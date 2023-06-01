@@ -13,7 +13,6 @@ private:
 
 public:
     Allocator() {  };
-    ~Allocator();
 
     int add();
     T &get(int id);
@@ -23,18 +22,6 @@ public:
     void forEach(lambda_t fn);
 
 };
-
-
-template <typename T>
-IDK::Allocator<T>::~Allocator()
-{
-    forEach(
-        [](IDK::GameObject::Base *obj)
-        {
-            delete obj;
-        }
-    );
-}
 
 
 template <typename T>

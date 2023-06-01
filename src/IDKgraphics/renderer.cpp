@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-IDK::Renderer::Renderer(size_t w, size_t h)
+IDK::RenderEngine::RenderEngine(size_t w, size_t h)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -41,7 +41,6 @@ IDK::Renderer::Renderer(size_t w, size_t h)
     glEnable(GL_CULL_FACE);
 
 
-
     // Generate screen quad vertex array
     GLCALL( glGenVertexArrays(1, &_quad_VAO); )
     GLCALL( glGenBuffers(1, &_quad_VBO); )
@@ -55,53 +54,65 @@ IDK::Renderer::Renderer(size_t w, size_t h)
     GLCALL( glEnableVertexAttribArray(2); )
 
 
-    // Generate screen quad framebuffer
-    // GLCALL( glGenFramebuffers(1, &_quad_FBO); )
-    // GLCALL( glGenTextures(1, &_quad_texture); )
-    // GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, _quad_FBO);)
-    // GLCALL(glBindTexture(GL_TEXTURE_2D, _quad_texture);)
-    // GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1000, 1000, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);)
-    // GLCALL(glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );)
-    // GLCALL(glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );)
-    // GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);)
-    // GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);)
-    // GLCALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _quad_texture, 0);)
-    // GLuint attachments[1] = { GL_COLOR_ATTACHMENT0 };
-    // GLCALL( glDrawBuffers(1, attachments); )
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     _screenquad_shader = Shader("assets/shaders/", "screenquad.vs", "screenquad.fs");
 }
 
 
-IDK::Renderer::~Renderer()
+IDK::RenderEngine::~RenderEngine()
 {
     SDL_DestroyWindow(_SDL_window);
 }
 
 
 
-void IDK::Renderer::_use_shader(Shader &shader)
+void IDK::RenderEngine::_use_shader(Shader &shader)
 {
     GLCALL( glUseProgram(shader.id()); )
 }
 
-void IDK::Renderer::useShader(IDK::Shader &shader)
+void IDK::RenderEngine::useShader(int id)
 {
-    _active_shader_id = shader.id();
-}
-void IDK::Renderer::useShader(GLuint shader_id)
-{
-    _active_shader_id = shader_id;
+    _active_shader_id = id;
 }
 
-void IDK::Renderer::addShader(Shader &shader)
+void IDK::RenderEngine::addShader(Shader &shader)
 {
     _shaders[shader.id()] = shader;
 }
 
 
-void IDK::Renderer::_draw_model(Model *model, IDK::transform *transform)
+
+// void Renderer::drawModel(Model *model, Transform *transform)
+// {
+//   this->active_shader->setMat4("model", transform->getModelMatrix_stale());
+
+//   Mesh &mesh = model->mesh;
+
+//   GLCALL( glBindVertexArray(mesh.VAO) );
+
+//   for (size_t i=0; i<mesh.IBOS.size(); i++)
+//   {
+//     mesh.materials[i].diffuseMap.bind(  GL_TEXTURE0 );
+//     mesh.materials[i].specularMap.bind( GL_TEXTURE1 );
+//     mesh.materials[i].normalMap.bind(   GL_TEXTURE2 );
+//     mesh.materials[i].emissionMap.bind( GL_TEXTURE3 );
+
+//     this->active_shader->setFloat("material.spec_exponent", mesh.materials[i].spec_exponent);
+
+//     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBOS[i]));
+//     GLCALL(glDrawElements(GL_TRIANGLES, mesh.indices[i].size(), GL_UNSIGNED_INT, (void *)0));
+
+//     unbindTextureUnit(GL_TEXTURE0);
+//     unbindTextureUnit(GL_TEXTURE1);
+//     unbindTextureUnit(GL_TEXTURE2);
+//     unbindTextureUnit(GL_TEXTURE3);
+//   }
+
+//   GLCALL( glBindVertexArray(0) );
+// }
+
+
+void IDK::RenderEngine::_draw_model(Model *model, IDK::transform *transform)
 {
     // glBindVertexArray(model.vao);
     // ...
@@ -110,9 +121,8 @@ void IDK::Renderer::_draw_model(Model *model, IDK::transform *transform)
     // glBindVertexArray(0);
 }
 
-void IDK::Renderer::_draw_model(int id, IDK::transform *transform)
+void IDK::RenderEngine::_draw_model(int id, IDK::transform *transform)
 {
-
     // glBindVertexArray(model.vao);
     // ...
     // ...
@@ -121,17 +131,13 @@ void IDK::Renderer::_draw_model(int id, IDK::transform *transform)
 }
 
 
-void IDK::Renderer::drawModel(Model &model, IDK::transform &transform)
+
+void IDK::RenderEngine::drawModel(int id, IDK::transform &transform)
 {
-    _model_queue[_active_shader_id].push({&model, &transform});
+    _model_queue[_active_shader_id].push({id, &transform});
 }
 
-void IDK::Renderer::drawModel(int id, IDK::transform &transform)
-{
-    _model_id_queue[_active_shader_id].push({id, &transform});
-}
-
-void IDK::Renderer::_draw_to_screen(GLuint texture_id)
+void IDK::RenderEngine::_draw_to_screen(GLuint texture_id)
 {
     GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, 0); )
     GLCALL( glActiveTexture(GL_TEXTURE0); )
@@ -140,26 +146,16 @@ void IDK::Renderer::_draw_to_screen(GLuint texture_id)
 
 
 
-void IDK::Renderer::beginFrame()
+void IDK::RenderEngine::beginFrame()
 {
     GLCALL( glClearColor(0.0f, 0.0f, 0.0f, 1.0f); )
     GLCALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); )
 }
 
 
-void IDK::Renderer::endFrame()
+void IDK::RenderEngine::endFrame()
 {
-    for (auto &[shader_id, mt_pairs]: _model_queue)
-    {
-        _use_shader(_shaders[shader_id]);
-
-        for (auto &[modelptr, tptr]: mt_pairs)
-            _draw_model(modelptr, tptr);
-
-        mt_pairs.clear();
-    }
-
-    for (auto &[shader_id, it_pairs]: _model_id_queue)
+    for (auto &[shader_id, it_pairs]: _model_queue)
     {
         _use_shader(_shaders[shader_id]);
 

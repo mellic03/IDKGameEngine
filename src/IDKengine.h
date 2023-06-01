@@ -18,7 +18,7 @@ private:
 
 
 public:
-    IDK::Renderer renderer;
+    IDK::RenderEngine renderer;
 
     Engine(size_t w = 1000, size_t h = 1000);
 
@@ -32,4 +32,13 @@ public:
     void deleteGameObject(int id) { _gameobject_allocator.remove(id); };
 
 };
+
+
+
+template <typename gameobject_t>
+gameobject_t *IDK::Engine::createGameObject()
+{
+    int id = _gameobject_allocator.add<gameobject_t>();
+    return _gameobject_allocator.get<gameobject_t>(id);
+}
 

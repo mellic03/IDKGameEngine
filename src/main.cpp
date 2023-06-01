@@ -41,10 +41,6 @@ int ENTRY(int argc, const char **argv)
     IDK::transform transform;
 
 
-    Actor *obj1 = idk.createGameObject<Actor>();
-    Terrain *obj2 = idk.createGameObject<Terrain>();
-
-
     while (1)
     {
         idk.beginFrame();

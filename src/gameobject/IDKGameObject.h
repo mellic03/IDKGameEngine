@@ -5,12 +5,13 @@
 
 class IDK::GameObject::Base
 {
-private:
+protected:
     IDK::transform _transform;
     int _id;
 
 public:
     Base() {  };
-
     IDK::transform &transform() { return _transform; };
+
 };
+

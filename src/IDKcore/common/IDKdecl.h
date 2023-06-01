@@ -32,7 +32,8 @@ namespace IDK
     class Model;
     class ModelSystem;
     class Camera;
-    class Renderer;
+    class RenderEngine;
+    class GraphicsEngine;
     // --------------------------------------------------
 
 
