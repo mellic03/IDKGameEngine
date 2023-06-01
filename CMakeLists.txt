@@ -27,6 +27,7 @@ add_definitions(
 file(
     GLOB SOURCES
     "src/*.cpp"
+    "src/IDKgraphics/*.cpp"
     "src/gameobject/*.cpp"
 )
 
@@ -40,20 +41,11 @@ add_executable(
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
-
-
-add_library(libIDKgraphics STATIC IMPORTED)
-set_target_properties(
-    libIDKgraphics PROPERTIES
-    IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/src/IDKgraphics/libIDKgraphics.a
-)
-
-
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
 
 target_link_libraries(
-    ${PROJECT_NAME} PUBLIC libIDKgraphics stdc++fs
+    ${PROJECT_NAME}
     GLEW
     SDL2
     ${OPENGL_LIBRARIES}
