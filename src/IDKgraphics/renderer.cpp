@@ -121,7 +121,6 @@ void IDK::Renderer::_draw_model(int id, IDK::transform *transform)
 }
 
 
-
 void IDK::Renderer::drawModel(Model &model, IDK::transform &transform)
 {
     _model_queue[_active_shader_id].push({&model, &transform});

@@ -7,6 +7,14 @@ IDK::Engine::Engine(size_t w, size_t h): renderer(w, h)
 }
 
 
+template <typename gameobject_t>
+gameobject_t *IDK::Engine::createGameObject()
+{
+    int id = _gameobject_allocator.add<gameobject_t>();
+    return _gameobject_allocator.get<gameobject_t>(id);
+}
+
+
 void IDK::Engine::_process_key_input()
 {
     const Uint8 *state = SDL_GetKeyboardState(NULL);

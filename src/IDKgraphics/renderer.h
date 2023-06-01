@@ -26,6 +26,7 @@ private:
        1.0f,  1.0f,  -0.999f,  1.0f,  1.0f
     };
 
+    IDK::Allocator<IDK::Camera> _camera_allocator;
 
     using mt_pair = std::pair<Model *, IDK::transform *>;
     using it_pair = std::pair<int, IDK::transform *>;
@@ -49,12 +50,10 @@ public:
 
     void addShader(Shader &shader);
 
-
-    /**
-     * Switch to the perspective of another camera.
-     * @param camera The camera to switch to.
-    */
-    void useCamera(IDK::Camera &camera);
+    void useCamera(int camera_id);
+    int createCamera()             { return _camera_allocator.add();   };
+    void deleteCamera(int id)      { _camera_allocator.remove(id);     };
+    IDK::Camera &getCamera(int id) { return _camera_allocator.get(id); };
 
     /*@param shader The shader to use for all subsequent draw calls.*/
     void useShader(IDK::Shader &shader);

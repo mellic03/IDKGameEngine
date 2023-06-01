@@ -19,8 +19,8 @@ class IDK::Texture
 {
 private:
     int _id;
-public:
 
+public:
     
 
 };
@@ -32,6 +32,7 @@ private:
     IDK::vec3 _diffuse_color;
     IDK::vec3 _specular_color;
     float _specular_exponent;
+    int _texture_id;
 
 public:
 
@@ -42,6 +43,7 @@ class Mesh
 {
 private:
     IDK::vector<GLuint> _vertex_indices;
+    int _material_id;
 
 public:
     Mesh() {  };

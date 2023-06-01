@@ -30,6 +30,7 @@ namespace IDK
     class Texture;
     class Material;
     class Model;
+    class ModelSystem;
     class Camera;
     class Renderer;
     // --------------------------------------------------
