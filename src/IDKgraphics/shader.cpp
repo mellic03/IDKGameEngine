@@ -71,6 +71,14 @@ void IDK::Shader::setfloat(const char *name, float f)
     )
 }
 
+void IDK::Shader::setvec2(const char *name, IDK::vec2 &v)
+{
+    GLCALL(
+        GLuint loc = glGetUniformLocation(_program_id, name);
+        glUniform2fv(loc, 1, IDK::value_ptr(v));
+    )
+}
+
 void IDK::Shader::setvec3(const char *name, IDK::vec3 &v)
 {
     GLCALL(

@@ -6,7 +6,7 @@
 #include <sstream>
 
 
-struct vertex
+struct IDK::vertex
 {
     IDK::vec3 position  = IDK::vec3(0.0f);
     IDK::vec3 normal    = IDK::vec3(0.0f);
@@ -14,16 +14,6 @@ struct vertex
     IDK::vec3 tangent   = IDK::vec3(0.0f);
 };
 
-
-class IDK::Texture
-{
-private:
-    int _id;
-
-public:
-    
-
-};
 
 
 class IDK::Material
@@ -37,23 +27,22 @@ public:
 };
 
 
-class Mesh
+class IDK::Mesh
 {
 private:
     IDK::vector<GLuint> _vertex_indices;
 
 public:
     int material_id;
+    IDK::vector<GLuint> IBOS;
 
-    Mesh() {  };
 };
 
 
 class IDK::Model
 {
 private:
-    IDK::vector<vertex> _vertices;
-    IDK::vector<Mesh> _meshes;
+    IDK::vector<IDK::vertex> _vertices;
 
     void _load_obj(std::string &path);
     void _load_mtl(std::string &path);
@@ -61,5 +50,8 @@ private:
 public:
     Model() {  };
     Model(std::string dir, std::string obj, std::string mtl) {  };
+
+    GLuint VAO;
+    IDK::vector<Mesh> meshes;
 
 };

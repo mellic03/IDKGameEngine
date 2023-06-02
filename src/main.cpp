@@ -8,40 +8,19 @@
 #include "IDKengine.h"
 
 
-class Actor: public IDK::GameObject::Base
-{
-private:
-
-public:
-    void testfn()
-    {
-        std::cout << "Actor\n";
-    };
-};
-
-
-class Terrain: public IDK::GameObject::Base
-{
-private:
-
-public:
-    void testfn()
-    {
-        std::cout << "Terrain\n";
-    };
-};
-
 
 int ENTRY(int argc, const char **argv)
 {
     IDK::Engine idk;
+
+    std::string shaderpath = "assets/shaders/";
 
     IDK::Shader shader1("assets/shaders/", "screenquad.vs", "screenquad.fs");
     IDK::Model model1("assets/", "cube.obj", "cube.mtl");
     IDK::transform transform;
 
 
-    while (1)
+    while (idk.running())
     {
         idk.beginFrame();
 

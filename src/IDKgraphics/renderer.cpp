@@ -58,86 +58,167 @@ IDK::RenderEngine::RenderEngine(size_t w, size_t h)
 }
 
 
-IDK::RenderEngine::~RenderEngine()
+
+GLuint
+IDK::RenderEngine::_load_shader(std::string root, std::string vs, std::string fs)
 {
-    SDL_DestroyWindow(_SDL_window);
+    std::ifstream instream;
+    std::string line;
+
+    std::string vert_src, frag_src;
+
+
+    instream = std::ifstream(root + vs);
+    while (getline(instream, line))
+        vert_src += line + "\n";
+
+    instream = std::ifstream(root + fs);
+    while (getline(instream, line))
+        frag_src += line + "\n";
+
+    auto compile_shader = [](std::string &src, GLenum type)
+    {
+        const char *str = src.c_str();
+        GLuint shader_id = glCreateShader(type);
+        glShaderSource(shader_id, 1, &str, nullptr);
+        glCompileShader(shader_id);
+
+        int result;
+        glGetShaderiv(shader_id, GL_COMPILE_STATUS, &result);
+        if (result == GL_FALSE)
+        {
+            int length;
+            glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length);
+            char *message = (char *)alloca(length * sizeof(char));
+            glGetShaderInfoLog(shader_id, length, &length, message);
+
+            std::cout << "Failed to compile "
+                      << (type == GL_VERTEX_SHADER ? "vertex" : "fragment")
+                      << " shader\n" << std::endl; 
+            std::cout << message << std::endl;
+            exit(1);
+        }
+
+        return shader_id;
+    };
+
+    GLuint vert_id = compile_shader(vert_src, GL_VERTEX_SHADER);
+    GLuint frag_id = compile_shader(frag_src, GL_FRAGMENT_SHADER);
+
+    GLuint program_id = glCreateProgram();
+    GLCALL( glAttachShader(program_id, vert_id); )
+    GLCALL( glAttachShader(program_id, frag_id); )
+    GLCALL( glLinkProgram(program_id); )
+    GLCALL( glValidateProgram(program_id); )
+
+    GLCALL( glDeleteShader(vert_id); )
+    GLCALL( glDeleteShader(frag_id); )
+
+    // _shader_allocator.add(program_id);
+
+    return program_id;
 }
 
 
-
-void IDK::RenderEngine::_use_shader(Shader &shader)
+void
+IDK::RenderEngine::_use_shader(Shader &shader)
 {
     GLCALL( glUseProgram(shader.id()); )
 }
 
-void IDK::RenderEngine::useShader(int id)
+void
+IDK::RenderEngine::useShader(int id)
 {
     _active_shader_id = id;
 }
 
-void IDK::RenderEngine::addShader(Shader &shader)
+void
+IDK::RenderEngine::loadShader(std::string path)
 {
-    _shaders[shader.id()] = shader;
+
 }
 
 
-
-// void Renderer::drawModel(Model *model, Transform *transform)
-// {
-//   this->active_shader->setMat4("model", transform->getModelMatrix_stale());
-
-//   Mesh &mesh = model->mesh;
-
-//   GLCALL( glBindVertexArray(mesh.VAO) );
-
-//   for (size_t i=0; i<mesh.IBOS.size(); i++)
-//   {
-//     mesh.materials[i].diffuseMap.bind(  GL_TEXTURE0 );
-//     mesh.materials[i].specularMap.bind( GL_TEXTURE1 );
-//     mesh.materials[i].normalMap.bind(   GL_TEXTURE2 );
-//     mesh.materials[i].emissionMap.bind( GL_TEXTURE3 );
-
-//     this->active_shader->setFloat("material.spec_exponent", mesh.materials[i].spec_exponent);
-
-//     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBOS[i]));
-//     GLCALL(glDrawElements(GL_TRIANGLES, mesh.indices[i].size(), GL_UNSIGNED_INT, (void *)0));
-
-//     unbindTextureUnit(GL_TEXTURE0);
-//     unbindTextureUnit(GL_TEXTURE1);
-//     unbindTextureUnit(GL_TEXTURE2);
-//     unbindTextureUnit(GL_TEXTURE3);
-//   }
-
-//   GLCALL( glBindVertexArray(0) );
-// }
-
-
-void IDK::RenderEngine::_draw_model(Model *model, IDK::transform *transform)
+GLuint
+IDK::RenderEngine::_gen_texture(std::string path)
 {
-    // glBindVertexArray(model.vao);
-    // ...
-    // ...
-    // ...
-    // glBindVertexArray(0);
-}
+    GLuint texture_id;
 
-void IDK::RenderEngine::_draw_model(int id, IDK::transform *transform)
-{
-    // glBindVertexArray(model.vao);
-    // ...
-    // ...
-    // ...
-    // glBindVertexArray(0);
+    unsigned char *data;
+    std::ifstream instream(path);
+
+    if (instream.good())
+    {
+        // data = load_img()
+    }
+
+
+    glGenTextures(1, &texture_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    // if (useSRGB)
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    // else
+    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+
+    // _texture_allocator.add(texture_id);
+
+    return texture_id;
 }
 
 
-
-void IDK::RenderEngine::drawModel(int id, IDK::transform &transform)
+void
+IDK::RenderEngine::_bind_material(int id)
 {
-    _model_queue[_active_shader_id].push({id, &transform});
+    IDK::Material &material = _material_allocator.get(id);
 }
 
-void IDK::RenderEngine::_draw_to_screen(GLuint texture_id)
+
+void
+IDK::RenderEngine::_draw_mesh(IDK::Mesh &mesh)
+{
+    _bind_material(mesh.material_id);
+
+    for (GLuint ibo: mesh.IBOS)
+    {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        
+    }
+}
+
+
+void
+IDK::RenderEngine::_draw_model(int id, IDK::transform *transform)
+{
+    IDK::Model &model = _model_allocator.get(id);
+    
+    GLCALL( glBindVertexArray(model.VAO); )
+    for (IDK::Mesh &mesh: model.meshes)
+        _draw_mesh(mesh);
+}
+
+
+void
+IDK::RenderEngine::drawModel(int id, IDK::transform &transform)
+{
+
+}
+
+
+void
+IDK::RenderEngine::_draw_to_screen(GLuint texture_id)
 {
     GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, 0); )
     GLCALL( glActiveTexture(GL_TEXTURE0); )
@@ -145,28 +226,19 @@ void IDK::RenderEngine::_draw_to_screen(GLuint texture_id)
 }
 
 
-
-void IDK::RenderEngine::beginFrame()
+void
+IDK::RenderEngine::beginFrame()
 {
     GLCALL( glClearColor(0.0f, 0.0f, 0.0f, 1.0f); )
     GLCALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); )
 }
 
 
-void IDK::RenderEngine::endFrame()
+void
+IDK::RenderEngine::endFrame()
 {
-    for (auto &[shader_id, it_pairs]: _model_queue)
-    {
-        _use_shader(_shaders[shader_id]);
-
-        for (auto &[model_id, tptr]: it_pairs)
-            _draw_model(model_id, tptr);
-
-        it_pairs.clear();
-    }
-
-
     _use_shader(_screenquad_shader);
+
 
     GLCALL( glDisable(GL_DEPTH_TEST); )
     GLCALL( glDisable(GL_CULL_FACE); )

@@ -52,3 +52,11 @@ target_link_libraries(
 )
 
 
+
+
+
+project(objconvert)
+add_executable(
+    ${PROJECT_NAME} "src/IDKtools/objconvert.cpp"
+)
+

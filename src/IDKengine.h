@@ -7,36 +7,39 @@
 class IDK::Engine
 {
 private:
-    SDL_Event _SDL_event;
-    IDK::Keylog _keylog;
-    IDK::vec2 _delta_mouse;
+    IDK::RenderEngine                           _render_engine;
+    
+    SDL_Event                                   _SDL_event;
+    
+    IDK::Keylog                                 _keylog;
+    IDK::vec2                                   _delta_mouse;
+    IDK::vec2                                   _mouse;
 
-    IDK::ptr_Allocator<IDK::GameObject::Base> _gameobject_allocator;
+    ptr_Allocator<GameObject::Base>             _gameobject_allocator;
 
-    void _process_key_input();
-    void _process_mouse_input();
+    void                                        _process_key_input();
+    void                                        _process_mouse_input();
 
 
 public:
-    IDK::RenderEngine renderer;
+                                                Engine(size_t w = 1000, size_t h = 1000);
 
-    Engine(size_t w = 1000, size_t h = 1000);
+    bool                                        running();
+    void                                        beginFrame();
+    void                                        endFrame();
 
-    void beginFrame();
-    void endFrame();
-
-    IDK::vec2 dMouse() { return _delta_mouse; };
+    IDK::vec2                                   mouse();
+    IDK::vec2                                   dMouse();
 
     template <typename gameobject_t>
-    gameobject_t *createGameObject();
-    void deleteGameObject(int id) { _gameobject_allocator.remove(id); };
-
+    gameobject_t                                *createGameObject();
+    void                                        deleteGameObject(int id);
 };
 
 
-
 template <typename gameobject_t>
-gameobject_t *IDK::Engine::createGameObject()
+gameobject_t *
+IDK::Engine::createGameObject()
 {
     int id = _gameobject_allocator.add<gameobject_t>();
     return _gameobject_allocator.get<gameobject_t>(id);

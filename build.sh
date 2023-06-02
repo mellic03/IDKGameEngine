@@ -7,5 +7,9 @@ cmake -G Ninja ..
 ninja
 cd ..
 
+
 # Move output to output folder
 cp build/IDKEngine output/IDKEngine
+cp -R assets output/.
+mkdir output/IDKtools
+cp build/objconvert output/IDKtools/objconvert

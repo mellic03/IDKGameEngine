@@ -20,6 +20,7 @@ public:
     void setint(const char *, int);
     void setfloat(const char *, float);
 
+    void setvec2(const char *, IDK::vec2 &);
     void setvec3(const char *, IDK::vec3 &);
     void setvec4(const char *, IDK::vec4 &);
     void setmat3(const char *, IDK::mat3 &);

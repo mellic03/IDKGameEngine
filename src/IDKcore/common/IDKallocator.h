@@ -15,6 +15,7 @@ public:
     Allocator() {  };
 
     int add();
+    int add(T);
     T &get(int id);
     void remove(int id);
 
@@ -39,6 +40,26 @@ int IDK::Allocator<T>::add()
     {
         _occupied.push(true);
         _objects.push(T());
+        return _objects.size()-1;
+    }
+};
+
+
+template <typename T>
+int IDK::Allocator<T>::add(T data)
+{
+    if (_unnocupied_indices.size() > 0)
+    {
+        int id = _unnocupied_indices.pop();
+        _objects[id] = data;
+        _occupied[id] = true;
+        return id;
+    }
+
+    else
+    {
+        _occupied.push(true);
+        _objects.push(data);
         return _objects.size()-1;
     }
 };
