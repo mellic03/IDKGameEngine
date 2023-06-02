@@ -44,6 +44,8 @@ private:
   
     IDK::Shader                                 _screenquad_shader;
 
+    IDK::stack<GLuint>                          _gltu_available;
+    IDK::stack<GLuint>                          _gltu_unavailable;
 
     IDK::Allocator<GLuint>                      _shader_allocator;
     IDK::Allocator<GLuint>                      _texture_allocator;
@@ -55,13 +57,14 @@ private:
                                                 friend class IDK::Engine;
                                                 RenderEngine(size_t w, size_t h);
 
-
     GLuint                                      _load_shader(std::string root, std::string vs, std::string fs);
 
     void                                        _load_textures(std::string path);
     GLuint                                      _gen_texture(std::string path);
 
-    void                                        _bind_texture(int id);
+    void                                        _bind_texture(GLuint texture_id);
+    void                                        _unbind_texture(GLuint texture_id);
+
     void                                        _bind_material(int id);
     void                                        _use_shader(Shader &shader);
     void                                        _draw_mesh(IDK::Mesh &mesh);
@@ -71,11 +74,10 @@ private:
 
 public:
 
-
-    int                                         createCamera()                  { return _camera_allocator.add();   };
-    void                                        deleteCamera(int id)            { _camera_allocator.remove(id);     };
-    void                                        useCamera(int id)               { _active_camera_id = id;           };
-    IDK::Camera                                 &getCamera(int id)              { return _camera_allocator.get(id); };
+    int                                         createCamera()             { return _camera_allocator.add();   };
+    void                                        deleteCamera(int id)       { _camera_allocator.remove(id);     };
+    void                                        useCamera(int id)          { _active_camera_id = id;           };
+    IDK::Camera &                               getCamera(int id)          { return _camera_allocator.get(id); };
 
     void                                        loadShader(std::string path);
     void                                        useShader(int id);

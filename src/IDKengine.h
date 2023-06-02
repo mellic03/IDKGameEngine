@@ -32,7 +32,7 @@ public:
     IDK::vec2                                   dMouse();
 
     template <typename gameobject_t>
-    gameobject_t                                *createGameObject();
+    gameobject_t *                              createGameObject();
     void                                        deleteGameObject(int id);
 };
 

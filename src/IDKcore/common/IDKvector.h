@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstring>
-#include <cstddef>
-
 #include "IDKdecl.h"
 
 
@@ -14,26 +12,29 @@ private:
     size_t _size, _cap;
 
 public:
-    vector(): _size(0), _cap(1), _data(new T[1]) {  };
-    ~vector() { delete[] _data; };
+                        vector(): _size(0), _cap(1), _data(new T[1]) {  };
+                        vector(size_t size): _size(size), _cap(size), _data(new T[size]) {  };
+                        ~vector() { delete[] _data; };
 
-    size_t size() const { return _size; };
-    void resize(size_t size);
+    void                resize(size_t size);
    
-    void clear() { _size = 0; };
-    void push(T data);
-    T pop() { return _data[--_size]; };
+    void                push(T data);
+    T                   pop()                   { return _data[--_size]; };
+    size_t              size()  const           { return _size;          };
+    bool                empty() const           { return _size == 0;     };
+    void                clear()                 { _size = 0;             };
+    void                erase()                 { resize(1); _size = 0; };
 
-    T &front() { return _data[0]; };
-    T &back()  { return _data[_size-1]; };
+    T &                 front()                 { return _data[0];       };
+    T &                 back()                  { return _data[_size-1]; };
 
 
-    class iterator;
-    iterator begin() { return iterator(_data); };
-    iterator end()   { return iterator(_data + _size); };
+                        class iterator;
+    iterator            begin() { return iterator(_data); };
+    iterator            end()   { return iterator(_data + _size); };
     
 
-    T &operator [] (size_t i) { return _data[i]; };
+    T &                 operator [] (size_t i) { return _data[i]; };
 };
 
 
@@ -65,7 +66,8 @@ public:
 
 
 template <typename T>
-void IDK::vector<T>::resize(size_t cap)
+void
+IDK::vector<T>::resize(size_t cap)
 {
     T *temp = new T[_size];
     memcpy((void *)temp, (void *)_data, _size * sizeof(T));
@@ -81,7 +83,8 @@ void IDK::vector<T>::resize(size_t cap)
 
 
 template <typename T>
-void IDK::vector<T>::push(T data)
+void
+IDK::vector<T>::push(T data)
 {
     if (_size+1 > _cap)
         resize(2*_cap);

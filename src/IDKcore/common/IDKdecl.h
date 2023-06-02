@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstddef>
+
+
 #define IDK_DECL
 
 namespace IDK
@@ -8,7 +11,19 @@ namespace IDK
     template <typename T> class Allocator;
     template <typename T> class ptr_Allocator;
 
+    template <typename T> class stack;
     template <typename T> class vector;
+
+    // Search data  structures
+    template <typename T> class minheap;
+    template <typename T> class maxheap;
+    template <typename key_t, typename data_t> class BST;
+    template <typename T> class quadtree;
+    template <typename T> class octree;
+    template <typename T> class trie;
+    template <typename T> class linkedlist;
+    template <typename T> class skiplist;
+
 
     template <typename T, int size> class vec_t;
     typedef vec_t<float, 2> vec2;
@@ -52,6 +67,7 @@ namespace IDK
     namespace GameObject
     {
         class Base;
+        class Renderable;
     }
     // --------------------------------------------------
 };

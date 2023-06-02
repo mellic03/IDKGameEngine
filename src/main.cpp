@@ -20,6 +20,16 @@ int ENTRY(int argc, const char **argv)
     IDK::transform transform;
 
 
+    IDK::BST<int, int> bst;
+
+    for (int i=0; i<10; i++)
+    {
+        bst.insert(rand()%100, i);
+    }
+
+    bst.print();
+
+
     while (idk.running())
     {
         idk.beginFrame();

@@ -178,6 +178,24 @@ IDK::RenderEngine::_gen_texture(std::string path)
     return texture_id;
 }
 
+void
+IDK::RenderEngine::_bind_texture(GLuint texture_id)
+{
+    GLuint textureunit_id = _gltu_available.pop();
+    _gltu_unavailable.push(textureunit_id);
+
+    glActiveTexture(textureunit_id);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+}
+
+
+void
+IDK::RenderEngine::_unbind_texture(GLuint texture_id)
+{
+    
+}
+
 
 void
 IDK::RenderEngine::_bind_material(int id)
@@ -237,6 +255,12 @@ IDK::RenderEngine::beginFrame()
 void
 IDK::RenderEngine::endFrame()
 {
+    // Mark all gl texture units as available
+    while (_gltu_unavailable.empty() == false)
+    {
+        _gltu_available.push(_gltu_unavailable.pop());
+    }
+
     _use_shader(_screenquad_shader);
 
 
