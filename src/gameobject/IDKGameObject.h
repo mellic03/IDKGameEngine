@@ -3,26 +3,27 @@
 #include "../IDKcore/IDKcore.h"
 #include <iostream>
 
-class IDK::GameObject::Base
+class idk::GameObject::Base
 {
 protected:
-    IDK::transform _transform;
-    int _id;
+    idk::transform  _transform;
+    int             _id;
+    int             _transform_id;
 
 public:
-    Base() {  };
-    IDK::transform &transform() { return _transform; };
-
+                    Base() {  };
+    int             ID()            { return _id;           };
+    int             transformID()   { return _transform_id; };
 };
 
 
-class IDK::GameObject::Renderable: public IDK::GameObject::Base
+class idk::GameObject::Renderable: public idk::GameObject::Base
 {
 protected:
-    int _model_id;
+    int             _model_id;
 
 public:
-    Renderable() {  };
+                    Renderable() {  };
 
 };
 

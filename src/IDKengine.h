@@ -4,16 +4,16 @@
 #include "gameobject/IDKGameObject.h"
 
 
-class IDK::Engine
+class idk::Engine
 {
 private:
-    IDK::RenderEngine                           _render_engine;
+    idk::RenderEngine                           _render_engine;
     
     SDL_Event                                   _SDL_event;
     
-    IDK::Keylog                                 _keylog;
-    IDK::vec2                                   _delta_mouse;
-    IDK::vec2                                   _mouse;
+    idk::Keylog                                 _keylog;
+    idk::vec2                                   _delta_mouse;
+    idk::vec2                                   _mouse;
 
     ptr_Allocator<GameObject::Base>             _gameobject_allocator;
 
@@ -24,12 +24,14 @@ private:
 public:
                                                 Engine(size_t w = 1000, size_t h = 1000);
 
+    idk::RenderEngine &                         rengine()  { return _render_engine; };
+
     bool                                        running();
     void                                        beginFrame();
     void                                        endFrame();
 
-    IDK::vec2                                   mouse();
-    IDK::vec2                                   dMouse();
+    idk::vec2                                   mouse();
+    idk::vec2                                   dMouse();
 
     template <typename gameobject_t>
     gameobject_t *                              createGameObject();
@@ -39,7 +41,7 @@ public:
 
 template <typename gameobject_t>
 gameobject_t *
-IDK::Engine::createGameObject()
+idk::Engine::createGameObject()
 {
     int id = _gameobject_allocator.add<gameobject_t>();
     return _gameobject_allocator.get<gameobject_t>(id);

@@ -1,14 +1,14 @@
 #include "IDKengine.h"
 
 
-IDK::Engine::Engine(size_t w, size_t h): _render_engine(w, h)
+idk::Engine::Engine(size_t w, size_t h): _render_engine(w, h)
 {
     
 }
 
 
 void
-IDK::Engine::_process_key_input()
+idk::Engine::_process_key_input()
 {
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     _keylog.log(state);
@@ -16,7 +16,7 @@ IDK::Engine::_process_key_input()
 
 
 void
-IDK::Engine::_process_mouse_input()
+idk::Engine::_process_mouse_input()
 {
     while (SDL_PollEvent(&_SDL_event))
     {
@@ -46,35 +46,35 @@ IDK::Engine::_process_mouse_input()
 
 
 bool
-IDK::Engine::running()
+idk::Engine::running()
 {
     return true;
 }
 
 
-IDK::vec2
-IDK::Engine::mouse()
+idk::vec2
+idk::Engine::mouse()
 {
     return _mouse;
 }
 
 
-IDK::vec2
-IDK::Engine::dMouse()
+idk::vec2
+idk::Engine::dMouse()
 {
     return _delta_mouse;
 }
 
 
 void
-IDK::Engine::deleteGameObject(int id)
+idk::Engine::deleteGameObject(int id)
 {
     _gameobject_allocator.remove(id);
 }
 
 
 void
-IDK::Engine::beginFrame()
+idk::Engine::beginFrame()
 {
     _process_key_input();
     _process_mouse_input();
@@ -84,7 +84,7 @@ IDK::Engine::beginFrame()
 
 
 void
-IDK::Engine::endFrame()
+idk::Engine::endFrame()
 {
 
     _render_engine.endFrame();

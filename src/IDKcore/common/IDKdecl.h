@@ -5,25 +5,22 @@
 
 #define IDK_DECL
 
-namespace IDK
+namespace idk
 {
     // Data structures ----------------------------------
     template <typename T> class Allocator;
     template <typename T> class ptr_Allocator;
 
+    template <typename T, typename U> struct pair;
     template <typename T> class stack;
     template <typename T> class vector;
-
-    // Search data  structures
-    template <typename T> class minheap;
-    template <typename T> class maxheap;
+    template <typename T> class heap;
     template <typename key_t, typename data_t> class BST;
     template <typename T> class quadtree;
     template <typename T> class octree;
     template <typename T> class trie;
     template <typename T> class linkedlist;
-    template <typename T> class skiplist;
-
+    template <typename key_t> class skiplist;
 
     template <typename T, int size> class vec_t;
     typedef vec_t<float, 2> vec2;
@@ -39,12 +36,12 @@ namespace IDK
     typedef mat_t<4> mat4;
 
     template <typename T, int size>
-    T *value_ptr(IDK::vec_t<T, size> &);
+    T *value_ptr(idk::vec_t<T, size> &);
     
     template <int size>
-    float *value_ptr(IDK::mat_t<size> &);
+    float *value_ptr(idk::mat_t<size> &);
 
-
+    class graph;
     class transform;
     // --------------------------------------------------
 
@@ -52,6 +49,7 @@ namespace IDK
     // Graphics-level -----------------------------------
     struct vertex;
     class Shader;
+    class ShaderInterface;
     class Mesh;
     class Material;
     class Model;
@@ -61,13 +59,33 @@ namespace IDK
 
 
     // Engine-level-------------------------------------
-    class Keylog;
-    class Engine;
-
     namespace GameObject
     {
         class Base;
         class Renderable;
     }
+    class Keylog;
+    class Navmap;
+    class Engine;
     // --------------------------------------------------
+
+
+
+    // Utility functions --------------------------------
+    template<typename T>  void swap(T &a, T &b);
+    // --------------------------------------------------
+
 };
+
+
+template<typename T>
+void
+idk::swap(T &a, T &b)
+{
+    T temp = a;
+    a = b;
+    b = temp;
+}
+
+
+

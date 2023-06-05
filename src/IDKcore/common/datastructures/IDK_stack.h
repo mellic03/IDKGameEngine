@@ -1,11 +1,11 @@
 #pragma once
 
 #include <cstring>
-#include "IDKdecl.h"
+#include "../IDKdecl.h"
 
 
 template <typename T>
-class IDK::stack
+class idk::stack
 {
 private:
     T *_data;
@@ -17,7 +17,7 @@ public:
                 stack(): _size(0), _cap(1), _data(new T[1]) {  };
                 ~stack() { delete[] _data; };
 
-    void        push(T data);
+    void        push(const T &data);
     T           pop()               { return _data[--_size]; };
     size_t      size() const        { return _size;          };
     bool        empty()             { return _size == 0;     };
@@ -26,7 +26,7 @@ public:
 
 template <typename T>
 void
-IDK::stack<T>::_resize(size_t cap)
+idk::stack<T>::_resize(size_t cap)
 {
     T *temp = new T[_size];
     memcpy((void *)temp, (void *)_data, _size * sizeof(T));
@@ -43,7 +43,7 @@ IDK::stack<T>::_resize(size_t cap)
 
 template <typename T>
 void
-IDK::stack<T>::push(T data)
+idk::stack<T>::push(const T &data)
 {
     if (_size+1 > _cap)
         _resize(2*_cap);

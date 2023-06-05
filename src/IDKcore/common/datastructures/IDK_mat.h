@@ -1,17 +1,17 @@
 #pragma once
 
-#include "IDKdecl.h"
+#include "../IDKdecl.h"
 
 
 template <int size>
-float *IDK::value_ptr(IDK::mat_t<size> &mat)
+float *idk::value_ptr(idk::mat_t<size> &mat)
 {
     return mat[0];
 }
 
 
 template <int size>
-class IDK::mat_t
+class idk::mat_t
 {
 private:
     float *_data;

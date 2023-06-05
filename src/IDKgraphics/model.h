@@ -6,52 +6,52 @@
 #include <sstream>
 
 
-struct IDK::vertex
+struct idk::vertex
 {
-    IDK::vec3 position  = IDK::vec3(0.0f);
-    IDK::vec3 normal    = IDK::vec3(0.0f);
-    IDK::vec2 texcoords = IDK::vec2(0.0f);
-    IDK::vec3 tangent   = IDK::vec3(0.0f);
+    idk::vec3 position  = idk::vec3(0.0f);
+    idk::vec3 normal    = idk::vec3(0.0f);
+    idk::vec2 texcoords = idk::vec2(0.0f);
+    idk::vec3 tangent   = idk::vec3(0.0f);
 };
 
 
 
-class IDK::Material
+class idk::Material
 {
 public:
-    IDK::vec3 diffuse_color;
-    IDK::vec3 specular_color;
+    idk::vec3 diffuse_color;
+    idk::vec3 specular_color;
     float specular_exponent;
     int texture_id;
 
 };
 
 
-class IDK::Mesh
+class idk::Mesh
 {
 private:
-    IDK::vector<GLuint> _vertex_indices;
+    idk::vector<GLuint> _vertex_indices;
 
 public:
     int material_id;
-    IDK::vector<GLuint> IBOS;
+    idk::vector<GLuint> IBOS;
 
 };
 
 
-class IDK::Model
+class idk::Model
 {
 private:
-    IDK::vector<IDK::vertex> _vertices;
+    idk::vector<idk::vertex> _vertices;
 
     void _load_obj(std::string &path);
     void _load_mtl(std::string &path);
 
 public:
     Model() {  };
-    Model(std::string dir, std::string obj, std::string mtl) {  };
+    Model(std::string root, std::string obj, std::string mtl);
 
     GLuint VAO;
-    IDK::vector<Mesh> meshes;
+    idk::vector<Mesh> meshes;
 
 };

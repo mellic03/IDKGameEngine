@@ -4,17 +4,17 @@
 
 
 
-class IDK::Camera
+class idk::Camera
 {
 private:
-    IDK::transform _transform;
-    IDK::mat4 _projection, _view;
-    friend class IDK::RenderEngine;
+    idk::transform _transform;
+    idk::mat4 _projection, _view;
+    friend class idk::RenderEngine;
 
 public:
     Camera() {  };
 
-    IDK::transform &transform() { return _transform; };
+    idk::transform &transform() { return _transform; };
 
 };
 

@@ -3,7 +3,7 @@
 #include "IDKdecl.h"
 
 
-class IDK::Keylog
+class idk::Keylog
 {
 public:
 

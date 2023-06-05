@@ -1,33 +1,34 @@
 #pragma once
 
-#include "IDKdecl.h"
+#include "../IDKdecl.h"
 #include <string>
 #include <iostream>
 
+
 template <typename key_t, typename data_t>
-class IDK::BST
+class idk::BST
 {
 private:
-                struct Node;
-    Node *      _root;
+                        struct Node;
+    Node *              _root;
 
-    void        _free(Node* &node);
-    void        _insert(Node* &node, key_t key, data_t &data);
-    void        _remove(Node* &node, key_t key);
-    void        _print(std::string prefix, Node* &node, bool is_right);
+    void                _free(Node* &node);
+    void                _insert(Node* &node, key_t key, data_t &data);
+    void                _remove(Node* &node, key_t key);
+    void                _print(std::string prefix, Node* &node, bool is_right);
 
 public:
-                BST(): _root(nullptr) {  };
-                ~BST();
+                        BST(): _root(nullptr) {  };
+                        ~BST();
 
-    void        insert(key_t key, data_t data);
-    void        remove(key_t key)   { _remove(_root, key);       };
-    void        print()             { _print("", _root, false); };
+    void                insert(key_t key, data_t data);
+    void                remove(key_t key)   { _remove(_root, key);      };
+    void                print()             { _print("", _root, false); };
 };
 
 
 template <typename key_t, typename data_t>
-struct IDK::BST<key_t, data_t>::Node
+struct idk::BST<key_t, data_t>::Node
 {
     key_t key;
     data_t data;
@@ -38,7 +39,7 @@ struct IDK::BST<key_t, data_t>::Node
 
 template <typename key_t, typename data_t>
 void
-IDK::BST<key_t, data_t>::_free(Node* &node)
+idk::BST<key_t, data_t>::_free(Node* &node)
 {
     if (node == nullptr)
         return;
@@ -51,7 +52,7 @@ IDK::BST<key_t, data_t>::_free(Node* &node)
 
 
 template <typename key_t, typename data_t>
-IDK::BST<key_t, data_t>::~BST()
+idk::BST<key_t, data_t>::~BST()
 {
     _free(_root);
 }
@@ -59,7 +60,7 @@ IDK::BST<key_t, data_t>::~BST()
 
 template <typename key_t, typename data_t>
 void
-IDK::BST<key_t, data_t>::_insert(Node* &node, key_t key, data_t &data)
+idk::BST<key_t, data_t>::_insert(Node* &node, key_t key, data_t &data)
 {
     if (key < node->key)
     {
@@ -83,7 +84,7 @@ IDK::BST<key_t, data_t>::_insert(Node* &node, key_t key, data_t &data)
 
 template <typename key_t, typename data_t>
 void
-IDK::BST<key_t, data_t>::insert(key_t key, data_t data)
+idk::BST<key_t, data_t>::insert(key_t key, data_t data)
 {
     if (_root == nullptr)
     {
@@ -96,16 +97,30 @@ IDK::BST<key_t, data_t>::insert(key_t key, data_t data)
 
 template <typename key_t, typename data_t>
 void
-IDK::BST<key_t, data_t>::_remove(Node* &node, key_t key)
+idk::BST<key_t, data_t>::_remove(Node* &node, key_t key)
 {
-    
+    if (key == node->key)
+    {
+
+    }
+
+    if (key < node->key)
+    {
+
+    }
+
+    if (key > node->key)
+    {
+
+    }
+
 }
 
 
 
 template <typename key_t, typename data_t>
 void
-IDK::BST<key_t, data_t>::_print( std::string prefix, Node* &node, bool is_right )
+idk::BST<key_t, data_t>::_print( std::string prefix, Node* &node, bool is_right )
 {
     if (node == nullptr)
     {

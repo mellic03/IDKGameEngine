@@ -1,7 +1,7 @@
 #include "shader.h"
 #include <iostream>
 
-IDK::Shader::Shader(std::string dir, std::string vs, std::string fs)
+idk::Shader::Shader(std::string dir, std::string vs, std::string fs)
 {
     std::ifstream instream;
     std::string line;
@@ -54,7 +54,7 @@ IDK::Shader::Shader(std::string dir, std::string vs, std::string fs)
 }
 
 
-void IDK::Shader::setint(const char *name, int i)
+void idk::Shader::setint(const char *name, int i)
 {
     GLuint loc = glGetUniformLocation(_program_id, name);
     GLCALL(
@@ -63,7 +63,7 @@ void IDK::Shader::setint(const char *name, int i)
     )
 }
 
-void IDK::Shader::setfloat(const char *name, float f)
+void idk::Shader::setfloat(const char *name, float f)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_program_id, name);
@@ -71,43 +71,43 @@ void IDK::Shader::setfloat(const char *name, float f)
     )
 }
 
-void IDK::Shader::setvec2(const char *name, IDK::vec2 &v)
+void idk::Shader::setvec2(const char *name, idk::vec2 &v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_program_id, name);
-        glUniform2fv(loc, 1, IDK::value_ptr(v));
+        glUniform2fv(loc, 1, idk::value_ptr(v));
     )
 }
 
-void IDK::Shader::setvec3(const char *name, IDK::vec3 &v)
+void idk::Shader::setvec3(const char *name, idk::vec3 &v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_program_id, name);
-        glUniform3fv(loc, 1, IDK::value_ptr(v));
+        glUniform3fv(loc, 1, idk::value_ptr(v));
     )
 }
 
-void IDK::Shader::setvec4(const char *name, IDK::vec4 &v)
+void idk::Shader::setvec4(const char *name, idk::vec4 &v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_program_id, name);
-        glUniform4fv(loc, 1, IDK::value_ptr(v));
+        glUniform4fv(loc, 1, idk::value_ptr(v));
     )
 }
 
-void IDK::Shader::setmat3(const char *name, IDK::mat3 &m)
+void idk::Shader::setmat3(const char *name, idk::mat3 &m)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_program_id, name);
-        glUniformMatrix3fv(loc, 1, GL_FALSE, IDK::value_ptr(m));
+        glUniformMatrix3fv(loc, 1, GL_FALSE, idk::value_ptr(m));
     )
 }
 
-void IDK::Shader::setmat4(const char *name, IDK::mat4 &m)
+void idk::Shader::setmat4(const char *name, idk::mat4 &m)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_program_id, name);
-        glUniformMatrix4fv(loc, 1, GL_FALSE, IDK::value_ptr(m));
+        glUniformMatrix4fv(loc, 1, GL_FALSE, idk::value_ptr(m));
     )
 }
 

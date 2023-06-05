@@ -1,21 +1,21 @@
 #pragma once
 
-#include "IDKdecl.h"
+#include "../IDKdecl.h"
 
 
 template <typename T, int size>
-class IDK::vec_t { };
+class idk::vec_t { };
 
 
 template <typename T, int size>
-T *IDK::value_ptr(IDK::vec_t<T, size> &v)
+T *idk::value_ptr(idk::vec_t<T, size> &v)
 {
     return &v.x;
 }
 
 
 template <typename T>
-class IDK::vec_t<T, 2>
+class idk::vec_t<T, 2>
 {
 private:
 
@@ -32,7 +32,7 @@ public:
 
 
 template <typename T>
-class IDK::vec_t<T, 3>
+class idk::vec_t<T, 3>
 {
 private:
 
@@ -50,7 +50,7 @@ public:
 
 
 template <typename T>
-class IDK::vec_t<T, 4>
+class idk::vec_t<T, 4>
 {
 private:
 

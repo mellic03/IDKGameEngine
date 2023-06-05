@@ -1,41 +1,41 @@
 #pragma once
 
-#include "IDKdecl.h"
+#include "../IDKdecl.h"
 
 
 template <typename T>
-class IDK::ptr_Allocator
+class idk::ptr_Allocator
 {
 private:
-    IDK::vector<bool> _occupied;
-    IDK::vector<int>  _unnocupied_indices;
-    IDK::vector<T *> _objects;
+    idk::vector<bool>               _occupied;
+    idk::vector<int>                _unnocupied_indices;
+    idk::vector<T *>                _objects;
 
 public:
-    ptr_Allocator() {  };
-    ~ptr_Allocator();
+                                    ptr_Allocator() {  };
+                                    ~ptr_Allocator();
 
     template <typename U>
-    int add();
-    int add();
+    int                             add();
+    int                             add();
 
     template <typename U>
-    U *get(int id);
-    T *get(int id);
+    U *                             get(int id);
+    T *                             get(int id);
 
-    void remove(int id);
+    void                            remove(int id);
 
     template <typename lambda_t>
-    void forEach(lambda_t fn);
+    void                            forEach(lambda_t fn);
 
 };
 
 
 template <typename T>
-IDK::ptr_Allocator<T>::~ptr_Allocator()
+idk::ptr_Allocator<T>::~ptr_Allocator()
 {
     forEach(
-        [](IDK::GameObject::Base *obj)
+        [](idk::GameObject::Base *obj)
         {
             delete obj;
         }
@@ -45,7 +45,8 @@ IDK::ptr_Allocator<T>::~ptr_Allocator()
 
 template <typename T>
 template <typename U>
-int IDK::ptr_Allocator<T>::add()
+int
+idk::ptr_Allocator<T>::add()
 {
     if (_unnocupied_indices.size() > 0)
     {
@@ -65,7 +66,8 @@ int IDK::ptr_Allocator<T>::add()
 
 
 template <typename T>
-int IDK::ptr_Allocator<T>::add()
+int
+idk::ptr_Allocator<T>::add()
 {
     if (_unnocupied_indices.size() > 0)
     {
@@ -85,7 +87,8 @@ int IDK::ptr_Allocator<T>::add()
 
 
 template <typename T>
-void IDK::ptr_Allocator<T>::remove(int id)
+void
+idk::ptr_Allocator<T>::remove(int id)
 {
     delete _objects[id];
     _occupied[id] = false;
@@ -95,14 +98,16 @@ void IDK::ptr_Allocator<T>::remove(int id)
 
 template <typename T>
 template <typename U>
-U *IDK::ptr_Allocator<T>::get(int id)
+U *
+idk::ptr_Allocator<T>::get(int id)
 {
     return (U *)_objects[id];
 };
 
 
 template <typename T>
-T *IDK::ptr_Allocator<T>::get(int id)
+T *
+idk::ptr_Allocator<T>::get(int id)
 {
     return _objects[id];
 };
@@ -110,7 +115,8 @@ T *IDK::ptr_Allocator<T>::get(int id)
 
 template <typename T>
 template <typename lambda_t>
-void IDK::ptr_Allocator<T>::forEach(lambda_t fn)
+void
+idk::ptr_Allocator<T>::forEach(lambda_t fn)
 {
     for (size_t i=0; i<_objects.size(); i++)
         if (_occupied[i])

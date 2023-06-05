@@ -11,32 +11,21 @@
 
 int ENTRY(int argc, const char **argv)
 {
-    IDK::Engine idk;
+    idk::Engine engine;
 
-    std::string shaderpath = "assets/shaders/";
+    int shader_id = engine.rengine().compileShaderProgram("assets/shaders/", "screenquad.vs", "mouse.fs");
+    int model_id  = engine.rengine().loadOBJ("assets/models/", "cube.obj", "cube.mtl");
+    int transform_id = engine.rengine().createTransform();
 
-    IDK::Shader shader1("assets/shaders/", "screenquad.vs", "screenquad.fs");
-    IDK::Model model1("assets/", "cube.obj", "cube.mtl");
-    IDK::transform transform;
-
-
-    IDK::BST<int, int> bst;
-
-    for (int i=0; i<10; i++)
+    while (engine.running())
     {
-        bst.insert(rand()%100, i);
-    }
+        engine.beginFrame();
 
-    bst.print();
-
-
-    while (idk.running())
-    {
-        idk.beginFrame();
+        engine.rengine().useShaderProgram(shader_id);
+        engine.rengine().drawModel(model_id, transform_id);
 
 
-
-        idk.endFrame();
+        engine.endFrame();
     }
 
     return 0;
