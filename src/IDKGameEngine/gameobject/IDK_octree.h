@@ -8,7 +8,7 @@ private:
                 struct Node;
     Node *      _root;
     void        _insert(Node* &node, int id);
-    int         _relative_octant(const idk::vec4 &a, const idk::vec4 &b);
+    int         _relative_octant(const glm::vec4 &a, const glm::vec4 &b);
 
 public:
                 octree(): _root(nullptr) {  };

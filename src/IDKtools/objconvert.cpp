@@ -4,9 +4,9 @@
 #include <iostream>
 #include "IDKtools.h"
 
-idk::vector<idk::vec3> positions;
-idk::vector<idk::vec3> normals;
-idk::vector<idk::vec2> uvs;
+idk::vector<glm::vec3> positions;
+idk::vector<glm::vec3> normals;
+idk::vector<glm::vec2> uvs;
 
 void IDKtools::objconvert(
     std::string root, std::string obj,
@@ -27,21 +27,21 @@ void IDKtools::objconvert(
         {
             float x, y, z;
             iss >> dummy >> x >> y >> z;
-            positions.push(idk::vec3(x, y, z));
+            positions.push(glm::vec3(x, y, z));
         }
 
         else if (line.find("vn ") != std::string::npos)
         {
             float x, y, z;
             iss >> dummy >> x >> y >> z;
-            normals.push(idk::vec3(x, y, z));
+            normals.push(glm::vec3(x, y, z));
         }
 
         else if (line.find("vt ") != std::string::npos)
         {
             float u, v;
             iss >> dummy >> u >> v;
-            uvs.push(idk::vec2(u, v)); 
+            uvs.push(glm::vec2(u, v)); 
         }
     }
 

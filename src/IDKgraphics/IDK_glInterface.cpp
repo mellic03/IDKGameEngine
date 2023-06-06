@@ -156,6 +156,52 @@ idk::glInterface::loadTexture(std::string filepath)
 }
 
 
+void
+idk::glInterface::genScreenBuffer(GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures)
+{
+    size_t temp_w = 1000, temp_h = 1000;
+
+    glDeleteFramebuffers(1, &FBO);
+    glDeleteRenderbuffers(1, &RBO);
+    glDeleteTextures(textures.size(), &textures[0]);
+
+    glGenFramebuffers(1, &FBO);
+    glGenRenderbuffers(1, &RBO);
+    glGenTextures(textures.size(), &textures[0]);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+    for (size_t i=0; i<textures.size(); i++)
+    {
+        glBindTexture(GL_TEXTURE_2D, textures[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, temp_w, temp_h, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, textures[i], 0);  
+    }
+
+    idk::vector<GLuint> attachments(textures.size());
+    for (size_t i=0; i<textures.size(); i++)
+        attachments[i] = GL_COLOR_ATTACHMENT0 + i;
+    glDrawBuffers(textures.size(), &attachments[0]);
+     
+    glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, temp_w, temp_h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void
+idk::glInterface::genScreenBuffer(idk::glInterface::ScreenBuffer &screenbuffer)
+{
+    genScreenBuffer(screenbuffer.FBO, screenbuffer.RBO, screenbuffer.textures);
+}
+
+
+
 GLuint
 idk::glInterface::pop_glTextureUnitID()
 {
@@ -182,9 +228,93 @@ idk::glInterface::bindShaderProgram(GLuint shader_id)
 
 
 void
+idk::glInterface::bind_framebuffer(GLuint framebuffer_id)
+{
+    int width = 1000, height = 1000;
+
+    glViewport(0, 0, width, height);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+
+void
+idk::glInterface::draw_model(idk::Model &model, idk::transform &transform)
+{
+    glm::mat4 mat = transform.modelMatrix();
+    setmat4("model", mat);
+
+    for (size_t i=0; i<model.meshes.size(); i++)
+    {
+        idk::Mesh &mesh = model.meshes[i];        
+
+        GLCALL( glBindVertexArray(mesh.VAO); )
+
+        // bind diffuse
+        // bind specular
+        // bind normal
+
+        GLCALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.IBOS[i]); )
+        GLCALL( glDrawElements(
+            GL_TRIANGLES,
+            mesh.vertex_indices.size(),
+            GL_UNSIGNED_INT,
+            (void *)0
+        ); )
+    }
+}
+
+
+void
+idk::glInterface::draw_model(idk::Model &model, idk::transform &transform, idk::glShader &gl_shader)
+{
+    glm::mat4 mat = transform.modelMatrix();
+    setmat4("model", mat);
+
+    for (auto &[name, value]: gl_shader.getUniforms_int())
+        setint(name.c_str(), value);
+    for (auto &[name, value]: gl_shader.getUniforms_float())
+        setfloat(name.c_str(), value);
+    for (auto &[name, value]: gl_shader.getUniforms_vec2())
+        setvec2(name.c_str(), value);
+    for (auto &[name, value]: gl_shader.getUniforms_vec3())
+        setvec3(name.c_str(), value);
+    for (auto &[name, value]: gl_shader.getUniforms_vec4())
+        setvec4(name.c_str(), value);
+    for (auto &[name, value]: gl_shader.getUniforms_mat3())
+        setmat3(name.c_str(), value);
+    for (auto &[name, value]: gl_shader.getUniforms_mat4())
+        setmat4(name.c_str(), value);
+
+
+    for (size_t i=0; i<model.meshes.size(); i++)
+    {
+        idk::Mesh &mesh = model.meshes[i];
+
+        GLCALL( glBindVertexArray(mesh.VAO); )
+
+        // bind diffuse
+        // bind specular
+        // bind normal
+
+        GLCALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.IBOS[i]); )
+        GLCALL( glDrawElements(
+            GL_TRIANGLES,
+            mesh.vertex_indices.size(),
+            GL_UNSIGNED_INT,
+            (void *)0
+        ); )
+    }
+
+    gl_shader.clear();
+}
+
+
+
+void
 idk::glInterface::setint(const char *name, int i)
 {
-    GLuint loc = glGetUniformLocation(_active_shader_id, name);
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
         glUniform1i(loc, i);
@@ -201,46 +331,94 @@ idk::glInterface::setfloat(const char *name, float f)
 }
 
 void
-idk::glInterface::setvec2(const char *name, idk::vec2 &v)
+idk::glInterface::setvec2(const char *name, glm::vec2 &v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
-        glUniform2fv(loc, 1, idk::value_ptr(v));
+        glUniform2fv(loc, 1, glm::value_ptr(v));
     )
 }
 
 void
-idk::glInterface::setvec3(const char *name, idk::vec3 &v)
+idk::glInterface::setvec3(const char *name, glm::vec3 &v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
-        glUniform3fv(loc, 1, idk::value_ptr(v));
+        glUniform3fv(loc, 1, glm::value_ptr(v));
     )
 }
 
 void
-idk::glInterface::setvec4(const char *name, idk::vec4 &v)
+idk::glInterface::setvec4(const char *name, glm::vec4 &v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
-        glUniform4fv(loc, 1, idk::value_ptr(v));
+        glUniform4fv(loc, 1, glm::value_ptr(v));
     )
 }
 
 void
-idk::glInterface::setmat3(const char *name, idk::mat3 &m)
+idk::glInterface::setmat3(const char *name, glm::mat3 &m)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
-        glUniformMatrix3fv(loc, 1, GL_FALSE, idk::value_ptr(m));
+        glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(m));
     )
 }
 
 void
-idk::glInterface::setmat4(const char *name, idk::mat4 &m)
+idk::glInterface::setmat4(const char *name, glm::mat4 &m)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
-        glUniformMatrix4fv(loc, 1, GL_FALSE, idk::value_ptr(m));
+        glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m));
+    )
+}
+
+
+
+
+void
+idk::glInterface::setvec2(const char *name, float *v)
+{
+    GLCALL(
+        GLuint loc = glGetUniformLocation(_active_shader_id, name);
+        glUniform2fv(loc, 1, v);
+    )
+}
+
+void
+idk::glInterface::setvec3(const char *name, float *v)
+{
+    GLCALL(
+        GLuint loc = glGetUniformLocation(_active_shader_id, name);
+        glUniform3fv(loc, 1, v);
+    )
+}
+
+void
+idk::glInterface::setvec4(const char *name, float *v)
+{
+    GLCALL(
+        GLuint loc = glGetUniformLocation(_active_shader_id, name);
+        glUniform4fv(loc, 1, v);
+    )
+}
+
+void
+idk::glInterface::setmat3(const char *name, float *m)
+{
+    GLCALL(
+        GLuint loc = glGetUniformLocation(_active_shader_id, name);
+        glUniformMatrix3fv(loc, 1, GL_FALSE, m);
+    )
+}
+
+void
+idk::glInterface::setmat4(const char *name, float *m)
+{
+    GLCALL(
+        GLuint loc = glGetUniformLocation(_active_shader_id, name);
+        glUniformMatrix4fv(loc, 1, GL_FALSE, m);
     )
 }

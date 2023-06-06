@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../IDKgraphics/IDKgraphics.h"
+#include "IDKGameEngine_common/IDKGameEngine_common.h"
 #include "gameobject/IDKGameObject.h"
 
 
@@ -10,12 +11,13 @@ private:
     idk::RenderEngine                           _render_engine;
     
     SDL_Event                                   _SDL_event;
-    
+
     idk::Keylog                                 _keylog;
-    idk::vec2                                   _delta_mouse_position;
-    idk::vec2                                   _mouse_position;
+    glm::vec2                                   _delta_mouse_position;
+    glm::vec2                                   _mouse_position;
 
     ptr_Allocator<GameObject::Base>             _gameobject_allocator;
+    idk::vector<idk::Module *>                  _idk_modules;
 
     void                                        _process_key_input();
     void                                        _process_mouse_input();
@@ -30,12 +32,15 @@ public:
     void                                        beginFrame();
     void                                        endFrame();
 
-    idk::vec2                                   mouse()         { return _mouse_position; };
-    idk::vec2                                   dMouse()        { return _delta_mouse_position; };
+    glm::vec2                                   mouse()         { return _mouse_position; };
+    glm::vec2                                   dMouse()        { return _delta_mouse_position; };
 
     template <typename gameobject_t>
     gameobject_t *                              createGameObject();
     void                                        deleteGameObject(int id);
+
+    template <typename idk_module_t>
+    void                                        registerModule() { _idk_modules.push(new idk_module_t()); };
 };
 
 

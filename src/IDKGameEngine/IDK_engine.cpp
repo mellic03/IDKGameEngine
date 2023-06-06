@@ -59,6 +59,11 @@ idk::Engine::beginFrame()
     _process_mouse_input();
 
     _render_engine.beginFrame();
+
+    for (idk::Module *module: _idk_modules)
+    {
+        module->beginFrame(*this);
+    }
 }
 
 
@@ -66,6 +71,11 @@ void
 idk::Engine::endFrame()
 {
 
+    for (idk::Module *module: _idk_modules)
+    {
+        module->endFrame(*this);
+    }
+    
     _render_engine.endFrame();
 }
 

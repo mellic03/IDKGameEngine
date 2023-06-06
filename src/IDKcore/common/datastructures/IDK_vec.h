@@ -8,7 +8,7 @@ class idk::vec_t { };
 
 
 template <typename T, int size>
-T *idk::value_ptr(idk::vec_t<T, size> &v)
+T *idk::raw_ptr(idk::vec_t<T, size> &v)
 {
     return &v.x;
 }
@@ -64,5 +64,7 @@ public:
         this->x = x;  this->y = y;  this->z = z;  this->w = w;
     };
     vec_t(T f): vec_t(f, f, f, f) {  };
+    vec_t(vec_t<T, 3> &v, T w): vec_t(v.x, v.y, v.z, w) {  };
     vec_t() {  };
 };
+

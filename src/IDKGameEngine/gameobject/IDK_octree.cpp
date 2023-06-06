@@ -4,7 +4,7 @@
 
 /** Return the octant of a relative to b (0 - 7) */
 int
-idk::octree::_relative_octant(const idk::vec4 &a, const idk::vec4 &b)
+idk::octree::_relative_octant(const glm::vec4 &a, const glm::vec4 &b)
 {
     bool xn = a.x < b.x;
     bool yn = a.y < b.y;
@@ -28,6 +28,7 @@ idk::octree::_relative_octant(const idk::vec4 &a, const idk::vec4 &b)
     for (int i=0; i<8; i++)
         if (octants[i])
             return i;
+    return 0;
 }
 
 

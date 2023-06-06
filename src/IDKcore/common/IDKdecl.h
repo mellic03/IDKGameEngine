@@ -23,33 +23,34 @@ namespace idk
     template <typename T> class linkedlist;
     template <typename key_t> class skiplist;
 
-    template <typename T, int size> class vec_t;
-    typedef vec_t<float, 2> vec2;
-    typedef vec_t<float, 3> vec3;
-    typedef vec_t<float, 4> vec4;
+    // template <typename T, int size> class vec_t;
+    // typedef vec_t<float, 2> vec2;
+    // typedef vec_t<float, 3> vec3;
+    // typedef vec_t<float, 4> vec4;
 
-    typedef vec_t<int, 2> ivec2;
-    typedef vec_t<int, 3> ivec3;
-    typedef vec_t<int, 4> ivec4;
+    // typedef vec_t<int, 2> ivec2;
+    // typedef vec_t<int, 3> ivec3;
+    // typedef vec_t<int, 4> ivec4;
 
-    template <int size> class mat_t;
-    typedef mat_t<3> mat3;
-    typedef mat_t<4> mat4;
+    // template <int size> class mat_t;
+    // typedef mat_t<3> mat3;
+    // typedef mat_t<4> mat4;
 
-    template <typename T, int size>
-    T *value_ptr(idk::vec_t<T, size> &);
+    // template <typename T, int size>
+    // T *raw_ptr(idk::vec_t<T, size> &);
     
-    template <int size>
-    float *value_ptr(idk::mat_t<size> &);
+    // template <int size>
+    // float *raw_ptr(idk::mat_t<size> &);
 
     class graph;
-    class transform;
     // --------------------------------------------------
 
 
     // Graphics-level -----------------------------------
+    class transform;
     struct vertex;
     class glInterface;
+    class glShader;
     class Mesh;
     class Material;
     class Model;
@@ -69,8 +70,8 @@ namespace idk
     class Keylog;
     class Navmap;
     class Engine;
+    class Module;
     // --------------------------------------------------
-
 
 
     // Utility functions --------------------------------

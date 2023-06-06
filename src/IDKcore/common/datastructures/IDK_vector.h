@@ -38,8 +38,8 @@ public:
     iterator            begin() { return iterator(_data);         };
     iterator            end()   { return iterator(_data + _size); };
  
-                        vector &operator = (const vector &other);
-                        vector &operator = (vector &&other) noexcept;
+    vector &            operator = (const vector &other);
+    vector &            operator = (vector &&other) noexcept;
     T &                 operator [] (size_t i) { return _data[i]; };
 };
 
