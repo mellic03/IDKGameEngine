@@ -7,28 +7,34 @@ class idk::Allocator
 {
 private:
     idk::vector<bool>               _occupied;
-    idk::vector<int>                _unnocupied_indices;
+    idk::vector<uint>               _unnocupied;
     idk::vector<T>                  _objects;
 
 public:
-                                    Allocator() {  };
+                                    Allocator();
 
-    int                             add();
-    int                             add(T);
-    T &                             get(int id);
-    void                            remove(int id);
+    uint                            add();
+    uint                            add(T);
+    T &                             get(uint id);
+    void                            remove(uint id);
 
     template <typename lambda_t>
     void                            forEach(lambda_t fn);
 
 };
 
+template <typename T>
+idk::Allocator<T>::Allocator(): _occupied(1), _unnocupied(1), _objects(1)
+{
+
+}
+
 
 template <typename T>
-int
+uint
 idk::Allocator<T>::add()
 {
-    if (_unnocupied_indices.empty())
+    if (_unnocupied.empty())
     {
         _occupied.push(true);
         _objects.push(T());
@@ -37,7 +43,7 @@ idk::Allocator<T>::add()
 
     else
     {
-        int id = _unnocupied_indices.pop();
+        uint id = _unnocupied.pop();
         _objects[id] = T();
         _occupied[id] = true;
         return id;
@@ -46,10 +52,10 @@ idk::Allocator<T>::add()
 
 
 template <typename T>
-int
+uint
 idk::Allocator<T>::add(T data)
 {
-    if (_unnocupied_indices.empty())
+    if (_unnocupied.empty())
     {
         _occupied.push(true);
         _objects.push(data);
@@ -58,7 +64,7 @@ idk::Allocator<T>::add(T data)
 
     else
     {
-        int id = _unnocupied_indices.pop();
+        uint id = _unnocupied.pop();
         _objects[id] = data;
         _occupied[id] = true;
         return id;
@@ -68,7 +74,7 @@ idk::Allocator<T>::add(T data)
 
 template <typename T>
 T &
-idk::Allocator<T>::get(int id)
+idk::Allocator<T>::get(uint id)
 {
     return _objects[id];
 };
@@ -76,10 +82,10 @@ idk::Allocator<T>::get(int id)
 
 template <typename T>
 void
-idk::Allocator<T>::remove(int id)
+idk::Allocator<T>::remove(uint id)
 {
     _occupied[id] = false;
-    _unnocupied_indices.push(id);
+    _unnocupied.push(id);
 };
 
 

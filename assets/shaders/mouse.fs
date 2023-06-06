@@ -12,5 +12,5 @@ void main()
     vec2 mousepos = mouse / 1000.0;
     float dist = sqrt(SQ(screenpos.x - mousepos.x) + SQ(screenpos.y - mousepos.y));
 
-    FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    FragColor = vec4(dist, 0.0, 0.0, 1.0);
 }

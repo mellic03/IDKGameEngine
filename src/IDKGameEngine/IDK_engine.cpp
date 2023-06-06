@@ -1,4 +1,4 @@
-#include "IDKengine.h"
+#include "IDK_engine.h"
 
 
 idk::Engine::Engine(size_t w, size_t h): _render_engine(w, h)
@@ -25,8 +25,8 @@ idk::Engine::_process_mouse_input()
     
         if (_SDL_event.type == SDL_MOUSEMOTION)
         {
-            _delta_mouse.x = _SDL_event.motion.xrel;
-            _delta_mouse.y = _SDL_event.motion.yrel;
+            _delta_mouse_position.x = _SDL_event.motion.xrel;
+            _delta_mouse_position.y = _SDL_event.motion.yrel;
         }
     }
 
@@ -40,29 +40,8 @@ idk::Engine::_process_mouse_input()
 
     int x, y;
     SDL_GetMouseState(&x, &y);
-    _mouse.x = float(x);
-    _mouse.y = float(y);
-}
-
-
-bool
-idk::Engine::running()
-{
-    return true;
-}
-
-
-idk::vec2
-idk::Engine::mouse()
-{
-    return _mouse;
-}
-
-
-idk::vec2
-idk::Engine::dMouse()
-{
-    return _delta_mouse;
+    _mouse_position.x = float(x);
+    _mouse_position.y = float(y);
 }
 
 

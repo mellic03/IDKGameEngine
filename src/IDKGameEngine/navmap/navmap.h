@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../IDKcore/IDKcore.h"
+#include "../../IDKcore/IDKcore.h"
 
 
 class idk::Navmap

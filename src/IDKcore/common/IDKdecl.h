@@ -12,12 +12,13 @@ namespace idk
     template <typename T> class ptr_Allocator;
 
     template <typename T, typename U> struct pair;
+    template <typename T, typename U, typename V> struct triple;
+
     template <typename T> class stack;
     template <typename T> class vector;
     template <typename T> class heap;
     template <typename key_t, typename data_t> class BST;
     template <typename T> class quadtree;
-    template <typename T> class octree;
     template <typename T> class trie;
     template <typename T> class linkedlist;
     template <typename key_t> class skiplist;
@@ -48,8 +49,7 @@ namespace idk
 
     // Graphics-level -----------------------------------
     struct vertex;
-    class Shader;
-    class ShaderInterface;
+    class glInterface;
     class Mesh;
     class Material;
     class Model;
@@ -63,7 +63,9 @@ namespace idk
     {
         class Base;
         class Renderable;
+        class Physical;
     }
+    class octree;
     class Keylog;
     class Navmap;
     class Engine;
@@ -72,7 +74,9 @@ namespace idk
 
 
     // Utility functions --------------------------------
-    template<typename T>  void swap(T &a, T &b);
+    template<typename T>        void        swap(T &a, T &b);
+    template<typename T>        T &         min(T &a, T &b);
+    template<typename T>        T &         max(T &a, T &b);
     // --------------------------------------------------
 
 };
@@ -87,5 +91,17 @@ idk::swap(T &a, T &b)
     b = temp;
 }
 
+template<typename T>
+T &
+idk::min(T &a, T &b)
+{
+    return (a < b) ? a : b;
+}
 
+template<typename T>
+T &
+idk::max(T &a, T &b)
+{
+    return (a > b) ? a : b;
+}
 

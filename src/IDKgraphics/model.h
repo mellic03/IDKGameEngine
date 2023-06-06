@@ -8,10 +8,10 @@
 
 struct idk::vertex
 {
-    idk::vec3 position  = idk::vec3(0.0f);
-    idk::vec3 normal    = idk::vec3(0.0f);
+    idk::vec4 position  = idk::vec4(0.0f);
+    idk::vec4 normal    = idk::vec4(0.0f);
+    idk::vec4 tangent   = idk::vec4(0.0f);
     idk::vec2 texcoords = idk::vec2(0.0f);
-    idk::vec3 tangent   = idk::vec3(0.0f);
 };
 
 
@@ -44,8 +44,8 @@ class idk::Model
 private:
     idk::vector<idk::vertex> _vertices;
 
-    void _load_obj(std::string &path);
-    void _load_mtl(std::string &path);
+    void _load_obj(std::string path);
+    void _load_mtl(std::string path);
 
 public:
     Model() {  };
