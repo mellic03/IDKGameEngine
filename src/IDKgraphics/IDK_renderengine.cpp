@@ -60,14 +60,17 @@ idk::RenderEngine::_init_screenquad()
 
 
 idk::RenderEngine::RenderEngine(size_t w, size_t h):
-_gbuffer_geometrypass(4)
+_gbuffer_geometrypass(4), _screenquad_buffer(1)
 {
     _init_SDL_OpenGL(w, h);
     _init_screenquad();
 
     _gl_interface.genScreenBuffer(_gbuffer_geometrypass);
-    _screenquad_shader = compileShaderProgram("assets/shaders/", "screenquad.vs", "mouse.fs");
+    _gbuffer_geometrypass_shader = compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
 
+    _gl_interface.genScreenBuffer(_screenquad_buffer);
+    _screenquad_shader = compileShaderProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
+    _screenquad_shader2 = compileShaderProgram("assets/shaders/", "mouse.vs", "mouse.fs");
 }
 
 
@@ -83,7 +86,7 @@ idk::RenderEngine::compileShaderProgram(std::string root, std::string vs, std::s
 void
 idk::RenderEngine::drawModel(uint model_id, uint transform_id)
 {
-    _model_draw_queue[_active_shader_id].push({model_id, transform_id, _active_glShader_id});
+    _model_draw_queue[_active_shader_id].push({model_id, transform_id});
 }
 
 
@@ -108,33 +111,35 @@ idk::RenderEngine::beginFrame()
 void
 idk::RenderEngine::endFrame()
 {
-    GLuint geometrypass_framebuffer = 0;
-    // _gl_interface.bind_framebuffer(geometrypass_framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
-        _gl_interface.bindShaderProgram(shader_id);
-        for (auto [model_id, transform_id, glShader_id]: vec)
+        for (auto [model_id, transform_id]: vec)
         {
             _gl_interface.draw_model(
                 _model_allocator.get(model_id),
-                _transform_allocator.get(transform_id),
-                _glShader_allocator[glShader_id]
+                _transform_allocator.get(transform_id)
             );
         }
-        vec.clear();
     }
 
-    // Draw final texture to the screen quad
-    _gl_interface.free_glTextureUnitIDs();
     // _gl_interface.bindShaderProgram(_screenquad_shader);
 
-    GLCALL( glDisable(GL_DEPTH_TEST); )
-    GLCALL( glDisable(GL_CULL_FACE); )
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, _gbuffer_geometrypass.textures[0]);
+    // _gl_interface.setint("un_screen_texture", 0);
 
-    GLCALL( glBindVertexArray(_quad_VAO); )
-    GLCALL( glDrawArrays(GL_TRIANGLES, 0, 6); )
-    GLCALL( glBindVertexArray(0); )
+    // GLCALL( glDisable(GL_DEPTH_TEST); )
+    // GLCALL( glDisable(GL_CULL_FACE); )
+
+    // GLCALL( glBindVertexArray(_quad_VAO); )
+    // GLCALL( glDrawArrays(GL_TRIANGLES, 0, 6); )
+    // GLCALL( glBindVertexArray(0); )
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
     SDL_GL_SwapWindow(_SDL_window);
 }

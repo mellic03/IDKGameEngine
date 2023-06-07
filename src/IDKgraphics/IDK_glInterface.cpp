@@ -228,12 +228,12 @@ idk::glInterface::bindShaderProgram(GLuint shader_id)
 
 
 void
-idk::glInterface::bind_framebuffer(GLuint framebuffer_id)
+idk::glInterface::bindScreenbuffer(idk::glInterface::ScreenBuffer &screen_buffer)
 {
     int width = 1000, height = 1000;
 
     glViewport(0, 0, width, height);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id);
+    glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.FBO);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
@@ -263,51 +263,6 @@ idk::glInterface::draw_model(idk::Model &model, idk::transform &transform)
             (void *)0
         ); )
     }
-}
-
-
-void
-idk::glInterface::draw_model(idk::Model &model, idk::transform &transform, idk::glShader &gl_shader)
-{
-    glm::mat4 mat = transform.modelMatrix();
-    setmat4("model", mat);
-
-    for (auto &[name, value]: gl_shader.getUniforms_int())
-        setint(name.c_str(), value);
-    for (auto &[name, value]: gl_shader.getUniforms_float())
-        setfloat(name.c_str(), value);
-    for (auto &[name, value]: gl_shader.getUniforms_vec2())
-        setvec2(name.c_str(), value);
-    for (auto &[name, value]: gl_shader.getUniforms_vec3())
-        setvec3(name.c_str(), value);
-    for (auto &[name, value]: gl_shader.getUniforms_vec4())
-        setvec4(name.c_str(), value);
-    for (auto &[name, value]: gl_shader.getUniforms_mat3())
-        setmat3(name.c_str(), value);
-    for (auto &[name, value]: gl_shader.getUniforms_mat4())
-        setmat4(name.c_str(), value);
-
-
-    for (size_t i=0; i<model.meshes.size(); i++)
-    {
-        idk::Mesh &mesh = model.meshes[i];
-
-        GLCALL( glBindVertexArray(mesh.VAO); )
-
-        // bind diffuse
-        // bind specular
-        // bind normal
-
-        GLCALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.IBOS[i]); )
-        GLCALL( glDrawElements(
-            GL_TRIANGLES,
-            mesh.vertex_indices.size(),
-            GL_UNSIGNED_INT,
-            (void *)0
-        ); )
-    }
-
-    gl_shader.clear();
 }
 
 
@@ -379,7 +334,7 @@ idk::glInterface::setmat4(const char *name, glm::mat4 &m)
 
 
 void
-idk::glInterface::setvec2(const char *name, float *v)
+idk::glInterface::setvec2(const char *name, const float *v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);

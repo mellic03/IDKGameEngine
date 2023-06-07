@@ -18,6 +18,7 @@ public:
                 ~stack() { delete[] _data; };
 
     void        push(const T &data);
+    T &         top()               { return _data[_size];   };
     T           pop()               { return _data[--_size]; };
     size_t      size() const        { return _size;          };
     bool        empty()             { return _size == 0;     };

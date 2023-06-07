@@ -16,6 +16,7 @@ namespace idk
 
     template <typename T> class stack;
     template <typename T> class vector;
+    template <typename T> class queue;
     template <typename T> class heap;
     template <typename key_t, typename data_t> class BST;
     template <typename T> class quadtree;

@@ -11,7 +11,7 @@ private:
     glm::vec3 _scale;
 
 public:
-                        transform(): _scale(1.0f) {  };
+                        transform();
     
     void                translate(glm::vec3);
     void                scale(glm::vec3);

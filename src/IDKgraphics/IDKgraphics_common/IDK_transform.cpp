@@ -3,6 +3,13 @@
 #include <iostream>
 
 
+idk::transform::transform():
+_position(0.0f), _velocity(0.0f), _scale(1.0f)
+{
+
+}
+
+
 void
 idk::transform::translate(glm::vec3 t)
 {

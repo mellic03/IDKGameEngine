@@ -1,9 +1,10 @@
-#version 330 core
+#version 440 core
 
 #define SQ(a) ((a)*(a))
 
 out vec4 FragColor;
 uniform vec2 mouse;
+uniform float val;
 
 void main()
 {
@@ -11,5 +12,5 @@ void main()
     vec2 mousepos = vec2(mouse.x, 1000.0 - mouse.y) / 1000.0;
     float dist = sqrt(SQ(screenpos.x - mousepos.x) + SQ(screenpos.y - mousepos.y));
 
-    FragColor = vec4(0.0, dist, 0.0, 1.0);
+    FragColor = vec4(val, dist, 0.0, 1.0);
 }

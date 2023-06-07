@@ -9,6 +9,10 @@
 class idk::glInterface
 {
 private:
+                            enum class shaderQ_instruction { change_program, set_uniform, draw_model };
+                            struct shaderQ_element { shaderQ_instruction instruction; void *data; };
+    idk::queue<shaderQ_element>     _instruction_queue;
+
     GLuint                  _active_shader_id;
     idk::stack<GLuint>      _available_glTextureUnits;
     idk::stack<GLuint>      _unavailable_glTextureUnits;
@@ -25,6 +29,7 @@ public:
 
     void                    genScreenBuffer(GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures);
     void                    genScreenBuffer(glInterface::ScreenBuffer &screenbuffer);
+    void                    bindScreenbuffer(idk::glInterface::ScreenBuffer &screen_buffer);
     
     GLuint                  compileShaderProgram(std::string root, std::string vs, std::string fs);
     void                    bindShaderProgram(GLuint shader_id);
@@ -35,9 +40,7 @@ public:
     void                    free_glTextureUnitIDs();
 
                             /** All subsequent draw calls will be drawn to this framebuffer */
-    void                    bind_framebuffer(GLuint framebuffer_id);
     void                    draw_model(idk::Model &, idk::transform &);
-    void                    draw_model(idk::Model &, idk::transform &, idk::glShader &);
 
     void                    setint(const char *, int);
     void                    setfloat(const char *, float);
@@ -47,8 +50,7 @@ public:
     void                    setmat3(const char *, glm::mat3 &);
     void                    setmat4(const char *, glm::mat4 &);
 
-
-    void                    setvec2(const char *, float *);
+    void                    setvec2(const char *, const float *);
     void                    setvec3(const char *, float *);
     void                    setvec4(const char *, float *);
     void                    setmat3(const char *, float *);

@@ -9,7 +9,7 @@
 #include "model.h"
 
 
-#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<uint, uint, uint>>>
+#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::pair<uint, uint>>>
 
 
 class idk::RenderEngine
@@ -39,9 +39,11 @@ private:
     };
 
     idk::glInterface::ScreenBuffer      _gbuffer_geometrypass;
+    GLuint                              _gbuffer_geometrypass_shader;
 
-
+    idk::glInterface::ScreenBuffer      _screenquad_buffer;
     GLuint                              _screenquad_shader;
+    GLuint                              _screenquad_shader2;
 
     uint                                            _active_glShader_id;
     std::unordered_map<GLuint, idk::glShader>       _glShader_allocator;
@@ -52,7 +54,7 @@ private:
     idk::Allocator<idk::transform>      _transform_allocator;
     idk::Allocator<idk::Camera>         _camera_allocator;
 
-                                        // queue[shader_id] = vector<{model_id, transform_id, glShader}>;
+                                        // queue[shader_id] = vector<{model_id, transform_id}>;
     modelqueue_t                        _model_draw_queue;
 
 
