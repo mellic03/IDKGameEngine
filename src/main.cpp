@@ -21,30 +21,42 @@ struct shader_element
 };
 
 
+class Actor: public idk::GameObject::Renderable, public idk::GameObject::Physical
+{
+private:
+
+public:
+    Actor() {  };
+};
+
 
 
 int ENTRY(int argc, const char **argv)
 {
     idk::Engine engine;
+    idk::RenderEngine &ren = engine.rengine();
+    idk::glInterface &gl = ren.glInterface();
 
-    GLuint mouse_shader = engine.rengine().compileShaderProgram("assets/shaders/", "mouse.vs", "mouse.fs");
-    uint model_id  = engine.rengine().loadOBJ("assets/models/cube/", "cube.obj", "cube.mtl");
-    uint transform_id = engine.rengine().createTransform();
+    GLuint mouse_shader = gl.compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
+    uint model_id  = ren.loadOBJ("assets/models/cube/", "cube.obj", "cube.mtl");
+    
+    idk::transform &transform = ren.getTransform(ren.createTransform());
+    transform.translate(glm::vec3(0.0f, 0.0f, 2.50f));
 
-    float val = 0.0f;
+    // idk::transform &transform2 = ren.getTransform(ren.createTransform());
+    // transform2.translate(glm::vec3(5.0f, 0.0f, 2.50f));
+
+
+    ren.setActiveCamera(ren.createCamera());
+    idk::Camera &camera = ren.getActiveCamera();
 
     while (engine.running())
     {
         engine.beginFrame();
 
-        engine.rengine().glInterface().bindShaderProgram(mouse_shader);
-        engine.rengine().glInterface().setfloat("val", val);
-        engine.rengine().glInterface().setvec2("mouse", glm::value_ptr(engine.mouse()));
-        engine.rengine().drawModel(model_id, transform_id);
-
-        engine.rengine().getTransform(transform_id).scale(glm::vec3(0.999f, 0.999f, 0.0f));
-
-        val += 0.001f;
+        ren.bindShader(mouse_shader);
+        ren.bindModel(model_id, transform);
+        ren.setvec2("mouse", engine.mouse());
 
         engine.endFrame();
     }

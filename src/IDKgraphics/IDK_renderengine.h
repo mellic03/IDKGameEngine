@@ -3,13 +3,13 @@
 #include <unordered_map>
 
 #include "IDKgraphics_common/IDKgraphics_common.h"
-#include "IDK_glShader.h"
+#include "IDK_glUniforms.h"
 #include "IDK_glInterface.h"
 #include "IDK_camera.h"
 #include "model.h"
 
 
-#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::pair<uint, uint>>>
+#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<uint, idk::transform, idk::glUniforms>>>
 
 
 class idk::RenderEngine
@@ -20,8 +20,9 @@ private:
 
     idk::glInterface                            _gl_interface;
 
-    GLuint                                      _active_shader_id;
-    int                                         _active_camera_id;
+    uint                                        _active_camera_id;
+    uint                                        _active_shader_id;
+    idk::glUniforms *                           _active_glUniforms;
 
     GLuint                                      _quad_FBO;
     GLuint                                      _quad_VBO;
@@ -45,9 +46,6 @@ private:
     GLuint                              _screenquad_shader;
     GLuint                              _screenquad_shader2;
 
-    uint                                            _active_glShader_id;
-    std::unordered_map<GLuint, idk::glShader>       _glShader_allocator;
-
     idk::Allocator<GLuint>              _texture_allocator;
     idk::Allocator<idk::Material>       _material_allocator;
     idk::Allocator<idk::Model>          _model_allocator;
@@ -62,7 +60,7 @@ private:
                                         RenderEngine(size_t w, size_t h);
     void                                _init_SDL_OpenGL(size_t w, size_t h);
     void                                _init_screenquad();
-
+    void                                _render_screenquad();
 
 public:
     idk::glInterface &                  glInterface()               { return _gl_interface;              };
@@ -70,16 +68,19 @@ public:
     idk::transform &                    getTransform(uint id)       { return _transform_allocator.get(id); };
 
     uint                                createCamera()              { return _camera_allocator.add();    };
-    void                                deleteCamera(int id)        { _camera_allocator.remove(id);      };
-    void                                useCamera(int id)           { _active_camera_id = id;            };
-    idk::Camera &                       getCamera(int id)           { return _camera_allocator.get(id);  };
-
-    GLuint                              compileShaderProgram(std::string root, std::string vs, std::string fs);
-    void                                useShaderProgram(GLuint id)    { _active_shader_id = id; };
-    glShader &                          activeShader()  { return _glShader_allocator[_active_glShader_id]; };
+    void                                deleteCamera(uint id)       { _camera_allocator.remove(id);      };
+    void                                setActiveCamera(uint id)    { _active_camera_id = id;            };
+    idk::Camera &                       getCamera(uint id)          { return _camera_allocator.get(id);  };
+    idk::Camera &                       getActiveCamera()           { return _camera_allocator.get(_active_camera_id); };
 
     uint                                loadOBJ(std::string root, std::string obj, std::string mtl);
-    void                                drawModel(uint model_id, uint transform_id);
+    void                                bindModel(uint model_id, idk::transform transform);
+    void                                bindShader(GLuint shader_id)    { _active_shader_id = shader_id; };
+
+    void                                setvec2(std::string name, glm::vec2 v)
+    {
+        _active_glUniforms->setvec2(name, v);
+    }
 
     void                                beginFrame();
     void                                endFrame();

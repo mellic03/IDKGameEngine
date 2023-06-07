@@ -50,8 +50,8 @@ namespace idk
     // Graphics-level -----------------------------------
     class transform;
     struct vertex;
+    class glUniforms;
     class glInterface;
-    class glShader;
     class Mesh;
     class Material;
     class Model;
@@ -67,9 +67,9 @@ namespace idk
         class Renderable;
         class Physical;
     }
+    class GameObject_Allocator;
     class octree;
     class Keylog;
-    class Navmap;
     class Engine;
     class Module;
     // --------------------------------------------------

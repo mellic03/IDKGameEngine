@@ -65,30 +65,44 @@ _gbuffer_geometrypass(4), _screenquad_buffer(1)
     _init_SDL_OpenGL(w, h);
     _init_screenquad();
 
-    _gl_interface.genScreenBuffer(_gbuffer_geometrypass);
-    _gbuffer_geometrypass_shader = compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
+    idk::glInterface gl = _gl_interface;
+
+    gl.genScreenBuffer(_gbuffer_geometrypass);
+    _gbuffer_geometrypass_shader = gl.compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
 
     _gl_interface.genScreenBuffer(_screenquad_buffer);
-    _screenquad_shader = compileShaderProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
-    _screenquad_shader2 = compileShaderProgram("assets/shaders/", "mouse.vs", "mouse.fs");
-}
-
-
-GLuint
-idk::RenderEngine::compileShaderProgram(std::string root, std::string vs, std::string fs)
-{
-    GLuint id = _gl_interface.compileShaderProgram(root, vs, fs);
-    _glShader_allocator[id] = glShader();
-    return id;
+    _screenquad_shader = gl.compileShaderProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
 }
 
 
 void
-idk::RenderEngine::drawModel(uint model_id, uint transform_id)
+idk::RenderEngine::_render_screenquad()
 {
-    _model_draw_queue[_active_shader_id].push({model_id, transform_id});
+    idk::glInterface &gl = _gl_interface;
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl.bindShaderProgram(_screenquad_shader);
+    gl.setUniform_texture("un_screen_texture", _gbuffer_geometrypass.textures[0]);
+
+
+    GLCALL( glDisable(GL_DEPTH_TEST); )
+    GLCALL( glDisable(GL_CULL_FACE); )
+
+    GLCALL( glBindVertexArray(_quad_VAO); )
+    GLCALL( glDrawArrays(GL_TRIANGLES, 0, 6); )
+    GLCALL( glBindVertexArray(0); )
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 }
 
+
+void
+idk::RenderEngine::bindModel(uint model_id, idk::transform transform)
+{
+    _model_draw_queue[_active_shader_id].push({model_id, transform, idk::glUniforms()});
+    _active_glUniforms = &_model_draw_queue[_active_shader_id].back().third;
+}
 
 
 uint
@@ -103,6 +117,7 @@ idk::RenderEngine::beginFrame()
 {
     _gl_interface.free_glTextureUnitIDs();
 
+    GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, 0); )
     GLCALL( glClearColor(0.0f, 0.0f, 0.0f, 1.0f); )
     GLCALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); )
 }
@@ -111,35 +126,32 @@ idk::RenderEngine::beginFrame()
 void
 idk::RenderEngine::endFrame()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    idk::Camera &camera = _camera_allocator.get(_active_camera_id);
+    
+    idk::glInterface &gl = _gl_interface;
+    gl.bindScreenbuffer(_gbuffer_geometrypass);
 
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
-        for (auto [model_id, transform_id]: vec)
+        gl.bindShaderProgram(shader_id);
+
+        glm::mat4 view = camera.view();
+        glm::mat4 proj = camera.projection();
+        gl.setmat4("un_view", view);
+        gl.setmat4("un_projection", proj);
+
+        for (auto [model_id, transform, uniforms]: vec)
         {
-            _gl_interface.draw_model(
+            gl.draw_model(
                 _model_allocator.get(model_id),
-                _transform_allocator.get(transform_id)
+                transform,
+                uniforms
             );
         }
+        vec.clear();
     }
 
-    // _gl_interface.bindShaderProgram(_screenquad_shader);
-
-    // glActiveTexture(GL_TEXTURE0);
-    // glBindTexture(GL_TEXTURE_2D, _gbuffer_geometrypass.textures[0]);
-    // _gl_interface.setint("un_screen_texture", 0);
-
-    // GLCALL( glDisable(GL_DEPTH_TEST); )
-    // GLCALL( glDisable(GL_CULL_FACE); )
-
-    // GLCALL( glBindVertexArray(_quad_VAO); )
-    // GLCALL( glDrawArrays(GL_TRIANGLES, 0, 6); )
-    // GLCALL( glBindVertexArray(0); )
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    _render_screenquad();
 
     SDL_GL_SwapWindow(_SDL_window);
 }

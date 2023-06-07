@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IDKgraphics_common/IDKgraphics_common.h"
-#include "IDK_glShader.h"
+#include "IDK_glUniforms.h"
 #include "model.h"
 
 #define IDK_GLINTERFACE_MAX_TEXTUREi (GL_TEXTURE0 + 32)
@@ -35,12 +35,12 @@ public:
     void                    bindShaderProgram(GLuint shader_id);
 
     GLuint                  loadTexture(std::string filepath);
-
     GLuint                  pop_glTextureUnitID();
     void                    free_glTextureUnitIDs();
+    void                    setUniform_texture(std::string name, GLuint texture_id);
 
                             /** All subsequent draw calls will be drawn to this framebuffer */
-    void                    draw_model(idk::Model &, idk::transform &);
+    void                    draw_model(idk::Model &, idk::transform &, idk::glUniforms &);
 
     void                    setint(const char *, int);
     void                    setfloat(const char *, float);

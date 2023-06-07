@@ -4,7 +4,8 @@
 
 
 idk::transform::transform():
-_position(0.0f), _velocity(0.0f), _scale(1.0f)
+_position(0.0f), _velocity(0.0f), _scale(1.0f),
+_orientation(glm::vec3(0.0f)), _model_mat(1.0f)
 {
 
 }
@@ -24,12 +25,18 @@ idk::transform::scale(glm::vec3 s)
 }
 
 
+void
+idk::transform::rotateX(float x)
+{
+    glm::quat rotX = glm::quat(glm::vec3(x, 0.0f, 0.0f));
+    _orientation = rotX * _orientation;
+}
+
+
 glm::mat4
 idk::transform::modelMatrix()
 {
-    glm::mat4 model_mat(1.0f);
-    
-    model_mat = glm::translate(model_mat, _position);
+    glm::mat4 model_mat = glm::translate(glm::mat4(1.0f), _position) * glm::mat4_cast(_orientation);
     model_mat = glm::scale(model_mat, _scale);
 
     return model_mat;

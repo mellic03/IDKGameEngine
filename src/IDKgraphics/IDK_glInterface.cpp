@@ -219,6 +219,7 @@ idk::glInterface::free_glTextureUnitIDs()
 }
 
 
+
 void
 idk::glInterface::bindShaderProgram(GLuint shader_id)
 {
@@ -240,14 +241,19 @@ idk::glInterface::bindScreenbuffer(idk::glInterface::ScreenBuffer &screen_buffer
 
 
 void
-idk::glInterface::draw_model(idk::Model &model, idk::transform &transform)
+idk::glInterface::draw_model(idk::Model &model, idk::transform &transform, idk::glUniforms &uniforms)
 {
-    glm::mat4 mat = transform.modelMatrix();
-    setmat4("model", mat);
+    glm::mat4 model_mat = transform.modelMatrix();
+    setmat4("un_model", model_mat);
+
+    for (auto &[name, data]: uniforms.getUniforms_vec2())
+    {
+        setvec2(name.c_str(), data);
+    }
 
     for (size_t i=0; i<model.meshes.size(); i++)
     {
-        idk::Mesh &mesh = model.meshes[i];        
+        idk::Mesh &mesh = model.meshes[i];
 
         GLCALL( glBindVertexArray(mesh.VAO); )
 
@@ -332,7 +338,6 @@ idk::glInterface::setmat4(const char *name, glm::mat4 &m)
 
 
 
-
 void
 idk::glInterface::setvec2(const char *name, const float *v)
 {
@@ -341,6 +346,7 @@ idk::glInterface::setvec2(const char *name, const float *v)
         glUniform2fv(loc, 1, v);
     )
 }
+
 
 void
 idk::glInterface::setvec3(const char *name, float *v)
@@ -351,6 +357,7 @@ idk::glInterface::setvec3(const char *name, float *v)
     )
 }
 
+
 void
 idk::glInterface::setvec4(const char *name, float *v)
 {
@@ -359,6 +366,7 @@ idk::glInterface::setvec4(const char *name, float *v)
         glUniform4fv(loc, 1, v);
     )
 }
+
 
 void
 idk::glInterface::setmat3(const char *name, float *m)
@@ -369,6 +377,7 @@ idk::glInterface::setmat3(const char *name, float *m)
     )
 }
 
+
 void
 idk::glInterface::setmat4(const char *name, float *m)
 {
@@ -377,3 +386,15 @@ idk::glInterface::setmat4(const char *name, float *m)
         glUniformMatrix4fv(loc, 1, GL_FALSE, m);
     )
 }
+
+
+void
+idk::glInterface::setUniform_texture(std::string name, GLuint texture_id)
+{
+    GLuint gl_texture_unit = pop_glTextureUnitID();
+    GLCALL( glActiveTexture(gl_texture_unit); )
+    GLCALL( glBindTexture(GL_TEXTURE_2D, texture_id); )
+    setint(name.c_str(), gl_texture_unit - GL_TEXTURE0);
+}
+
+

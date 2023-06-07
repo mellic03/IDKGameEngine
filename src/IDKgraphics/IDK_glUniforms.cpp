@@ -1,8 +1,8 @@
-#include "IDK_glShader.h"
+#include "IDK_glUniforms.h"
 
 
 void
-idk::glShader::clear()
+idk::glUniforms::clear()
 {
     _uniforms_vec2.clear();
     _uniforms_vec2.clear();

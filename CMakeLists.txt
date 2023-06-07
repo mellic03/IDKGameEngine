@@ -34,7 +34,6 @@ file(
     "src/IDKGameEngine/IDKGameEngine_common/*.cpp"
     "src/IDKGameEngine/*.cpp"
     "src/IDKGameEngine/gameobject/*.cpp"
-    "src/IDKGameEngine/navmap/*.cpp"
 
     "src/IDKcore/common/datastructures/*.cpp"
 )

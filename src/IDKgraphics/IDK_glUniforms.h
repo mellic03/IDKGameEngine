@@ -2,7 +2,7 @@
 
 #include "IDKgraphics_common/IDKgraphics_common.h"
 
-class idk::glShader
+class idk::glUniforms
 {
 private:
 
@@ -15,7 +15,7 @@ private:
     idk::vector<idk::pair<std::string, glm::mat4>>      _uniforms_mat4;
 
 public:
-            glShader()  { clear(); };
+            glUniforms()  { clear(); };
 
     void    clear();
 

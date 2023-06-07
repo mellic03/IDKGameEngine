@@ -46,9 +46,9 @@ idk::Engine::_process_mouse_input()
 
 
 void
-idk::Engine::deleteGameObject(int id)
+idk::Engine::deleteGameObject(int obj_id)
 {
-    _gameobject_allocator.remove(id);
+    _base_alloc.remove(obj_id);
 }
 
 
