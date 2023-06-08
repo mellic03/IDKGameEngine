@@ -39,6 +39,7 @@ public:
     uint                                        createGameObject();
     idk::GameObject &                           getGameObject(uint obj_id);
     void                                        deleteGameObject(uint obj_id);
+    Allocator<GameObject> &                     gameObjects() { return _gameobjects; };
 
     template <typename idk_module_t>
     void                                        registerModule() { _idk_modules.push(new idk_module_t()); };

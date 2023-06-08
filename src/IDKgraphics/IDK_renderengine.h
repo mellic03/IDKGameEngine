@@ -16,22 +16,29 @@
 class idk::RenderEngine
 {
 private:
-    clock_t                                     _frame_start, _frame_end, _frametime;
+    clock_t                             _frame_start;
+    clock_t                             _frame_end;
+    clock_t                             _frametime;
 
+    SDL_Window                          *_SDL_window;
+    SDL_GLContext                       _SDL_gl_context;
 
-    SDL_Window                                  *_SDL_window;
-    SDL_GLContext                               _SDL_gl_context;
+    glInterface                         _gl_interface;
 
-    idk::glInterface                            _gl_interface;
+    glInterface::ScreenBuffer           _gbuffer_geometrypass;
+    GLuint                              _gbuffer_geometrypass_shader;
 
-    uint                                        _active_camera_id;
-    uint                                        _active_shader_id;
-    idk::glUniforms *                           _active_glUniforms;
+    glInterface::ScreenBuffer           _screenquad_buffer;
+    GLuint                              _screenquad_shader;
 
-    GLuint                                      _quad_FBO;
-    GLuint                                      _quad_VBO;
-    GLuint                                      _quad_VAO;
-    GLuint                                      _quad_texture;
+    uint                                _active_camera_id;
+    uint                                _active_shader_id;
+    glUniforms *                        _active_glUniforms;
+
+    GLuint                              _quad_FBO;
+    GLuint                              _quad_VBO;
+    GLuint                              _quad_VAO;
+    GLuint                              _quad_texture;
 
     float _quad_vertices[30] = {
       -1.0f,  1.0f,  -0.999f,  0.0f,  1.0f,
@@ -42,13 +49,6 @@ private:
        1.0f, -1.0f,  -0.999f,  1.0f,  0.0f,
        1.0f,  1.0f,  -0.999f,  1.0f,  1.0f
     };
-
-    idk::glInterface::ScreenBuffer      _gbuffer_geometrypass;
-    GLuint                              _gbuffer_geometrypass_shader;
-
-    idk::glInterface::ScreenBuffer      _screenquad_buffer;
-    GLuint                              _screenquad_shader;
-    GLuint                              _screenquad_shader2;
 
     Allocator<GLuint>                   _texture_allocator;
     Allocator<Material>                 _material_allocator;
@@ -71,7 +71,7 @@ private:
     void                                _render_screenquad();
 
 public:
-    idk::glInterface &                  glInterface()               { return _gl_interface;                };
+    glInterface &                       glinterface()               { return _gl_interface;                };
    
     uint                                createTransform()           { return _transform_allocator.add();   };
     void                                deleteTransform(uint id)    { _transform_allocator.remove(id);     };

@@ -1,16 +1,6 @@
 #version 440 core
 
-struct pointlight
-{
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 position;
-
-    float attenuation_constant;
-    float attentuation_linear;
-    float attentuation_quadratic;
-
-};
+#include "structs.glsl"
 
 #define SQ(a) ((a)*(a))
 
@@ -30,19 +20,17 @@ uniform int un_num_pointlights;
 
 vec3 pointlight_contribution(int idx, vec3 view_dir)
 {
-    float spec_exponent = 32.0;
+    float spec_exponent = 128.0;
     float spec_strength = 1.0;
 
     pointlight light = un_pointlights[idx];
     float d = distance(fsin_fragpos, light.position);
-
 
     vec3 frag_to_light = normalize(light.position - fsin_fragpos);
     float diffuse_f = max(dot(fsin_normal, frag_to_light), 0.0);
 
     vec3 halfway_dir = normalize(frag_to_light + view_dir);  
     float specular_f = pow(max(dot(fsin_normal, halfway_dir), 0.0), spec_exponent);
-
 
     float attenuation = 1.0 / (
           light.attenuation_constant
@@ -62,7 +50,6 @@ vec3 pointlight_contribution(int idx, vec3 view_dir)
 
 void main()
 {
-
     vec3 view_dir = normalize(un_viewpos - fsin_fragpos);
 
 
