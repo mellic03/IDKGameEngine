@@ -22,7 +22,7 @@ idk::Model::_load_obj(std::string path)
     std::ifstream instream(path);
     std::string line;
 
-    idk::vector<glm::vec4> positions, normals;
+    idk::vector<glm::vec3> positions, normals;
     idk::vector<glm::vec2> uvs;
 
     while (getline(instream, line))
@@ -34,14 +34,14 @@ idk::Model::_load_obj(std::string path)
         {
             float x, y, z;
             iss >> dummy >> x >> y >> z;
-            positions.push(glm::vec4(x, y, z, 1.0f));
+            positions.push(glm::vec3(x, y, z));
         }
 
         else if (line.find("vn ") != std::string::npos)
         {
             float x, y, z;
             iss >> dummy >> x >> y >> z;
-            normals.push(glm::vec4(x, y, z, 0.0f));
+            normals.push(glm::vec3(x, y, z));
         }
 
         else if (line.find("vt ") != std::string::npos)
@@ -52,7 +52,7 @@ idk::Model::_load_obj(std::string path)
         }
 
 
-        else if (line.find("usemtl ") != std::string::npos)
+        else if (line.find("s ") != std::string::npos)
         {
             meshes.push(Mesh());
             IBOS.push(0);
@@ -68,18 +68,18 @@ idk::Model::_load_obj(std::string path)
 
             for (size_t i=0; i<3; i++)
             {
-                meshes.back().vertex_indices.push(_vertices.size());
-                
                 iss = std::istringstream(vstrs[i]);
-                _vertices.push(idk::vertex());
                 
-                size_t pos, norm, uv;
-                iss >> pos >> norm >> uv;
-                pos -= 1; norm -= 1; uv -= 1;
-                _vertices.back().position  = positions[pos];
-                _vertices.back().normal    = normals[norm];
-                // _vertices.back().tangent = tangent(norm);
-                _vertices.back().texcoords = uvs[uv];
+                size_t pos, uv, norm;
+                iss >> pos >> uv >> norm;
+
+                idk::vertex vert;
+                vert.position  = positions[pos - 1];
+                vert.texcoords = uvs[uv - 1];
+                vert.normal    = normals[norm - 1];
+
+                meshes.back().vertex_indices.push(_vertices.size());
+                _vertices.push(vert);
             }
         }
     }
@@ -139,26 +139,26 @@ idk::Model::_gen_mesh_IBO(size_t mesh_idx)
     unsigned long offset = 0;
 
     // Position
-    GLCALL( glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(idk::vertex), (void *)offset); )
-    GLCALL( offset += 4 * sizeof(float); )
+    GLCALL( glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void *)offset); )
     GLCALL( glEnableVertexAttribArray(0); )
+    offset += 3 * sizeof(float);
 
     // Normal
-    GLCALL( glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(idk::vertex), (void *)offset); )
-    GLCALL( offset += 4 * sizeof(float); )
+    GLCALL( glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void *)offset); )
     GLCALL( glEnableVertexAttribArray(1); )
+    offset += 3 * sizeof(float);
 
     // UV
-    GLCALL( glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(idk::vertex), (void *)offset); )
-    GLCALL( offset += 2 * sizeof(float); )
+    GLCALL( glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void *)offset); )
     GLCALL( glEnableVertexAttribArray(2); )
+    offset += 2 * sizeof(float);
 
+    GLCALL( glDeleteBuffers(IBOS.size(), &IBOS[0]); )
+    GLCALL( glGenBuffers(IBOS.size(), &IBOS[0]); )
 
     // Indexing
     for (size_t i=0; i<IBOS.size(); i++)
     {
-        GLCALL( glDeleteBuffers(1, &IBOS[i]); )
-        GLCALL( glGenBuffers(1, &IBOS[i]); )
         GLCALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBOS[i]); )
         GLCALL(
             glBufferData(
@@ -169,4 +169,7 @@ idk::Model::_gen_mesh_IBO(size_t mesh_idx)
             );
         )
     }
+
+    GLCALL( glBindBuffer(GL_ARRAY_BUFFER, 0); )
+    GLCALL( glBindVertexArray(0); )
 }

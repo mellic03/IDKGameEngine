@@ -32,6 +32,20 @@ idk::transform::rotateX(float x)
     _orientation = rotX * _orientation;
 }
 
+void
+idk::transform::rotateY(float y)
+{
+    glm::quat rotY = glm::quat(glm::vec3(0.0f, y, 0.0f));
+    _orientation = rotY * _orientation;
+}
+
+void
+idk::transform::rotateZ(float z)
+{
+    glm::quat rotZ = glm::quat(glm::vec3(0.0f, 0.0f, z));
+    _orientation = rotZ * _orientation;
+}
+
 
 glm::mat4
 idk::transform::modelMatrix()
@@ -41,3 +55,4 @@ idk::transform::modelMatrix()
 
     return model_mat;
 }
+

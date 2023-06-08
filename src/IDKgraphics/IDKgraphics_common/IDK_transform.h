@@ -15,8 +15,9 @@ private:
 public:
                         transform();
     
-    glm::vec3 &         position()  { return _position; };
-    glm::vec3 &         velocity()  { return _velocity; };
+    glm::vec3 &         position()      { return _position;     };
+    glm::vec3 &         velocity()      { return _velocity;     };
+    glm::quat &         orientation()   { return _orientation;  };
 
     void                translate(glm::vec3);
     void                scale(glm::vec3);

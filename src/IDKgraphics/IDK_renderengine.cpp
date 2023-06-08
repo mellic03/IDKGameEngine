@@ -60,6 +60,7 @@ idk::RenderEngine::_init_screenquad()
 
 
 idk::RenderEngine::RenderEngine(size_t w, size_t h):
+_frametime(1),
 _gbuffer_geometrypass(4), _screenquad_buffer(1)
 {
     _init_SDL_OpenGL(w, h);
@@ -97,10 +98,20 @@ idk::RenderEngine::_render_screenquad()
 }
 
 
-void
-idk::RenderEngine::bindModel(uint model_id, idk::transform transform)
+uint
+idk::RenderEngine::createPointLight()
 {
-    _model_draw_queue[_active_shader_id].push({model_id, transform, idk::glUniforms()});
+    uint transform_id = _transform_allocator.add();
+    lightsource::Point point(transform_id);
+    uint pointlight_id = _pointlight_allocator.add(point);
+    return pointlight_id;
+}
+
+
+void
+idk::RenderEngine::bindModel(uint model_id, uint transform_id)
+{
+    _model_draw_queue[_active_shader_id].push({model_id, transform_id, idk::glUniforms()});
     _active_glUniforms = &_model_draw_queue[_active_shader_id].back().third;
 }
 
@@ -108,13 +119,17 @@ idk::RenderEngine::bindModel(uint model_id, idk::transform transform)
 uint
 idk::RenderEngine::loadOBJ(std::string root, std::string obj, std::string mtl)
 {
-    return _model_allocator.add(idk::Model(root, obj, mtl));
+    uint model_id = _model_allocator.add();
+    _model_allocator.get(model_id) = idk::Model(root, obj, mtl);
+    return model_id;
 }
 
 
 void
 idk::RenderEngine::beginFrame()
 {
+    _frame_start = clock();
+
     _gl_interface.free_glTextureUnitIDs();
 
     GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, 0); )
@@ -131,28 +146,55 @@ idk::RenderEngine::endFrame()
     idk::glInterface &gl = _gl_interface;
     gl.bindScreenbuffer(_gbuffer_geometrypass);
 
+    auto &transform_allocator = _transform_allocator;
+
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
         gl.bindShaderProgram(shader_id);
 
+        gl.setint("un_num_pointlights", _pointlight_allocator.size());
+
+        int count = 0;
+        _pointlight_allocator.for_each(
+            [&gl, &transform_allocator, &count](lightsource::Point &pointlight)
+            {
+                idk::transform &transform = transform_allocator.get(pointlight.transform_id);
+                std::string str = std::to_string(count);
+                gl.setvec3(std::string("un_pointlights[" + str + "].ambient").c_str(), pointlight.ambient);
+                gl.setvec3(std::string("un_pointlights[" + str + "].diffuse").c_str(), pointlight.diffuse);
+                gl.setvec3(std::string("un_pointlights[" + str + "].position").c_str(), transform.position());
+
+                gl.setfloat(std::string("un_pointlights[" + str + "].attenuation_constant").c_str(), pointlight.attentuation_constant);
+                gl.setfloat(std::string("un_pointlights[" + str + "].attentuation_linear").c_str(), pointlight.attentuation_linear);
+                gl.setfloat(std::string("un_pointlights[" + str + "].attentuation_quadratic").c_str(), pointlight.attentuation_quadratic);
+
+                count += 1;
+            }
+        );
+
         glm::mat4 view = camera.view();
         glm::mat4 proj = camera.projection();
+        gl.setvec3("un_viewpos", camera.transform().position());
         gl.setmat4("un_view", view);
         gl.setmat4("un_projection", proj);
 
-        for (auto [model_id, transform, uniforms]: vec)
+        for (auto [model_id, transform_id, uniforms]: vec)
         {
             gl.draw_model(
                 _model_allocator.get(model_id),
-                transform,
+                _transform_allocator.get(transform_id),
                 uniforms
             );
         }
         vec.clear();
     }
+    _model_draw_queue.clear();
 
     _render_screenquad();
 
     SDL_GL_SwapWindow(_SDL_window);
+
+    _frame_end = clock();
+    _frametime = _frame_end - _frame_start;
 }
 

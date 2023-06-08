@@ -21,7 +21,7 @@ idk::glInterface::_line_has_include(std::string &line)
     
     if (include_pos == std::string::npos)
         return false;
-    
+
     return true;
 }
 
@@ -292,7 +292,7 @@ idk::glInterface::setfloat(const char *name, float f)
 }
 
 void
-idk::glInterface::setvec2(const char *name, glm::vec2 &v)
+idk::glInterface::setvec2(const char *name, glm::vec2 v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
@@ -301,7 +301,7 @@ idk::glInterface::setvec2(const char *name, glm::vec2 &v)
 }
 
 void
-idk::glInterface::setvec3(const char *name, glm::vec3 &v)
+idk::glInterface::setvec3(const char *name, glm::vec3 v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
@@ -310,7 +310,7 @@ idk::glInterface::setvec3(const char *name, glm::vec3 &v)
 }
 
 void
-idk::glInterface::setvec4(const char *name, glm::vec4 &v)
+idk::glInterface::setvec4(const char *name, glm::vec4 v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
@@ -319,7 +319,7 @@ idk::glInterface::setvec4(const char *name, glm::vec4 &v)
 }
 
 void
-idk::glInterface::setmat3(const char *name, glm::mat3 &m)
+idk::glInterface::setmat3(const char *name, glm::mat3 m)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);
@@ -328,7 +328,7 @@ idk::glInterface::setmat3(const char *name, glm::mat3 &m)
 }
 
 void
-idk::glInterface::setmat4(const char *name, glm::mat4 &m)
+idk::glInterface::setmat4(const char *name, glm::mat4 m)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(_active_shader_id, name);

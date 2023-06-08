@@ -14,7 +14,7 @@ private:
 
 public:
                         vector(): _size(0), _cap(1), _data(new T[1]) {  };
-                        vector(size_t size): _size(size), _cap(size), _data(new T[size]) {  };
+                        vector(size_t size): _size(size), _cap(2*size+1), _data(new T[2*size+1]) {  };
                         vector(size_t size, const T &data);
                         vector(const vector<T> &other);
                         vector(vector<T> &&other);
@@ -71,7 +71,7 @@ public:
 
 
 template <typename T>
-idk::vector<T>::vector(size_t size, const T &data): _size(size), _cap(size), _data(new T[size])
+idk::vector<T>::vector(size_t size, const T &data): _size(size), _cap(2*size+1), _data(new T[2*size+1])
 {
     for (T &element: *this)
         element = data;
@@ -100,7 +100,7 @@ idk::vector<T>::vector(vector<T> &&other)
     _size = other._size;
     _cap = other._cap;
     _data = other._data;
-    other._data = nullptr;    
+    other._data = nullptr;
 }
 
 
@@ -157,11 +157,8 @@ idk::vector<T>::operator = (const vector &other)
 {
     if (this != &other)
     {
-        if (_data && _size > 0)
-        {
+        if (_data)
             delete[] _data;
-            _data = nullptr;
-        }
 
         _size = other._size;
         _cap = other._cap;
@@ -182,11 +179,8 @@ idk::vector<T>::operator = (vector &&other) noexcept
     if (this == &other)
         return *this;
 
-    if (_data && _size > 0)
-    {
+    if (_data)
         delete[] _data;
-        _data = nullptr;
-    }
 
     _size = other._size;
     _cap = other._cap;

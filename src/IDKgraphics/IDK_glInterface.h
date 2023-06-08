@@ -9,10 +9,6 @@
 class idk::glInterface
 {
 private:
-                            enum class shaderQ_instruction { change_program, set_uniform, draw_model };
-                            struct shaderQ_element { shaderQ_instruction instruction; void *data; };
-    idk::queue<shaderQ_element>     _instruction_queue;
-
     GLuint                  _active_shader_id;
     idk::stack<GLuint>      _available_glTextureUnits;
     idk::stack<GLuint>      _unavailable_glTextureUnits;
@@ -44,11 +40,11 @@ public:
 
     void                    setint(const char *, int);
     void                    setfloat(const char *, float);
-    void                    setvec2(const char *, glm::vec2 &);
-    void                    setvec3(const char *, glm::vec3 &);
-    void                    setvec4(const char *, glm::vec4 &);
-    void                    setmat3(const char *, glm::mat3 &);
-    void                    setmat4(const char *, glm::mat4 &);
+    void                    setvec2(const char *, glm::vec2);
+    void                    setvec3(const char *, glm::vec3);
+    void                    setvec4(const char *, glm::vec4);
+    void                    setmat3(const char *, glm::mat3);
+    void                    setmat4(const char *, glm::mat4);
 
     void                    setvec2(const char *, const float *);
     void                    setvec3(const char *, float *);

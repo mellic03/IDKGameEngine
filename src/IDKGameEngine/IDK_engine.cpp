@@ -45,10 +45,22 @@ idk::Engine::_process_mouse_input()
 }
 
 
-void
-idk::Engine::deleteGameObject(int obj_id)
+uint
+idk::Engine::createGameObject()
 {
-    _base_alloc.remove(obj_id);
+    return _gameobjects.add();
+}
+
+idk::GameObject &
+idk::Engine::getGameObject(uint obj_id)
+{
+    return _gameobjects.get(obj_id);
+}
+
+void
+idk::Engine::deleteGameObject(uint obj_id)
+{
+    _gameobjects.remove(obj_id);
 }
 
 
@@ -60,21 +72,20 @@ idk::Engine::beginFrame()
 
     _render_engine.beginFrame();
 
-    for (idk::Module *module: _idk_modules)
-    {
-        module->beginFrame(*this);
-    }
+    // for (idk::Module *module: _idk_modules)
+    // {
+    //     module->beginFrame(*this);
+    // }
 }
 
 
 void
 idk::Engine::endFrame()
 {
-
-    for (idk::Module *module: _idk_modules)
-    {
-        module->endFrame(*this);
-    }
+    // for (idk::Module *module: _idk_modules)
+    // {
+    //     module->endFrame(*this);
+    // }
     
     _render_engine.endFrame();
 }

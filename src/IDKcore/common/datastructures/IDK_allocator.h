@@ -2,6 +2,7 @@
 
 #include "../IDKdecl.h"
 
+
 template <typename T>
 class idk::Allocator
 {
@@ -9,22 +10,24 @@ private:
     idk::vector<bool>               _occupied;
     idk::vector<uint>               _unnocupied;
     idk::vector<T>                  _objects;
+    size_t                          _size;
 
 public:
                                     Allocator();
 
     uint                            add();
-    uint                            add(T);
+    uint                            add(const T &data);
     T &                             get(uint id);
     void                            remove(uint id);
+    size_t                          size() const { return _size; };
 
     template <typename lambda_t>
-    void                            forEach(lambda_t fn);
+    void                            for_each(lambda_t fn);
 
 };
 
 template <typename T>
-idk::Allocator<T>::Allocator(): _occupied(1), _unnocupied(1), _objects(1)
+idk::Allocator<T>::Allocator(): _occupied(0), _unnocupied(0), _objects(0), _size(0)
 {
 
 }
@@ -34,6 +37,8 @@ template <typename T>
 uint
 idk::Allocator<T>::add()
 {
+    _size += 1;
+
     if (_unnocupied.empty())
     {
         _occupied.push(true);
@@ -53,8 +58,10 @@ idk::Allocator<T>::add()
 
 template <typename T>
 uint
-idk::Allocator<T>::add(T data)
+idk::Allocator<T>::add(const T &data)
 {
+    _size += 1;
+
     if (_unnocupied.empty())
     {
         _occupied.push(true);
@@ -84,6 +91,8 @@ template <typename T>
 void
 idk::Allocator<T>::remove(uint id)
 {
+    _size -= 1;
+
     _occupied[id] = false;
     _unnocupied.push(id);
 };
@@ -92,7 +101,7 @@ idk::Allocator<T>::remove(uint id)
 template <typename T>
 template <typename lambda_t>
 void
-idk::Allocator<T>::forEach(lambda_t fn)
+idk::Allocator<T>::for_each(lambda_t fn)
 {
     for (size_t i=0; i<_objects.size(); i++)
         if (_occupied[i])

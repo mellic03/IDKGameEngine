@@ -6,15 +6,19 @@
 #include "IDK_glUniforms.h"
 #include "IDK_glInterface.h"
 #include "IDK_camera.h"
+#include "IDK_lightsource.h"
 #include "model.h"
 
 
-#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<uint, idk::transform, idk::glUniforms>>>
+#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<uint, uint, idk::glUniforms>>>
 
 
 class idk::RenderEngine
 {
 private:
+    clock_t                                     _frame_start, _frame_end, _frametime;
+
+
     SDL_Window                                  *_SDL_window;
     SDL_GLContext                               _SDL_gl_context;
 
@@ -46,11 +50,15 @@ private:
     GLuint                              _screenquad_shader;
     GLuint                              _screenquad_shader2;
 
-    idk::Allocator<GLuint>              _texture_allocator;
-    idk::Allocator<idk::Material>       _material_allocator;
-    idk::Allocator<idk::Model>          _model_allocator;
-    idk::Allocator<idk::transform>      _transform_allocator;
-    idk::Allocator<idk::Camera>         _camera_allocator;
+    Allocator<GLuint>                   _texture_allocator;
+    Allocator<Material>                 _material_allocator;
+    Allocator<Model>                    _model_allocator;
+    Allocator<transform>                _transform_allocator;
+    Allocator<Camera>                   _camera_allocator;
+    Allocator<lightsource::Point>       _pointlight_allocator;
+    Allocator<lightsource::Spot>        _spotlight_allocator;
+    Allocator<lightsource::Dir>         _dirlight_allocator;
+
 
                                         // queue[shader_id] = vector<{model_id, transform_id}>;
     modelqueue_t                        _model_draw_queue;
@@ -63,29 +71,48 @@ private:
     void                                _render_screenquad();
 
 public:
-    idk::glInterface &                  glInterface()               { return _gl_interface;              };
-    uint                                createTransform()           { return _transform_allocator.add(); };
+    idk::glInterface &                  glInterface()               { return _gl_interface;                };
+   
+    uint                                createTransform()           { return _transform_allocator.add();   };
+    void                                deleteTransform(uint id)    { _transform_allocator.remove(id);     };
     idk::transform &                    getTransform(uint id)       { return _transform_allocator.get(id); };
 
-    uint                                createCamera()              { return _camera_allocator.add();    };
-    void                                deleteCamera(uint id)       { _camera_allocator.remove(id);      };
-    void                                setActiveCamera(uint id)    { _active_camera_id = id;            };
-    idk::Camera &                       getCamera(uint id)          { return _camera_allocator.get(id);  };
+    uint                                createCamera()              { return _camera_allocator.add();   };
+    void                                deleteCamera(uint id)       { _camera_allocator.remove(id);     };
+    idk::Camera &                       getCamera(uint id)          { return _camera_allocator.get(id); };
+    void                                setActiveCamera(uint id)    { _active_camera_id = id;           };
     idk::Camera &                       getActiveCamera()           { return _camera_allocator.get(_active_camera_id); };
 
+    Allocator<lightsource::Point> &     pointlights()   { return _pointlight_allocator; };
+
+    uint                                createPointLight();
+    void                                deletePointLight(uint id)   { _pointlight_allocator.remove(id);     };
+    idk::lightsource::Point &           getPointLight(uint id)      { return _pointlight_allocator.get(id); };
+
+    uint                                createSpotLight()           { return _spotlight_allocator.add();   };
+    void                                deleteSpotLight(uint id)    { _spotlight_allocator.remove(id);     };
+    idk::lightsource::Spot &            getSpotLight(uint id)       { return _spotlight_allocator.get(id); };
+
+    uint                                createDirLight()            { return _dirlight_allocator.add();   };
+    void                                deleteDirLight(uint id)     { _dirlight_allocator.remove(id);     };
+    idk::lightsource::Dir &             getDirLight(uint id)        { return _dirlight_allocator.get(id); };
+ 
+
     uint                                loadOBJ(std::string root, std::string obj, std::string mtl);
-    void                                bindModel(uint model_id, idk::transform transform);
+    void                                bindModel(uint model_id, uint transform_id);
     void                                bindShader(GLuint shader_id)    { _active_shader_id = shader_id; };
 
-    void                                setvec2(std::string name, glm::vec2 v)
-    {
-        _active_glUniforms->setvec2(name, v);
-    }
+
+    idk::glUniforms &                   glUniformInterface()    { return *_active_glUniforms; };
 
     void                                beginFrame();
     void                                endFrame();
+
+    float                               deltaTime()  { return ((float)_frametime) / CLOCKS_PER_SEC; };
+    float                               frameRate()  { return 1.0f / deltaTime();                   };
 
 };
 
 
 #undef modelqueue_t
+

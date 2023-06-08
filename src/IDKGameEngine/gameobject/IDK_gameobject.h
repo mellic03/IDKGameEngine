@@ -4,41 +4,26 @@
 
 
 
-class idk::GameObject::Base
+
+
+class idk::GameObject
 {
 protected:
-    idk::transform          _transform;
-    uint                    _id;
-    uint                    _transform_id;
+    idk::vector<size_t> _components;
 
 public:
-                            Base() {  };
-    uint                    ID()            { return _id;           };
-    uint                    transformID()   { return _transform_id; };
-    virtual void            perFrame() = 0;
-};
 
+                enum class Component: uint
+                {
+                    Rendering       = 1 << 0,
+                    Physics         = 1 << 1,
+                    NUM_COMPONENTS  = 2
+                };
 
-class idk::GameObject::Renderable: public idk::GameObject::Base
-{
-protected:
-    uint                    _model_id;
+                GameObject(): _components(static_cast<uint>(Component::NUM_COMPONENTS), 0) {  };
 
-public:
-                            Renderable();
-    void                    perFrame() {  };
-};
-
-
-class idk::GameObject::Physical: public idk::GameObject::Base
-{
-protected:
-    uint                    _model_id;
-
-public:
-                            Physical() {  };
-    void                    perFrame() {  };
+    bool        hasComponent(Component cmp)     { return _components[static_cast<uint>(cmp)] > 0; };
+    void        giveComponent(Component cmp)    { _components[static_cast<uint>(cmp)] += 1;       };
+    void        removeComponent(Component cmp)  { _components[static_cast<uint>(cmp)] -= 1;       };
 
 };
-
-

@@ -8,8 +8,8 @@
 namespace idk
 {
     // Data structures ----------------------------------
+    // Implemented in IDKcore/common/datastructures 
     template <typename T> class Allocator;
-    template <typename T> class ptr_Allocator;
 
     template <typename T, typename U> struct pair;
     template <typename T, typename U, typename V> struct triple;
@@ -24,30 +24,12 @@ namespace idk
     template <typename T> class linkedlist;
     template <typename key_t> class skiplist;
 
-    // template <typename T, int size> class vec_t;
-    // typedef vec_t<float, 2> vec2;
-    // typedef vec_t<float, 3> vec3;
-    // typedef vec_t<float, 4> vec4;
-
-    // typedef vec_t<int, 2> ivec2;
-    // typedef vec_t<int, 3> ivec3;
-    // typedef vec_t<int, 4> ivec4;
-
-    // template <int size> class mat_t;
-    // typedef mat_t<3> mat3;
-    // typedef mat_t<4> mat4;
-
-    // template <typename T, int size>
-    // T *raw_ptr(idk::vec_t<T, size> &);
-    
-    // template <int size>
-    // float *raw_ptr(idk::mat_t<size> &);
-
     class graph;
     // --------------------------------------------------
 
 
     // Graphics-level -----------------------------------
+    // Implemented in IDKgraphics/ 
     class transform;
     struct vertex;
     class glUniforms;
@@ -56,26 +38,30 @@ namespace idk
     class Material;
     class Model;
     class Camera;
+    namespace lightsource
+    {
+        struct Point;
+        struct Spot;
+        struct Dir;
+    };
     class RenderEngine;
     // --------------------------------------------------
 
 
     // Engine-level-------------------------------------
-    namespace GameObject
-    {
-        class Base;
-        class Renderable;
-        class Physical;
-    }
-    class GameObject_Allocator;
+    // Implemented in IDKGameEngine/ 
+    class GameObject;
+    class ECS;
     class octree;
     class Keylog;
+    class Controller;
     class Engine;
     class Module;
     // --------------------------------------------------
 
 
     // Utility functions --------------------------------
+    // Implemented below
     template<typename T>        void        swap(T &a, T &b);
     template<typename T>        T &         min(T &a, T &b);
     template<typename T>        T &         max(T &a, T &b);
@@ -93,12 +79,14 @@ idk::swap(T &a, T &b)
     b = temp;
 }
 
+
 template<typename T>
 T &
 idk::min(T &a, T &b)
 {
     return (a < b) ? a : b;
 }
+
 
 template<typename T>
 T &

@@ -2,8 +2,3 @@
 
 
 
-idk::GameObject::Renderable::Renderable()
-{
-
-}
-

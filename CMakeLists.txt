@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.24)
 
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 set(CMAKE_BUILD_PARALLEL_LEVEL 8)
-# add_compile_options( -pedantic -Wextra )
-set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -g -fdiagnostics-color=always")
+# add_compile_options( -pedantic -Wextra -Ofast )
+set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -Ofast -fdiagnostics-color=always")
 
 project(IDKEngine)
 

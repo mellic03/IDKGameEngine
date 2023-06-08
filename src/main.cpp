@@ -8,28 +8,6 @@
 #include "IDKengine.h"
 
 
-enum class shader_instruction
-{
-    use_shader, set_uniform, draw_model
-};
-
-
-struct shader_element
-{
-    shader_instruction      instruction;
-    void *                  data;
-};
-
-
-class Actor: public idk::GameObject::Renderable, public idk::GameObject::Physical
-{
-private:
-
-public:
-    Actor() {  };
-};
-
-
 
 int ENTRY(int argc, const char **argv)
 {
@@ -38,14 +16,16 @@ int ENTRY(int argc, const char **argv)
     idk::glInterface &gl = ren.glInterface();
 
     GLuint mouse_shader = gl.compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
-    uint model_id  = ren.loadOBJ("assets/models/cube/", "cube.obj", "cube.mtl");
-    
-    idk::transform &transform = ren.getTransform(ren.createTransform());
-    transform.translate(glm::vec3(0.0f, 0.0f, 2.50f));
+    uint model_id  = ren.loadOBJ("assets/models/dog/", "dog.obj", "dog.mtl");
 
-    // idk::transform &transform2 = ren.getTransform(ren.createTransform());
-    // transform2.translate(glm::vec3(5.0f, 0.0f, 2.50f));
+    uint tid1 = ren.createTransform();
+    idk::transform &transform = ren.getTransform(tid1);
+    transform.translate(glm::vec3(0.0f, 0.0f, 3.50f));
+    transform.rotateY(3.1415);
 
+    uint pID = ren.createPointLight();
+    idk::lightsource::Point &point = ren.pointlights().get(pID);
+    ren.getTransform(point.transform_id).position() = glm::vec3(-5.0f, 3.0f, 2.0f);
 
     ren.setActiveCamera(ren.createCamera());
     idk::Camera &camera = ren.getActiveCamera();
@@ -55,8 +35,12 @@ int ENTRY(int argc, const char **argv)
         engine.beginFrame();
 
         ren.bindShader(mouse_shader);
-        ren.bindModel(model_id, transform);
-        ren.setvec2("mouse", engine.mouse());
+        ren.bindModel(model_id, tid1);
+
+        float dtime = ren.deltaTime();
+
+        // ren.getTransform(tid1).rotateX(1.0f * dtime);
+        ren.getTransform(tid1).rotateY(2.0f * dtime);
 
         engine.endFrame();
     }
