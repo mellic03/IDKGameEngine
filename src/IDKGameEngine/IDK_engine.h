@@ -7,7 +7,7 @@
 
 class idk::Engine
 {
-private:    
+private:
     idk::RenderEngine                           _render_engine;
     
     SDL_Event                                   _SDL_event;
@@ -36,11 +36,11 @@ public:
     glm::vec2                                   mouse()         { return _mouse_position; };
     glm::vec2                                   dMouse()        { return _delta_mouse_position; };
 
-    uint                                        createGameObject();
+    idk::GameObject &                           createGameObject();
     idk::GameObject &                           getGameObject(uint obj_id);
     void                                        deleteGameObject(uint obj_id);
     Allocator<GameObject> &                     gameObjects() { return _gameobjects; };
 
-    template <typename idk_module_t>
-    void                                        registerModule() { _idk_modules.push(new idk_module_t()); };
+    template <typename module_t>
+    void                                        registerModule() { _idk_modules.push(new module_t()); };
 };

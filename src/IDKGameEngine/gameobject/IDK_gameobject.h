@@ -9,10 +9,10 @@
 class idk::GameObject
 {
 protected:
-    idk::vector<size_t> _components;
+    idk::vector<size_t>     _components;
+    vector<vector<uint>>    _component_ids;
 
 public:
-
                 enum class Component: uint
                 {
                     Rendering       = 1 << 0,
@@ -22,8 +22,8 @@ public:
 
                 GameObject(): _components(static_cast<uint>(Component::NUM_COMPONENTS), 0) {  };
 
-    bool        hasComponent(Component cmp)     { return _components[static_cast<uint>(cmp)] > 0; };
-    void        giveComponent(Component cmp)    { _components[static_cast<uint>(cmp)] += 1;       };
-    void        removeComponent(Component cmp)  { _components[static_cast<uint>(cmp)] -= 1;       };
+    bool        hasComponent(Component cmp);
+    void        giveComponent(Component cmp);
+    void        removeComponent(Component cmp);
 
 };

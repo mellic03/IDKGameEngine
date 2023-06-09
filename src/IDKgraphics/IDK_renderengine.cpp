@@ -98,13 +98,13 @@ idk::RenderEngine::_render_screenquad()
 }
 
 
-uint
+idk::lightsource::Point &
 idk::RenderEngine::createPointLight()
 {
     uint transform_id = _transform_allocator.add();
     lightsource::Point point(transform_id);
     uint pointlight_id = _pointlight_allocator.add(point);
-    return pointlight_id;
+    return _pointlight_allocator.get(pointlight_id);
 }
 
 

@@ -50,13 +50,21 @@ namespace idk
 
     // Engine-level-------------------------------------
     // Implemented in IDKGameEngine/ 
+    enum class ECScomponent
+    {
+        render          =  1 << 0,
+        phyiscs         =  1 << 1,
+        num_components  =  2
+    };
     class GameObject;
-    class ECS;
     class octree;
     class Keylog;
     class Controller;
     class Engine;
+    
+    // Core modules
     class Module;
+    class PhysicsModule;
     // --------------------------------------------------
 
 

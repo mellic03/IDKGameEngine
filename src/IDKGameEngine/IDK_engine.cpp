@@ -45,11 +45,13 @@ idk::Engine::_process_mouse_input()
 }
 
 
-uint
+idk::GameObject &
 idk::Engine::createGameObject()
 {
-    return _gameobjects.add();
+    uint object_id = _gameobjects.add();
+    return _gameobjects.get(object_id);
 }
+
 
 idk::GameObject &
 idk::Engine::getGameObject(uint obj_id)
@@ -72,21 +74,17 @@ idk::Engine::beginFrame()
 
     _render_engine.beginFrame();
 
-    // for (idk::Module *module: _idk_modules)
-    // {
-    //     module->beginFrame(*this);
-    // }
 }
 
 
 void
 idk::Engine::endFrame()
 {
-    // for (idk::Module *module: _idk_modules)
-    // {
-    //     module->endFrame(*this);
-    // }
-    
+    for (idk::Module *module: _idk_modules)
+    {
+        module->update(*this);
+    }
+
     _render_engine.endFrame();
 }
 

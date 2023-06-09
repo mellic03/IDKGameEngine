@@ -83,20 +83,10 @@ public:
     void                                setActiveCamera(uint id)    { _active_camera_id = id;           };
     idk::Camera &                       getActiveCamera()           { return _camera_allocator.get(_active_camera_id); };
 
-    Allocator<lightsource::Point> &     pointlights()   { return _pointlight_allocator; };
 
-    uint                                createPointLight();
-    void                                deletePointLight(uint id)   { _pointlight_allocator.remove(id);     };
-    idk::lightsource::Point &           getPointLight(uint id)      { return _pointlight_allocator.get(id); };
+    lightsource::Point &                createPointLight();
+    Allocator<lightsource::Point> &     pointlights()       { return _pointlight_allocator; };
 
-    uint                                createSpotLight()           { return _spotlight_allocator.add();   };
-    void                                deleteSpotLight(uint id)    { _spotlight_allocator.remove(id);     };
-    idk::lightsource::Spot &            getSpotLight(uint id)       { return _spotlight_allocator.get(id); };
-
-    uint                                createDirLight()            { return _dirlight_allocator.add();   };
-    void                                deleteDirLight(uint id)     { _dirlight_allocator.remove(id);     };
-    idk::lightsource::Dir &             getDirLight(uint id)        { return _dirlight_allocator.get(id); };
- 
 
     uint                                loadOBJ(std::string root, std::string obj, std::string mtl);
     void                                bindModel(uint model_id, uint transform_id);

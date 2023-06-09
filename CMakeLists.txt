@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 set(CMAKE_BUILD_PARALLEL_LEVEL 8)
 # add_compile_options( -pedantic -Wextra -Ofast )
-set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -Ofast -fdiagnostics-color=always")
+# -fsanitize=undefined
+set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -O3 -fdiagnostics-color=always")
 
 project(IDKEngine)
 
@@ -28,6 +29,8 @@ file(
     GLOB SOURCES
     "src/*.cpp"
 
+    "src/IDKcore/common/datastructures/*.cpp"
+
     "src/IDKgraphics/IDKgraphics_common/*.cpp"
     "src/IDKgraphics/*.cpp"
     
@@ -35,7 +38,7 @@ file(
     "src/IDKGameEngine/*.cpp"
     "src/IDKGameEngine/gameobject/*.cpp"
 
-    "src/IDKcore/common/datastructures/*.cpp"
+    "src/IDK_core_modules/*.cpp"
 )
 
 find_package(SDL2 REQUIRED)

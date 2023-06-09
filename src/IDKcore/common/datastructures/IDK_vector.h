@@ -111,17 +111,11 @@ idk::vector<T>::reserve(size_t cap)
     size_t smallest = idk::min(_cap, cap);
 
     T *temp = new T[cap];
-    if (_data)
-    {
-        for (size_t i=0; i<smallest; i++)
-            temp[i] = _data[i];
-        delete[] _data;
-    }
-
-    _data = new T[cap];
     for (size_t i=0; i<smallest; i++)
-        _data[i] = temp[i];
-    delete[] temp;
+        temp[i] = _data[i];
+    delete[] _data;
+
+    _data = temp;
 
     _cap = cap;
     if (_cap < _size)
@@ -143,7 +137,7 @@ template <typename T>
 void
 idk::vector<T>::push(const T &data)
 {
-    if (_size+1 > _cap)
+    if (_size+1 >= _cap)
         reserve(2*_cap);
 
     _data[_size] = data;
