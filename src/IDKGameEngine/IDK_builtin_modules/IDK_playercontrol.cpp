@@ -3,7 +3,7 @@
 
 
 void
-idk::core_modules::PlayerControlModule::stage_C(idk::Engine &engine)
+idk::builtin_modules::Builtin_PlayerControl::stage_C(idk::Engine &engine)
 {
     idk::Camera &camera = engine.rengine().getActiveCamera();
     idk::Keylog &keylog = engine.keylog();

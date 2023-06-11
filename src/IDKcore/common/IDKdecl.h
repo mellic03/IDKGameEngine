@@ -63,11 +63,11 @@ namespace idk
     class Engine;
     class Module;
 
-    namespace core_modules
+    namespace builtin_modules
     {
-        class PhysicsModule;
-        class PlayerControlModule;
-        class UIModule;
+        class Builtin_Physics;
+        class Builtin_PlayerControl;
+        class Builtin_UI;
     };
 
     // --------------------------------------------------

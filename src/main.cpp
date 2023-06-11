@@ -11,9 +11,9 @@
 int ENTRY(int argc, const char **argv)
 {
     idk::Engine engine(1500, 1000);
-    engine.registerModule<idk::core_modules::PhysicsModule>();
-    engine.registerModule<idk::core_modules::PlayerControlModule>();
-    engine.registerModule<idk::core_modules::UIModule>();
+    engine.registerModule<idk::builtin_modules::Builtin_Physics>();
+    engine.registerModule<idk::builtin_modules::Builtin_PlayerControl>();
+    engine.registerModule<idk::builtin_modules::Builtin_UI>();
 
     idk::RenderEngine &ren = engine.rengine();
     idk::glInterface &gl = ren.glinterface();

@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../IDKGameEngine/IDK_engine.h"
+#include "IDK_builtin_modules_common.h"
 
 
-class idk::core_modules::PlayerControlModule: public idk::Module
+class idk::builtin_modules::Builtin_PlayerControl: public idk::Module
 {
 private:
 
 public:
-                PlayerControlModule()           {  };
+                Builtin_PlayerControl()           {  };
     void        init(idk::Engine &engine)       {  };
     void        stage_A(idk::Engine &engine)    {  };
     void        stage_B(idk::Engine &engine)    {  };

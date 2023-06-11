@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../IDKGameEngine/IDK_engine.h"
+#include "IDK_builtin_modules_common.h"
 
 
-class idk::core_modules::PhysicsModule: public idk::Module
+class idk::builtin_modules::Builtin_Physics: public idk::Module
 {
 private:
     std::function<void(idk::GameObject &, idk::GameObject &)>   _predicate;
@@ -16,7 +16,7 @@ private:
     void        _sphere_sphere_collision(spherecollider &a, spherecollider &b) {  };
 
 public:
-                PhysicsModule();
+                Builtin_Physics();
     void        init(idk::Engine &engine)       {  };
 
     void        stage_A(idk::Engine &engine)    {  };

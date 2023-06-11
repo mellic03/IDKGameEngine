@@ -4,7 +4,7 @@
 
 
 void
-idk::core_modules::UIModule::_rect(int x, int y, int w, int h)
+idk::builtin_modules::Builtin_UI::_rect(int x, int y, int w, int h)
 {
     y = _height - h - y;
 
@@ -30,7 +30,7 @@ idk::core_modules::UIModule::_rect(int x, int y, int w, int h)
 
 
 void
-idk::core_modules::UIModule::stage_C(idk::Engine &engine)
+idk::builtin_modules::Builtin_UI::stage_C(idk::Engine &engine)
 {
     if (engine.mouseCaptured())
         return;
@@ -58,7 +58,7 @@ idk::core_modules::UIModule::stage_C(idk::Engine &engine)
     {
         for (int j=0; j<_height; j+=_height/9)
         {
-            UIModule::_rect(i+_width/18, j+_height/18, 25, 25);
+            Builtin_UI::_rect(i+_width/18, j+_height/18, 25, 25);
         }
     }
 

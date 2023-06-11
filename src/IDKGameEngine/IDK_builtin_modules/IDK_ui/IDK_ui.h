@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../../IDKGameEngine/IDK_engine.h"
+#include "../IDK_builtin_modules_common.h"
 
 
 
 
-class idk::core_modules::UIModule: public idk::Module
+class idk::builtin_modules::Builtin_UI: public idk::Module
 {
 private:
     int         _width;
@@ -13,7 +13,7 @@ private:
     void        _rect(int x, int y, int w, int h);
 
 public:
-                UIModule() {  };
+                Builtin_UI() {  };
     void        init(idk::Engine &engine)       {  };
     void        stage_A(idk::Engine &engine)    {  };
     void        stage_B(idk::Engine &engine)    {  };
