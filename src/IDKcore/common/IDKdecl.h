@@ -61,21 +61,28 @@ namespace idk
     class Keylog;
     class Controller;
     class Engine;
-    
-    // Core modules
     class Module;
-    class PhysicsModule;
+
+    namespace core_modules
+    {
+        class PhysicsModule;
+        class PlayerControlModule;
+        class UIModule;
+    };
+
     // --------------------------------------------------
 
 
     // Utility functions --------------------------------
     // Implemented below
-    template<typename T>        void        swap(T &a, T &b);
-    template<typename T>        T &         min(T &a, T &b);
-    template<typename T>        T &         max(T &a, T &b);
+    template <typename T>       void        swap(T &a, T &b);
+    template <typename T>       T           min(T a, T b);
+    template <typename T>       T           max(T a, T b);
+    template <typename T>       T           clamp(T value, T min, T max);
+    template <typename T>       T *         raw_ptr(idk::vector<T> &vec);
     // --------------------------------------------------
-
 };
+
 
 
 template<typename T>
@@ -89,17 +96,34 @@ idk::swap(T &a, T &b)
 
 
 template<typename T>
-T &
-idk::min(T &a, T &b)
+T
+idk::min(T a, T b)
 {
     return (a < b) ? a : b;
 }
 
 
 template<typename T>
-T &
-idk::max(T &a, T &b)
+T
+idk::max(T a, T b)
 {
     return (a > b) ? a : b;
 }
+
+
+template<typename T>
+T
+idk::clamp(T value, T min, T max)
+{
+    return idk::max(min, idk::min(value, max));
+}
+
+
+template <typename T>
+T *
+idk::raw_ptr(idk::vector<T> &vec)
+{
+    return &vec[0];
+}
+
 

@@ -15,7 +15,7 @@ private:
 
 public:
                 stack(): _size(0), _cap(1), _data(new T[1]) {  };
-                ~stack() { delete[] _data; };
+                ~stack() { if (_data) delete[] _data; };
 
     void        push(const T &data);
     T &         top()               { return _data[_size];   };

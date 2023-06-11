@@ -8,6 +8,7 @@
 #include "IDK_camera.h"
 #include "IDK_lightsource.h"
 #include "model.h"
+#include "primitives/primitives.h"
 
 
 #define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<uint, uint, idk::glUniforms>>>
@@ -16,9 +17,8 @@
 class idk::RenderEngine
 {
 private:
-    clock_t                             _frame_start;
-    clock_t                             _frame_end;
-    clock_t                             _frametime;
+    int                                 _screen_width;
+    int                                 _screen_height;
 
     SDL_Window                          *_SDL_window;
     SDL_GLContext                       _SDL_gl_context;
@@ -60,6 +60,8 @@ private:
     Allocator<lightsource::Dir>         _dirlight_allocator;
 
 
+    // std::function<void(Keylog &, Camera &)>       _camera_control_lambda;
+
                                         // queue[shader_id] = vector<{model_id, transform_id}>;
     modelqueue_t                        _model_draw_queue;
 
@@ -76,33 +78,29 @@ public:
     uint                                createTransform()           { return _transform_allocator.add();   };
     void                                deleteTransform(uint id)    { _transform_allocator.remove(id);     };
     idk::transform &                    getTransform(uint id)       { return _transform_allocator.get(id); };
-
-    uint                                createCamera()              { return _camera_allocator.add();   };
+    
+    uint                                createCamera();
     void                                deleteCamera(uint id)       { _camera_allocator.remove(id);     };
     idk::Camera &                       getCamera(uint id)          { return _camera_allocator.get(id); };
     void                                setActiveCamera(uint id)    { _active_camera_id = id;           };
     idk::Camera &                       getActiveCamera()           { return _camera_allocator.get(_active_camera_id); };
 
-
     lightsource::Point &                createPointLight();
     Allocator<lightsource::Point> &     pointlights()       { return _pointlight_allocator; };
-
 
     uint                                loadOBJ(std::string root, std::string obj, std::string mtl);
     void                                bindModel(uint model_id, uint transform_id);
     void                                bindShader(GLuint shader_id)    { _active_shader_id = shader_id; };
-
 
     idk::glUniforms &                   glUniformInterface()    { return *_active_glUniforms; };
 
     void                                beginFrame();
     void                                endFrame();
 
-    float                               deltaTime()  { return ((float)_frametime) / CLOCKS_PER_SEC; };
-    float                               frameRate()  { return 1.0f / deltaTime();                   };
+    int                                 width()  const  { return _screen_width; };
+    int                                 height() const  { return _screen_height; };
 
 };
 
 
 #undef modelqueue_t
-

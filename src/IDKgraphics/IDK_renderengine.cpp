@@ -19,11 +19,9 @@ idk::RenderEngine::_init_SDL_OpenGL(size_t w, size_t h)
         SDL_WINDOW_OPENGL
         // SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED
     );
-
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
 
     _SDL_gl_context = SDL_GL_CreateContext(_SDL_window);
     SDL_GL_MakeCurrent(_SDL_window, _SDL_gl_context);
@@ -44,7 +42,7 @@ idk::RenderEngine::_init_SDL_OpenGL(size_t w, size_t h)
 void
 idk::RenderEngine::_init_screenquad()
 {
-    // Generate screen quad vertex array
+    // Send screen quad to GPU
     GLCALL( glGenVertexArrays(1, &_quad_VAO); )
     GLCALL( glGenBuffers(1, &_quad_VBO); )
     GLCALL( glBindVertexArray(_quad_VAO); )
@@ -55,23 +53,22 @@ idk::RenderEngine::_init_screenquad()
     GLCALL( glEnableVertexAttribArray(0); )
     GLCALL( glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))); )
     GLCALL( glEnableVertexAttribArray(2); )
-
 }
 
 
 idk::RenderEngine::RenderEngine(size_t w, size_t h):
-_frametime(1),
+_screen_width(w), _screen_height(h),
 _gbuffer_geometrypass(4), _screenquad_buffer(1)
 {
-    _init_SDL_OpenGL(w, h);
+    _init_SDL_OpenGL(_screen_width, _screen_height);
     _init_screenquad();
 
     idk::glInterface gl = _gl_interface;
 
-    gl.genScreenBuffer(_gbuffer_geometrypass);
+    gl.genScreenBuffer(_screen_width, _screen_height, _gbuffer_geometrypass);
     _gbuffer_geometrypass_shader = gl.compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
 
-    _gl_interface.genScreenBuffer(_screenquad_buffer);
+    _gl_interface.genScreenBuffer(_screen_width, _screen_height, _screenquad_buffer);
     _screenquad_shader = gl.compileShaderProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
 }
 
@@ -82,9 +79,9 @@ idk::RenderEngine::_render_screenquad()
     idk::glInterface &gl = _gl_interface;
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    
     gl.bindShaderProgram(_screenquad_shader);
     gl.setUniform_texture("un_screen_texture", _gbuffer_geometrypass.textures[0]);
-
 
     GLCALL( glDisable(GL_DEPTH_TEST); )
     GLCALL( glDisable(GL_CULL_FACE); )
@@ -96,6 +93,23 @@ idk::RenderEngine::_render_screenquad()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 }
+
+
+uint
+idk::RenderEngine::createCamera()
+{
+    uint camera_id = _camera_allocator.add();
+    _camera_allocator.get(camera_id).aspect(_screen_width, _screen_height);
+    return camera_id;
+}
+
+
+// void
+// idk::RenderEngine::controlCamera(std::function<void(idk::Keylog &, idk::Camera &)> fn)
+// {
+//     _camera_control_lambda = fn;
+// }
+
 
 
 idk::lightsource::Point &
@@ -119,8 +133,7 @@ idk::RenderEngine::bindModel(uint model_id, uint transform_id)
 uint
 idk::RenderEngine::loadOBJ(std::string root, std::string obj, std::string mtl)
 {
-    uint model_id = _model_allocator.add();
-    _model_allocator.get(model_id) = idk::Model(root, obj, mtl);
+    uint model_id = _model_allocator.add(idk::Model(root, obj, mtl));
     return model_id;
 }
 
@@ -128,12 +141,11 @@ idk::RenderEngine::loadOBJ(std::string root, std::string obj, std::string mtl)
 void
 idk::RenderEngine::beginFrame()
 {
-    _frame_start = clock();
-
+    SDL_GL_SwapWindow(_SDL_window);
     _gl_interface.free_glTextureUnitIDs();
 
     GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, 0); )
-    GLCALL( glClearColor(0.0f, 0.0f, 0.0f, 1.0f); )
+    GLCALL( glClearColor(1.0f, 1.0f, 1.0f, 1.0f); )
     GLCALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); )
 }
 
@@ -144,7 +156,7 @@ idk::RenderEngine::endFrame()
     idk::Camera &camera = _camera_allocator.get(_active_camera_id);
     
     idk::glInterface &gl = _gl_interface;
-    gl.bindScreenbuffer(_gbuffer_geometrypass);
+    gl.bindScreenbuffer(_screen_width, _screen_height, _gbuffer_geometrypass);
 
     auto &transform_allocator = _transform_allocator;
 
@@ -174,6 +186,7 @@ idk::RenderEngine::endFrame()
 
         glm::mat4 view = camera.view();
         glm::mat4 proj = camera.projection();
+
         gl.setvec3("un_viewpos", camera.transform().position());
         gl.setmat4("un_view", view);
         gl.setmat4("un_projection", proj);
@@ -189,12 +202,6 @@ idk::RenderEngine::endFrame()
         vec.clear();
     }
     _model_draw_queue.clear();
-
     _render_screenquad();
-
-    SDL_GL_SwapWindow(_SDL_window);
-
-    _frame_end = clock();
-    _frametime = _frame_end - _frame_start;
 }
 

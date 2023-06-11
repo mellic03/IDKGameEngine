@@ -10,8 +10,8 @@ class idk::glInterface
 {
 private:
     GLuint                  _active_shader_id;
-    idk::stack<GLuint>      _available_glTextureUnits;
-    idk::stack<GLuint>      _unavailable_glTextureUnits;
+    idk::vector<GLuint>     _available_glTextureUnits;
+    idk::vector<GLuint>     _unavailable_glTextureUnits;
 
     bool                    _line_has_include(std::string &line);
     std::string             _parse_shader_include(std::string root, std::string line);
@@ -23,9 +23,9 @@ public:
 
                             glInterface();
 
-    void                    genScreenBuffer(GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures);
-    void                    genScreenBuffer(glInterface::ScreenBuffer &screenbuffer);
-    void                    bindScreenbuffer(idk::glInterface::ScreenBuffer &screen_buffer);
+    void                    genScreenBuffer(int width, int height, GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures);
+    void                    genScreenBuffer(int width, int height, glInterface::ScreenBuffer &screenbuffer);
+    void                    bindScreenbuffer(int width, int height, idk::glInterface::ScreenBuffer &screen_buffer);
     
     GLuint                  compileShaderProgram(std::string root, std::string vs, std::string fs);
     void                    bindShaderProgram(GLuint shader_id);

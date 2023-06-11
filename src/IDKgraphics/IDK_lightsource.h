@@ -13,11 +13,11 @@ struct idk::lightsource::Point
 
     float           radius;
     float           attentuation_constant   = 1.0f;
-    float           attentuation_linear     = 0.01f;
-    float           attentuation_quadratic  = 0.01f;
+    float           attentuation_linear     = 0.05f;
+    float           attentuation_quadratic  = 0.0f;
 
                     Point() {  };
-                    Point(uint tID): ambient(0.05f), diffuse(1.0f), transform_id(tID) {  };
+                    Point(uint tID): ambient(0.05f), diffuse(0.25f), transform_id(tID) {  };
 };
 
 

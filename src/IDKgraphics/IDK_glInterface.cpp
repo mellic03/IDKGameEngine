@@ -157,10 +157,8 @@ idk::glInterface::loadTexture(std::string filepath)
 
 
 void
-idk::glInterface::genScreenBuffer(GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures)
+idk::glInterface::genScreenBuffer(int width, int height, GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures)
 {
-    size_t temp_w = 1000, temp_h = 1000;
-
     glDeleteFramebuffers(1, &FBO);
     glDeleteRenderbuffers(1, &RBO);
     glDeleteTextures(textures.size(), &textures[0]);
@@ -174,7 +172,7 @@ idk::glInterface::genScreenBuffer(GLuint &FBO, GLuint &RBO, idk::vector<GLuint> 
     for (size_t i=0; i<textures.size(); i++)
     {
         glBindTexture(GL_TEXTURE_2D, textures[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, temp_w, temp_h, 0, GL_RGBA, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, textures[i], 0);  
@@ -186,7 +184,7 @@ idk::glInterface::genScreenBuffer(GLuint &FBO, GLuint &RBO, idk::vector<GLuint> 
     glDrawBuffers(textures.size(), &attachments[0]);
      
     glBindRenderbuffer(GL_RENDERBUFFER, RBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, temp_w, temp_h);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RBO);
 
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -195,9 +193,9 @@ idk::glInterface::genScreenBuffer(GLuint &FBO, GLuint &RBO, idk::vector<GLuint> 
 
 
 void
-idk::glInterface::genScreenBuffer(idk::glInterface::ScreenBuffer &screenbuffer)
+idk::glInterface::genScreenBuffer(int width, int height, idk::glInterface::ScreenBuffer &screenbuffer)
 {
-    genScreenBuffer(screenbuffer.FBO, screenbuffer.RBO, screenbuffer.textures);
+    genScreenBuffer(width, height, screenbuffer.FBO, screenbuffer.RBO, screenbuffer.textures);
 }
 
 
@@ -229,13 +227,11 @@ idk::glInterface::bindShaderProgram(GLuint shader_id)
 
 
 void
-idk::glInterface::bindScreenbuffer(idk::glInterface::ScreenBuffer &screen_buffer)
+idk::glInterface::bindScreenbuffer(int width, int height, idk::glInterface::ScreenBuffer &screen_buffer)
 {
-    int width = 1000, height = 1000;
-
     glViewport(0, 0, width, height);
     glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.FBO);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    GLCALL( glClearColor(1.0f, 1.0f, 1.0f, 1.0f); )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -246,10 +242,10 @@ idk::glInterface::draw_model(idk::Model &model, idk::transform &transform, idk::
     glm::mat4 model_mat = transform.modelMatrix();
     setmat4("un_model", model_mat);
 
-    for (auto &[name, data]: uniforms.getUniforms_vec2())
-    {
-        setvec2(name.c_str(), data);
-    }
+    // for (auto &[name, data]: uniforms.getUniforms_vec2())
+    // {
+    //     setvec2(name.c_str(), data);
+    // }
 
     for (size_t i=0; i<model.meshes.size(); i++)
     {

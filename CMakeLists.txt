@@ -4,7 +4,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 set(CMAKE_BUILD_PARALLEL_LEVEL 8)
 # add_compile_options( -pedantic -Wextra -Ofast )
 # -fsanitize=undefined
-set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -O3 -fdiagnostics-color=always")
+set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -g -fdiagnostics-color=always")
 
 project(IDKEngine)
 
@@ -32,6 +32,7 @@ file(
     "src/IDKcore/common/datastructures/*.cpp"
 
     "src/IDKgraphics/IDKgraphics_common/*.cpp"
+    "src/IDKgraphics/IDKui/*.cpp"
     "src/IDKgraphics/*.cpp"
     
     "src/IDKGameEngine/IDKGameEngine_common/*.cpp"
@@ -39,6 +40,7 @@ file(
     "src/IDKGameEngine/gameobject/*.cpp"
 
     "src/IDK_core_modules/*.cpp"
+    "src/IDK_core_modules/IDK_ui/*.cpp"
 )
 
 find_package(SDL2 REQUIRED)

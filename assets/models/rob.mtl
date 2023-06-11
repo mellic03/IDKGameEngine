@@ -1,0 +1,22 @@
+# Blender 3.5.1 MTL File: 'None'
+# www.blender.org
+
+newmtl diffuse3
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 1
+map_Kd /home/michael/Desktop/code/C++/OpenGL/assets/gameobjects/npc/rob/cara.png
+
+newmtl diffuse4
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 64.000000
+d 1.000000
+illum 1
+map_Kd /home/michael/Desktop/code/C++/OpenGL/assets/gameobjects/npc/rob/alum.png

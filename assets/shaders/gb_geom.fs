@@ -20,8 +20,9 @@ uniform int un_num_pointlights;
 
 vec3 pointlight_contribution(int idx, vec3 view_dir)
 {
-    float spec_exponent = 128.0;
+    float spec_exponent = 32.0;
     float spec_strength = 1.0;
+    vec3 albedo = vec3(1.0, 1.0, 1.0);
 
     pointlight light = un_pointlights[idx];
     float d = distance(fsin_fragpos, light.position);
@@ -38,9 +39,9 @@ vec3 pointlight_contribution(int idx, vec3 view_dir)
         + light.attentuation_quadratic * d*d
     );
 
-    vec3 ambient = attenuation * light.ambient;
-    vec3 diffuse = attenuation * diffuse_f * light.diffuse;
-    vec3 specular = attenuation * specular_f * spec_strength * light.diffuse;
+    vec3 ambient  = attenuation * albedo * light.ambient;
+    vec3 diffuse  = attenuation * albedo * diffuse_f * light.diffuse;
+    vec3 specular = attenuation * albedo * specular_f * spec_strength;
 
     vec3 result = ambient + diffuse + specular;
 
@@ -50,7 +51,7 @@ vec3 pointlight_contribution(int idx, vec3 view_dir)
 
 void main()
 {
-    vec3 view_dir = normalize(un_viewpos - fsin_fragpos);
+    vec3 view_dir = normalize(-un_viewpos - fsin_fragpos);
 
 
     vec3 color = vec3(0.0);
