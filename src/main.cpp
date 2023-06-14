@@ -11,6 +11,7 @@
 int ENTRY(int argc, const char **argv)
 {
     idk::Engine engine(1500, 1000);
+    engine.registerModule<idk::builtin_modules::Builtin_Render>();
     engine.registerModule<idk::builtin_modules::Builtin_Physics>();
     engine.registerModule<idk::builtin_modules::Builtin_PlayerControl>();
     engine.registerModule<idk::builtin_modules::Builtin_UI>();
@@ -40,6 +41,10 @@ int ENTRY(int argc, const char **argv)
     uint cam_id = ren.createCamera();
     ren.setActiveCamera(cam_id);
     ren.getActiveCamera().ylock(true);
+
+
+    idk::GameObject &obj1 = engine.createGameObject();
+    obj1.model_id = suz_id;
 
     while (engine.running())
     {

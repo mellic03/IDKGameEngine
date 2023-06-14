@@ -90,7 +90,11 @@ idk::Engine::createGameObject()
 {
     uint num_components = _idk_modules.size();
     uint object_id = _gameobjects.add(GameObject(num_components));
-    return _gameobjects.get(object_id);
+
+    GameObject &obj = _gameobjects.get(object_id);
+    obj.transform_id = _render_engine.createTransform();
+
+    return obj;
 }
 
 

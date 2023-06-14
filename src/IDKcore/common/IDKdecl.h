@@ -59,6 +59,7 @@ namespace idk
 
     namespace builtin_modules
     {
+        class Builtin_Render;
         class Builtin_Scripting;
         class Builtin_Physics;
         class Builtin_PlayerControl;

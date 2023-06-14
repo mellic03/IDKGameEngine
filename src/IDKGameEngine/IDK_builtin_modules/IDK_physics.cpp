@@ -20,6 +20,7 @@ idk::builtin_modules::Builtin_Physics::Builtin_Physics()
 void
 idk::builtin_modules::Builtin_Physics::stage_B(idk::Engine &engine)
 {
+
     // engine.gameObjects().for_each_pair(_predicate);
 }
 
