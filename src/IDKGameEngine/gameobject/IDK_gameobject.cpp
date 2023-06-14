@@ -2,29 +2,22 @@
 
 
 bool
-idk::GameObject::hasComponent(idk::GameObject::Component cmp)
+idk::GameObject::hasComponent(uint idx)
 {
-    return _components[static_cast<uint>(cmp)] > 0;
+    return _components[idx] > 0;
 }
 
 
 void
-idk::GameObject::giveComponent(idk::GameObject::Component cmp)
+idk::GameObject::giveComponent(uint idx)
 {
-    _components[static_cast<uint>(cmp)] += 1;
+    _components[idx] += 1;
 }
 
 
 void
-idk::GameObject::removeComponent(idk::GameObject::Component cmp)
+idk::GameObject::removeComponent(uint idx)
 {
-    _components[static_cast<uint>(cmp)] -= 1;
-}
-
-
-
-void createActor()
-{
-    idk::GameObject obj;
+    _components[idx] -= 1;
 }
 

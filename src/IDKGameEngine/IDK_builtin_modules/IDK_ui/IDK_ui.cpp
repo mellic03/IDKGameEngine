@@ -1,8 +1,6 @@
 #include "IDK_ui.h"
 
 
-
-
 void
 idk::builtin_modules::Builtin_UI::_rect(int x, int y, int w, int h)
 {
@@ -28,9 +26,22 @@ idk::builtin_modules::Builtin_UI::_rect(int x, int y, int w, int h)
 }
 
 
+void
+idk::builtin_modules::Builtin_UI::_button(int x, int y, int r, int g, int b)
+{
+    _rect(x, y, 200, 50);
+}
+
 
 void
-idk::builtin_modules::Builtin_UI::stage_C(idk::Engine &engine)
+idk::builtin_modules::Builtin_UI::_fill(int r, int g, int b)
+{
+    _fill_color = glm::ivec3(r, g, b);
+}
+
+
+void
+idk::builtin_modules::Builtin_UI::stage_B(idk::Engine &engine)
 {
     if (engine.mouseCaptured())
         return;

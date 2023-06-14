@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstddef>
-
+#include <cmath>
 
 #define IDK_DECL
 
@@ -22,7 +22,7 @@ namespace idk
     template <typename T> class quadtree;
     template <typename T> class trie;
     template <typename T> class linkedlist;
-    template <typename key_t> class skiplist;
+    class skiplist;
 
     class graph;
     // --------------------------------------------------
@@ -50,12 +50,6 @@ namespace idk
 
     // Engine-level-------------------------------------
     // Implemented in IDKGameEngine/ 
-    enum class ECScomponent
-    {
-        render          =  1 << 0,
-        phyiscs         =  1 << 1,
-        num_components  =  2
-    };
     class GameObject;
     class octree;
     class Keylog;
@@ -65,9 +59,11 @@ namespace idk
 
     namespace builtin_modules
     {
+        class Builtin_Scripting;
         class Builtin_Physics;
         class Builtin_PlayerControl;
         class Builtin_UI;
+        class Builtin_ECS;
     };
 
     // --------------------------------------------------
@@ -75,6 +71,7 @@ namespace idk
 
     // Utility functions --------------------------------
     // Implemented below
+    template <typename T>       void        dowith_probability(float p, T lambda);
     template <typename T>       void        swap(T &a, T &b);
     template <typename T>       T           min(T a, T b);
     template <typename T>       T           max(T a, T b);
@@ -83,6 +80,16 @@ namespace idk
     // --------------------------------------------------
 };
 
+
+template <typename T>
+void
+idk::dowith_probability(float p, T lambda)
+{
+    if ((rand()%1000) / 1000.0f < p)
+    {
+        lambda();
+    }
+}
 
 
 template<typename T>

@@ -70,17 +70,6 @@ idk::Engine::_idk_modules_stage_B()
 
 
 void
-idk::Engine::_idk_modules_stage_C()
-{
-    for (size_t i=0; i<_idk_modules.size(); i++)
-    {
-        idk::Module *idk_module = _idk_modules[i];
-        idk_module->stage_C(*this);
-    }
-}
-
-
-void
 idk::Engine::mouseCapture(bool capture)
 {
     _mouse_captured = capture;
@@ -99,7 +88,8 @@ idk::Engine::mouseCaptured()
 idk::GameObject &
 idk::Engine::createGameObject()
 {
-    uint object_id = _gameobjects.add();
+    uint num_components = _idk_modules.size();
+    uint object_id = _gameobjects.add(GameObject(num_components));
     return _gameobjects.get(object_id);
 }
 
@@ -122,10 +112,11 @@ void
 idk::Engine::beginFrame()
 {
     _frame_start = clock();
-
     _process_key_input();
     _process_mouse_input();
-
+    
+    _idk_modules_stage_A();
+    
     _render_engine.beginFrame();
 }
 
@@ -134,11 +125,10 @@ void
 idk::Engine::endFrame()
 {
     _render_engine.endFrame();
-
-    _idk_modules_stage_C();
-
+   
+    _idk_modules_stage_B();
+    
     _delta_mouse_position = glm::vec2(0.0f);
-
     _frame_end = clock();
     _frametime = _frame_end - _frame_start;
 }

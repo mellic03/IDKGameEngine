@@ -12,7 +12,6 @@ private:
     std::vector<bool>               _occupied;
     std::vector<uint>               _unnocupied;
     std::vector<T>                  _objects;
-    size_t                          _size;
 
 public:
                                     Allocator();
@@ -21,14 +20,14 @@ public:
     uint                            add(const T &data);
     T &                             get(uint id);
     void                            remove(uint id);
-    size_t                          size() const { return _size; };
+    size_t                          size() const { return _objects.size() - _unnocupied.size(); };
 
     void                            for_each(std::function<void(T&)>);
     void                            for_each_pair(std::function<void(T&, T&)>);
 };
 
 template <typename T>
-idk::Allocator<T>::Allocator(): _occupied(0), _unnocupied(0), _objects(0), _size(0)
+idk::Allocator<T>::Allocator(): _occupied(0), _unnocupied(0), _objects(0)
 {
 
 }
@@ -38,8 +37,6 @@ template <typename T>
 uint
 idk::Allocator<T>::add()
 {
-    _size += 1;
-
     if (_unnocupied.empty())
     {
         _occupied.push_back(true);
@@ -61,8 +58,6 @@ template <typename T>
 uint
 idk::Allocator<T>::add(const T &data)
 {
-    _size += 1;
-
     if (_unnocupied.empty())
     {
         _occupied.push_back(true);
@@ -92,8 +87,6 @@ template <typename T>
 void
 idk::Allocator<T>::remove(uint id)
 {
-    _size -= 1;
-
     _occupied[id] = false;
     _unnocupied.push_back(id);
 };

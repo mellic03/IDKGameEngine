@@ -17,10 +17,8 @@ private:
 
 public:
                 Builtin_Physics();
-    void        init(idk::Engine &engine)       {  };
-
-    void        stage_A(idk::Engine &engine)    {  };
-    void        stage_B(idk::Engine &engine)    {  };
-    void        stage_C(idk::Engine &engine);
+    void        init(idk::Engine &)       {  };
+    void        stage_A(idk::Engine &)    {  };
+    void        stage_B(idk::Engine &);
 };
 

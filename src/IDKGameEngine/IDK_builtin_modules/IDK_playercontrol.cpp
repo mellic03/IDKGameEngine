@@ -3,7 +3,7 @@
 
 
 void
-idk::builtin_modules::Builtin_PlayerControl::stage_C(idk::Engine &engine)
+idk::builtin_modules::Builtin_PlayerControl::stage_B(idk::Engine &engine)
 {
     idk::Camera &camera = engine.rengine().getActiveCamera();
     idk::Keylog &keylog = engine.keylog();
@@ -21,9 +21,7 @@ idk::builtin_modules::Builtin_PlayerControl::stage_C(idk::Engine &engine)
         engine.shutdown();
 
     if (keylog.keyTapped(SDL_SCANCODE_E))
-    {
         engine.mouseCapture(!engine.mouseCaptured());
-    }
 
     if (keylog.keyDown(SDL_SCANCODE_W))
         camera.translate(glm::vec3(0.0f, 0.0f, +0.0003f));

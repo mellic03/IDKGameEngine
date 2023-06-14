@@ -1,5 +1,7 @@
 #include "IDK_renderengine.h"
 
+#include <filesystem>
+
 
 void
 idk::RenderEngine::_init_SDL_OpenGL(size_t w, size_t h)
@@ -104,14 +106,6 @@ idk::RenderEngine::createCamera()
 }
 
 
-// void
-// idk::RenderEngine::controlCamera(std::function<void(idk::Keylog &, idk::Camera &)> fn)
-// {
-//     _camera_control_lambda = fn;
-// }
-
-
-
 idk::lightsource::Point &
 idk::RenderEngine::createPointLight()
 {
@@ -130,10 +124,24 @@ idk::RenderEngine::bindModel(uint model_id, uint transform_id)
 }
 
 
+void
+idk::RenderEngine::loadTextures(std::string root)
+{
+    using namespace std;
+
+    filesystem::path rootpath(root);
+    for (auto const &dir_entry: filesystem::recursive_directory_iterator{rootpath})
+    {
+        _gl_interface.loadTexture(dir_entry.path());
+    }
+}
+
+
 uint
 idk::RenderEngine::loadOBJ(std::string root, std::string obj, std::string mtl)
 {
-    uint model_id = _model_allocator.add(idk::Model(root, obj, mtl));
+    idk::glInterface &gl = _gl_interface;
+    uint model_id = _model_allocator.add(idk::Model(root, obj, mtl, gl.materials(), gl.textures()));
     return model_id;
 }
 
@@ -142,7 +150,6 @@ void
 idk::RenderEngine::beginFrame()
 {
     SDL_GL_SwapWindow(_SDL_window);
-    _gl_interface.free_glTextureUnitIDs();
 
     GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, 0); )
     GLCALL( glClearColor(1.0f, 1.0f, 1.0f, 1.0f); )

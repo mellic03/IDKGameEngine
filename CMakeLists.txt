@@ -4,7 +4,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 set(CMAKE_BUILD_PARALLEL_LEVEL 8)
 # add_compile_options( -pedantic -Wextra -Ofast )
 # -fsanitize=undefined
-set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -fsanitize=undefined -Ofast -fdiagnostics-color=always")
+set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -fsanitize=undefined -g -fdiagnostics-color=always")
 
 project(IDKEngine)
 
@@ -44,6 +44,8 @@ file(
 )
 
 find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
+
 find_package(OpenGL REQUIRED)
 
 add_executable(
@@ -54,12 +56,14 @@ add_executable(
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_image_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
 
 target_link_libraries(
     ${PROJECT_NAME}
     GLEW
     SDL2
+    SDL2_image
     ${OPENGL_LIBRARIES}
 )
 

@@ -13,10 +13,16 @@ private:
     idk::vector<GLuint>     _available_glTextureUnits;
     idk::vector<GLuint>     _unavailable_glTextureUnits;
 
+    Allocator<Material>                 _material_allocator;
+    std::unordered_map<std::string, GLuint> _textures;
+
+
     bool                    _line_has_include(std::string &line);
     std::string             _parse_shader_include(std::string root, std::string line);
     std::string             _parse_shader_source(std::string root, std::string glsl);
-
+    
+    GLuint                  _pop_glTextureUnitID();
+    void                    _free_glTextureUnitIDs();
 
 public:
     struct                  ScreenBuffer;
@@ -30,10 +36,13 @@ public:
     GLuint                  compileShaderProgram(std::string root, std::string vs, std::string fs);
     void                    bindShaderProgram(GLuint shader_id);
 
-    GLuint                  loadTexture(std::string filepath);
-    GLuint                  pop_glTextureUnitID();
-    void                    free_glTextureUnitIDs();
+    void                    loadTexture(std::string filepath);
+
     void                    setUniform_texture(std::string name, GLuint texture_id);
+    void                    bindMaterial(idk::Material &material);
+
+    Allocator<Material> &   materials() { return _material_allocator; };
+    std::unordered_map<std::string, GLuint> &textures() { return _textures; };
 
                             /** All subsequent draw calls will be drawn to this framebuffer */
     void                    draw_model(idk::Model &, idk::transform &, idk::glUniforms &);

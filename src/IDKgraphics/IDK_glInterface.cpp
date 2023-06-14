@@ -120,18 +120,12 @@ idk::glInterface::compileShaderProgram(std::string root, std::string vs, std::st
 }
 
 
-GLuint
+void
 idk::glInterface::loadTexture(std::string filepath)
 {
     GLuint texture_id;
-
-    unsigned char *data;
-    std::ifstream instream(filepath);
-
-    if (instream.good())
-    {
-        // data = load_img()
-    }
+    SDL_Surface *img;
+    img = IMG_Load(filepath.c_str());
 
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -139,9 +133,9 @@ idk::glInterface::loadTexture(std::string filepath)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // if (useSRGB)
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, img->w, img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
     // else
-    //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img->w, img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -152,7 +146,7 @@ idk::glInterface::loadTexture(std::string filepath)
     
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    return texture_id;
+    _textures[filepath] = texture_id;
 }
 
 
@@ -201,7 +195,7 @@ idk::glInterface::genScreenBuffer(int width, int height, idk::glInterface::Scree
 
 
 GLuint
-idk::glInterface::pop_glTextureUnitID()
+idk::glInterface::_pop_glTextureUnitID()
 {
     GLuint textureunit_id = _available_glTextureUnits.pop();
     _unavailable_glTextureUnits.push(textureunit_id);
@@ -210,12 +204,11 @@ idk::glInterface::pop_glTextureUnitID()
 
 
 void
-idk::glInterface::free_glTextureUnitIDs()
+idk::glInterface::_free_glTextureUnitIDs()
 {
     while (_unavailable_glTextureUnits.empty() == false)
         _available_glTextureUnits.push(_unavailable_glTextureUnits.pop());
 }
-
 
 
 void
@@ -237,25 +230,27 @@ idk::glInterface::bindScreenbuffer(int width, int height, idk::glInterface::Scre
 
 
 void
+idk::glInterface::bindMaterial(idk::Material &material)
+{
+    setUniform_texture("un_albedo_texture", material.albedo_texture);
+    setUniform_texture("un_specular_texture", material.specular_texture);
+}
+
+
+void
 idk::glInterface::draw_model(idk::Model &model, idk::transform &transform, idk::glUniforms &uniforms)
 {
     glm::mat4 model_mat = transform.modelMatrix();
     setmat4("un_model", model_mat);
 
-    // for (auto &[name, data]: uniforms.getUniforms_vec2())
-    // {
-    //     setvec2(name.c_str(), data);
-    // }
-
     for (size_t i=0; i<model.meshes.size(); i++)
     {
         idk::Mesh &mesh = model.meshes[i];
+        idk::Material &material = _material_allocator.get(mesh.material_id);
+
+        bindMaterial(material);
 
         GLCALL( glBindVertexArray(mesh.VAO); )
-
-        // bind diffuse
-        // bind specular
-        // bind normal
 
         GLCALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.IBOS[i]); )
         GLCALL( glDrawElements(
@@ -265,6 +260,8 @@ idk::glInterface::draw_model(idk::Model &model, idk::transform &transform, idk::
             (void *)0
         ); )
     }
+
+    _free_glTextureUnitIDs();
 }
 
 
@@ -387,10 +384,10 @@ idk::glInterface::setmat4(const char *name, float *m)
 void
 idk::glInterface::setUniform_texture(std::string name, GLuint texture_id)
 {
-    GLuint gl_texture_unit = pop_glTextureUnitID();
-    GLCALL( glActiveTexture(gl_texture_unit); )
+    GLuint texture_unit = _pop_glTextureUnitID();
+    GLCALL( glActiveTexture(texture_unit); )
     GLCALL( glBindTexture(GL_TEXTURE_2D, texture_id); )
-    setint(name.c_str(), gl_texture_unit - GL_TEXTURE0);
+    setint(name.c_str(), texture_unit - GL_TEXTURE0);
 }
 
 

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "../IDKgraphics/IDKgraphics.h"
 #include "IDKGameEngine_common/IDKGameEngine_common.h"
+#include "IDK_module.h"
 #include "gameobject/IDK_gameobject.h"
-#include "IDK_controller.h"
 
 
 class idk::Engine
@@ -32,10 +31,10 @@ private:
 
     void                                        _idk_modules_stage_A();
     void                                        _idk_modules_stage_B();
-    void                                        _idk_modules_stage_C();
+
 
 public:
-                                                Engine(size_t w = 1000, size_t h = 1000);
+                                                Engine( size_t w = 1000, size_t h = 1000 );
 
     idk::RenderEngine &                         rengine()       { return _render_engine; };
 
@@ -47,30 +46,32 @@ public:
     float                                       deltaTime()  { return ((float)_frametime) / CLOCKS_PER_SEC; };
     float                                       frameRate()  { return 1.0f / deltaTime();                   };
 
-    glm::vec2                                   mouse()         { return _mouse_position; };
-    glm::vec2                                   dMouse()        { return _delta_mouse_position; };
-    void                                        mouseCapture(bool on);
+    glm::vec2                                   mouse()     { return _mouse_position; };
+    glm::vec2                                   dMouse()    { return _delta_mouse_position; };
+    void                                        mouseCapture( bool capture );
     bool                                        mouseCaptured();
 
 
     Keylog &                                    keylog()    { return _keylog; };
 
     idk::GameObject &                           createGameObject();
-    idk::GameObject &                           getGameObject(uint obj_id);
-    void                                        deleteGameObject(uint obj_id);
-    Allocator<GameObject> &                     gameObjects() { return _gameobjects; };
+    idk::GameObject &                           getGameObject( uint obj_id );
+    void                                        deleteGameObject( uint obj_id );
+    Allocator<GameObject> &                     gameObjects()   { return _gameobjects; };
 
     template <typename module_t>
-    void                                        registerModule();
+    module_t *                                  registerModule();
 
 };
 
 
+
 template <typename module_t>
-void
+module_t *
 idk::Engine::registerModule()
 {   
     _idk_modules.push_back(new module_t);
     _idk_modules.back()->init(*this);
+    return dynamic_cast<module_t *>(_idk_modules.back());
 }
 

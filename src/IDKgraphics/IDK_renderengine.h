@@ -50,8 +50,6 @@ private:
        1.0f,  1.0f,  -0.999f,  1.0f,  1.0f
     };
 
-    Allocator<GLuint>                   _texture_allocator;
-    Allocator<Material>                 _material_allocator;
     Allocator<Model>                    _model_allocator;
     Allocator<transform>                _transform_allocator;
     Allocator<Camera>                   _camera_allocator;
@@ -60,7 +58,6 @@ private:
     Allocator<lightsource::Dir>         _dirlight_allocator;
 
 
-    // std::function<void(Keylog &, Camera &)>       _camera_control_lambda;
 
                                         // queue[shader_id] = vector<{model_id, transform_id}>;
     modelqueue_t                        _model_draw_queue;
@@ -88,6 +85,7 @@ public:
     lightsource::Point &                createPointLight();
     Allocator<lightsource::Point> &     pointlights()       { return _pointlight_allocator; };
 
+    void                                loadTextures(std::string root);
     uint                                loadOBJ(std::string root, std::string obj, std::string mtl);
     void                                bindModel(uint model_id, uint transform_id);
     void                                bindShader(GLuint shader_id)    { _active_shader_id = shader_id; };
