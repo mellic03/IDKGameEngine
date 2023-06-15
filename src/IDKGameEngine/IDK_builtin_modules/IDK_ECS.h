@@ -11,7 +11,7 @@ private:
 
 
 public:
-                Builtin_ECS();
+                Builtin_ECS(int idx): Module(idx)   {  };
     void        init(idk::Engine &)       {  };
     void        stage_A(idk::Engine &)    {  };
     void        stage_B(idk::Engine &);

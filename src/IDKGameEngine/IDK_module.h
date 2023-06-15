@@ -6,12 +6,14 @@
 class idk::Module
 {
 protected:
+    int         _component_index = -1;
 
 public:
-    virtual ~Module() = default;
-    virtual void init(idk::Engine &) = 0;
-    virtual void stage_A(idk::Engine &) = 0;
-    virtual void stage_B(idk::Engine &) = 0;
+                    Module(int idx)         { _component_index = idx; };
+    virtual         ~Module() = default;
+    virtual void    init( idk::Engine & ) = 0;
+    virtual void    stage_A( idk::Engine & ) = 0;
+    virtual void    stage_B( idk::Engine & ) = 0;
 };
 
 

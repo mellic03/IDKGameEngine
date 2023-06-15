@@ -16,8 +16,8 @@ private:
     void        _sphere_sphere_collision(spherecollider &a, spherecollider &b) {  };
 
 public:
-                Builtin_Physics();
-    void        init(idk::Engine &)       {  };
+                Builtin_Physics(int idx): Module(idx)   {  };
+    void        init(idk::Engine &);
     void        stage_A(idk::Engine &)    {  };
     void        stage_B(idk::Engine &);
 };

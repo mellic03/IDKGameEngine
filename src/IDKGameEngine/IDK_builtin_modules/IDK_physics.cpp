@@ -1,7 +1,9 @@
 #include "IDK_physics.h"
 
 
-idk::builtin_modules::Builtin_Physics::Builtin_Physics()
+
+void
+idk::builtin_modules::Builtin_Physics::init(idk::Engine &engine)
 {
     _predicate = [](idk::GameObject &obj1, idk::GameObject &obj2)
     {
@@ -10,17 +12,15 @@ idk::builtin_modules::Builtin_Physics::Builtin_Physics()
 }
 
 
-// void
-// idk::builtin_modules::Builtin_Physics::_sphere_sphere_collision(spherecollider &a, spherecollider &b)
-// {
-    
-// }
-
-
 void
 idk::builtin_modules::Builtin_Physics::stage_B(idk::Engine &engine)
 {
-
-    // engine.gameObjects().for_each_pair(_predicate);
+    engine.gameObjects_byComponent(_component_index).for_each(
+        [&engine](int idx)
+        {
+            GameObject &obj = engine.getGameObject(idx);
+            engine.rengine().getTransform(obj.transform_id).translate(glm::vec3(0.0f, 0.001f, 0.0f));
+        }
+    );
 }
 

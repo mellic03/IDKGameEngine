@@ -5,6 +5,8 @@
 #include "gameobject/IDK_gameobject.h"
 
 
+#define prefab_table_t std::unordered_map<std::string, idk::GameObject>
+
 class idk::Engine
 {
 private:
@@ -24,6 +26,8 @@ private:
     bool                                        _mouse_captured;
 
     idk::Allocator<GameObject>                  _gameobjects;
+    std::vector<idk::Allocator<int>>            _gameobjects_by_component;
+    prefab_table_t                              _prefabs;
     std::vector<idk::Module *>                  _idk_modules;
 
     void                                        _process_key_input();
@@ -36,9 +40,10 @@ private:
 public:
                                                 Engine( size_t w = 1000, size_t h = 1000 );
 
-    idk::RenderEngine &                         rengine()       { return _render_engine; };
+    idk::RenderEngine &                         rengine()   { return _render_engine; };
+    Keylog &                                    keylog()    { return _keylog; };
 
-    bool                                        running()       { return _running; };
+    bool                                        running()   { return _running; };
     void                                        beginFrame();
     void                                        endFrame();
     void                                        shutdown();
@@ -52,12 +57,14 @@ public:
     bool                                        mouseCaptured();
 
 
-    Keylog &                                    keylog()    { return _keylog; };
-
     idk::GameObject &                           createGameObject();
     idk::GameObject &                           getGameObject( uint obj_id );
     void                                        deleteGameObject( uint obj_id );
+    void                                        createPrefab( std::string name, GameObject &obj );
     Allocator<GameObject> &                     gameObjects()   { return _gameobjects; };
+    Allocator<int> &                            gameObjects_byComponent( uint component_id );
+    void                                        giveComponent( uint object_id, uint component_id );
+    void                                        removeComponent( uint object_id, uint component_id );
 
     template <typename module_t>
     module_t *                                  registerModule();
@@ -65,12 +72,16 @@ public:
 };
 
 
+#undef prefab_table_t
+
 
 template <typename module_t>
 module_t *
 idk::Engine::registerModule()
 {   
-    _idk_modules.push_back(new module_t);
+    _gameobjects_by_component.push_back(idk::Allocator<int>());
+
+    _idk_modules.push_back(new module_t(_idk_modules.size()));
     _idk_modules.back()->init(*this);
     return dynamic_cast<module_t *>(_idk_modules.back());
 }

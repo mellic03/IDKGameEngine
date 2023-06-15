@@ -16,7 +16,7 @@ private:
     void        _fill(int r, int g, int b);
 
 public:
-                Builtin_UI() {  };
+                Builtin_UI(int idx): Module(idx)   {  };
     void        init(idk::Engine &)       {  };
     void        stage_A(idk::Engine &)    {  };
     void        stage_B(idk::Engine &);

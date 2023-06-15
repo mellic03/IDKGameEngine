@@ -92,9 +92,17 @@ idk::Engine::createGameObject()
     uint object_id = _gameobjects.add(GameObject(num_components));
 
     GameObject &obj = _gameobjects.get(object_id);
+    obj.id = object_id;
     obj.transform_id = _render_engine.createTransform();
 
     return obj;
+}
+
+
+idk::Allocator<int> &
+idk::Engine::gameObjects_byComponent( uint component_id )
+{
+    return _gameobjects_by_component[component_id];
 }
 
 
@@ -106,9 +114,34 @@ idk::Engine::getGameObject(uint obj_id)
 
 
 void
+idk::Engine::createPrefab( std::string name, idk::GameObject &obj )
+{
+    _prefabs[name] = obj;
+}
+
+
+void
 idk::Engine::deleteGameObject(uint obj_id)
 {
     _gameobjects.remove(obj_id);
+}
+
+
+void
+idk::Engine::giveComponent( uint object_id, uint component_id )
+{
+    GameObject &object = _gameobjects.get(object_id);
+    object.giveComponent(component_id);
+    _gameobjects_by_component[component_id].add(object_id, object_id);
+}
+
+
+void
+idk::Engine::removeComponent( uint object_id, uint component_id )
+{
+    GameObject &object = _gameobjects.get(object_id);
+    object.removeComponent(component_id);
+    _gameobjects_by_component[component_id].remove(object_id);
 }
 
 

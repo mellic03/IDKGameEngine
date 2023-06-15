@@ -12,6 +12,7 @@ protected:
     std::vector<size_t>     _components;
 
 public:
+    int         id            = -1;
     int         model_id      = -1;
     int         transform_id  = -1;
 

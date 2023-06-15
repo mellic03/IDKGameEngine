@@ -4,7 +4,7 @@
 
 
 
-class idk::builtin_modules::Builtin_Scripting
+class idk::builtin_modules::Builtin_Scripting: public idk::Module
 {
 public:
                 struct script
@@ -20,7 +20,7 @@ private:
 
 
 public:
-                Builtin_Scripting()     {  };
+                Builtin_Scripting(int idx): Module(idx)   {  };
     void        init(idk::Engine &)     {  };
     void        stage_A(idk::Engine &)  {  };
     void        stage_B(idk::Engine &)  {  };
