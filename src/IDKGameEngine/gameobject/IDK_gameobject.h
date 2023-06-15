@@ -9,18 +9,13 @@
 class idk::GameObject
 {
 protected:
-    std::vector<size_t>     _components;
 
 public:
-    int         id            = -1;
-    int         model_id      = -1;
-    int         transform_id  = -1;
+    std::vector<int> components;
 
-                GameObject(): _components(0) {  };
-                GameObject(int num_components): _components(num_components, 0) {  };
+    int model_id      = -1;
+    int transform_id  = -1;
 
-    bool        hasComponent(uint idx);
-    void        giveComponent(uint idx);
-    void        removeComponent(uint idx);
-
+    GameObject(): components(0) {  };
+    GameObject(int num_components): components(num_components, 0) {  };
 };

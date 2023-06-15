@@ -3,7 +3,7 @@
 
 
 void
-idk::builtin_modules::Builtin_Render::init(idk::Engine &engine)
+idk::builtin_modules::Builtin_RenderPipeline::init(idk::Engine &engine)
 {
     _mouse_shader = engine.rengine().glinterface().compileShaderProgram(
         "assets/shaders/", "gb_geom.vs", "gb_geom.fs"
@@ -12,7 +12,7 @@ idk::builtin_modules::Builtin_Render::init(idk::Engine &engine)
 
 
 void
-idk::builtin_modules::Builtin_Render::stage_B(idk::Engine &engine)
+idk::builtin_modules::Builtin_RenderPipeline::stage_A(idk::Engine &engine)
 {
     idk::RenderEngine &ren = engine.rengine();
     ren.bindShader(_mouse_shader);

@@ -84,18 +84,22 @@ idk::Engine::mouseCaptured()
 }
 
 
-
-idk::GameObject &
+uint
 idk::Engine::createGameObject()
 {
     uint num_components = _idk_modules.size();
-    uint object_id = _gameobjects.add(GameObject(num_components));
+    uint obj_id = _gameobjects.add(GameObject(num_components));
+    _gameobjects.get(obj_id).transform_id = _render_engine.createTransform();
+    return obj_id;
+}
 
-    GameObject &obj = _gameobjects.get(object_id);
-    obj.id = object_id;
-    obj.transform_id = _render_engine.createTransform();
-
-    return obj;
+uint
+idk::Engine::createGameObject( uint prefab_id )
+{
+    uint num_components = _idk_modules.size();
+    uint obj_id = _gameobjects.add(_prefabs.get(prefab_id));
+    _gameobjects.get(obj_id).transform_id = _render_engine.createTransform();
+    return obj_id;
 }
 
 
@@ -114,34 +118,60 @@ idk::Engine::getGameObject(uint obj_id)
 
 
 void
-idk::Engine::createPrefab( std::string name, idk::GameObject &obj )
+idk::Engine::deleteGameObject( uint obj_id )
 {
-    _prefabs[name] = obj;
-}
+    for (int i=0; i<_idk_modules.size(); i++)
+        removeComponent(obj_id, i);
 
+    rengine().deleteTransform(_gameobjects.get(obj_id).transform_id);
 
-void
-idk::Engine::deleteGameObject(uint obj_id)
-{
     _gameobjects.remove(obj_id);
 }
 
 
-void
-idk::Engine::giveComponent( uint object_id, uint component_id )
+uint
+idk::Engine::createPrefab( uint obj_id )
 {
-    GameObject &object = _gameobjects.get(object_id);
-    object.giveComponent(component_id);
-    _gameobjects_by_component[component_id].add(object_id, object_id);
+    return _prefabs.add(_gameobjects.get(obj_id));
 }
 
 
 void
-idk::Engine::removeComponent( uint object_id, uint component_id )
+idk::Engine::giveComponent( uint obj_id, uint component_id )
 {
-    GameObject &object = _gameobjects.get(object_id);
-    object.removeComponent(component_id);
-    _gameobjects_by_component[component_id].remove(object_id);
+    _gameobject_components[obj_id][component_id] = 1;
+    _gameobjects_by_component[component_id].add(obj_id, obj_id);
+}
+
+
+void
+idk::Engine::removeComponent( uint obj_id, uint component_id )
+{
+    if (hasComponent(obj_id, component_id) == false)
+        return;
+
+    _gameobjects.get(obj_id).components[component_id] = 0;
+    _gameobjects_by_component[component_id].remove(obj_id);
+}
+
+
+bool
+idk::Engine::hasComponent( uint obj_id, uint component_id )
+{
+    return _gameobject_components[obj_id][component_id] == 1;
+}
+
+
+void
+idk::Engine::translate( uint obj_id, glm::vec3 v )
+{
+    rengine().getTransform(_gameobjects.get(obj_id).transform_id).translate(v);
+}
+
+void
+idk::Engine::scale( uint obj_id, glm::vec3 v )
+{
+    rengine().getTransform(_gameobjects.get(obj_id).transform_id).scale(v);
 }
 
 

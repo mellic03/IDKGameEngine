@@ -19,7 +19,14 @@ idk::builtin_modules::Builtin_Physics::stage_B(idk::Engine &engine)
         [&engine](int idx)
         {
             GameObject &obj = engine.getGameObject(idx);
-            engine.rengine().getTransform(obj.transform_id).translate(glm::vec3(0.0f, 0.001f, 0.0f));
+
+            idk::transform &t = engine.rengine().getTransform(obj.transform_id);
+
+            if (t.position().y > -5.0f)
+            {
+                float dtime = engine.deltaTime();
+                t.translate(glm::vec3(0.0f, dtime * -1.0f, 0.0f));
+            }
         }
     );
 }

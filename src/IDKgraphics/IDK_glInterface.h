@@ -21,8 +21,8 @@ private:
     std::string             _parse_shader_include(std::string root, std::string line);
     std::string             _parse_shader_source(std::string root, std::string glsl);
     
-    GLuint                  _pop_glTextureUnitID();
-    void                    _free_glTextureUnitIDs();
+    GLuint                  pop_glTextureUnitID();
+    void                    free_glTextureUnitIDs();
 
 public:
     struct                  ScreenBuffer;

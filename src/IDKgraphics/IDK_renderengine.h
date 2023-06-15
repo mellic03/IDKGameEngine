@@ -58,10 +58,8 @@ private:
     Allocator<lightsource::Dir>         _dirlight_allocator;
 
 
-
                                         // queue[shader_id] = vector<{model_id, transform_id}>;
     modelqueue_t                        _model_draw_queue;
-
 
                                         friend class idk::Engine;
                                         RenderEngine(size_t w, size_t h);

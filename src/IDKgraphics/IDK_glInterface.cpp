@@ -195,7 +195,7 @@ idk::glInterface::genScreenBuffer(int width, int height, idk::glInterface::Scree
 
 
 GLuint
-idk::glInterface::_pop_glTextureUnitID()
+idk::glInterface::pop_glTextureUnitID()
 {
     GLuint textureunit_id = _available_glTextureUnits.pop();
     _unavailable_glTextureUnits.push(textureunit_id);
@@ -204,7 +204,7 @@ idk::glInterface::_pop_glTextureUnitID()
 
 
 void
-idk::glInterface::_free_glTextureUnitIDs()
+idk::glInterface::free_glTextureUnitIDs()
 {
     while (_unavailable_glTextureUnits.empty() == false)
         _available_glTextureUnits.push(_unavailable_glTextureUnits.pop());
@@ -214,6 +214,7 @@ idk::glInterface::_free_glTextureUnitIDs()
 void
 idk::glInterface::bindShaderProgram(GLuint shader_id)
 {
+    free_glTextureUnitIDs();
     _active_shader_id = shader_id;
     GLCALL( glUseProgram(shader_id); )
 }
@@ -261,7 +262,7 @@ idk::glInterface::draw_model(idk::Model &model, idk::transform &transform, idk::
         ); )
     }
 
-    _free_glTextureUnitIDs();
+    free_glTextureUnitIDs();
 }
 
 
@@ -384,7 +385,7 @@ idk::glInterface::setmat4(const char *name, float *m)
 void
 idk::glInterface::setUniform_texture(std::string name, GLuint texture_id)
 {
-    GLuint texture_unit = _pop_glTextureUnitID();
+    GLuint texture_unit = pop_glTextureUnitID();
     GLCALL( glActiveTexture(texture_unit); )
     GLCALL( glBindTexture(GL_TEXTURE_2D, texture_id); )
     setint(name.c_str(), texture_unit - GL_TEXTURE0);
