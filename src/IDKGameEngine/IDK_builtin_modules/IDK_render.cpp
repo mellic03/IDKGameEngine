@@ -20,9 +20,6 @@ idk::builtin_modules::Builtin_RenderPipeline::stage_A(idk::Engine &engine)
     engine.gameObjects().for_each(
         [&ren](idk::GameObject &obj)
         {
-            if (obj.model_id == -1)
-                return;
-
             ren.bindModel(obj.model_id, obj.transform_id);
         }
     );

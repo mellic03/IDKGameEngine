@@ -9,9 +9,9 @@
 class idk::Engine
 {
 private:
-    clock_t                                     _frame_start;
-    clock_t                                     _frame_end;
-    clock_t                                     _frametime;
+    Uint64                                      _frame_start;
+    Uint64                                      _frame_end;
+    Uint64                                      _frametime;
     bool                                        _running = true;
 
     idk::RenderEngine                           _render_engine;
@@ -23,9 +23,8 @@ private:
     bool                                        _mouse_captured;
 
     idk::Allocator<GameObject>                  _gameobjects;
-    std::vector<std::vector<int>>               _gameobject_components;
-    std::vector<idk::Allocator<int>>            _gameobjects_by_component;
-    idk::Allocator<GameObject>                  _prefabs;
+    idk::Allocator<std::vector<int>>            _gameobject_components;     // v.get(obj) = { components }
+    std::vector<idk::Allocator<int>>            _gameobjects_by_component;  // v[i] = { obj_ids with component i }
     std::vector<idk::Module *>                  _idk_modules;
 
     void                                        _process_key_input();
@@ -45,7 +44,7 @@ public:
     void                                        endFrame();
     void                                        shutdown();
 
-    float                                       deltaTime() { return ((float)_frametime) / CLOCKS_PER_SEC; };
+    float                                       deltaTime() { return ((float)_frametime) / 1000; };
     float                                       frameRate() { return 1.0f / deltaTime();                   };
 
     glm::vec2                                   mouse()     { return _mouse_position; };
@@ -53,7 +52,6 @@ public:
     void                                        mouseCapture( bool capture );
     bool                                        mouseCaptured();
 
-    uint                                        createPrefab( uint obj_id );
     uint                                        createGameObject();
     uint                                        createGameObject( uint prefab_id );
     void                                        deleteGameObject( uint obj_id );
@@ -79,7 +77,6 @@ module_t *
 idk::Engine::registerModule()
 {   
     _gameobjects_by_component.push_back(idk::Allocator<int>());
-
     _idk_modules.push_back(new module_t(_idk_modules.size()));
     _idk_modules.back()->init(*this);
     return dynamic_cast<module_t *>(_idk_modules.back());

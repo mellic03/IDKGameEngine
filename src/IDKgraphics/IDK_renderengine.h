@@ -11,7 +11,7 @@
 #include "primitives/primitives.h"
 
 
-#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<uint, uint, idk::glUniforms>>>
+#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::pair<uint, uint>>>
 
 
 class idk::RenderEngine

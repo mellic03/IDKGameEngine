@@ -16,17 +16,18 @@ void
 idk::builtin_modules::Builtin_Physics::stage_B(idk::Engine &engine)
 {
     engine.gameObjects_byComponent(_component_index).for_each(
-        [&engine](int idx)
+        [&engine](int obj_id)
         {
-            GameObject &obj = engine.getGameObject(idx);
-
+            GameObject &obj = engine.getGameObject(obj_id);
             idk::transform &t = engine.rengine().getTransform(obj.transform_id);
+            float dtime = engine.deltaTime();
 
-            if (t.position().y > -5.0f)
-            {
-                float dtime = engine.deltaTime();
-                t.translate(glm::vec3(0.0f, dtime * -1.0f, 0.0f));
-            }
+            if (t.position().y < -5.0f)
+                t.velocity().y = 0.0f;
+            else
+                t.velocity().y -= 0.01f;
+
+            t.position() += dtime * t.velocity();
         }
     );
 }

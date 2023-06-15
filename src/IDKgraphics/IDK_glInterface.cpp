@@ -225,7 +225,7 @@ idk::glInterface::bindScreenbuffer(int width, int height, idk::glInterface::Scre
 {
     glViewport(0, 0, width, height);
     glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.FBO);
-    GLCALL( glClearColor(1.0f, 1.0f, 1.0f, 1.0f); )
+    GLCALL( glClearColor(0.0f, 0.0f, 0.0f, 0.0f); )
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -239,7 +239,7 @@ idk::glInterface::bindMaterial(idk::Material &material)
 
 
 void
-idk::glInterface::draw_model(idk::Model &model, idk::transform &transform, idk::glUniforms &uniforms)
+idk::glInterface::draw_model(idk::Model &model, idk::transform &transform)
 {
     glm::mat4 model_mat = transform.modelMatrix();
     setmat4("un_model", model_mat);

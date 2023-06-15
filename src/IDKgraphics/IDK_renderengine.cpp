@@ -119,8 +119,8 @@ idk::RenderEngine::createPointLight()
 void
 idk::RenderEngine::bindModel(uint model_id, uint transform_id)
 {
-    _model_draw_queue[_active_shader_id].push({model_id, transform_id, idk::glUniforms()});
-    _active_glUniforms = &_model_draw_queue[_active_shader_id].back().third;
+    _model_draw_queue[_active_shader_id].push({model_id, transform_id});
+    // _active_glUniforms = &_model_draw_queue[_active_shader_id].back().third;
 }
 
 
@@ -152,7 +152,7 @@ idk::RenderEngine::beginFrame()
     SDL_GL_SwapWindow(_SDL_window);
 
     GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, 0); )
-    GLCALL( glClearColor(1.0f, 1.0f, 1.0f, 1.0f); )
+    GLCALL( glClearColor(0.0f, 0.0f, 0.0f, 1.0f); )
     GLCALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); )
 }
 
@@ -198,12 +198,11 @@ idk::RenderEngine::endFrame()
         gl.setmat4("un_view", view);
         gl.setmat4("un_projection", proj);
 
-        for (auto [model_id, transform_id, uniforms]: vec)
+        for (auto [model_id, transform_id]: vec)
         {
             gl.draw_model(
                 _model_allocator.get(model_id),
-                _transform_allocator.get(transform_id),
-                uniforms
+                _transform_allocator.get(transform_id)
             );
         }
         vec.clear();

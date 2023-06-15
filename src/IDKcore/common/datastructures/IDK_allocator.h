@@ -80,15 +80,15 @@ template <typename T>
 void
 idk::Allocator<T>::add(const T &data, uint id)
 {
-    while (_objects.size() <= id)
+    while (_objects.size() < id)
     {
         _objects.push_back(T());
         _occupied.push_back(false);
         _unnocupied.push_back(_objects.size()-1);
     }
 
-    _objects.back() = data;
-    _occupied.back() = true;
+    _objects.push_back(data);
+    _occupied.push_back(true);
 }
 
 
@@ -96,6 +96,15 @@ template <typename T>
 T &
 idk::Allocator<T>::get(uint id)
 {
+    if (id >= _objects.size())
+    {
+        std::cout
+        << "Runtime error in idk::Allocator<T>::remove(uint id)\n" 
+        << "\tid " << id << " is >= size (" << _objects.size() << ")"
+        << std::endl;
+        exit(1);
+    }
+
     return _objects[id];
 };
 

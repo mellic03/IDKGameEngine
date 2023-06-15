@@ -45,7 +45,7 @@ public:
     std::unordered_map<std::string, GLuint> &textures() { return _textures; };
 
                             /** All subsequent draw calls will be drawn to this framebuffer */
-    void                    draw_model(idk::Model &, idk::transform &, idk::glUniforms &);
+    void                    draw_model(idk::Model &, idk::transform &);
 
     void                    setint(const char *, int);
     void                    setfloat(const char *, float);
