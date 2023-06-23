@@ -23,7 +23,7 @@ uniform sampler2D un_specular_texture;
 
 vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap)
 {
-    float spec_exponent = 32.0;
+    float spec_exponent = 256.0;
 
     pointlight light = un_pointlights[idx];
     float d = distance(fsin_fragpos, light.position);
@@ -42,7 +42,7 @@ vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specul
 
     vec3 ambient  = attenuation * albedomap * light.ambient;
     vec3 diffuse  = attenuation * albedomap * diffuse_f * light.diffuse;
-    vec3 specular = attenuation * albedomap * specular_f * specularmap;
+    vec3 specular = attenuation * albedomap * specular_f * specularmap * 2;
 
     vec3 result = ambient + diffuse + specular;
 

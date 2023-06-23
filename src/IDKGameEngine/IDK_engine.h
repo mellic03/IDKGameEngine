@@ -11,12 +11,14 @@ class idk::Engine
 private:
     Uint64                                      _frame_start;
     Uint64                                      _frame_end;
-    Uint64                                      _frametime;
+    float                                       _frametime;
     bool                                        _running = true;
 
     idk::RenderEngine                           _render_engine;
     SDL_Event                                   _SDL_event;
     idk::Keylog                                 _keylog;
+    idk::vector<bool>                           _mouse_down;
+
 
     glm::vec2                                   _delta_mouse_position;
     glm::vec2                                   _mouse_position;
@@ -28,6 +30,7 @@ private:
     std::vector<idk::Module *>                  _idk_modules;
 
     void                                        _process_key_input();
+    void                                        _reset_mouse_inputs();
     void                                        _process_mouse_input();
 
     void                                        _idk_modules_stage_A();
@@ -44,11 +47,13 @@ public:
     void                                        endFrame();
     void                                        shutdown();
 
-    float                                       deltaTime() { return ((float)_frametime) / 1000; };
-    float                                       frameRate() { return 1.0f / deltaTime();                   };
+    float                                       deltaTime() { return _frametime;         };
+    float                                       frameRate() { return 1.0f / deltaTime(); };
 
-    glm::vec2                                   mouse()     { return _mouse_position; };
+    glm::vec2                                   mouse()     { return _mouse_position;       };
     glm::vec2                                   dMouse()    { return _delta_mouse_position; };
+    bool                                        mouseUp( idk::MouseButton mb );
+    bool                                        mouseDown( idk::MouseButton mb );
     void                                        mouseCapture( bool capture );
     bool                                        mouseCaptured();
 
@@ -59,15 +64,19 @@ public:
     Allocator<GameObject> &                     gameObjects() { return _gameobjects; };
     Allocator<int> &                            gameObjects_byComponent( uint component_id );
 
-    void                                        giveComponent( uint object_id, uint component_id );
-    void                                        removeComponent( uint object_id, uint component_id );
-    bool                                        hasComponent( uint object_id, uint component_id );
-    void                                        translate( uint obj_id, glm::vec3 v);
-    void                                        scale( uint obj_id, glm::vec3 v);
+    void                                        giveComponent( uint obj_id, uint component_id );
+    void                                        removeComponent( uint obj_id, uint component_id );
+    bool                                        hasComponent( uint obj_id, uint component_id );
+
+    void                                        translate( uint obj_id, glm::vec3 v );
+    void                                        scale( uint obj_id, glm::vec3 v );
 
 
     template <typename module_t>
     module_t *                                  registerModule();
+
+    template <typename module_t>
+    module_t *                                  getModule(std::string name);
 
 };
 

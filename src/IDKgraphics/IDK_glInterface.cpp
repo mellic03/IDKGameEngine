@@ -146,6 +146,8 @@ idk::glInterface::loadTexture(std::string filepath)
     
     glBindTexture(GL_TEXTURE_2D, 0);
 
+    filepath = filepath.substr(filepath.find("textures/"));
+
     _textures[filepath] = texture_id;
 }
 
@@ -216,12 +218,12 @@ idk::glInterface::bindShaderProgram(GLuint shader_id)
 {
     free_glTextureUnitIDs();
     _active_shader_id = shader_id;
-    GLCALL( glUseProgram(shader_id); )
+    GLCALL( glUseProgram(_active_shader_id); )
 }
 
 
 void
-idk::glInterface::bindScreenbuffer(int width, int height, idk::glInterface::ScreenBuffer &screen_buffer)
+idk::glInterface::bindScreenbuffer( int width, int height, idk::glInterface::ScreenBuffer &screen_buffer )
 {
     glViewport(0, 0, width, height);
     glBindFramebuffer(GL_FRAMEBUFFER, screen_buffer.FBO);
@@ -231,7 +233,7 @@ idk::glInterface::bindScreenbuffer(int width, int height, idk::glInterface::Scre
 
 
 void
-idk::glInterface::bindMaterial(idk::Material &material)
+idk::glInterface::bindMaterial( idk::Material &material )
 {
     setUniform_texture("un_albedo_texture", material.albedo_texture);
     setUniform_texture("un_specular_texture", material.specular_texture);
@@ -239,7 +241,7 @@ idk::glInterface::bindMaterial(idk::Material &material)
 
 
 void
-idk::glInterface::draw_model(idk::Model &model, idk::transform &transform)
+idk::glInterface::draw_model( idk::Model &model, idk::Transform &transform )
 {
     glm::mat4 model_mat = transform.modelMatrix();
     setmat4("un_model", model_mat);
@@ -247,9 +249,12 @@ idk::glInterface::draw_model(idk::Model &model, idk::transform &transform)
     for (size_t i=0; i<model.meshes.size(); i++)
     {
         idk::Mesh &mesh = model.meshes[i];
-        idk::Material &material = _material_allocator.get(mesh.material_id);
 
-        bindMaterial(material);
+        if (mesh.material_id != -1)
+        {
+            idk::Material &material = _material_allocator.get(mesh.material_id);
+            bindMaterial(material);
+        }
 
         GLCALL( glBindVertexArray(mesh.VAO); )
 
@@ -265,6 +270,41 @@ idk::glInterface::draw_model(idk::Model &model, idk::transform &transform)
     free_glTextureUnitIDs();
 }
 
+
+void
+idk::glInterface::draw_model( idk::Model &model, idk::Transform &transform, idk::glUniforms &uniforms )
+{
+    glm::mat4 model_mat = transform.modelMatrix();
+    setmat4("un_model", model_mat);
+
+    for (auto &[name, value]: uniforms.getUniforms_vec3())
+    {
+        setvec3(name.c_str(), value);
+    }
+
+    for (size_t i=0; i<model.meshes.size(); i++)
+    {
+        idk::Mesh &mesh = model.meshes[i];
+
+        if (mesh.material_id != -1)
+        {
+            idk::Material &material = _material_allocator.get(mesh.material_id);
+            bindMaterial(material);
+        }
+
+        GLCALL( glBindVertexArray(mesh.VAO); )
+
+        GLCALL( glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.IBOS[i]); )
+        GLCALL( glDrawElements(
+            GL_TRIANGLES,
+            mesh.vertex_indices.size(),
+            GL_UNSIGNED_INT,
+            (void *)0
+        ); )
+    }
+
+    free_glTextureUnitIDs();
+}
 
 
 void

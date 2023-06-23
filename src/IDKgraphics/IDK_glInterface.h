@@ -14,6 +14,7 @@ private:
     idk::vector<GLuint>     _unavailable_glTextureUnits;
 
     Allocator<Material>                 _material_allocator;
+    Allocator<GLuint>                   _shader_allocator;
     std::unordered_map<std::string, GLuint> _textures;
 
 
@@ -44,8 +45,8 @@ public:
     Allocator<Material> &   materials() { return _material_allocator; };
     std::unordered_map<std::string, GLuint> &textures() { return _textures; };
 
-                            /** All subsequent draw calls will be drawn to this framebuffer */
-    void                    draw_model(idk::Model &, idk::transform &);
+    void                    draw_model( idk::Model &, idk::Transform & );
+    void                    draw_model( idk::Model &, idk::Transform &, idk::glUniforms & );
 
     void                    setint(const char *, int);
     void                    setfloat(const char *, float);

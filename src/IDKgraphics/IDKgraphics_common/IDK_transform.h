@@ -3,7 +3,7 @@
 #include "../../IDKcore/IDKcore.h"
 
 
-class idk::transform
+class idk::Transform
 {
 private:
     glm::vec3           _position;
@@ -13,7 +13,7 @@ private:
     glm::mat4           _model_mat;
 
 public:
-                        transform();
+                        Transform();
     
     glm::vec3 &         position()      { return _position;     };
     glm::vec3 &         velocity()      { return _velocity;     };

@@ -26,6 +26,8 @@ idk::Model::_load_obj(std::string path)
     std::vector<glm::vec3> positions, normals;
     std::vector<glm::vec2> uvs;
 
+    bool on_face = false;
+
     while (getline(instream, line))
     {
         std::istringstream iss(line);
@@ -60,10 +62,21 @@ idk::Model::_load_obj(std::string path)
             std::string material_name;
             iss >> dummy >> material_name;
             meshes.back().material_id = _material_ids[material_name];
+
+            on_face = true;
         }
 
         else if (line[0] == 'f' && line[1] == ' ')
         {
+            if (on_face == false)
+            {
+                meshes.push_back(Mesh());
+                IBOS.push_back(0);
+                meshes.back().material_id = -1;
+
+                on_face = true;
+            }
+
             std::vector<std::string> vstrs(3);
             iss >> dummy >> vstrs[0] >> vstrs[1] >> vstrs[2];
 
@@ -110,8 +123,8 @@ idk::Model::_load_mtl(std::string path, Allocator<Material> &materials, std::uno
 
             _material_ids[material_name] = material_id;
 
-            materials.get(material_id).albedo_texture = textures["assets/textures/default-diffuse"];
-            materials.get(material_id).specular_texture = textures["assets/textures/default-lightmap"];
+            materials.get(material_id).albedo_texture = textures["textures/default-diffuse"];
+            materials.get(material_id).specular_texture = textures["textures/default-lightmap"];
         }
 
         else if (line[0] == 'N' && line[1] == 's')
@@ -130,7 +143,7 @@ idk::Model::_load_mtl(std::string path, Allocator<Material> &materials, std::uno
 
         if (line.find("map_Kd") != std::string::npos)
         {
-            size_t root = line.find("assets/");
+            size_t root = line.find("textures/");
             line = line.substr(root);
             Material &material = materials.get(material_id);
             material.albedo_texture = textures[line];
@@ -138,7 +151,7 @@ idk::Model::_load_mtl(std::string path, Allocator<Material> &materials, std::uno
 
         if (line.find("map_Ks") != std::string::npos)
         {
-            size_t root = line.find("assets/");
+            size_t root = line.find("textures/");
             line = line.substr(root);
             Material &material = materials.get(material_id);
             material.specular_texture = textures[line];

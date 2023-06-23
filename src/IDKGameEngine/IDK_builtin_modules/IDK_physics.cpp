@@ -19,7 +19,7 @@ idk::builtin_modules::Builtin_Physics::stage_B(idk::Engine &engine)
         [&engine](int obj_id)
         {
             GameObject &obj = engine.getGameObject(obj_id);
-            idk::transform &t = engine.rengine().getTransform(obj.transform_id);
+            idk::Transform &t = engine.rengine().getTransform(obj.transform_id);
             float dtime = engine.deltaTime();
 
             if (t.position().y < -5.0f)
@@ -30,5 +30,20 @@ idk::builtin_modules::Builtin_Physics::stage_B(idk::Engine &engine)
             t.position() += dtime * t.velocity();
         }
     );
+}
+
+
+void
+idk::builtin_modules::Builtin_Physics::giveSphereCollider( uint obj_id )
+{
+    _sphere_colliders.add(spherecollider(), obj_id);
+}
+
+
+
+void
+idk::builtin_modules::Builtin_Physics::removeSphereCollider( uint obj_id )
+{
+    _sphere_colliders.remove(obj_id);
 }
 

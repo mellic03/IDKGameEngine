@@ -13,7 +13,7 @@ idk::builtin_modules::Builtin_UI::_rect(int x, int y, int w, int h)
     glBegin(GL_QUADS);
 
         if (mx > x && mx < x+w && my > y && my < y+h)
-            glColor3f(1, 1, 0);
+            glColor3f(0, 1, 0);
         else
             glColor3f(1, 0, 0);
 

@@ -5,6 +5,9 @@ idk::Engine::Engine(size_t w, size_t h):
 _frametime(1), _render_engine(w, h), _mouse_captured(false)
 {
 
+    // v[idk::MouseButton::LEFT, MIDDLE, RIGHT]
+    _mouse_down = idk::vector<bool>(3);
+
 }
 
 
@@ -17,8 +20,17 @@ idk::Engine::_process_key_input()
 
 
 void
+idk::Engine::_reset_mouse_inputs()
+{
+
+}
+
+
+void
 idk::Engine::_process_mouse_input()
 {
+    _reset_mouse_inputs();
+
     while (SDL_PollEvent(&_SDL_event))
     {
         if (_SDL_event.type == SDL_QUIT)
@@ -28,6 +40,16 @@ idk::Engine::_process_mouse_input()
         {
             _delta_mouse_position.x = _SDL_event.motion.xrel;
             _delta_mouse_position.y = _SDL_event.motion.yrel;
+        }
+
+        else if (_SDL_event.type == SDL_MOUSEBUTTONDOWN)
+        {
+            _mouse_down[_SDL_event.button.button - 1] = true;
+        }
+
+        else if (_SDL_event.type == SDL_MOUSEBUTTONUP)
+        {
+            _mouse_down[_SDL_event.button.button - 1] = false;
         }
     }
 
@@ -84,6 +106,20 @@ idk::Engine::mouseCaptured()
 }
 
 
+bool
+idk::Engine::mouseUp( idk::MouseButton mb )
+{
+    return false;
+}
+
+
+bool
+idk::Engine::mouseDown( idk::MouseButton mb )
+{
+    return _mouse_down[static_cast<bool>(mb)];
+}
+
+
 uint
 idk::Engine::createGameObject()
 {
@@ -110,8 +146,10 @@ idk::Engine::createGameObject( uint prefab_id )
     obj.transform_id = _render_engine.createTransform();
 
     for (int comp_id = 0; comp_id < _idk_modules.size(); comp_id++)
+    {
         if (_gameobject_components.get(prefab_id)[comp_id] == 1)
             giveComponent(obj_id, comp_id);
+    }
 
     return obj_id;
 }
@@ -186,12 +224,11 @@ idk::Engine::scale( uint obj_id, glm::vec3 v )
 void
 idk::Engine::beginFrame()
 {
-    _frame_start = SDL_GetTicks64();
+    _frame_start = SDL_GetPerformanceCounter();
     _process_key_input();
     _process_mouse_input();
     
     _idk_modules_stage_A();
-    
 
     _render_engine.beginFrame();
 }
@@ -205,8 +242,8 @@ idk::Engine::endFrame()
     _idk_modules_stage_B();
     
     _delta_mouse_position = glm::vec2(0.0f);
-    _frame_end = SDL_GetTicks64();
-    _frametime = _frame_end - _frame_start;
+    _frame_end = SDL_GetPerformanceCounter();
+    _frametime = (_frame_end - _frame_start) / (float)SDL_GetPerformanceFrequency();
 }
 
 

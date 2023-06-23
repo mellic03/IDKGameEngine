@@ -68,10 +68,9 @@ _gbuffer_geometrypass(4), _screenquad_buffer(1)
     idk::glInterface gl = _gl_interface;
 
     gl.genScreenBuffer(_screen_width, _screen_height, _gbuffer_geometrypass);
-    _gbuffer_geometrypass_shader = gl.compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
-
-    _gl_interface.genScreenBuffer(_screen_width, _screen_height, _screenquad_buffer);
+    gl.genScreenBuffer(_screen_width, _screen_height, _screenquad_buffer);
     _screenquad_shader = gl.compileShaderProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
+    _primitive_shader = gl.compileShaderProgram("assets/shaders/", "primitive.vs", "primitive.fs");
 }
 
 
@@ -97,6 +96,13 @@ idk::RenderEngine::_render_screenquad()
 }
 
 
+void
+idk::RenderEngine::loadSpherePrimitive(std::string path)
+{
+    SPHERE_PRIMITIVE = loadOBJ("assets/models/", "uvsp.obj", "uvsp.mtl");
+}
+
+
 uint
 idk::RenderEngine::createCamera()
 {
@@ -106,26 +112,38 @@ idk::RenderEngine::createCamera()
 }
 
 
-idk::lightsource::Point &
+uint
 idk::RenderEngine::createPointLight()
 {
     uint transform_id = _transform_allocator.add();
     lightsource::Point point(transform_id);
-    uint pointlight_id = _pointlight_allocator.add(point);
-    return _pointlight_allocator.get(pointlight_id);
+    return _pointlight_allocator.add(point);
 }
 
 
 void
-idk::RenderEngine::bindModel(uint model_id, uint transform_id)
+idk::RenderEngine::bindModel( uint model_id, uint transform_id )
 {
-    _model_draw_queue[_active_shader_id].push({model_id, transform_id});
-    // _active_glUniforms = &_model_draw_queue[_active_shader_id].back().third;
+    _model_draw_queue[_active_shader_id].push({model_id, transform_id, glUniforms()});
 }
 
 
 void
-idk::RenderEngine::loadTextures(std::string root)
+idk::RenderEngine::drawModel( GLuint shader_id, uint primitive_id, uint transform_id )
+{
+    _model_draw_queue[shader_id].push({primitive_id, transform_id, glUniforms()});
+}
+
+
+void
+idk::RenderEngine::setUniform_vec3( GLuint shader_id, std::string name, glm::vec3 v )
+{
+    _model_draw_queue[shader_id].back().third.setvec3(name, v);
+}
+
+
+void
+idk::RenderEngine::loadTextures( std::string root )
 {
     using namespace std;
 
@@ -162,10 +180,22 @@ idk::RenderEngine::endFrame()
 {
     idk::Camera &camera = _camera_allocator.get(_active_camera_id);
     
+    idk::RenderEngine &ren = *this;
+
     idk::glInterface &gl = _gl_interface;
     gl.bindScreenbuffer(_screen_width, _screen_height, _gbuffer_geometrypass);
 
     auto &transform_allocator = _transform_allocator;
+
+    // Draw sphere primitive for every point light
+    GLuint primitive_shader = _primitive_shader;
+    pointlights().for_each(
+        [&ren, primitive_shader](lightsource::Point &light)
+        {
+            ren.drawModel( primitive_shader, ren.SPHERE_PRIMITIVE, light.transform_id);
+            ren.setUniform_vec3( primitive_shader, "un_color", light.diffuse);
+        }
+    );
 
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
@@ -174,10 +204,10 @@ idk::RenderEngine::endFrame()
         gl.setint("un_num_pointlights", _pointlight_allocator.size());
 
         int count = 0;
-        _pointlight_allocator.for_each(
-            [&gl, &transform_allocator, &count](lightsource::Point &pointlight)
+        pointlights().for_each(
+            [&ren, &gl, &count](lightsource::Point &pointlight)
             {
-                idk::transform &transform = transform_allocator.get(pointlight.transform_id);
+                idk::Transform &transform = ren.getTransform(pointlight.transform_id);
                 std::string str = std::to_string(count);
                 gl.setvec3(std::string("un_pointlights[" + str + "].ambient").c_str(), pointlight.ambient);
                 gl.setvec3(std::string("un_pointlights[" + str + "].diffuse").c_str(), pointlight.diffuse);
@@ -198,11 +228,12 @@ idk::RenderEngine::endFrame()
         gl.setmat4("un_view", view);
         gl.setmat4("un_projection", proj);
 
-        for (auto [model_id, transform_id]: vec)
+        for (auto [model_id, transform_id, glUniform]: vec)
         {
             gl.draw_model(
                 _model_allocator.get(model_id),
-                _transform_allocator.get(transform_id)
+                _transform_allocator.get(transform_id),
+                glUniform
             );
         }
         vec.clear();

@@ -11,7 +11,7 @@
 #include "primitives/primitives.h"
 
 
-#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::pair<uint, uint>>>
+#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<uint, uint, idk::glUniforms>>>
 
 
 class idk::RenderEngine
@@ -27,6 +27,7 @@ private:
 
     glInterface::ScreenBuffer           _gbuffer_geometrypass;
     GLuint                              _gbuffer_geometrypass_shader;
+    GLuint                              _primitive_shader;
 
     glInterface::ScreenBuffer           _screenquad_buffer;
     GLuint                              _screenquad_shader;
@@ -40,6 +41,7 @@ private:
     GLuint                              _quad_VAO;
     GLuint                              _quad_texture;
 
+
     float _quad_vertices[30] = {
       -1.0f,  1.0f,  -0.999f,  0.0f,  1.0f,
       -1.0f, -1.0f,  -0.999f,  0.0f,  0.0f,
@@ -51,7 +53,7 @@ private:
     };
 
     Allocator<Model>                    _model_allocator;
-    Allocator<transform>                _transform_allocator;
+    Allocator<Transform>                _transform_allocator;
     Allocator<Camera>                   _camera_allocator;
     Allocator<lightsource::Point>       _pointlight_allocator;
     Allocator<lightsource::Spot>        _spotlight_allocator;
@@ -68,25 +70,30 @@ private:
     void                                _render_screenquad();
 
 public:
+    uint                                SPHERE_PRIMITIVE;
+
     glInterface &                       glinterface()               { return _gl_interface;                };
    
     uint                                createTransform()           { return _transform_allocator.add();   };
     void                                deleteTransform(uint id)    { _transform_allocator.remove(id);     };
-    idk::transform &                    getTransform(uint id)       { return _transform_allocator.get(id); };
+    idk::Transform &                    getTransform(uint id)       { return _transform_allocator.get(id); };
     
     uint                                createCamera();
-    void                                deleteCamera(uint id)       { _camera_allocator.remove(id);     };
-    idk::Camera &                       getCamera(uint id)          { return _camera_allocator.get(id); };
-    void                                setActiveCamera(uint id)    { _active_camera_id = id;           };
+    void                                deleteCamera( uint id )     { _camera_allocator.remove(id);     };
+    idk::Camera &                       getCamera( uint id)         { return _camera_allocator.get(id); };
+    void                                setActiveCamera( uint id )  { _active_camera_id = id;           };
     idk::Camera &                       getActiveCamera()           { return _camera_allocator.get(_active_camera_id); };
 
-    lightsource::Point &                createPointLight();
+    uint                                createPointLight();
     Allocator<lightsource::Point> &     pointlights()       { return _pointlight_allocator; };
 
-    void                                loadTextures(std::string root);
-    uint                                loadOBJ(std::string root, std::string obj, std::string mtl);
-    void                                bindModel(uint model_id, uint transform_id);
-    void                                bindShader(GLuint shader_id)    { _active_shader_id = shader_id; };
+    void                                loadSpherePrimitive( std::string path );
+    void                                loadTextures( std::string root );
+    uint                                loadOBJ( std::string root, std::string obj, std::string mtl );
+    void                                bindShader( GLuint shader_id )  { _active_shader_id = shader_id; };
+    void                                bindModel( uint model_id, uint transform_id );
+    void                                drawModel( GLuint shader_id, uint primitive_id, uint transform_id );
+    void                                setUniform_vec3( GLuint shader_id, std::string name, glm::vec3 v );
 
     idk::glUniforms &                   glUniformInterface()    { return *_active_glUniforms; };
 

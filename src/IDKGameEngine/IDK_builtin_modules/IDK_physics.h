@@ -15,10 +15,17 @@ private:
 
     void        _sphere_sphere_collision(spherecollider &a, spherecollider &b) {  };
 
+    idk::Allocator<spherecollider> _sphere_colliders;
+
 public:
-                Builtin_Physics(int idx): Module(idx)   {  };
-    void        init(idk::Engine &);
-    void        stage_A(idk::Engine &)    {  };
-    void        stage_B(idk::Engine &);
+                Builtin_Physics( int idx ): Module( idx )   {  };
+    void        init( idk::Engine & );
+    void        stage_A( idk::Engine & )    {  };
+    void        stage_B( idk::Engine & );
+
+
+
+    void        giveSphereCollider( uint obj_id );
+    void        removeSphereCollider( uint obj_id );
 };
 

@@ -14,9 +14,15 @@ Camera(90.0f, 0.1f, 200.0f)
     glm::vec3 &pos = _transform.position();
    
     pos    = glm::vec3( 0.0f,  0.0f,  0.0f );
-    _front = glm::vec3( 0.0f,  0.0f,  -1.0f );
+    _front = glm::vec3( 0.0f,  0.0f, -1.0f );
     _right = glm::vec3( 1.0f,  0.0f,  0.0f );
     _up    = glm::vec3( 0.0f,  1.0f,  0.0f );
+
+    _default_pos = pos;
+    _default_front = glm::vec4(_front, 0.0f);
+    _default_right = glm::vec4(_right, 0.0f);
+    _default_up    = glm::vec4(_up, 0.0f);
+
 
     _view = glm::lookAt(
         pos,
@@ -42,7 +48,9 @@ idk::Camera::translate(glm::vec3 v)
 
     if (_ylock)
     {
+        float length = glm::length(v);
         v.y = 0.0f;
+        v = length * glm::normalize(v);
     }
 
     _transform.translate(v);
@@ -60,28 +68,43 @@ void
 idk::Camera::pitch(float f)
 {
     _view = glm::rotate(_view, f, _right);
+    _front = glm::inverse(_view) * _default_front;
+    _up = glm::inverse(_view) * _default_up;
+}
+
+
+void
+idk::Camera::roll(float f)
+{
+    _view = glm::rotate(_view, f, _front);
+
+    if (_noroll == false)
+    {
+        _right = glm::inverse(_view) * _default_right;
+        _up = glm::inverse(_view) * _default_up;
+    }
 }
 
 
 void
 idk::Camera::yaw(float f)
 {
-    _view = glm::rotate(_view, f, glm::vec3(0.0f, 1.0f, 0.0f));
-    _right = glm::inverse(_view) * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
-    _front = glm::inverse(_view) * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+    if (_ylock)
+        _view = glm::rotate(_view, f, glm::vec3(0.0f, 1.0f, 0.0f));
+    else
+        _view = glm::rotate(_view, f, _up);
+
+    _right = glm::inverse(_view) * _default_right;
+    _front = glm::inverse(_view) * _default_front;
 }
+
 
 
 glm::mat4
 idk::Camera::view()
 {
-    // _pitch = idk::clamp(_pitch, -1.0f, 1.0f);
-
-    // glm::mat4 rot_view = glm::rotate(_view, _yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-    // glm::vec4 right(_right, 0.0f);
-    // right = glm::inverse(rot_view) * right;
-    // rot_view = glm::rotate(rot_view, _pitch, glm::vec3(right));
-
-    return _view * _transform.modelMatrix();
+    // inverse model matrix needed because world needs
+    // to be transform the opposite way the camera has moved.
+    return _view * glm::inverse(_transform.modelMatrix());
 }
 

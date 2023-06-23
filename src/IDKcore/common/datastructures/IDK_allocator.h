@@ -99,7 +99,7 @@ idk::Allocator<T>::get(uint id)
     if (id >= _objects.size())
     {
         std::cout
-        << "Runtime error in idk::Allocator<T>::remove(uint id)\n" 
+        << "Runtime error in idk::Allocator<T>::get(uint id)\n" 
         << "\tid " << id << " is >= size (" << _objects.size() << ")"
         << std::endl;
         exit(1);

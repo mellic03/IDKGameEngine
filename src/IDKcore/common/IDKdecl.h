@@ -30,7 +30,7 @@ namespace idk
 
     // Graphics-level -----------------------------------
     // Implemented in IDKgraphics/ 
-    class transform;
+    class Transform;
     struct vertex;
     class glUniforms;
     class glInterface;
@@ -56,6 +56,8 @@ namespace idk
     class Controller;
     class Engine;
     class Module;
+
+    enum class MouseButton { LEFT, MIDDLE, RIGHT };
 
     namespace builtin_modules
     {
