@@ -77,7 +77,8 @@ public:
     uint                                createTransform()           { return _transform_allocator.add();   };
     void                                deleteTransform(uint id)    { _transform_allocator.remove(id);     };
     idk::Transform &                    getTransform(uint id)       { return _transform_allocator.get(id); };
-    
+    Allocator<Transform> &              transforms()    { return _transform_allocator; };
+
     uint                                createCamera();
     void                                deleteCamera( uint id )     { _camera_allocator.remove(id);     };
     idk::Camera &                       getCamera( uint id)         { return _camera_allocator.get(id); };

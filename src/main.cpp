@@ -11,18 +11,15 @@
 int ENTRY(int argc, const char **argv)
 {
     idk::Engine engine(2000, 1200);
-    auto rendermod = engine.registerModule<idk::builtin_modules::Builtin_RenderPipeline>();
-    auto controlmod = engine.registerModule<idk::builtin_modules::Builtin_PlayerControl>();
-    auto physicsmod = engine.registerModule<idk::builtin_modules::Builtin_Physics>();
-    auto uimod = engine.registerModule<idk::builtin_modules::Builtin_UI>();
-    auto gmod = engine.registerModule<Grabbable>();
-    auto tmod = engine.registerModule<transform_CS>();
-
+    engine.registerModule<Builtin_RenderPipeline>("render");
+    engine.registerModule<Builtin_PlayerControl>("playercontrol");
+    engine.registerModule<Builtin_Physics>("physics");
+    engine.registerModule<Builtin_UI>("ui");
+    engine.registerModule<Grabbable>("grabbable");
 
     idk::RenderEngine &ren = engine.rengine();
     ren.loadTextures("assets/textures/");
     ren.loadSpherePrimitive("assets/models/uvsp.obj");
-
 
     uint light1 = ren.createPointLight();
     uint light2 = ren.createPointLight();
@@ -32,11 +29,12 @@ int ENTRY(int argc, const char **argv)
     ren.pointlights().get(light3).diffuse = glm::vec3(0.3f, 1.0f, 0.3f);
 
 
-    uint suz = ren.loadOBJ("assets/models/", "baby.obj", "baby.mtl");
+    uint suz = ren.loadOBJ("assets/models/cube/", "cube.obj", "cube.mtl");
     uint obj1 = engine.createGameObject();
-    engine.giveComponent(obj1, 4);
     engine.getGameObject(obj1).model_id = suz;
     engine.translate(obj1, glm::vec3(0.0f, -33.5f, 0.0f));
+    engine.giveComponent(obj1, 2);
+
 
     uint plane_id = ren.loadOBJ("assets/models/", "plane.obj", "plane.mtl");
     uint obj2 = engine.createGameObject();
@@ -60,7 +58,6 @@ int ENTRY(int argc, const char **argv)
     uint cam_id = ren.createCamera();
     ren.setActiveCamera(cam_id);
     ren.getActiveCamera().ylock(true);
-    ren.getActiveCamera().noroll(true);
 
     float aaa =  0.0f;
     float bbb = +2.0f;

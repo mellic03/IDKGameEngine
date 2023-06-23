@@ -17,10 +17,9 @@ public:
                                     Allocator();
 
     uint                            add();
-    uint                            add(const T &data);
-    void                            add(const T &data, uint id);
-    T &                             get(uint id);
-    void                            remove(uint id);
+    uint                            add( const T &data );
+    T &                             get( uint id );
+    void                            remove( uint id );
     size_t                          size() const { return _objects.size() - _unnocupied.size(); };
 
     void                            for_each(std::function<void(T&)>);
@@ -75,21 +74,6 @@ idk::Allocator<T>::add(const T &data)
     }
 };
 
-
-template <typename T>
-void
-idk::Allocator<T>::add(const T &data, uint id)
-{
-    while (_objects.size() < id)
-    {
-        _objects.push_back(T());
-        _occupied.push_back(false);
-        _unnocupied.push_back(_objects.size()-1);
-    }
-
-    _objects.push_back(data);
-    _occupied.push_back(true);
-}
 
 
 template <typename T>

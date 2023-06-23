@@ -6,6 +6,17 @@
 
 
 
+class ComponentManager
+{
+private:
+    std::vector<std::vector<int>>   _obj_has_cmp;
+
+public:
+
+
+};
+
+
 class idk::Engine
 {
 private:
@@ -26,7 +37,7 @@ private:
 
     idk::Allocator<GameObject>                  _gameobjects;
     idk::Allocator<std::vector<int>>            _gameobject_components;     // v.get(obj) = { components }
-    std::vector<idk::Allocator<int>>            _gameobjects_by_component;  // v[i] = { obj_ids with component i }
+    std::vector<std::vector<int>>               _has_component; // v[object_id][component_id]
     std::vector<idk::Module *>                  _idk_modules;
 
     void                                        _process_key_input();
@@ -62,7 +73,7 @@ public:
     void                                        deleteGameObject( uint obj_id );
     idk::GameObject &                           getGameObject( uint obj_id );
     Allocator<GameObject> &                     gameObjects() { return _gameobjects; };
-    Allocator<int> &                            gameObjects_byComponent( uint component_id );
+    std::vector<int>                            gameObjects_byComponent( uint component_id );
 
     void                                        giveComponent( uint obj_id, uint component_id );
     void                                        removeComponent( uint obj_id, uint component_id );
@@ -71,23 +82,36 @@ public:
     void                                        translate( uint obj_id, glm::vec3 v );
     void                                        scale( uint obj_id, glm::vec3 v );
 
+    template <typename module_t>
+    module_t *                                  registerModule( std::string name );
 
     template <typename module_t>
-    module_t *                                  registerModule();
-
-    template <typename module_t>
-    module_t *                                  getModule(std::string name);
+    module_t *                                  getModule( std::string name );
 
 };
 
 
 template <typename module_t>
 module_t *
-idk::Engine::registerModule()
+idk::Engine::registerModule( std::string name )
 {   
-    _gameobjects_by_component.push_back(idk::Allocator<int>());
-    _idk_modules.push_back(new module_t(_idk_modules.size()));
+    _idk_modules.push_back(new module_t(name, _idk_modules.size()));
     _idk_modules.back()->init(*this);
     return dynamic_cast<module_t *>(_idk_modules.back());
+}
+
+
+template <typename module_t>
+module_t *
+idk::Engine::getModule( std::string name )
+{
+    module_t *ptr;
+
+    for (idk::Module *moduleptr: _idk_modules)
+    {
+
+    }
+
+    return ptr;
 }
 

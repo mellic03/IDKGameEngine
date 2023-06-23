@@ -155,10 +155,12 @@ idk::Engine::createGameObject( uint prefab_id )
 }
 
 
-idk::Allocator<int> &
+std::vector<int>
 idk::Engine::gameObjects_byComponent( uint component_id )
 {
-    return _gameobjects_by_component[component_id];
+    std::vector<int> obj_ids;
+
+    return obj_ids;
 }
 
 
@@ -186,7 +188,9 @@ void
 idk::Engine::giveComponent( uint obj_id, uint component_id )
 {
     _gameobject_components.get(obj_id)[component_id] = 1;
-    _gameobjects_by_component[component_id].add(obj_id, obj_id);
+
+    if (_has_component.size() <= obj_id)
+        _has_component.resize(obj_id+1);
 }
 
 
@@ -197,7 +201,6 @@ idk::Engine::removeComponent( uint obj_id, uint component_id )
         return;
 
     _gameobject_components.get(obj_id)[component_id] = 0;
-    _gameobjects_by_component[component_id].remove(obj_id);
 }
 
 

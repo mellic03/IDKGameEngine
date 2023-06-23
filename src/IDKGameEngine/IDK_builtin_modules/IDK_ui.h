@@ -1,11 +1,9 @@
 #pragma once
 
-#include "../IDK_builtin_modules_common.h"
+#include "../IDK_engine.h"
 
 
-
-
-class idk::builtin_modules::Builtin_UI: public idk::Module
+class Builtin_UI: public idk::Module
 {
 private:
     int         _width;
@@ -16,7 +14,7 @@ private:
     void        _fill(int r, int g, int b);
 
 public:
-                Builtin_UI(int idx): Module(idx)   {  };
+                Builtin_UI(std::string name, int idx): Module(name, idx)   {  };
     void        init(idk::Engine &)       {  };
     void        stage_A(idk::Engine &)    {  };
     void        stage_B(idk::Engine &);

@@ -58,17 +58,6 @@ namespace idk
     class Module;
 
     enum class MouseButton { LEFT, MIDDLE, RIGHT };
-
-    namespace builtin_modules
-    {
-        class Builtin_RenderPipeline;
-        class Builtin_Scripting;
-        class Builtin_Physics;
-        class Builtin_PlayerControl;
-        class Builtin_UI;
-        class Builtin_ECS;
-    };
-
     // --------------------------------------------------
 
 

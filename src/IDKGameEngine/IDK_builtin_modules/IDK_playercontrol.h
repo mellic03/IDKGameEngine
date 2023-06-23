@@ -1,20 +1,17 @@
 #pragma once
 
-#include "IDK_builtin_modules_common.h"
+#include "../IDK_engine.h"
 
 
-class idk::builtin_modules::Builtin_PlayerControl: public idk::Module
+class Builtin_PlayerControl: public idk::Module
 {
 private:
 
 public:
-                Builtin_PlayerControl(int idx): Module(idx)   {  };
+                Builtin_PlayerControl( std::string name, int idx ): Module(name, idx)   {  };
     void        init(idk::Engine &)       {  };
     void        stage_B(idk::Engine &)    {  };
     void        stage_A(idk::Engine &);
-
-
-    void        testfn()    { std::cout << "testfn()\n"; };
 
 };
 

@@ -4,7 +4,7 @@
 
 
 idk::Transform::Transform():
-_position(0.0f), _velocity(0.0f), _scale(1.0f),
+_position(0.0f), _scale(1.0f),
 _orientation(glm::vec3(0.0f)), _model_mat(1.0f)
 {
 

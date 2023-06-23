@@ -32,8 +32,8 @@ Grabbable::init( idk::Engine &engine )
 void
 Grabbable::stage_B( idk::Engine &engine )
 {
-    engine.gameObjects_byComponent(_component_index)
-    .for_each( _stage_B_predicate );
+    // engine.gameObjects_byComponent(_component_index)
+    // .for_each( _stage_B_predicate );
 };
 
 

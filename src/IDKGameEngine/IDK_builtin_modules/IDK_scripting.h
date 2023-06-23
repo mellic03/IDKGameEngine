@@ -1,10 +1,10 @@
 #pragma once
 
-#include "IDK_builtin_modules_common.h"
+#include "../IDK_engine.h"
 
 
 
-class idk::builtin_modules::Builtin_Scripting: public idk::Module
+class Builtin_Scripting: public idk::Module
 {
 public:
                 struct script
@@ -20,7 +20,7 @@ private:
 
 
 public:
-                Builtin_Scripting(int idx): Module(idx)   {  };
+                Builtin_Scripting( std::string name, int idx ): Module(name, idx)   {  };
     void        init(idk::Engine &)     {  };
     void        stage_A(idk::Engine &)  {  };
     void        stage_B(idk::Engine &)  {  };

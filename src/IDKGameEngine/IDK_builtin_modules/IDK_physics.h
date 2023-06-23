@@ -1,31 +1,20 @@
 #pragma once
 
-#include "IDK_builtin_modules_common.h"
+#include "../IDK_engine.h"
 
 
-class idk::builtin_modules::Builtin_Physics: public idk::Module
+class Builtin_Physics: public idk::Module
 {
 private:
     std::function<void(idk::GameObject &, idk::GameObject &)>   _predicate;
 
-                struct spherecollider
-                {
-                    float radius;
-                };
-
-    void        _sphere_sphere_collision(spherecollider &a, spherecollider &b) {  };
-
-    idk::Allocator<spherecollider> _sphere_colliders;
+    std::vector<float>               _masses;
+    std::vector<glm::vec3>           _velocities;
 
 public:
-                Builtin_Physics( int idx ): Module( idx )   {  };
+                Builtin_Physics( std::string name, int idx ): Module(name, idx)   {  };
     void        init( idk::Engine & );
     void        stage_A( idk::Engine & )    {  };
     void        stage_B( idk::Engine & );
 
-
-
-    void        giveSphereCollider( uint obj_id );
-    void        removeSphereCollider( uint obj_id );
 };
-

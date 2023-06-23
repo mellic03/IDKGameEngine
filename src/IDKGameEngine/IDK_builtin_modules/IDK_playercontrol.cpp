@@ -1,24 +1,25 @@
 #include "IDK_playercontrol.h"
 
 
+static constexpr float SWAY_SPEED_LOOK = 0.01f;
+static constexpr float SWAY_SPEED_MOVE = 0.05f;
+
 
 void
-idk::builtin_modules::Builtin_PlayerControl::stage_A(idk::Engine &engine)
+Builtin_PlayerControl::stage_A(idk::Engine &engine)
 {
     idk::Camera &camera = engine.rengine().getActiveCamera();
     idk::Keylog &keylog = engine.keylog();
     
     float dtime = engine.deltaTime();
 
-
     if (keylog.keyTapped(SDL_SCANCODE_C))
         engine.mouseCapture(!engine.mouseCaptured());
 
+    float speed = 5.0f;
 
-    float speed = 2.5f;
     if (keylog.keyDown(SDL_SCANCODE_LSHIFT))
-        speed = 10.0f;
-
+        speed = 8.0f;
 
     static float roll_sway = 0.0f;
     static float pitch_sway = 0.0f;
@@ -31,7 +32,7 @@ idk::builtin_modules::Builtin_PlayerControl::stage_A(idk::Engine &engine)
         glm::vec2 dmouse = 0.001f * engine.dMouse();
         camera.pitch(dmouse.y);
         camera.yaw(dmouse.x);
-        roll_sway -= 0.08f * dmouse.x;
+        roll_sway -= speed * SWAY_SPEED_LOOK * dmouse.x;
     }
 
     else if (keylog.keyDown(SDL_SCANCODE_ESCAPE))
@@ -39,28 +40,26 @@ idk::builtin_modules::Builtin_PlayerControl::stage_A(idk::Engine &engine)
         engine.shutdown();
     }
 
-    glm::vec3 translation(0.0f);
-
     if (keylog.keyDown(SDL_SCANCODE_W))
     {
-        camera.translate(glm::vec3(0.0f, 0.0f, speed*dtime*-3.0f));
+        camera.translate(glm::vec3(0.0f, 0.0f, -speed*dtime));
     }
 
     if (keylog.keyDown(SDL_SCANCODE_S))
     {
-        camera.translate(glm::vec3(0.0f, 0.0f, speed*dtime*+3.0f));
+        camera.translate(glm::vec3(0.0f, 0.0f, speed*dtime));
     }
 
     if (keylog.keyDown(SDL_SCANCODE_A))
     {
-        camera.translate(glm::vec3(speed*dtime*-3.0f, 0.0f, 0.0f));
-        roll_sway += engine.deltaTime() * 0.25f;
+        camera.translate(glm::vec3(-speed*dtime, 0.0f, 0.0f));
+        roll_sway += speed * SWAY_SPEED_MOVE * engine.deltaTime();
     }
 
     if (keylog.keyDown(SDL_SCANCODE_D))
     {
-        camera.translate(glm::vec3(speed*dtime*+3.0f, 0.0f, 0.0f));
-        roll_sway -= engine.deltaTime() * 0.25f;
+        camera.translate(glm::vec3(speed*dtime, 0.0f, 0.0f));
+        roll_sway -= speed * SWAY_SPEED_MOVE * engine.deltaTime();
     }
 
     float decay = std::pow(0.001f, dtime);

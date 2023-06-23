@@ -3,7 +3,7 @@
 
 
 void
-idk::builtin_modules::Builtin_Physics::init(idk::Engine &engine)
+Builtin_Physics::init(idk::Engine &engine)
 {
     _predicate = [](idk::GameObject &obj1, idk::GameObject &obj2)
     {
@@ -13,37 +13,23 @@ idk::builtin_modules::Builtin_Physics::init(idk::Engine &engine)
 
 
 void
-idk::builtin_modules::Builtin_Physics::stage_B(idk::Engine &engine)
+Builtin_Physics::stage_B(idk::Engine &engine)
 {
-    engine.gameObjects_byComponent(_component_index).for_each(
-        [&engine](int obj_id)
-        {
-            GameObject &obj = engine.getGameObject(obj_id);
-            idk::Transform &t = engine.rengine().getTransform(obj.transform_id);
-            float dtime = engine.deltaTime();
+    std::vector<glm::vec3> &velocities = _velocities;
+    std::vector<int> obj_ids = engine.gameObjects_byComponent(_component_index);
 
-            if (t.position().y < -5.0f)
-                t.velocity().y = 0.0f;
-            else
-                t.velocity().y -= 0.01f;
+    for (int obj_id: obj_ids)
+    {
+        if (obj_id >= velocities.size())
+            velocities.resize(obj_id+1);
 
-            t.position() += dtime * t.velocity();
-        }
-    );
-}
+        idk::GameObject &obj = engine.getGameObject(obj_id);
+        idk::Transform &t = engine.rengine().getTransform(obj.transform_id);
+        float dtime = engine.deltaTime();
 
+        velocities[obj_id].y -= 0.01f;
 
-void
-idk::builtin_modules::Builtin_Physics::giveSphereCollider( uint obj_id )
-{
-    _sphere_colliders.add(spherecollider(), obj_id);
-}
-
-
-
-void
-idk::builtin_modules::Builtin_Physics::removeSphereCollider( uint obj_id )
-{
-    _sphere_colliders.remove(obj_id);
+        t.position() += dtime * velocities[obj_id];
+    }
 }
 
