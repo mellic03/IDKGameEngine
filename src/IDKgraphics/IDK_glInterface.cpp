@@ -120,8 +120,8 @@ idk::glInterface::compileShaderProgram(std::string root, std::string vs, std::st
 }
 
 
-void
-idk::glInterface::loadTexture(std::string filepath)
+GLuint
+idk::glInterface::_load_texture(std::string filepath, bool srgb)
 {
     GLuint texture_id;
     SDL_Surface *img;
@@ -132,10 +132,10 @@ idk::glInterface::loadTexture(std::string filepath)
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    // if (useSRGB)
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, img->w, img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
-    // else
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img->w, img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
+    if (srgb)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, img->w, img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
+    else
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img->w, img->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
 
     glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -146,9 +146,15 @@ idk::glInterface::loadTexture(std::string filepath)
     
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    filepath = filepath.substr(filepath.find("textures/"));
+    return texture_id;
+}
 
-    _textures[filepath] = texture_id;
+
+void
+idk::glInterface::loadTexture(std::string filepath)
+{
+    _textures[filepath + "-srgb"] = _load_texture(filepath, true);
+    _textures[filepath] = _load_texture(filepath, false);
 }
 
 
@@ -193,7 +199,6 @@ idk::glInterface::genScreenBuffer(int width, int height, idk::glInterface::Scree
 {
     genScreenBuffer(width, height, screenbuffer.FBO, screenbuffer.RBO, screenbuffer.textures);
 }
-
 
 
 GLuint
@@ -254,6 +259,7 @@ idk::glInterface::draw_model( idk::Model &model, idk::Transform &transform )
         {
             idk::Material &material = _material_allocator.get(mesh.material_id);
             bindMaterial(material);
+            setfloat("un_specular_exponent", material.specular_exponent);
         }
 
         GLCALL( glBindVertexArray(mesh.VAO); )
@@ -290,6 +296,7 @@ idk::glInterface::draw_model( idk::Model &model, idk::Transform &transform, idk:
         {
             idk::Material &material = _material_allocator.get(mesh.material_id);
             bindMaterial(material);
+            setfloat("un_specular_exponent", material.specular_exponent);
         }
 
         GLCALL( glBindVertexArray(mesh.VAO); )

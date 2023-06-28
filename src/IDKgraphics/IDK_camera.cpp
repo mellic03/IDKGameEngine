@@ -9,7 +9,7 @@ _fov(fov), _near(near), _far(far)
 
 
 idk::Camera::Camera():
-Camera(90.0f, 0.1f, 200.0f)
+Camera(85.0f, 0.1f, 200.0f)
 {
     glm::vec3 &pos = _transform.position();
    

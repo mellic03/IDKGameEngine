@@ -15,27 +15,22 @@ struct idk::vertex
 
 
 
-class idk::Material
+struct idk::Material
 {
-private:
-public:
-    glm::vec3   diffuse_color;
-    glm::vec3   specular_color;
-    float       specular_exponent;
+    glm::vec3   diffuse_color       = glm::vec3(0.0f);
+    glm::vec3   specular_color      = glm::vec3(0.0f);
+    float       specular_exponent   = 16.0f;
     GLuint      albedo_texture;
     GLuint      specular_texture;
     GLuint      normal_texture;
-
 };
 
 
-class idk::Mesh
+struct idk::Mesh
 {
-public:
     uint                    material_id;
     std::vector<GLuint>     vertex_indices;
     GLuint                  VAO, VBO;
-
 };
 
 

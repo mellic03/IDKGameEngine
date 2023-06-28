@@ -10,74 +10,70 @@
 
 int ENTRY(int argc, const char **argv)
 {
-    idk::Engine engine(2000, 1200);
-    engine.registerModule<Builtin_RenderPipeline>("render");
-    engine.registerModule<Builtin_PlayerControl>("playercontrol");
-    engine.registerModule<Builtin_Physics>("physics");
-    engine.registerModule<Builtin_UI>("ui");
-    engine.registerModule<Grabbable>("grabbable");
+    idk::Engine engine(1920, 1080);
+    const uint TRANSFORM     = engine.registerCS<Transform_CS>("transform");
+    const uint MODEL         = engine.registerCS<Model_CS>("model");
+    const uint PLAYERCONTORL = engine.registerCS<PlayerControl_CS>("playercontrol");
+    const uint PHYSICS       = engine.registerCS<Physics_CS>("physics");
+    const uint UI_SYS        = engine.registerCS<Builtin_UI>("ui");
+    const uint GRABBABLE     = engine.registerCS<Grabbable_CS>("grabbable");
+    const uint SPHERECOL     = engine.registerCS<SphereCollider_CS>("spherecollider");
+    const uint PLIGHT        = engine.registerCS<Lightsource_CS>("pointlight");
+
+    Transform_CS *tCS = engine.getCS<Transform_CS>("transform");
+    Model_CS *mCS = engine.getCS<Model_CS>("model");
+
 
     idk::RenderEngine &ren = engine.rengine();
     ren.loadTextures("assets/textures/");
     ren.loadSpherePrimitive("assets/models/uvsp.obj");
 
-    uint light1 = ren.createPointLight();
-    uint light2 = ren.createPointLight();
-    uint light3 = ren.createPointLight();
-    ren.pointlights().get(light1).diffuse = glm::vec3(0.3f, 0.3f, 1.0f);
-    ren.pointlights().get(light2).diffuse = glm::vec3(1.0f, 0.3f, 0.3f);
-    ren.pointlights().get(light3).diffuse = glm::vec3(0.3f, 1.0f, 0.3f);
+    engine.giveComponents(engine.createGameObject(), TRANSFORM, PHYSICS, GRABBABLE, PLIGHT);
 
 
-    uint suz = ren.loadOBJ("assets/models/cube/", "cube.obj", "cube.mtl");
+    uint suz = ren.loadOBJ("assets/models/", "dog.obj", "dog.mtl");
     uint obj1 = engine.createGameObject();
-    engine.getGameObject(obj1).model_id = suz;
-    engine.translate(obj1, glm::vec3(0.0f, -33.5f, 0.0f));
-    engine.giveComponent(obj1, 2);
+    engine.giveComponents(obj1, TRANSFORM, PHYSICS, GRABBABLE, SPHERECOL, MODEL);
+    mCS->useModel(obj1, suz);
+    engine.getCS<SphereCollider_CS>(SPHERECOL)->setRadius(obj1, 1.7f);
 
 
-    uint plane_id = ren.loadOBJ("assets/models/", "plane.obj", "plane.mtl");
+    uint plane_id = ren.loadOBJ("assets/models/", "rob.obj", "rob.mtl");
     uint obj2 = engine.createGameObject();
-    engine.getGameObject(obj2).model_id = plane_id;
-    engine.translate(obj2, glm::vec3(0.0f, -1.5f, 0.0f));
+    engine.giveComponents(obj2, TRANSFORM, MODEL);
+    mCS->useModel(obj2, plane_id);
+    tCS->translate(obj2, glm::vec3(0.0f, -1.11f, 0.0f));
 
 
     constexpr int spread = 100;
     for (int i=0; i<200; i++)
     {
         uint obj_id = engine.createGameObject(obj1);
-        engine.translate(obj_id, glm::vec3((rand()%spread) - (spread/2), (rand()%spread), (rand()%spread) - (spread/2)));
+        tCS->translate(
+            obj_id,
+            glm::vec3(
+                (rand()%spread) - (spread/2),
+                (rand()%spread),
+                (rand()%spread) - (spread/2)
+            )
+        );
 
-        idk::Transform &t = ren.getTransform(engine.getGameObject(obj_id).transform_id);
+        idk::Transform &t = tCS->getTransform(obj_id);
         t.rotateX((rand()%628) / 100.0f);
         t.rotateY((rand()%628) / 100.0f);
         t.rotateZ((rand()%628) / 100.0f);
     }
+    engine.deleteGameObject(obj1);
 
 
     uint cam_id = ren.createCamera();
     ren.setActiveCamera(cam_id);
     ren.getActiveCamera().ylock(true);
 
-    float aaa =  0.0f;
-    float bbb = +2.0f;
-    float ccc = -2.0f;
-
     while (engine.running())
     {
         engine.beginFrame();
 
-        auto &t1 = ren.getTransform(ren.pointlights().get(light1).transform_id);
-        auto &t2 = ren.getTransform(ren.pointlights().get(light2).transform_id);
-        auto &t3 = ren.getTransform(ren.pointlights().get(light3).transform_id);
-
-        t1.position() = glm::vec3( 15*sin(aaa),  20.0f,  15*cos(aaa) );
-        t2.position() = glm::vec3( 15*sin(bbb),  20.0f,  15*cos(bbb) );
-        t3.position() = glm::vec3( 15*sin(ccc),  20.0f,  15*cos(ccc) );
-
-        aaa += 2.0f * engine.deltaTime();
-        bbb += 2.0f * engine.deltaTime();
-        ccc += 2.0f * engine.deltaTime();
 
         engine.endFrame();
     }

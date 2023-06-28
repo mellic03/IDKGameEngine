@@ -65,13 +65,13 @@ Builtin_UI::stage_B(idk::Engine &engine)
     glLoadIdentity();
 
 
-    for (int i=0; i<_width; i+=_width/9)
-    {
-        for (int j=0; j<_height; j+=_height/9)
-        {
-            Builtin_UI::_rect(i+_width/18, j+_height/18, 25, 25);
-        }
-    }
+    // for (int i=0; i<_width; i+=_width/9)
+    // {
+    //     for (int j=0; j<_height; j+=_height/9)
+    //     {
+    //         Builtin_UI::_rect(i+_width/18, j+_height/18, 25, 25);
+    //     }
+    // }
 
 
     glMatrixMode(GL_MODELVIEW);

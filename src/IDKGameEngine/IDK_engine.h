@@ -1,20 +1,8 @@
 #pragma once
 
 #include "IDKGameEngine_common/IDKGameEngine_common.h"
-#include "IDK_module.h"
+#include "IDK_componentsystem.h"
 #include "gameobject/IDK_gameobject.h"
-
-
-
-class ComponentManager
-{
-private:
-    std::vector<std::vector<int>>   _obj_has_cmp;
-
-public:
-
-
-};
 
 
 class idk::Engine
@@ -22,7 +10,7 @@ class idk::Engine
 private:
     Uint64                                      _frame_start;
     Uint64                                      _frame_end;
-    float                                       _frametime;
+    float                                       _frame_time;
     bool                                        _running = true;
 
     idk::RenderEngine                           _render_engine;
@@ -35,17 +23,20 @@ private:
     glm::vec2                                   _mouse_position;
     bool                                        _mouse_captured;
 
-    idk::Allocator<GameObject>                  _gameobjects;
-    idk::Allocator<std::vector<int>>            _gameobject_components;     // v.get(obj) = { components }
-    std::vector<std::vector<int>>               _has_component; // v[object_id][component_id]
-    std::vector<idk::Module *>                  _idk_modules;
+    idk::Allocator<int>                         _gameobjects;
+    std::vector<std::vector<int>>               _component_matrix; // v[object_id][component_id]
+    std::vector<idk::ComponentSystem *>         _idk_componentsystems;
+
 
     void                                        _process_key_input();
-    void                                        _reset_mouse_inputs();
     void                                        _process_mouse_input();
 
     void                                        _idk_modules_stage_A();
     void                                        _idk_modules_stage_B();
+
+                                                /* Base case for giveComponents(uint, Args) */
+    void                                        giveComponents( uint obj_id ) {  };
+
 
 public:
                                                 Engine( size_t w = 1000, size_t h = 1000 );
@@ -58,7 +49,7 @@ public:
     void                                        endFrame();
     void                                        shutdown();
 
-    float                                       deltaTime() { return _frametime;         };
+    float                                       deltaTime() { return _frame_time;         };
     float                                       frameRate() { return 1.0f / deltaTime(); };
 
     glm::vec2                                   mouse()     { return _mouse_position;       };
@@ -71,47 +62,58 @@ public:
     uint                                        createGameObject();
     uint                                        createGameObject( uint prefab_id );
     void                                        deleteGameObject( uint obj_id );
-    idk::GameObject &                           getGameObject( uint obj_id );
-    Allocator<GameObject> &                     gameObjects() { return _gameobjects; };
+    Allocator<int> &                            gameObjects() { return _gameobjects; };
     std::vector<int>                            gameObjects_byComponent( uint component_id );
 
     void                                        giveComponent( uint obj_id, uint component_id );
+    template <typename... Args> void            giveComponents( uint obj_id,  uint, Args... );
     void                                        removeComponent( uint obj_id, uint component_id );
     bool                                        hasComponent( uint obj_id, uint component_id );
 
-    void                                        translate( uint obj_id, glm::vec3 v );
-    void                                        scale( uint obj_id, glm::vec3 v );
-
-    template <typename module_t>
-    module_t *                                  registerModule( std::string name );
-
-    template <typename module_t>
-    module_t *                                  getModule( std::string name );
+    template <typename module_t> uint           registerCS( std::string name );
+    template <typename module_t> module_t *     getCS( uint component_id );
+    template <typename module_t> module_t *     getCS( std::string name );
 
 };
 
 
+
+template <typename... Args>
+void
+idk::Engine::giveComponents( uint obj_id, uint first, Args... rest )
+{
+    giveComponent(obj_id, first);
+    giveComponents(obj_id, rest...);
+}
+
+
 template <typename module_t>
-module_t *
-idk::Engine::registerModule( std::string name )
+uint
+idk::Engine::registerCS( std::string name )
 {   
-    _idk_modules.push_back(new module_t(name, _idk_modules.size()));
-    _idk_modules.back()->init(*this);
-    return dynamic_cast<module_t *>(_idk_modules.back());
+    _idk_componentsystems.push_back(new module_t());
+    _idk_componentsystems.back()->base_init(_idk_componentsystems.size()-1, name);
+    _idk_componentsystems.back()->init(*this);
+    return _idk_componentsystems.size()-1;
 }
 
 
 template <typename module_t>
 module_t *
-idk::Engine::getModule( std::string name )
+idk::Engine::getCS( uint component_id )
+{   
+    return dynamic_cast<module_t *>(_idk_componentsystems[component_id]);
+}
+
+
+template <typename module_t>
+module_t *
+idk::Engine::getCS( std::string name )
 {
-    module_t *ptr;
+    for (auto ptr: _idk_componentsystems)
+        if (ptr->name() == name)
+            return dynamic_cast<module_t *>(ptr);
 
-    for (idk::Module *moduleptr: _idk_modules)
-    {
-
-    }
-
-    return ptr;
+    return nullptr;
 }
 

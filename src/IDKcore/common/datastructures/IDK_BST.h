@@ -2,7 +2,6 @@
 
 #include "../IDKdecl.h"
 #include <string>
-#include <iostream>
 #include <functional>
 
 #define comp_t std::function<bool(const key_t &a, const key_t &b)>

@@ -30,6 +30,7 @@ file(
     "src/*.cpp"
 
     "src/IDKcore/common/datastructures/*.cpp"
+    "src/IDKcore/common/util/*.cpp"
 
     "src/IDKgraphics/IDKgraphics_common/*.cpp"
     "src/IDKgraphics/IDKui/*.cpp"
@@ -38,8 +39,7 @@ file(
     "src/IDKGameEngine/IDKGameEngine_common/*.cpp"
     "src/IDKGameEngine/gameobject/*.cpp"
     "src/IDKGameEngine/*.cpp"
-    "src/IDKGameEngine/IDK_builtin_modules/*.cpp"
-    "src/IDKGameEngine/IDK_builtin_modules/IDK_ui/*.cpp"
+    "src/IDKGameEngine/IDK_components/*.cpp"
 
 )
 

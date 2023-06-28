@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include "../IDKdecl.h"
+#include "../util/util.h"
 
 
 template <typename T>

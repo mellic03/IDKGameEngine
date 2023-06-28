@@ -21,7 +21,9 @@ private:
     bool                    _line_has_include(std::string &line);
     std::string             _parse_shader_include(std::string root, std::string line);
     std::string             _parse_shader_source(std::string root, std::string glsl);
-    
+
+    GLuint                  _load_texture(std::string filepath, bool srgb);
+
     GLuint                  pop_glTextureUnitID();
     void                    free_glTextureUnitIDs();
 
@@ -36,6 +38,7 @@ public:
     
     GLuint                  compileShaderProgram(std::string root, std::string vs, std::string fs);
     void                    bindShaderProgram(GLuint shader_id);
+
 
     void                    loadTexture(std::string filepath);
 

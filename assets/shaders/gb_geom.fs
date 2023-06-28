@@ -16,15 +16,14 @@ in vec2 fsin_texcoords;
 uniform vec3 un_viewpos;
 uniform pointlight un_pointlights[10];
 uniform int un_num_pointlights;
+uniform float un_specular_exponent;
 
 uniform sampler2D un_albedo_texture;
 uniform sampler2D un_specular_texture;
 
 
-vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap)
+vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap, float spec_exponent)
 {
-    float spec_exponent = 256.0;
-
     pointlight light = un_pointlights[idx];
     float d = distance(fsin_fragpos, light.position);
 
@@ -42,7 +41,7 @@ vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specul
 
     vec3 ambient  = attenuation * albedomap * light.ambient;
     vec3 diffuse  = attenuation * albedomap * diffuse_f * light.diffuse;
-    vec3 specular = attenuation * albedomap * specular_f * specularmap * 2;
+    vec3 specular = attenuation * albedomap * specular_f * 255*specularmap;
 
     vec3 result = ambient + diffuse + specular;
 
@@ -52,14 +51,14 @@ vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specul
 
 void main()
 {
-    vec3 view_dir = normalize(-un_viewpos - fsin_fragpos);
+    vec3 view_dir = normalize(un_viewpos - fsin_fragpos);
     vec3 albedo_map = texture(un_albedo_texture, fsin_texcoords).rgb;
     vec3 specular_map = texture(un_specular_texture, fsin_texcoords).rgb;
 
     vec3 color = vec3(0.0);
     for (int i = 0; i < un_num_pointlights; i++)
     {
-        color += pointlight_contribution(i, view_dir, albedo_map, specular_map);
+        color += pointlight_contribution(i, view_dir, albedo_map, specular_map, un_specular_exponent);
     }
 
     FragColor1 = vec4(color, 1.0);

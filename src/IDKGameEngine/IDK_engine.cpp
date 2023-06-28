@@ -2,11 +2,11 @@
 
 
 idk::Engine::Engine(size_t w, size_t h):
-_frametime(1), _render_engine(w, h), _mouse_captured(false)
+_frame_time(1), _render_engine(w, h), _mouse_captured(false)
 {
 
     // v[idk::MouseButton::LEFT, MIDDLE, RIGHT]
-    _mouse_down = idk::vector<bool>(3);
+    _mouse_down = idk::vector<bool>(3, false);
 
 }
 
@@ -20,22 +20,13 @@ idk::Engine::_process_key_input()
 
 
 void
-idk::Engine::_reset_mouse_inputs()
-{
-
-}
-
-
-void
 idk::Engine::_process_mouse_input()
 {
-    _reset_mouse_inputs();
-
     while (SDL_PollEvent(&_SDL_event))
     {
         if (_SDL_event.type == SDL_QUIT)
             exit(0);
-    
+
         if (_SDL_event.type == SDL_MOUSEMOTION)
         {
             _delta_mouse_position.x = _SDL_event.motion.xrel;
@@ -72,9 +63,9 @@ idk::Engine::_process_mouse_input()
 void
 idk::Engine::_idk_modules_stage_A()
 {
-    for (size_t i=0; i<_idk_modules.size(); i++)
+    for (size_t i=0; i<_idk_componentsystems.size(); i++)
     {
-        idk::Module *idk_module = _idk_modules[i];
+        idk::ComponentSystem *idk_module = _idk_componentsystems[i];
         idk_module->stage_A(*this);
     }
 }
@@ -83,9 +74,9 @@ idk::Engine::_idk_modules_stage_A()
 void
 idk::Engine::_idk_modules_stage_B()
 {
-    for (size_t i=0; i<_idk_modules.size(); i++)
+    for (size_t i=0; i<_idk_componentsystems.size(); i++)
     {
-        idk::Module *idk_module = _idk_modules[i];
+        idk::ComponentSystem *idk_module = _idk_componentsystems[i];
         idk_module->stage_B(*this);
     }
 }
@@ -123,11 +114,13 @@ idk::Engine::mouseDown( idk::MouseButton mb )
 uint
 idk::Engine::createGameObject()
 {
-    uint num_components = _idk_modules.size();
-    _gameobject_components.add(std::vector<int>(num_components, 0));
+    uint num_components = _idk_componentsystems.size();
+    _component_matrix.push_back(std::vector<int>(num_components, 0));
 
     uint obj_id = _gameobjects.add();
-    _gameobjects.get(obj_id).transform_id = _render_engine.createTransform();
+
+    for (idk::ComponentSystem *component: _idk_componentsystems)
+        component->onGameObjectCreation(obj_id);
 
     return obj_id;
 }
@@ -136,19 +129,15 @@ idk::Engine::createGameObject()
 uint
 idk::Engine::createGameObject( uint prefab_id )
 {
-    uint num_components = _idk_modules.size();
-    _gameobject_components.add(std::vector<int>(num_components, 0));
+    uint num_components = _idk_componentsystems.size();
+    _component_matrix.push_back(_component_matrix[prefab_id]);
 
     uint obj_id = _gameobjects.add();
 
-    GameObject &obj = _gameobjects.get(obj_id);
-    obj.model_id = _gameobjects.get(prefab_id).model_id;
-    obj.transform_id = _render_engine.createTransform();
-
-    for (int comp_id = 0; comp_id < _idk_modules.size(); comp_id++)
+    for (idk::ComponentSystem *component: _idk_componentsystems)
     {
-        if (_gameobject_components.get(prefab_id)[comp_id] == 1)
-            giveComponent(obj_id, comp_id);
+        component->onGameObjectCreation(obj_id);
+        component->onGameObjectCopy(prefab_id, obj_id);
     }
 
     return obj_id;
@@ -160,67 +149,47 @@ idk::Engine::gameObjects_byComponent( uint component_id )
 {
     std::vector<int> obj_ids;
 
+    for (int i=0; i<_component_matrix.size(); i++)
+        if (_component_matrix[i][component_id] == 1)
+            obj_ids.push_back(i);
+
     return obj_ids;
-}
-
-
-idk::GameObject &
-idk::Engine::getGameObject(uint obj_id)
-{
-    return _gameobjects.get(obj_id);
 }
 
 
 void
 idk::Engine::deleteGameObject( uint obj_id )
 {
-    for (int i=0; i<_idk_modules.size(); i++)
+    for (int i=0; i<_idk_componentsystems.size(); i++)
         removeComponent(obj_id, i);
 
-    rengine().deleteTransform(_gameobjects.get(obj_id).transform_id);
-
     _gameobjects.remove(obj_id);
-    _gameobject_components.remove(obj_id);
+    _component_matrix[obj_id] = std::vector<int>(_idk_componentsystems.size(), 0);
+
+    for (idk::ComponentSystem *component: _idk_componentsystems)
+        component->onGameObjectDeletion(obj_id);
 }
 
 
 void
 idk::Engine::giveComponent( uint obj_id, uint component_id )
 {
-    _gameobject_components.get(obj_id)[component_id] = 1;
-
-    if (_has_component.size() <= obj_id)
-        _has_component.resize(obj_id+1);
+    _component_matrix[obj_id][component_id] = 1;
+    _idk_componentsystems[component_id]->onAssignment(obj_id, *this);
 }
 
 
 void
 idk::Engine::removeComponent( uint obj_id, uint component_id )
 {
-    if (hasComponent(obj_id, component_id) == false)
-        return;
-
-    _gameobject_components.get(obj_id)[component_id] = 0;
+    _component_matrix[obj_id][component_id] = 0;
 }
 
 
 bool
 idk::Engine::hasComponent( uint obj_id, uint component_id )
 {
-    return _gameobject_components.get(obj_id)[component_id] == 1;
-}
-
-
-void
-idk::Engine::translate( uint obj_id, glm::vec3 v )
-{
-    rengine().getTransform(_gameobjects.get(obj_id).transform_id).translate(v);
-}
-
-void
-idk::Engine::scale( uint obj_id, glm::vec3 v )
-{
-    rengine().getTransform(_gameobjects.get(obj_id).transform_id).scale(v);
+    return _component_matrix[obj_id][component_id] == 1;
 }
 
 
@@ -246,7 +215,7 @@ idk::Engine::endFrame()
     
     _delta_mouse_position = glm::vec2(0.0f);
     _frame_end = SDL_GetPerformanceCounter();
-    _frametime = (_frame_end - _frame_start) / (float)SDL_GetPerformanceFrequency();
+    _frame_time = (_frame_end - _frame_start) / (float)SDL_GetPerformanceFrequency();
 }
 
 

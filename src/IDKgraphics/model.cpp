@@ -123,8 +123,8 @@ idk::Model::_load_mtl(std::string path, Allocator<Material> &materials, std::uno
 
             _material_ids[material_name] = material_id;
 
-            materials.get(material_id).albedo_texture = textures["textures/default-diffuse"];
-            materials.get(material_id).specular_texture = textures["textures/default-lightmap"];
+            materials.get(material_id).albedo_texture = 0;
+            materials.get(material_id).specular_texture = 0;
         }
 
         else if (line[0] == 'N' && line[1] == 's')
@@ -141,17 +141,17 @@ idk::Model::_load_mtl(std::string path, Allocator<Material> &materials, std::uno
             materials.get(material_id).specular_color = glm::vec3(x, y, z);
         }
 
-        if (line.find("map_Kd") != std::string::npos)
+        else if (line.find("map_Kd") != std::string::npos)
         {
-            size_t root = line.find("textures/");
+            size_t root = line.find("assets/");
             line = line.substr(root);
             Material &material = materials.get(material_id);
-            material.albedo_texture = textures[line];
+            material.albedo_texture = textures[line + "-srgb"];
         }
 
-        if (line.find("map_Ks") != std::string::npos)
+        else if (line.find("map_Ks") != std::string::npos)
         {
-            size_t root = line.find("textures/");
+            size_t root = line.find("assets/");
             line = line.substr(root);
             Material &material = materials.get(material_id);
             material.specular_texture = textures[line];

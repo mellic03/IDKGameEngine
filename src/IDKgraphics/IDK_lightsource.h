@@ -6,7 +6,7 @@
 
 struct idk::lightsource::Point
 {
-    uint            transform_id;
+    Transform       transform;
 
     glm::vec3       ambient;
     glm::vec3       diffuse;
@@ -16,8 +16,7 @@ struct idk::lightsource::Point
     float           attentuation_linear     = 0.05f;
     float           attentuation_quadratic  = 0.0f;
 
-                    Point() {  };
-                    Point(uint tID): ambient(0.1f), diffuse(1.0f), transform_id(tID) {  };
+                    Point(): ambient(0.01f), diffuse(1.0f) {  };
 };
 
 

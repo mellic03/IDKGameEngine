@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../IDKdecl.h"
+#include "../util/util.h"
 #include <functional>
 
 #define cmp_t std::function<bool(const T &a, const T &b)>

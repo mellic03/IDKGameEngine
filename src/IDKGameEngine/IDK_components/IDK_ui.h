@@ -3,7 +3,7 @@
 #include "../IDK_engine.h"
 
 
-class Builtin_UI: public idk::Module
+class Builtin_UI: public idk::ComponentSystem
 {
 private:
     int         _width;
@@ -14,7 +14,6 @@ private:
     void        _fill(int r, int g, int b);
 
 public:
-                Builtin_UI(std::string name, int idx): Module(name, idx)   {  };
     void        init(idk::Engine &)       {  };
     void        stage_A(idk::Engine &)    {  };
     void        stage_B(idk::Engine &);
