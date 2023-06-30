@@ -1,4 +1,6 @@
 .vscode
+src/IDKcore/glew-2.1.0
 build
 output
 ideas.md
+zdump

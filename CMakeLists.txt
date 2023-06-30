@@ -1,78 +1,66 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.9)
 
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
 set(CMAKE_BUILD_PARALLEL_LEVEL 8)
 # add_compile_options( -pedantic -Wextra -Ofast )
 # -fsanitize=undefined
 set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -fsanitize=undefined -g -fdiagnostics-color=always")
+add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 
-project(IDKEngine)
+project(IDKGame)
 
-add_subdirectory (external)
-include_directories(
-    external/glew-2.1.0/include/
-)
+add_subdirectory (src/IDKengine)
 
-set(ALL_LIBS
-  ${OPENGL_LIBRARY}
-  GLEW_210
-)
-
-add_definitions(
-  -DTW_STATIC
-  -DTW_NO_LIB_PRAGMA
-  -DTW_NO_DIRECT3D
-  -DGLEW_STATIC
-)
 
 file(
     GLOB SOURCES
     "src/*.cpp"
-
-    "src/IDKcore/common/datastructures/*.cpp"
-    "src/IDKcore/common/util/*.cpp"
-
-    "src/IDKgraphics/IDKgraphics_common/*.cpp"
-    "src/IDKgraphics/IDKui/*.cpp"
-    "src/IDKgraphics/*.cpp"
-    
-    "src/IDKGameEngine/IDKGameEngine_common/*.cpp"
-    "src/IDKGameEngine/gameobject/*.cpp"
-    "src/IDKGameEngine/*.cpp"
-    "src/IDKGameEngine/IDK_components/*.cpp"
-
 )
-
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-
-find_package(OpenGL REQUIRED)
 
 add_executable(
     ${PROJECT_NAME} "src/main.cpp"
     ${SOURCES}
-    ${SDL2_LIBRARY}
 )
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_image_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
+include_directories(./)
 
 target_link_libraries(
-    ${PROJECT_NAME}
-    GLEW
-    SDL2
-    SDL2_image
-    ${OPENGL_LIBRARIES}
+    ${PROJECT_NAME} PUBLIC
+    IDKengine
 )
 
 
 
+# objconvert ------------------------------------------------------------------
+# file(
+#     GLOB SOURCES
+#     "src/IDKtools/*.cpp"
+#     "src/IDKcore/common/datastructures/*.cpp"
+#     "src/IDKcore/common/util/*.cpp"
+
+#     "src/IDKgraphics/IDKgraphics_common/*.cpp"
+#     "src/IDKgraphics/IDKui/*.cpp"
+#     "src/IDKgraphics/*.cpp"
+# )
 
 
-project(objconvert)
-add_executable(
-    ${PROJECT_NAME} "src/IDKtools/objconvert.cpp"
-)
+# add_executable(
+#     objconvert "src/IDKtools/objconvert.cpp"
+#     ${SOURCES}
+#     ${SDL2_LIBRARY}
+# )
 
+
+# target_include_directories(objconvert PUBLIC ${OPENGL_INCLUDE_DIRS})
+# target_include_directories(objconvert PUBLIC ${SDL2_INCLUDE_DIRS})
+# target_include_directories(objconvert PUBLIC ${SDL2_image_INCLUDE_DIRS})
+# target_include_directories(objconvert PUBLIC ${OPENGL_INCLUDE_DIRS})
+
+
+# target_link_libraries(
+#     objconvert PUBLIC
+#     GLEW
+#     SDL2
+#     SDL2_image
+#     ${OPENGL_LIBRARIES}
+# )
+# -----------------------------------------------------------------------------

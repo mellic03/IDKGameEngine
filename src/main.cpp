@@ -16,68 +16,42 @@ int ENTRY(int argc, const char **argv)
     const uint PLAYERCONTORL = engine.registerCS<PlayerControl_CS>("playercontrol");
     const uint PHYSICS       = engine.registerCS<Physics_CS>("physics");
     const uint UI_SYS        = engine.registerCS<Builtin_UI>("ui");
-    const uint GRABBABLE     = engine.registerCS<Grabbable_CS>("grabbable");
-    const uint SPHERECOL     = engine.registerCS<SphereCollider_CS>("spherecollider");
-    const uint PLIGHT        = engine.registerCS<Lightsource_CS>("pointlight");
+    // const uint GRABBABLE     = engine.registerCS<Grabbable_CS>("grabbable");
 
-    Transform_CS *tCS = engine.getCS<Transform_CS>("transform");
-    Model_CS *mCS = engine.getCS<Model_CS>("model");
-
+    auto &mCS = engine.getCS<Model_CS>(MODEL);
+    auto &tCS = engine.getCS<Transform_CS>(TRANSFORM);
 
     idk::RenderEngine &ren = engine.rengine();
     ren.loadTextures("assets/textures/");
-    ren.loadSpherePrimitive("assets/models/uvsp.obj");
 
-    engine.giveComponents(engine.createGameObject(), TRANSFORM, PHYSICS, GRABBABLE, PLIGHT);
+    uint p1_id = ren.createPointLight();
 
 
-    uint suz = ren.loadOBJ("assets/models/", "dog.obj", "dog.mtl");
+    uint suz = ren.loadOBJ("assets/models/", "cube.obj", "cube.mtl");
     uint obj1 = engine.createGameObject();
-    engine.giveComponents(obj1, TRANSFORM, PHYSICS, GRABBABLE, SPHERECOL, MODEL);
-    mCS->useModel(obj1, suz);
-    engine.getCS<SphereCollider_CS>(SPHERECOL)->setRadius(obj1, 1.7f);
+    engine.giveComponents(obj1, TRANSFORM, MODEL, PHYSICS);
+    mCS.useModel(obj1, suz);
 
 
     uint plane_id = ren.loadOBJ("assets/models/", "rob.obj", "rob.mtl");
     uint obj2 = engine.createGameObject();
-    engine.giveComponents(obj2, TRANSFORM, MODEL);
-    mCS->useModel(obj2, plane_id);
-    tCS->translate(obj2, glm::vec3(0.0f, -1.11f, 0.0f));
-
-
-    constexpr int spread = 100;
-    for (int i=0; i<200; i++)
-    {
-        uint obj_id = engine.createGameObject(obj1);
-        tCS->translate(
-            obj_id,
-            glm::vec3(
-                (rand()%spread) - (spread/2),
-                (rand()%spread),
-                (rand()%spread) - (spread/2)
-            )
-        );
-
-        idk::Transform &t = tCS->getTransform(obj_id);
-        t.rotateX((rand()%628) / 100.0f);
-        t.rotateY((rand()%628) / 100.0f);
-        t.rotateZ((rand()%628) / 100.0f);
-    }
-    engine.deleteGameObject(obj1);
+    engine.giveComponents(obj2, MODEL);
+    mCS.useModel(obj2, plane_id);
 
 
     uint cam_id = ren.createCamera();
     ren.setActiveCamera(cam_id);
     ren.getActiveCamera().ylock(true);
 
+
     while (engine.running())
     {
         engine.beginFrame();
-
 
         engine.endFrame();
     }
 
     return 0;
 }
+
 

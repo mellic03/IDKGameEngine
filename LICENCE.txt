@@ -1,0 +1,20 @@
+==== [IDKEngine] License ====
+
+[Your project's license terms and information]
+
+==== [Zlib Licensed Software] ====
+
+[Name of the zlib licensed software]
+This software is licensed under the zlib License.
+
+Copyright (c) [Year], [Copyright Holder(s)]
+
+The zlib License:
+
+[Copy the full text of the zlib License here]
+
+Additional requirements/conditions: [Specify any additional requirements or conditions, if applicable]
+
+==== Acknowledgements ====
+
+[Give credit to all third-party software and libraries used in your project, including the zlib licensed software]

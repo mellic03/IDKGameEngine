@@ -1,68 +1,40 @@
-#include <fstream>
-#include <sstream>
-#include <istream>
-#include <iostream>
-#include "IDKtools.h"
+#include "IDK_tools.h"
 
-idk::vector<glm::vec3> positions;
-idk::vector<glm::vec3> normals;
-idk::vector<glm::vec2> uvs;
+#include <iomanip>
 
-void IDKtools::objconvert(
-    std::string root, std::string obj,
-    std::string mtl, std::string to
-)
+
+
+int main( int argc, char **argv )
 {
-    std::ifstream objstream(root + obj);
-    std::ifstream mtlstream(root + mtl);
-    std::string line;
+    idk::RenderEngine ren(100, 100);
+    
+    std::string output_path = argv[1];
 
+    std::cout << "loading model... " << std::flush;
+    uint model_id = ren.loadOBJ("assets/models/", "rob.obj", "rob.mtl");
+    std::cout << "Done!" << std::endl;
 
-    while (getline(objstream, line))
+    idk::Model &model = ren.models().get(model_id);
+
+    int count = 0;
+
+    for (idk::Mesh &mesh: model.meshes)
     {
-        std::istringstream iss(line);
-        std::string dummy;
+        std::vector<idk::vertex> vertices;
 
-        if (line.find("v ") != std::string::npos)
-        {
-            float x, y, z;
-            iss >> dummy >> x >> y >> z;
-            positions.push(glm::vec3(x, y, z));
-        }
+        for (int idx: mesh.vertex_indices)
+            vertices.push_back(model.vertex_data[idx]);
 
-        else if (line.find("vn ") != std::string::npos)
-        {
-            float x, y, z;
-            iss >> dummy >> x >> y >> z;
-            normals.push(glm::vec3(x, y, z));
-        }
+        std::stringstream stream;
+        stream << std::setw(8) << std::setfill('0') << count;
 
-        else if (line.find("vt ") != std::string::npos)
-        {
-            float u, v;
-            iss >> dummy >> u >> v;
-            uvs.push(glm::vec2(u, v)); 
-        }
+
+        std::cout << "Writing " << count << ".idkvts ...";
+        idktools::vertices_to_bin(vertices, output_path + stream.str() + ".idkvts");
+        std::cout << " Done!" << std::endl;
+
+        count += 1;
     }
-
-    std::cout << positions.size() << " " << normals.size() << "\n";
-}
-
-
-int main(int argc, char **argv)
-{
-    if (argc != 5)
-    {
-        std::cout
-        << "Usage: objconvert [ROOT] [OBJ] [MTL] [OUT]\n"
-        << "  ROOT \t path containing both obj and mtl files\n"
-        << "  OBJ  \t obj filepath relative to root\n"
-        << "  MTL  \t mtl filepath relative to root\n"
-        << "  OUT  \t output filepath relative to working directory\n\n";
-        return 1;
-    }
-
-    IDKtools::objconvert(argv[1], argv[2], argv[3], argv[4]);
 
     return 0;
 }

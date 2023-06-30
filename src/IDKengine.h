@@ -1,5 +1,5 @@
 #pragma once
 
-#include "IDKGameEngine/IDK_engine.h"
-#include "IDKGameEngine/IDK_components/IDK_components.h"
+#include "IDKengine/IDK_engine.h"
+#include "IDKengine/IDK_builtin_CS/IDK_builtin_CS.h"
 

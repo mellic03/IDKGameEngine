@@ -1,0 +1,2 @@
+idktex idktex.db
+idkmdl idkmdl.db
