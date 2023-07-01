@@ -1,13 +1,13 @@
 #pragma once
 
 #include <unordered_map>
-#include "IDKcore.h"
+#include "IDKgraphics_common.h"
 
 #include "IDK_glUniforms.h"
 #include "IDK_glInterface.h"
 #include "IDK_camera.h"
 #include "IDK_lightsource.h"
-#include "IDK_model.h"
+#include "IDK_model/IDK_model.h"
 #include "primitives/primitives.h"
 
 
@@ -54,12 +54,19 @@ private:
     modelqueue_t                        _model_draw_queue;
     modelqueue_t                        _wireframe_draw_queue;
 
-    void                                _init_SDL_OpenGL(size_t w, size_t h);
+    void                                _init_SDL_OpenGL( size_t w, size_t h );
     void                                _init_screenquad();
     void                                _load_primitives();
     void                                _render_screenquad();
     void                                _colorgrade_screenquad();
     void                                _fxaa_screenquad();
+
+    // Model loading ----------------------------------------------------------
+
+    uint                                _load_mtl( std::string path );
+    uint                                _load_obj( std::string path );
+    
+    // ------------------------------------------------------------------------
 
 public:
     GLuint                              primitive_shader;
@@ -101,5 +108,5 @@ public:
 
 };
 
-
 #undef modelqueue_t
+

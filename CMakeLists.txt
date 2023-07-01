@@ -11,7 +11,6 @@ project(IDKGame)
 
 add_subdirectory (src/IDKengine)
 
-
 file(
     GLOB SOURCES
     "src/*.cpp"
@@ -19,6 +18,28 @@ file(
 
 add_executable(
     ${PROJECT_NAME} "src/main.cpp"
+    ${SOURCES}
+)
+include_directories(./)
+
+target_link_libraries(
+    ${PROJECT_NAME} PUBLIC
+    IDKengine
+)
+
+
+
+
+project(objconvert)
+
+
+file(
+    GLOB SOURCES
+    "src/IDKtools/*.cpp"
+)
+
+add_executable(
+    ${PROJECT_NAME} "src/IDKtools/objconvert.cpp"
     ${SOURCES}
 )
 include_directories(./)

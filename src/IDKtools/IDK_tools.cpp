@@ -1,9 +1,10 @@
 #include "IDK_tools.h"
 
-
+#include <fstream>
+#include <sstream>
 
 void
-idktools::vertices_to_bin( std::vector<idk::vertex> &vertices, std::string filepath )
+idktools::vertices_to_bin( std::vector<idk::Vertex> &vertices, std::string filepath )
 {
     std::ofstream stream(filepath, std::ios_base::binary);
     
@@ -17,14 +18,14 @@ idktools::vertices_to_bin( std::vector<idk::vertex> &vertices, std::string filep
     // Write vertices to file
     stream.write(
         reinterpret_cast<const char *>(&vertices[0]),
-        num_vertices * sizeof(idk::vertex)
+        num_vertices * sizeof(idk::Vertex)
     );
 
     stream.close();
 };
 
 
-std::vector<idk::vertex>
+std::vector<idk::Vertex>
 idktools::vertices_from_bin( std::string filepath )
 {
     std::ifstream stream(filepath, std::ios_base::binary);
@@ -36,12 +37,12 @@ idktools::vertices_from_bin( std::string filepath )
         sizeof(num_vertices)
     );
 
-    std::vector<idk::vertex> vertices(num_vertices);
+    std::vector<idk::Vertex> vertices(num_vertices);
 
     // read vertices from file
     stream.read(
         reinterpret_cast<char *>(&vertices[0]),
-        num_vertices * sizeof(idk::vertex)
+        num_vertices * sizeof(idk::Vertex)
     );
 
     stream.close();

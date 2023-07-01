@@ -8,7 +8,6 @@
 class Physics_CS: public idk::ComponentSystem
 {
 private:
-    GLuint                          _default_shader;
     idk_physics::World              _physicsworld;
     std::vector<idk::Transform>     _transforms;
 
@@ -22,8 +21,5 @@ public:
     void        onGameObjectCreation( int obj_id );
     void        onGameObjectDeletion( int obj_id );
     void        onGameObjectCopy( int src_obj_id, int dest_obj_id );
-
-
-    glm::vec3 & getVelocity( int obj_id );
 
 };

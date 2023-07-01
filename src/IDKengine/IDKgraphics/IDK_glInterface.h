@@ -1,22 +1,22 @@
 #pragma once
 
-#include "IDKcore.h"
+#include "IDKgraphics_common.h"
 #include "IDK_glUniforms.h"
 #include "IDK_glFramebuffer.h"
-#include "IDK_model.h"
+#include "IDK_model/IDK_model.h"
 
 #define IDK_GLINTERFACE_MAX_TEXTUREi (GL_TEXTURE0 + 32)
 
 class idk::glInterface
 {
 private:
-    GLuint                  _active_shader_id;
-    idk::vector<GLuint>     _available_glTextureUnits;
-    idk::vector<GLuint>     _unavailable_glTextureUnits;
+    GLuint                      _active_shader_id;
+    idk::vector<GLuint>         _available_glTextureUnits;
+    idk::vector<GLuint>         _unavailable_glTextureUnits;
 
-    Allocator<Material>                 _material_allocator;
-    Allocator<GLuint>                   _shader_allocator;
-    std::unordered_map<std::string, GLuint> _textures;
+    Allocator<Material>                         _material_allocator;
+    Allocator<Texture>                          _texture_allocator;
+    std::unordered_map<std::string, GLuint>     _textures;
 
 
     bool                    _line_has_include(std::string &line);
@@ -39,6 +39,8 @@ public:
     void                    bindShaderProgram(GLuint shader_id);
 
     void                    loadTexture(std::string filepath);
+    void                    loadMTL();
+    void                    loadOBJ();
 
     void                    setUniform_texture(std::string name, GLuint texture_id);
     void                    bindMaterial(idk::Material &material);
@@ -74,7 +76,6 @@ public:
 
     template <typename... GLenums> void     enable( GLenum, GLenums... );
     template <typename... GLenums> void     disable( GLenum, GLenums... );
-    
     
     // ----------------------------------------------------------------------------------------
 

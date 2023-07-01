@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcore.h"
+#include "IDKgraphics_common.h"
 
 class idk::glUniforms
 {

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "../IDKgraphics/IDKgraphics.h"
+#include "../IDKengine/IDKgraphics.h"
 
 
 namespace idktools
 {
     void
-    vertices_to_bin( std::vector<idk::vertex> &vertices, std::string filepath );
+    vertices_to_bin( std::vector<idk::Vertex> &vertices, std::string filepath );
 
-    std::vector<idk::vertex>
+    std::vector<idk::Vertex>
     vertices_from_bin( std::string filepath );
 };

@@ -25,13 +25,12 @@ int ENTRY(int argc, const char **argv)
     ren.loadTextures("assets/textures/");
 
     uint p1_id = ren.createPointLight();
-
+    ren.pointlights().get(p1_id).transform.translate(glm::vec3(0.0f, 10.0f, 0.0f));
 
     uint suz = ren.loadOBJ("assets/models/", "cube.obj", "cube.mtl");
     uint obj1 = engine.createGameObject();
     engine.giveComponents(obj1, TRANSFORM, MODEL, PHYSICS);
     mCS.useModel(obj1, suz);
-
 
     uint plane_id = ren.loadOBJ("assets/models/", "rob.obj", "rob.mtl");
     uint obj2 = engine.createGameObject();
@@ -53,5 +52,4 @@ int ENTRY(int argc, const char **argv)
 
     return 0;
 }
-
 

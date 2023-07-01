@@ -232,7 +232,7 @@ idk::RenderEngine::endFrame()
                 std::string str = std::to_string(count);
                 gl.setvec3("un_pointlights[" + str + "].ambient", pointlight.ambient);
                 gl.setvec3("un_pointlights[" + str + "].diffuse", pointlight.diffuse);
-                gl.setvec3("un_pointlights[" + str + "].position", glm::vec3(0.0f, 40.0f, 20.0f));
+                gl.setvec3("un_pointlights[" + str + "].position", pointlight.transform.position());
 
                 gl.setfloat("un_pointlights[" + str + "].attenuation_constant", pointlight.attentuation_constant);
                 gl.setfloat("un_pointlights[" + str + "].attentuation_linear", pointlight.attentuation_linear);

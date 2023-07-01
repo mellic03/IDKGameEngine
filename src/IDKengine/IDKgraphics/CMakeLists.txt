@@ -7,6 +7,7 @@ add_subdirectory(IDKcore)
 file(
     GLOB SOURCES
     "./*.cpp"
+    "./IDK_model/*.cpp"
 )
 add_library(${PROJECT_NAME} ${SOURCES})
 include_directories(./)

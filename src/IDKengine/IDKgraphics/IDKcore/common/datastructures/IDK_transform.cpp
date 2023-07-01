@@ -23,7 +23,6 @@ void
 idk::Transform::translate(glm::vec3 t)
 {
     _model_mat = glm::translate(_model_mat, t);
-    // _position += t;
 }
 
 
@@ -31,7 +30,6 @@ void
 idk::Transform::scale(glm::vec3 s)
 {
     _model_mat = glm::scale(_model_mat, s);
-    // _scale *= s;
 }
 
 

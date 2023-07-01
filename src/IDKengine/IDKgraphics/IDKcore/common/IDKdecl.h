@@ -30,7 +30,7 @@ namespace idk
     // Graphics-level -----------------------------------
     // Implemented in IDKgraphics/ 
     class Transform;
-    struct vertex;
+    struct Vertex;
     class glUniforms;
     struct glFramebuffer;
     class glInterface;
@@ -38,9 +38,10 @@ namespace idk
     struct __tex_file_t;
     struct __vts_file_t;
     struct __mdl_file_t;
-    class Mesh;
-    class Material;
-    class Model;
+    struct Texture;
+    struct Material;
+    struct Mesh;
+    struct Model;
 
     class Camera;
     namespace lightsource

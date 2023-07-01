@@ -16,7 +16,7 @@ public:
                         Transform();
                         Transform( glm::mat4 m );
     
-    glm::vec3 &         position()      { return _position;     };
+    glm::vec3           position()      { return glm::vec3(_model_mat[3]); };
     glm::quat &         orientation()   { return _orientation;  };
 
     void                translate(glm::vec3);

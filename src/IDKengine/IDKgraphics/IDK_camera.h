@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcore.h"
+#include "IDKgraphics_common.h"
 
 
 class idk::Camera
@@ -18,7 +18,6 @@ private:
     glm::vec4           _default_right;
     glm::vec4           _default_front;
     glm::vec4           _default_up;
-
 
 
     float               _fov;

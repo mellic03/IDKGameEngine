@@ -6,10 +6,6 @@
 void
 Physics_CS::init( idk::Engine &engine )
 {
-    _default_shader = engine.rengine().glinterface().compileShaderProgram(
-        "assets/shaders/", "gb_geom.vs", "gb_geom.fs"
-    );
-
     _physicsworld.init();
 
     auto box1 = idk_physics::createBoxCollider(0, {0.0f, 20.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
@@ -18,7 +14,6 @@ Physics_CS::init( idk::Engine &engine )
     auto box2 = idk_physics::createBoxCollider(1, {1.2f, 30.0f, 0.0f}, {1.0f, 0.25f, 1.0f});
     _physicsworld.addBoxCollider(box2);
 
-   
     auto box3 = idk_physics::createBoxCollider(1, {0.8f, 33.0f, 0.0f}, {1.0f, 0.25f, 1.0f});
     _physicsworld.addBoxCollider(box3);
 
@@ -41,15 +36,13 @@ Physics_CS::stage_B( idk::Engine &engine )
         else
             trans = obj->getWorldTransform();
 
-        auto scaling = ((btBoxShape *)obj->getCollisionShape())->getHalfExtentsWithMargin();
+        // auto scaling = ((btBoxShape *)obj->getCollisionShape())->getHalfExtentsWithMargin();
 
-        glm::mat4 mmmmm;
-        trans.getOpenGLMatrix(glm::value_ptr(mmmmm));
-        idk::Transform transform(mmmmm);
-        transform.scale(glm::vec3((float)scaling.getX(), (float)scaling.getY(), (float)scaling.getZ()));
+        // glm::mat4 mmmmm;
+        // trans.getOpenGLMatrix(glm::value_ptr(mmmmm));
+        // idk::Transform transform(mmmmm);
+        // transform.scale(glm::vec3((float)scaling.getX(), (float)scaling.getY(), (float)scaling.getZ()));
 
-        idk::RenderEngine &ren = engine.rengine();
-        ren.drawModel(_default_shader, 2, transform);
     }
 }
 
@@ -86,8 +79,3 @@ Physics_CS::onGameObjectCopy( int src_obj_id, int dest_obj_id )
 }
 
 
-glm::vec3 &
-Physics_CS::getVelocity( int obj_id )
-{
-    // return _velocities[obj_id];
-}
