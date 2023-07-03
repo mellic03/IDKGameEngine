@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.9)
+
+project(IDKgraphics)
+
+
+file(GLOB SOURCES
+    "./*.cpp"
+)
+
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/src/)
+
+add_subdirectory(IDKmodel)
+add_subdirectory(IDKglInterface)
+
+
+target_link_libraries(
+    ${PROJECT_NAME} PUBLIC
+    IDKmodel
+    IDKglInterface
+)
+
