@@ -7,46 +7,26 @@
 #include "idk_glFramebuffer.h"
 
 
-namespace idk { class glInterface; };
-
-
 #define IDK_GLINTERFACE_MAX_TEXTUREi (GL_TEXTURE0 + 32)
 
-class idk::glInterface
+namespace idk::glInterface
 {
-private:
-    GLuint                      _active_shader_id;
-    idk::vector<GLuint>         _available_glTextureUnits;
-    idk::vector<GLuint>         _unavailable_glTextureUnits;
+    void                    init();
 
-    // idk::Allocator<Material>                    _material_allocator;
-    // idk::Allocator<Texture>                     _texture_allocator;
-    // std::unordered_map<std::string, GLuint>     _textures;
+    GLuint                  loadTexture( std::string filepath, int w, int h, uint8_t* &data, bool srgb = false );
 
-
-    bool                    _line_has_include(std::string &line);
-    std::string             _parse_shader_include(std::string root, std::string line);
-    std::string             _parse_shader_source(std::string root, std::string glsl);
-
-
-public:
-                            glInterface();
-
-    void                    genFramebuffer(int width, int height, GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures);
-    void                    genFramebuffer(int width, int height, glFramebuffer &);
-    void                    bindFramebuffer(int width, int height, glFramebuffer &);
+    void                    genIdkFramebuffer(int width, int height, GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures);
+    void                    genIdkFramebuffer(int width, int height, glFramebuffer &);
+    void                    bindIdkFramebuffer(int width, int height, glFramebuffer &);
     
     GLuint                  compileShaderProgram(std::string root, std::string vs, std::string fs);
-    void                    useProgram(GLuint shader_id);
 
-    void                    loadTexture(std::string path, GLuint &gl_id, int &w, int &h, uint8_t* &data, bool srgb = false);
-
-    GLuint                  pop_glTextureUnitID();
-    void                    free_glTextureUnitIDs();
+    GLuint                  popTextureUnitID();
+    void                    freeTextureUnitIDs();
 
     void                    setUniform_texture(std::string name, GLuint texture_id);
 
-    void                    drawArrays( GLenum mode, GLuint VAO, int num_vertices );
+    void                    useProgram(GLuint shader_id);
 
     void                    setint(std::string, int);
     void                    setfloat(std::string, float);

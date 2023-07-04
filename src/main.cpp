@@ -22,25 +22,25 @@ int ENTRY(int argc, const char **argv)
     auto &tCS = engine.getCS<Transform_CS>(TRANSFORM);
 
     idk::RenderEngine &ren = engine.rengine();
-    ren.loadTextures("assets/textures/");
+    ren.modelManager().loadTextures("assets/textures/");
 
-    uint p1_id = ren.createPointLight();
+    int p1_id = ren.createPointLight();
     ren.pointlights().get(p1_id).transform.translate(glm::vec3(0.0f, 10.0f, 0.0f));
 
-    uint cube = ren.modelManager().loadOBJ("assets/models/", "cube.obj", "cube.mtl");
-    uint obj1 = engine.createGameObject();
+    int cube = ren.modelManager().loadOBJ("assets/models/", "cube.obj", "cube.mtl");
+    int obj1 = engine.createGameObject();
     engine.giveComponents(obj1, TRANSFORM, MODEL, PHYSICS);
     tCS.translate(obj1, glm::vec3(10.0f, 10.0f, 0.0f));
     mCS.useModel(obj1, cube);
 
 
-    uint plane_id = ren.modelManager().loadOBJ("assets/models/", "rob.obj", "rob.mtl");
-    uint obj2 = engine.createGameObject();
+    int plane_id = ren.modelManager().loadOBJ("assets/models/", "rob.obj", "rob.mtl");
+    int obj2 = engine.createGameObject();
     engine.giveComponents(obj2, MODEL);
     mCS.useModel(obj2, plane_id);
 
 
-    uint cam_id = ren.createCamera();
+    int cam_id = ren.createCamera();
     ren.setActiveCamera(cam_id);
     ren.getActiveCamera().ylock(true);
 

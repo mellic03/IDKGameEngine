@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include "IDKcommon/IDKcommon.h"
 
-#include "IDKmodel/IDKmodel.h"
+#include "idk_model_manager.h"
 #include "IDKglInterface/IDKglInterface.h"
 
 #include "idk_camera.h"
@@ -13,7 +13,7 @@
 
 namespace idk { class RenderEngine; };
 
-#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<uint, idk::Transform, idk::glUniforms>>>
+#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<int, idk::Transform, idk::glUniforms>>>
 
 class idk::RenderEngine
 {
@@ -23,8 +23,6 @@ private:
 
     SDL_Window *                        _SDL_window;
     SDL_GLContext                       _SDL_gl_context;
-
-    glInterface                         _gl_interface;
 
     glFramebuffer                       _gbuffer_geometrypass_buffer;
     glFramebuffer                       _screenquad_buffer;
@@ -57,7 +55,6 @@ private:
 
     void                                _init_SDL_OpenGL( size_t w, size_t h );
     void                                _init_screenquad();
-    void                                _load_primitives();
     void                                _render_screenquad();
     void                                _colorgrade_screenquad();
     void                                _fxaa_screenquad();
@@ -76,8 +73,6 @@ public:
 
                                         RenderEngine(size_t w, size_t h);
 
-    glInterface &                       glinterface()               { return _gl_interface;             };
-   
     uint                                createCamera();
     void                                deleteCamera( uint id )     { _camera_allocator.remove(id);     };
     idk::Camera &                       getCamera( uint id)         { return _camera_allocator.get(id); };
@@ -89,9 +84,8 @@ public:
 
     ModelManager &                      modelManager()          { return _model_manager; };
 
-    void                                loadTextures( std::string root );
-    void                                drawModel( GLuint shader_id, uint model_id, Transform &transform );
-    void                                drawWireframe( GLuint shader_id, uint model_id, Transform &transform );
+    void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
+    void                                drawWireframe( GLuint shader_id, int model_id, Transform &transform );
     void                                setUniform_vec3( GLuint shader_id, std::string name, glm::vec3 v );
 
     idk::glUniforms &                   glUniformInterface()    { return *_active_glUniforms; };

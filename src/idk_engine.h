@@ -59,20 +59,20 @@ public:
     void                                        mouseCapture( bool capture );
     bool                                        mouseCaptured();
 
-    uint                                        createGameObject();
-    uint                                        createGameObject( uint prefab_id );
-    void                                        deleteGameObject( uint obj_id );
+    int                                         createGameObject();
+    int                                         createGameObject( int prefab_id );
+    void                                        deleteGameObject( int obj_id );
     Allocator<int> &                            gameObjects() { return _gameobjects; };
-    std::vector<int>                            gameObjects_byComponent( uint component_id );
+    std::vector<int>                            gameObjects_byComponent( int component_id );
 
-    void                                        giveComponent( uint obj_id, uint component_id );
-    void                                        giveComponents( uint obj_id ) {  }; // Base case
-    template <typename... Args> void            giveComponents( uint obj_id,  uint, Args... );
-    void                                        removeComponent( uint obj_id, uint component_id );
-    bool                                        hasComponent( uint obj_id, uint component_id );
+    void                                        giveComponent( int obj_id, int component_id );
+    void                                        giveComponents( int obj_id ) {  }; // Base case
+    template <typename... Args> void            giveComponents( int obj_id,  int, Args... );
+    void                                        removeComponent( int obj_id, int component_id );
+    bool                                        hasComponent( int obj_id, int component_id );
 
-    template <typename module_t> uint           registerCS( std::string name );
-    template <typename module_t> module_t &     getCS( uint component_id );
+    template <typename module_t> int            registerCS( std::string name );
+    template <typename module_t> module_t &     getCS( int component_id );
     template <typename module_t> module_t &     getCS( std::string name );
 };
 
@@ -80,7 +80,7 @@ public:
 
 template <typename... Args>
 void
-idk::Engine::giveComponents( uint obj_id, uint first, Args... rest )
+idk::Engine::giveComponents( int obj_id, int first, Args... rest )
 {
     giveComponent(obj_id, first);
     giveComponents(obj_id, rest...);
@@ -88,10 +88,10 @@ idk::Engine::giveComponents( uint obj_id, uint first, Args... rest )
 
 
 template <typename module_t>
-uint
+int
 idk::Engine::registerCS( std::string name )
 {   
-    uint cs_id = _idk_componentsystems.size();
+    int cs_id = _idk_componentsystems.size();
     _idk_componentsystems.push_back(new module_t());
     _idk_componentsystems.back()->base_init(_idk_componentsystems.size()-1, name);
     _idk_componentsystems.back()->init(*this);
@@ -102,7 +102,7 @@ idk::Engine::registerCS( std::string name )
 
 template <typename module_t>
 module_t &
-idk::Engine::getCS( uint component_id )
+idk::Engine::getCS( int component_id )
 {   
     return *dynamic_cast<module_t *>(_idk_componentsystems[component_id]);
 }
@@ -112,7 +112,7 @@ template <typename module_t>
 module_t &
 idk::Engine::getCS( std::string name )
 {
-    uint cs_id = _idk_componentsystem_ids[name];
+    int cs_id = _idk_componentsystem_ids[name];
     return *dynamic_cast<module_t *>(_idk_componentsystems[cs_id]);
 }
 

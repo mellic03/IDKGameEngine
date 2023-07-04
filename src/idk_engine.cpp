@@ -139,13 +139,13 @@ idk::Engine::mouseDown( idk::MouseButton mb )
 }
 
 
-uint
+int
 idk::Engine::createGameObject()
 {
-    uint num_components = _idk_componentsystems.size();
+    int num_components = _idk_componentsystems.size();
     _component_matrix.push_back(std::vector<int>(num_components, 0));
 
-    uint obj_id = _gameobjects.add();
+    int obj_id = _gameobjects.add();
 
     _idk_CS_onCreation(obj_id);
 
@@ -153,13 +153,13 @@ idk::Engine::createGameObject()
 }
 
 
-uint
-idk::Engine::createGameObject( uint prefab_id )
+int
+idk::Engine::createGameObject( int prefab_id )
 {
-    uint num_components = _idk_componentsystems.size();
+    int num_components = _idk_componentsystems.size();
     _component_matrix.push_back(_component_matrix[prefab_id]);
 
-    uint obj_id = _gameobjects.add();
+    int obj_id = _gameobjects.add();
 
     _idk_CS_onCreation(obj_id);
     _idk_CS_onCopy(prefab_id, obj_id);
@@ -169,7 +169,7 @@ idk::Engine::createGameObject( uint prefab_id )
 
 
 std::vector<int>
-idk::Engine::gameObjects_byComponent( uint component_id )
+idk::Engine::gameObjects_byComponent( int component_id )
 {
     std::vector<int> obj_ids;
 
@@ -182,7 +182,7 @@ idk::Engine::gameObjects_byComponent( uint component_id )
 
 
 void
-idk::Engine::deleteGameObject( uint obj_id )
+idk::Engine::deleteGameObject( int obj_id )
 {
     for (int i=0; i<_idk_componentsystems.size(); i++)
         removeComponent(obj_id, i);
@@ -195,7 +195,7 @@ idk::Engine::deleteGameObject( uint obj_id )
 
 
 void
-idk::Engine::giveComponent( uint obj_id, uint component_id )
+idk::Engine::giveComponent( int obj_id, int component_id )
 {
     _component_matrix[obj_id][component_id] = 1;
     _idk_CS_onAssignment(component_id, obj_id);
@@ -203,14 +203,14 @@ idk::Engine::giveComponent( uint obj_id, uint component_id )
 
 
 void
-idk::Engine::removeComponent( uint obj_id, uint component_id )
+idk::Engine::removeComponent( int obj_id, int component_id )
 {
     _component_matrix[obj_id][component_id] = 0;
 }
 
 
 bool
-idk::Engine::hasComponent( uint obj_id, uint component_id )
+idk::Engine::hasComponent( int obj_id, int component_id )
 {
     return _component_matrix[obj_id][component_id] == 1;
 }

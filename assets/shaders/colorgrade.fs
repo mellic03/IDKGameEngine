@@ -33,4 +33,5 @@ void main()
     mapped = pow(mapped, vec3(1.0 / gamma));
   
     fsout_frag_color = vec4(mapped, 1.0);
+    // fsout_frag_color = vec4(0.0, 1.0, 0.0, 1.0);
 }

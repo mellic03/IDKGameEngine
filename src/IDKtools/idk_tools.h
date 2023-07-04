@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKgraphics.h"
+#include "IDKgraphics/IDKgraphics.h"
 
 namespace idktools
 {

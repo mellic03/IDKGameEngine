@@ -1,6 +1,6 @@
 #version 440 core
 
-#include "structs.glh"
+#include "structs.glsl"
 
 #define SQ(a) ((a)*(a))
 

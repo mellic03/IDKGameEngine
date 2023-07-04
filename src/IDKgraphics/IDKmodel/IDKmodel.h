@@ -1,6 +1,6 @@
 #pragma once
 
-#include "idk_model_manager.h"
-#include "idk_filetypes.h"
+#include "idk_model.h"
+#include "idk_filetools.h"
 
 

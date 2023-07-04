@@ -5,7 +5,7 @@
 void
 Model_CS::init(idk::Engine &engine)
 {
-    _default_shader = engine.rengine().glinterface().compileShaderProgram(
+    _default_shader = idk::glInterface::compileShaderProgram(
         "assets/shaders/", "gb_geom.vs", "gb_geom.fs"
     );
 }

@@ -14,19 +14,29 @@ add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 project(IDKGame)
 
 add_subdirectory(src)
+include_directories(src)
 
 add_executable(
     ${PROJECT_NAME} "src/main.cpp"
 )
 
-include_directories(src)
-
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     IDKengine
-    # IDKtools
 )
 
 
 
+project(objconvert)
+
+include_directories(src)
+
+add_executable(
+    ${PROJECT_NAME} "src/IDKtools/objconvert.cpp"
+)
+
+target_link_libraries(
+    ${PROJECT_NAME} PUBLIC
+    IDKengine
+)
 

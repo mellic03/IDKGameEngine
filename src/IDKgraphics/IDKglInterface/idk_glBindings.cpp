@@ -56,6 +56,7 @@ void idk::gl::bindFramebuffer( GLenum target, GLint framebuffer )
 
 // ---------------------------------------------------------------------------------------
 
+
 // glDrawXXX -----------------------------------------------------------------------------
 void idk::gl::drawArrays( GLenum mode, GLint first, GLsizei count )
 {
@@ -75,7 +76,6 @@ idk::gl::bufferData( GLenum target, GLsizeiptr size, const void *data, GLenum us
     GLCALL( glBufferData(target, size, data, usage); )
 }
 
-
 void
 idk::gl::vertexAttribPointer( GLuint index, GLint size,
                               GLenum type, GLboolean normalized,
@@ -89,4 +89,17 @@ void
 idk::gl::enableVertexAttribArray( GLuint index )
 {
     GLCALL( glEnableVertexAttribArray(index); )
+}
+
+
+void
+idk::gl::useProgram( GLuint program )
+{
+    GLCALL( glUseProgram(program); )
+}
+
+
+void idk::gl::clearColor( float r, float g, float b, float a )
+{
+    GLCALL( glClearColor(r, g, b, a); )
 }
