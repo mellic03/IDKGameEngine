@@ -36,21 +36,29 @@ void
 idk::Transform::rotateX(float x)
 {
     glm::quat rotX = glm::quat(glm::vec3(x, 0.0f, 0.0f));
-    _orientation = rotX * _orientation;
+    _model_mat = _model_mat * glm::mat4_cast(rotX);
 }
 
 void
 idk::Transform::rotateY(float y)
 {
     glm::quat rotY = glm::quat(glm::vec3(0.0f, y, 0.0f));
-    _orientation = rotY * _orientation;
+    _model_mat = _model_mat * glm::mat4_cast(rotY);
 }
 
 void
 idk::Transform::rotateZ(float z)
 {
     glm::quat rotZ = glm::quat(glm::vec3(0.0f, 0.0f, z));
-    _orientation = rotZ * _orientation;
+    _model_mat = _model_mat * glm::mat4_cast(rotZ);
+}
+
+
+void
+idk::Transform::rotate(glm::vec3 v)
+{
+    glm::quat rot = glm::quat(v);
+    _model_mat = _model_mat * glm::mat4_cast(rot);
 }
 
 

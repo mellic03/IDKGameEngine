@@ -23,6 +23,7 @@ public:
     void                rotateX(float x);
     void                rotateY(float x);
     void                rotateZ(float x);
+    void                rotate(glm::vec3 v);
 
     glm::mat4           modelMatrix();
 

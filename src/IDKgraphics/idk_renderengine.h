@@ -18,28 +18,34 @@ namespace idk { class RenderEngine; };
 class idk::RenderEngine
 {
 private:
-    int                                 _screen_width;
-    int                                 _screen_height;
+    int                 _screen_width;
+    int                 _screen_height;
 
-    SDL_Window *                        _SDL_window;
-    SDL_GLContext                       _SDL_gl_context;
+    SDL_Window *        _SDL_window;
+    SDL_GLContext       _SDL_gl_context;
 
-    glFramebuffer                       _gbuffer_geometrypass_buffer;
-    glFramebuffer                       _screenquad_buffer;
-    glFramebuffer                       _colorgrade_buffer;
+    // idk::glFramebuffers ------------------------------------
+    /***/
+    glFramebuffer       _gb_geometry_buffer;
+    glFramebuffer       _screenquad_buffer;
+    glFramebuffer       _colorgrade_buffer;
+    // --------------------------------------------------------
 
-    GLuint                              _gbuffer_geometrypass_shader;
-    GLuint                              _screenquad_shader;
-    GLuint                              _colorgrade_shader;
-    GLuint                              _fxaa_shader;
+    // Shaders ------------------------------------------------
+    /***/
+    GLuint              _gb_geometry_shader;
+    GLuint              _screenquad_shader;
+    GLuint              _colorgrade_shader;
+    GLuint              _fxaa_shader;
+    // --------------------------------------------------------
 
-    uint                                _active_camera_id;
-    glUniforms *                        _active_glUniforms;
+    uint                _active_camera_id;
+    glUniforms *        _active_glUniforms;
 
-    GLuint                              _quad_FBO;
-    GLuint                              _quad_VBO;
-    GLuint                              _quad_VAO;
-    GLuint                              _quad_texture;
+    GLuint              _quad_FBO;
+    GLuint              _quad_VBO;
+    GLuint              _quad_VAO;
+    GLuint              _quad_texture;
 
 
     ModelManager                        _model_manager;
@@ -50,26 +56,41 @@ private:
     Allocator<lightsource::Dir>         _dirlight_allocator;
 
 
-    modelqueue_t                        _model_draw_queue;
-    modelqueue_t                        _wireframe_draw_queue;
+    modelqueue_t        _model_draw_queue;
+    modelqueue_t        _wireframe_draw_queue;
 
-    void                                _init_SDL_OpenGL( size_t w, size_t h );
-    void                                _init_screenquad();
-    void                                _render_screenquad();
-    void                                _colorgrade_screenquad();
-    void                                _fxaa_screenquad();
 
-    // ------------------------------------------------------------------------
-    void        _bind_material( idk::Material & );
-    void        _draw_model( idk::Model &, idk::Transform &, idk::glUniforms & );
+    // Initialization ---------------------------------------------------------------------
+    /***/
+    void                _init_SDL_OpenGL( size_t w, size_t h );
+    void                _init_screenquad();
+    // ------------------------------------------------------------------------------------
 
-    // ------------------------------------------------------------------------
+
+    // Draw-related methods ---------------------------------------------------------------
+    /***/
+    void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );
+    void                _render_screenquad( GLuint shader, glFramebuffer &in );
+
+    void                _bind_material( idk::Material & );
+    void                _draw_model( idk::Model &, idk::Transform &, idk::glUniforms & );
+    // ------------------------------------------------------------------------------------
+
 
 public:
-    GLuint                              solid_shader;
-    GLuint                              wireframe_shader;
-    GLuint                              SPHERE_PRIMITIVE;
-    GLuint                              CUBE_PRIMITIVE;
+
+    // Built-in shaders -------------------------------------------------------------------
+    /***/
+    GLuint              solid_shader;
+    GLuint              wireframe_shader;
+    // ------------------------------------------------------------------------------------
+
+    // Built-in primitives ----------------------------------------------------------------
+    /***/
+    GLuint              SPHERE_PRIMITIVE;
+    GLuint              CUBE_PRIMITIVE;
+    // ------------------------------------------------------------------------------------
+
 
                                         RenderEngine(size_t w, size_t h);
 
@@ -80,15 +101,18 @@ public:
     idk::Camera &                       getActiveCamera()           { return _camera_allocator.get(_active_camera_id); };
 
     uint                                createPointLight();
-    Allocator<lightsource::Point> &     pointlights()           { return _pointlight_allocator; };
+    Allocator<lightsource::Point> &     pointlights()   { return _pointlight_allocator; };
 
-    ModelManager &                      modelManager()          { return _model_manager; };
+
+    // Models -----------------------------------------------------------------------------
+    /***/
+    ModelManager &                      modelManager()  { return _model_manager; };
 
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
     void                                drawWireframe( GLuint shader_id, int model_id, Transform &transform );
     void                                setUniform_vec3( GLuint shader_id, std::string name, glm::vec3 v );
+    // ------------------------------------------------------------------------------------
 
-    idk::glUniforms &                   glUniformInterface()    { return *_active_glUniforms; };
 
     void                                beginFrame();
     void                                endFrame();

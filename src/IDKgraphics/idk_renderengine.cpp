@@ -73,7 +73,7 @@ idk::RenderEngine::_init_screenquad()
 
 idk::RenderEngine::RenderEngine(size_t w, size_t h):
 _screen_width(w), _screen_height(h),
-_gbuffer_geometrypass_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
+_gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
 {
     glInterface::init();
     _init_SDL_OpenGL(_screen_width, _screen_height);
@@ -82,7 +82,7 @@ _gbuffer_geometrypass_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
     CUBE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::cube, "");
     SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
 
-    glInterface::genIdkFramebuffer(_screen_width, _screen_height, _gbuffer_geometrypass_buffer);
+    glInterface::genIdkFramebuffer(_screen_width, _screen_height, _gb_geometry_buffer);
     glInterface::genIdkFramebuffer(_screen_width, _screen_height, _screenquad_buffer);
     glInterface::genIdkFramebuffer(_screen_width, _screen_height, _colorgrade_buffer);
 
@@ -95,36 +95,24 @@ _gbuffer_geometrypass_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
 
 
 void
-idk::RenderEngine::_render_screenquad()
+idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out )
 {
-    glInterface::bindIdkFramebuffer(_screen_width, _screen_height, _screenquad_buffer);
-    glInterface::useProgram(_screenquad_shader);
-    glInterface::setUniform_texture("un_screen_texture", _gbuffer_geometrypass_buffer.textures[0]);
-   
+    glInterface::bindIdkFramebuffer(_screen_width, _screen_height, out);
+    glInterface::useProgram(shader);
+    glInterface::setUniform_texture("un_screen_texture", in.textures[0]);
+
     gl::bindVertexArray(_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
 }
 
 
 void
-idk::RenderEngine::_colorgrade_screenquad()
+idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in )
 {
-    glInterface::bindIdkFramebuffer(_screen_width, _screen_height, _colorgrade_buffer);
-    glInterface::useProgram(_colorgrade_shader);
-    glInterface::setUniform_texture("un_screen_texture", _screenquad_buffer.textures[0]);
-   
-    gl::bindVertexArray(_quad_VAO);
-    gl::drawArrays(GL_TRIANGLES, 0, 6);
-}
+    glInterface::unbindIdkFramebuffer(_screen_width, _screen_height);
+    glInterface::useProgram(shader);
+    glInterface::setUniform_texture("un_screen_texture", in.textures[0]);
 
-
-void
-idk::RenderEngine::_fxaa_screenquad()
-{
-    gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
-    glInterface::useProgram(_fxaa_shader);
-    glInterface::setUniform_texture("un_screen_texture", _colorgrade_buffer.textures[0]);
-   
     gl::bindVertexArray(_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -144,6 +132,7 @@ idk::RenderEngine::createPointLight()
 {
     return _pointlight_allocator.add();
 }
+
 
 void
 idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transform )
@@ -171,7 +160,7 @@ idk::RenderEngine::_bind_material( idk::Material &material )
 {
     glInterface::setUniform_texture("un_albedo_texture", material.albedo_gl_id);
     glInterface::setUniform_texture("un_specular_texture", material.specular_gl_id);
-    glInterface::setfloat("un_specular_exponent", material.specular_exponent);
+    glInterface::setUniform_float("un_specular_exponent", material.specular_exponent);
 }
 
 
@@ -179,7 +168,7 @@ void
 idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform, idk::glUniforms &uniforms )
 {
     glm::mat4 model_mat = transform.modelMatrix();
-    glInterface::setmat4("un_model", model_mat);
+    glInterface::setUniform_mat4("un_model", model_mat);
 
     glBindVertexArray(model.VAO);
     for (int i=0; i<model.meshes.size(); i++)
@@ -212,13 +201,13 @@ idk::RenderEngine::beginFrame()
 void
 idk::RenderEngine::endFrame()
 {
-    glInterface::bindIdkFramebuffer(_screen_width, _screen_height, _gbuffer_geometrypass_buffer);
+    glInterface::bindIdkFramebuffer(_screen_width, _screen_height, _gb_geometry_buffer);
 
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
         glInterface::useProgram(shader_id);
 
-        glInterface::setint("un_num_pointlights", _pointlight_allocator.size());
+        glInterface::setUniform_int("un_num_pointlights", _pointlight_allocator.size());
 
         int count = 0;
         pointlights().for_each(
@@ -226,13 +215,13 @@ idk::RenderEngine::endFrame()
             {
                 idk::Transform &transform = pointlight.transform;
                 std::string str = std::to_string(count);
-                glInterface::setvec3("un_pointlights[" + str + "].ambient", pointlight.ambient);
-                glInterface::setvec3("un_pointlights[" + str + "].diffuse", pointlight.diffuse);
-                glInterface::setvec3("un_pointlights[" + str + "].position", pointlight.transform.position());
+                glInterface::setUniform_vec3("un_pointlights[" + str + "].ambient", pointlight.ambient);
+                glInterface::setUniform_vec3("un_pointlights[" + str + "].diffuse", pointlight.diffuse);
+                glInterface::setUniform_vec3("un_pointlights[" + str + "].position", pointlight.transform.position());
 
-                glInterface::setfloat("un_pointlights[" + str + "].attenuation_constant", pointlight.attentuation_constant);
-                glInterface::setfloat("un_pointlights[" + str + "].attentuation_linear", pointlight.attentuation_linear);
-                glInterface::setfloat("un_pointlights[" + str + "].attentuation_quadratic", pointlight.attentuation_quadratic);
+                glInterface::setUniform_float("un_pointlights[" + str + "].attenuation_constant", pointlight.attentuation_constant);
+                glInterface::setUniform_float("un_pointlights[" + str + "].attentuation_linear", pointlight.attentuation_linear);
+                glInterface::setUniform_float("un_pointlights[" + str + "].attentuation_quadratic", pointlight.attentuation_quadratic);
 
                 count += 1;
             }
@@ -242,9 +231,9 @@ idk::RenderEngine::endFrame()
         glm::mat4 view = camera.view();
         glm::mat4 proj = camera.projection();
 
-        glInterface::setvec3("un_viewpos", camera.transform().position());
-        glInterface::setmat4("un_view", view);
-        glInterface::setmat4("un_projection", proj);
+        glInterface::setUniform_vec3("un_viewpos", camera.transform().position());
+        glInterface::setUniform_mat4("un_view", view);
+        glInterface::setUniform_mat4("un_projection", proj);
 
         for (auto &[model_id, transform, glUniform]: vec)
         {
@@ -260,9 +249,9 @@ idk::RenderEngine::endFrame()
 
 
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
-    _render_screenquad();
-    _colorgrade_screenquad();
-    _fxaa_screenquad();
+    _render_screenquad(_screenquad_shader, _gb_geometry_buffer, _screenquad_buffer);
+    _render_screenquad(_colorgrade_shader, _screenquad_buffer, _colorgrade_buffer);
+    _render_screenquad(_fxaa_shader, _colorgrade_buffer);
     gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
 
 }
@@ -274,7 +263,7 @@ idk::RenderEngine::resize( int w, int h )
     _screen_width = w;
     _screen_height = h;
 
-    glInterface::genIdkFramebuffer(w, h, _gbuffer_geometrypass_buffer);
+    glInterface::genIdkFramebuffer(w, h, _gb_geometry_buffer);
     glInterface::genIdkFramebuffer(w, h, _screenquad_buffer);
     glInterface::genIdkFramebuffer(w, h, _colorgrade_buffer);
 

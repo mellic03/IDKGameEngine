@@ -27,6 +27,7 @@ int ENTRY(int argc, const char **argv)
     int p1_id = ren.createPointLight();
     ren.pointlights().get(p1_id).transform.translate(glm::vec3(0.0f, 10.0f, 0.0f));
 
+
     int cube = ren.modelManager().loadOBJ("assets/models/", "cube.obj", "cube.mtl");
     int obj1 = engine.createGameObject();
     engine.giveComponents(obj1, TRANSFORM, MODEL, PHYSICS);
@@ -48,6 +49,9 @@ int ENTRY(int argc, const char **argv)
     while (engine.running())
     {
         engine.beginFrame();
+
+        idk::Transform &t = tCS.getTransform(obj1);
+        t.rotate(engine.deltaTime() * glm::vec3(0.1f, 1.0f, 0.3f));
 
         engine.endFrame();
     }

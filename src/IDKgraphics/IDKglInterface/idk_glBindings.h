@@ -37,12 +37,17 @@ namespace idk::gl
     void drawElements( GLenum mode, GLsizei count, GLenum type, const void *indices );
     // ---------------------------------------------------------------------------------------
 
+    // glBufferXXX ---------------------------------------------------------------------------
     void bufferData( GLenum target, GLsizeiptr size, const void *data, GLenum usage );
+    // ---------------------------------------------------------------------------------------
+
     void vertexAttribPointer( GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLuint offset );
     void enableVertexAttribArray( GLuint index );
 
     void useProgram( GLuint program );
     void clearColor( float r, float g, float b, float a );
+    void clear( GLbitfield mask );
+    void viewport( GLint x, GLint y, GLsizei w, GLsizei h );
 };
 
 
