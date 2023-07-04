@@ -11,8 +11,6 @@ static    idk::vector<GLuint>     _unavailable_glTextureUnits;
 void
 idk::glInterface::init()
 {
-    std::cout << "idk::glInterface::init()\n";
-
     for (GLint i = GL_TEXTURE0; i < IDK_GLINTERFACE_MAX_TEXTUREi; i++)
         _available_glTextureUnits.push(i);
 }

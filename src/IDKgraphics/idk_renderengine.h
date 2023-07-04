@@ -91,7 +91,6 @@ public:
     GLuint              CUBE_PRIMITIVE;
     // ------------------------------------------------------------------------------------
 
-
                                         RenderEngine(size_t w, size_t h);
 
     uint                                createCamera();

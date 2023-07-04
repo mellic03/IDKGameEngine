@@ -3,7 +3,7 @@
 layout (location = 0) out vec4 fsout_frag_color;
 
 in vec2 fsin_texcoords;
-uniform sampler2D un_screen_texture;
+uniform sampler2D un_texture_0;
 
 
 vec3 filmic(vec3 x, float gamma)
@@ -12,6 +12,7 @@ vec3 filmic(vec3 x, float gamma)
     vec3 result = (X * (6.2 * X + 0.5)) / (X * (6.2 * X + 1.7) + 0.06);
     return pow(result, vec3(1.0 / gamma));
 }
+
 
 vec3 aces(vec3 x)
 {
@@ -23,12 +24,13 @@ vec3 aces(vec3 x)
     return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
+
 void main()
 {
     const float gamma = 2.2;
     const float exposure = 1.0;
    
-    vec3 hdrColor = texture(un_screen_texture, fsin_texcoords).rgb;
+    vec3 hdrColor = texture(un_texture_0, fsin_texcoords).rgb;
     vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
     mapped = pow(mapped, vec3(1.0 / gamma));
   

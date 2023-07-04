@@ -99,7 +99,9 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFrame
 {
     glInterface::bindIdkFramebuffer(_screen_width, _screen_height, out);
     glInterface::useProgram(shader);
-    glInterface::setUniform_texture("un_screen_texture", in.textures[0]);
+
+    for (int i=0; i < in.textures.size(); i++)
+        glInterface::setUniform_texture("un_texture_" + std::to_string(i), in.textures[0]);
 
     gl::bindVertexArray(_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
@@ -111,7 +113,9 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in )
 {
     glInterface::unbindIdkFramebuffer(_screen_width, _screen_height);
     glInterface::useProgram(shader);
-    glInterface::setUniform_texture("un_screen_texture", in.textures[0]);
+
+    for (int i=0; i < in.textures.size(); i++)
+        glInterface::setUniform_texture("un_texture_" + std::to_string(i), in.textures[0]);
 
     gl::bindVertexArray(_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);

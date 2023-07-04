@@ -1,4 +1,4 @@
-#include "IDK_playercontrol.h"
+#include "idk_playercontrol.h"
 
 static constexpr float SWAY_SPEED_LOOK   = 0.01f;
 static constexpr float SWAY_SPEED_MOVE   = 0.05f;

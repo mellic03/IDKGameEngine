@@ -4,8 +4,8 @@ project(IDKengine)
 
 
 file(GLOB SOURCES
-    "idk_builtin_CS/*.cpp"
-    "idk_builtin_CS/IDK_physics/*.cpp"
+    "IDKcomponentsystems/*.cpp"
+    "IDKcomponentsystems/idk_physics/*.cpp"
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES} "idk_engine.cpp")

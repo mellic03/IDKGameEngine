@@ -4,10 +4,10 @@
 
 #define SQ(a) ((a)*(a))
 
-layout (location = 0) out vec4 FragColor1;
-layout (location = 1) out vec4 FragColor2;
-layout (location = 2) out vec4 FragColor3;
-layout (location = 3) out vec4 FragColor4;
+layout (location = 0) out vec4 fsout_frag_color_0;
+layout (location = 1) out vec4 fsout_frag_color_1;
+layout (location = 2) out vec4 fsout_frag_color_2;
+layout (location = 3) out vec4 fsout_frag_color_3;
 
 in vec3 fsin_fragpos;
 in vec3 fsin_normal;
@@ -20,6 +20,7 @@ uniform float un_specular_exponent;
 
 uniform sampler2D un_albedo_texture;
 uniform sampler2D un_specular_texture;
+uniform sampler2D un_normal_texture;
 
 
 vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap, float spec_exponent)
@@ -61,8 +62,8 @@ void main()
         color += pointlight_contribution(i, view_dir, albedo_map, specular_map, un_specular_exponent);
     }
 
-    FragColor1 = vec4(color, 1.0);
-    FragColor2 = vec4(0.0, 0.0, 0.0, 1.0);
-    FragColor3 = vec4(0.0, 0.0, 0.0, 1.0);
-    FragColor4 = vec4(0.0, 0.0, 0.0, 1.0);
+    fsout_frag_color_0 = vec4(color, 1.0);
+    fsout_frag_color_1 = vec4(0.0, 0.0, 0.0, 1.0);
+    fsout_frag_color_2 = vec4(0.0, 0.0, 0.0, 1.0);
+    fsout_frag_color_3 = vec4(0.0, 0.0, 0.0, 1.0);
 }
