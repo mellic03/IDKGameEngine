@@ -79,6 +79,8 @@ _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
     _init_SDL_OpenGL(_screen_width, _screen_height);
     _init_screenquad();
 
+    _active_camera_id = createCamera();
+
     CUBE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::cube, "");
     SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
 
@@ -148,7 +150,7 @@ idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transfo
 void
 idk::RenderEngine::drawWireframe( GLuint shader_id, int model_id, Transform &transform )
 {
-    // _wireframe_draw_queue[shader_id].push({model_id, transform, glUniforms()});
+    _wireframe_draw_queue[shader_id].push({model_id, transform, glUniforms()});
 }
 
 
@@ -188,6 +190,25 @@ idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform, id
     glBindVertexArray(0);
 
     glInterface::freeTextureUnitIDs();
+}
+
+
+void
+_draw_wireframe( idk::Model &model, idk::Transform &transform )
+{
+    glm::mat4 model_mat = transform.modelMatrix();
+    idk::glInterface::setUniform_mat4("un_model", model_mat);
+
+    glBindVertexArray(model.VAO);
+    for (int i=0; i<model.meshes.size(); i++)
+    {
+        idk::Mesh &mesh = model.meshes[i];
+        idk::gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
+        idk::gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
+    }
+    glBindVertexArray(0);
+
+    idk::glInterface::freeTextureUnitIDs();
 }
 
 
@@ -252,6 +273,32 @@ idk::RenderEngine::endFrame()
     _model_draw_queue.clear();
 
 
+
+    for (auto &[shader_id, vec]: _wireframe_draw_queue)
+    {
+        glInterface::useProgram(shader_id);
+
+        idk::Camera &camera = _camera_allocator.get(_active_camera_id);
+        glm::mat4 view = camera.view();
+        glm::mat4 proj = camera.projection();
+
+        glInterface::setUniform_vec3("un_viewpos", camera.transform().position());
+        glInterface::setUniform_mat4("un_view", view);
+        glInterface::setUniform_mat4("un_projection", proj);
+
+        for (auto &[model_id, transform, glUniform]: vec)
+        {
+            _draw_wireframe(
+                modelManager().getModel(model_id),
+                transform
+            );
+        }
+        vec.clear();
+    }
+    _wireframe_draw_queue.clear();
+
+
+
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
     _render_screenquad(_screenquad_shader, _gb_geometry_buffer, _screenquad_buffer);
     _render_screenquad(_colorgrade_shader, _screenquad_buffer, _colorgrade_buffer);
@@ -271,6 +318,6 @@ idk::RenderEngine::resize( int w, int h )
     glInterface::genIdkFramebuffer(w, h, _screenquad_buffer);
     glInterface::genIdkFramebuffer(w, h, _colorgrade_buffer);
 
-    getActiveCamera().aspect(w, h);
+    getCamera().aspect(w, h);
 }
 

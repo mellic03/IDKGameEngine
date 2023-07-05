@@ -26,7 +26,6 @@ target_link_libraries(
 )
 
 
-
 project(objconvert)
 
 include_directories(src)
@@ -39,4 +38,20 @@ target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     IDKengine
 )
+
+
+project(convexdecompose)
+
+include_directories(src)
+
+add_executable(
+    ${PROJECT_NAME} "src/IDKtools/convexdecompose.cpp"
+)
+
+target_link_libraries(
+    ${PROJECT_NAME} PUBLIC
+    IDKengine
+)
+    
+    
 

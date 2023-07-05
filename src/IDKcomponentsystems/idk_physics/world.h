@@ -22,9 +22,9 @@ private:
     btCollisionDispatcher *                 _dispatcher;
     btDbvtBroadphase *                      _paircache;
     btSequentialImpulseConstraintSolver *   _solver;
-    btDiscreteDynamicsWorld *               _dynamicsWorld;
 
 public:
+    btDiscreteDynamicsWorld *               _dynamicsWorld;
 
     void init();
     void addBoxCollider(idk_physics::BoxCollider box);

@@ -192,6 +192,35 @@ idk::ModelManager::loadTextures( std::string root )
 }
 
 
+void
+idk::ModelManager::loadTEX( std::string filepath )
+{
+    // __tex_file_t tex = filetools::loadImage(filepath);
+
+    // GLuint tex_linr = glInterface::loadTexture(filepath, tex.w, tex.h, tex.data, false);
+    // GLuint tex_srgb = glInterface::loadTexture(filepath, tex.w, tex.h, tex.data, true);
+
+    // _texture_linr_IDs[filepath] = tex_linr;
+    // _texture_srgb_IDs[filepath] = tex_srgb;
+}
+
+
+void
+idk::ModelManager::loadTEXs( std::string root )
+{
+    // using namespace std;
+
+    // filesystem::path rootpath(root);
+    // for (auto const &dir_entry: filesystem::recursive_directory_iterator{rootpath})
+    // {
+    //     if (dir_entry.is_directory())
+    //         continue;
+
+    //     loadTexture( dir_entry.path().string() );
+    // }
+}
+
+
 int
 idk::ModelManager::loadOBJ( std::string raw_obj, std::string raw_mtl )
 {
@@ -257,4 +286,68 @@ idk::ModelManager::loadOBJ( std::string rootpath, std::string obj, std::string m
     obj_buf << std::ifstream(rootpath + obj).rdbuf();
     mtl_buf << std::ifstream(rootpath + mtl).rdbuf();
     return loadOBJ(obj_buf.str(), mtl_buf.str());
+}
+
+
+void
+idk::ModelManager::loadVertices( std::string filepath, std::vector<idk::Vertex> &vertices )
+{
+    vertices.clear();
+
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> texcoords;
+
+    std::ifstream stream(filepath);
+    std::string line;
+
+    while (std::getline(stream, line))
+    {
+        std::istringstream iss(line);
+        std::string dummy;
+
+        if (line[0] == 'v' && line[1] == ' ')
+        {
+            float x, y, z;
+            iss >> dummy >> x >> y >> z;
+            positions.push_back(glm::vec3(x, y, z));
+        }
+
+        else if (line[0] == 'v' && line[1] == 'n')
+        {
+            float x, y, z;
+            iss >> dummy >> x >> y >> z;
+            normals.push_back(glm::vec3(x, y, z));
+        }
+
+        else if (line[0] == 'v' && line[1] == 't')
+        {
+            float u, v;
+            iss >> dummy >> u >> v;
+            texcoords.push_back(glm::vec2(u, 1.0f - v)); 
+        }
+
+        else if (line[0] == 'f' && line[1] == ' ')
+        {
+            std::vector<std::string> vstrs(3);
+            iss >> dummy >> vstrs[0] >> vstrs[1] >> vstrs[2];
+
+            charreplace(vstrs, '/', ' ');
+
+            for (size_t i=0; i<3; i++)
+            {
+                iss = std::istringstream(vstrs[i]);
+                
+                size_t pos, uv, norm;
+                iss >> pos >> uv >> norm;
+
+                idk::Vertex vert;
+                vert.position  = positions[pos - 1];
+                vert.texcoords = texcoords[uv - 1];
+                vert.normal    = normals[norm - 1];
+
+                vertices.push_back(vert);
+            }
+        }
+    }
 }

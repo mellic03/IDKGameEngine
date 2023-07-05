@@ -40,9 +40,9 @@ vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specul
         + light.attentuation_quadratic * d*d
     );
 
-    vec3 ambient  = attenuation * albedomap * light.ambient;
-    vec3 diffuse  = attenuation * albedomap * diffuse_f * light.diffuse;
-    vec3 specular = attenuation * albedomap * specular_f * 255*specularmap;
+    vec3 ambient  = 1 * albedomap * light.ambient;
+    vec3 diffuse  = 1 * albedomap * diffuse_f * light.diffuse;
+    vec3 specular = 1 * albedomap * specular_f * 25*specularmap;
 
     vec3 result = ambient + diffuse + specular;
 

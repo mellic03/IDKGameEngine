@@ -1,18 +1,18 @@
-// #pragma once
+#pragma once
 
-// #include "../IDK_engine.h"
-
-
-// class Grabbable_CS: public idk::ComponentSystem
-// {
-// private:
+#include "IDK_builtin_CS_common.h"
 
 
-// public:
+class Grabbable_CS: public idk::ComponentSystem
+{
+private:
 
-//     void        init( idk::Engine & )       {  };
-//     void        stage_A( idk::Engine & )    {  };
-//     void        stage_B( idk::Engine & );
 
-// };
+public:
+
+    void        init( idk::Engine & )       {  };
+    void        stage_A( idk::Engine & )    {  };
+    void        stage_B( idk::Engine & );
+
+};
 

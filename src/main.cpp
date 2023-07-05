@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include "IDKengine.h"
+#include "demos/demos.h"
 
 
 int ENTRY(int argc, const char **argv)
@@ -16,46 +17,38 @@ int ENTRY(int argc, const char **argv)
     const uint PLAYERCONTORL = engine.registerCS<PlayerControl_CS>("playercontrol");
     const uint PHYSICS       = engine.registerCS<Physics_CS>("physics");
     const uint UI_SYS        = engine.registerCS<Builtin_UI>("ui");
-    // const uint GRABBABLE     = engine.registerCS<Grabbable_CS>("grabbable");
+    const uint GRABBABLE     = engine.registerCS<Grabbable_CS>("grabbable");
 
-    auto &mCS = engine.getCS<Model_CS>(MODEL);
     auto &tCS = engine.getCS<Transform_CS>(TRANSFORM);
+    auto &mCS = engine.getCS<Model_CS>(MODEL);
+    auto &pCS = engine.getCS<Physics_CS>(PHYSICS);
+
 
     idk::RenderEngine &ren = engine.rengine();
     ren.modelManager().loadTextures("assets/textures/");
 
     int p1_id = ren.createPointLight();
-    ren.pointlights().get(p1_id).transform.translate(glm::vec3(0.0f, 10.0f, 0.0f));
+    ren.pointlights().get(p1_id).transform.translate(glm::vec3(-20.0f, 20.0f, 40.0f));
 
 
-    int cube = ren.modelManager().loadOBJ("assets/models/", "cube.obj", "cube.mtl");
-    int obj1 = engine.createGameObject();
-    engine.giveComponents(obj1, TRANSFORM, MODEL, PHYSICS);
-    tCS.translate(obj1, glm::vec3(10.0f, 10.0f, 0.0f));
-    mCS.useModel(obj1, cube);
+    ren.getCamera().ylock(true);
+    ren.getCamera().transform().translate(glm::vec3(0.0f, 0.0f, 20.0f));
 
 
-    int plane_id = ren.modelManager().loadOBJ("assets/models/", "rob.obj", "rob.mtl");
-    int obj2 = engine.createGameObject();
-    engine.giveComponents(obj2, MODEL);
-    mCS.useModel(obj2, plane_id);
-
-
-    int cam_id = ren.createCamera();
-    ren.setActiveCamera(cam_id);
-    ren.getActiveCamera().ylock(true);
+    demos::cube_physics(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
+    // demos::school(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
 
 
     while (engine.running())
     {
         engine.beginFrame();
 
-        idk::Transform &t = tCS.getTransform(obj1);
-        t.rotate(engine.deltaTime() * glm::vec3(0.1f, 1.0f, 0.3f));
 
         engine.endFrame();
     }
 
     return 0;
 }
+
+
 

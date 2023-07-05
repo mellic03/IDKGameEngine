@@ -21,7 +21,7 @@ Transform_CS::onGameObjectDeletion( int obj_id )
 void
 Transform_CS::onGameObjectCopy( int src_obj_id, int dest_obj_id )
 {
-    _transforms[dest_obj_id] = _transforms[src_obj_id];
+    // _transforms[dest_obj_id] = _transforms[src_obj_id];
 }
 
 

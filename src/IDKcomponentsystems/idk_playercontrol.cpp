@@ -10,7 +10,7 @@ static float pitch_sway = 0.0f;
 void
 PlayerControl_CS::stage_A(idk::Engine &engine)
 {
-    idk::Camera &camera = engine.rengine().getActiveCamera();
+    idk::Camera &camera = engine.rengine().getCamera();
     idk::Keylog &keylog = engine.keylog();
     
     float dtime = engine.deltaTime();

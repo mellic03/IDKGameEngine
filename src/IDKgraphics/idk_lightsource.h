@@ -24,7 +24,7 @@ struct idk::lightsource::Point
     float           attentuation_linear     = 0.05f;
     float           attentuation_quadratic  = 0.0f;
 
-                    Point(): ambient(0.01f), diffuse(1.0f) {  };
+                    Point(): ambient(0.1f), diffuse(1.0f) {  };
 };
 
 

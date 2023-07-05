@@ -94,10 +94,11 @@ public:
                                         RenderEngine(size_t w, size_t h);
 
     uint                                createCamera();
-    void                                deleteCamera( uint id )     { _camera_allocator.remove(id);     };
-    idk::Camera &                       getCamera( uint id)         { return _camera_allocator.get(id); };
-    void                                setActiveCamera( uint id )  { _active_camera_id = id;           };
-    idk::Camera &                       getActiveCamera()           { return _camera_allocator.get(_active_camera_id); };
+    // void                                deleteCamera( uint id )     { _camera_allocator.remove(id);     };
+    // idk::Camera &                       getCamera( uint id)         { return _camera_allocator.get(id); };
+    // void                                setActiveCamera( uint id )  { _active_camera_id = id;           };
+    // idk::Camera &                       getActiveCamera()           { return _camera_allocator.get(_active_camera_id); };
+    idk::Camera &                       getCamera()    { return _camera_allocator.get(_active_camera_id); };
 
     uint                                createPointLight();
     Allocator<lightsource::Point> &     pointlights()   { return _pointlight_allocator; };
