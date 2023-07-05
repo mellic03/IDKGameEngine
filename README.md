@@ -1,5 +1,5 @@
 
-## Native Model Format
+<!-- ## Native Model Format
 
 idk.db acts as a database for model and texture data.
 
@@ -28,4 +28,4 @@ textureID vts0ID vts1ID vts2ID ...
 2   pos nrm tan uv  pos nrm tan uv
 2   x y z  x y z  x y z  u v   x y z  x y z  x y z  u v
 ```
-
+ -->
