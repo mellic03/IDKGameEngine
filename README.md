@@ -34,7 +34,8 @@ textureID vts0ID vts1ID vts2ID ...
 
 
 #  Dependencies
-- [GLEW](https://github.com/nigels-com/glew)
+- [OpenGL Mathematics (glm)](https://github.com/g-truc/glm)
+- [OpenGL Extension Wrangler (GLEW)](https://github.com/nigels-com/glew)
 - [SDL2](https://github.com/libsdl-org/SDL)
 - [SDL_image](https://github.com/libsdl-org/SDL_image)
 - [Bullet3](https://github.com/bulletphysics/bullet3)
@@ -117,7 +118,7 @@ The engine will call `idk::ComponentSystem::stage_A()` and `idk::ComponentSystem
 | stage_B() | End of frame after engine and rendering logic but before the front and back buffers have been swapped. Mostly useful for UI. |
 
 
-### Callbacks
+### ComponentSystem Callbacks
 Each callback is run whenever a game object is created, deleted or copied.
 
 - Game object creation
@@ -137,6 +138,11 @@ Each callback is run whenever a game object is created, deleted or copied.
     idk::ComponentSystem::onGameObjectCopy( int obj_id, idk::Engine & )
     ```
 
+
+- Game object component assignment
+    ```C++
+    idk::ComponentSystem::onComponentAssignment( int obj_id, idk::Engine & )
+    ```
 
 ### Creating a new Component System
 Inherit from `idk::ComponentSystem` to create a new component system.
