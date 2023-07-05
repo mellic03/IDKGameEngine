@@ -1,3 +1,0 @@
-[submodule "src/IDKcommon/put_glew_here/glew"]
-	path = src/IDKcommon/put_glew_here/glew
-	url = https://github.com/nigels-com/glew.git
