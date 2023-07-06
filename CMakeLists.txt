@@ -10,6 +10,8 @@ set(CMAKE_BUILD_PARALLEL_LEVEL 8)
 set (CMAKE_CXX_FLAGS "-lstdc++fs -std=c++17 -fsanitize=undefined -g -fdiagnostics-color=always")
 add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 
+add_definitions(-DIDK_DEBUG)
+
 
 project(IDKGame)
 
@@ -23,7 +25,10 @@ add_executable(
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     IDKengine
+    IDKcomponentsystems
 )
+
+
 
 
 project(objconvert)
@@ -38,6 +43,8 @@ target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     IDKengine
 )
+
+
 
 
 project(convexdecompose)

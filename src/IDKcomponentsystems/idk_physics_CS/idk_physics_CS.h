@@ -23,9 +23,9 @@ public:
     void        stage_B( idk::Engine & );
 
     void        onAssignment( int obj_id, idk::Engine & );
-    void        onGameObjectCreation( int obj_id );
-    void        onGameObjectDeletion( int obj_id );
-    void        onGameObjectCopy( int src_obj_id, int dest_obj_id );
+    void        onGameObjectCreation( int obj_id, idk::Engine & );
+    void        onGameObjectDeletion( int obj_id, idk::Engine & );
+    void        onGameObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine & );
 
     void        giveBoxCollider( int obj_id, float mass, glm::vec3 size );
     void        giveBoxCollider( int obj_id, float mass );

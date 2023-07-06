@@ -1,5 +1,5 @@
 #include "idk_grabbable.h"
-#include "idk_physics/idk_physics.h"
+#include "idk_physics_CS/idk_physics_CS.h"
 #include "idk_transform_CS.h"
 
 
@@ -78,7 +78,7 @@ Grabbable_CS::stage_B( idk::Engine &engine )
         grabbedRB->activate(true);
         grabbedRB->applyCentralForce(btdir);
         grabbedRB->setLinearVelocity(btdir);
-        grabbedRB->setAngularVelocity(btdir);
+        grabbedRB->setAngularVelocity(btVector3(0, 0, 0));
     
 
         if (keylog.keyDown(idk_keycode::Q))

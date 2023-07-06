@@ -27,7 +27,7 @@ Model_CS::stage_A(idk::Engine &engine)
 
 
 void
-Model_CS::onGameObjectCreation( int obj_id )
+Model_CS::onGameObjectCreation( int obj_id, idk::Engine &engine )
 {
     if (obj_id >= _model_ids.size())
         _model_ids.resize(obj_id+1, -1);
@@ -37,14 +37,14 @@ Model_CS::onGameObjectCreation( int obj_id )
 
 
 void
-Model_CS::onGameObjectDeletion( int obj_id )
+Model_CS::onGameObjectDeletion( int obj_id, idk::Engine &engine )
 {
     _model_ids[obj_id] = -1;
 }
 
 
 void
-Model_CS::onGameObjectCopy( int src_obj_id, int dest_obj_id )
+Model_CS::onGameObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine &engine )
 {
     _model_ids[dest_obj_id] = _model_ids[src_obj_id];
 }

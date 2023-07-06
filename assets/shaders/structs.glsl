@@ -26,4 +26,7 @@ struct spotlight
     float attenuation_constant;
     float attentuation_linear;
     float attentuation_quadratic;
+
+    float           inner_cutoff;
+    float           outer_cutoff;
 };

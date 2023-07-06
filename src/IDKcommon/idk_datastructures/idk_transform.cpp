@@ -1,5 +1,7 @@
 #include "idk_transform.h"
 
+#include <glm/gtx/matrix_decompose.hpp>
+
 
 idk::Transform::Transform():
 _position(0.0f), _scale(1.0f),
@@ -24,6 +26,15 @@ idk::Transform::scale()
         _model_mat[1][1],
         _model_mat[2][2]
     );
+}
+
+
+glm::vec3
+idk::Transform::rotation()
+{
+    glm::vec4 dir = glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+    dir = modelMatrix() * dir;
+    return dir;
 }
 
 

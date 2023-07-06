@@ -133,13 +133,13 @@ Each callback is run whenever a game object is created, deleted or copied.
     ```
 
 
-- Game object copy
+- Game object copy. This is called when one gameobject is created by using another as a prefab: `idk::engine::createGameObject( prefab_id )`
     ```C++
     idk::ComponentSystem::onGameObjectCopy( int obj_id, idk::Engine & )
     ```
 
 
-- Game object component assignment
+- Game object component assignment. Called when the component system's component is given to the game object.
     ```C++
     idk::ComponentSystem::onComponentAssignment( int obj_id, idk::Engine & )
     ```

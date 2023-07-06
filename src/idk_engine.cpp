@@ -80,33 +80,62 @@ idk::Engine::_idk_CS_stage_B()
 
 
 void
-idk::Engine::_idk_CS_onCreation( int obj_id )
+idk::Engine::_idk_CS_checkDependencies( int obj_id, int component_id )
 {
-    for (idk::ComponentSystem *component: _idk_componentsystems)
-        component->onGameObjectCreation(obj_id);
-}
+    auto cs = _idk_componentsystems[component_id];
+    auto deps = cs->getDependencies();
 
+    for (auto &name: deps)
+    {
+        std::string assertmsg =
+        "object " + std::to_string(obj_id)
+        + " does not have component dependency "
+        + "\"" + name + "\""
+        + " required for component "
+        + "\"" + cs->name() + "\"";
 
-void
-idk::Engine::_idk_CS_onDeletion( int obj_id )
-{
-    for (idk::ComponentSystem *component: _idk_componentsystems)
-        component->onGameObjectDeletion(obj_id);
-}
+        if (hasComponent(obj_id, name) == false)
+        {
+            std::cout << assertmsg << std::endl;
+            exit(1);
+        }
+    }
 
-
-void
-idk::Engine::_idk_CS_onCopy( int src_obj_id, int dest_obj_id )
-{
-    for (idk::ComponentSystem *component: _idk_componentsystems)
-        component->onGameObjectCopy(src_obj_id, dest_obj_id);
 }
 
 
 void
 idk::Engine::_idk_CS_onAssignment( int component_id, int obj_id )
 {
+    #ifdef IDK_DEBUG
+        _idk_CS_checkDependencies(obj_id, component_id);
+    #endif
+
     _idk_componentsystems[component_id]->onAssignment(obj_id, *this);
+}
+
+
+void
+idk::Engine::_idk_CS_onGameObjectCreation( int obj_id )
+{
+    for (idk::ComponentSystem *component: _idk_componentsystems)
+        component->onGameObjectCreation(obj_id, *this);
+}
+
+
+void
+idk::Engine::_idk_CS_onGameObjectDeletion( int obj_id )
+{
+    for (idk::ComponentSystem *component: _idk_componentsystems)
+        component->onGameObjectDeletion(obj_id, *this);
+}
+
+
+void
+idk::Engine::_idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id )
+{
+    for (idk::ComponentSystem *component: _idk_componentsystems)
+        component->onGameObjectCopy(src_obj_id, dest_obj_id, *this);
 }
 
 
@@ -147,7 +176,7 @@ idk::Engine::createGameObject()
 
     int obj_id = _gameobjects.add();
 
-    _idk_CS_onCreation(obj_id);
+    _idk_CS_onGameObjectCreation(obj_id);
 
     return obj_id;
 }
@@ -161,8 +190,8 @@ idk::Engine::createGameObject( int prefab_id )
 
     int obj_id = _gameobjects.add();
 
-    _idk_CS_onCreation(obj_id);
-    _idk_CS_onCopy(prefab_id, obj_id);
+    _idk_CS_onGameObjectCreation(obj_id);
+    _idk_CS_onGameObjectCopy(prefab_id, obj_id);
 
     return obj_id;
 }
@@ -190,7 +219,7 @@ idk::Engine::deleteGameObject( int obj_id )
     _gameobjects.remove(obj_id);
     _component_matrix[obj_id] = std::vector<int>(_idk_componentsystems.size(), 0);
 
-    _idk_CS_onDeletion(obj_id);
+    _idk_CS_onGameObjectDeletion(obj_id);
 }
 
 
@@ -213,6 +242,13 @@ bool
 idk::Engine::hasComponent( int obj_id, int component_id )
 {
     return _component_matrix[obj_id][component_id] == 1;
+}
+
+
+bool 
+idk::Engine::hasComponent( int obj_id, std::string component_name )
+{
+    return _component_matrix[obj_id][_idk_componentsystem_ids[component_name]] == 1;
 }
 
 

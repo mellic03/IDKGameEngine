@@ -18,6 +18,9 @@ namespace idk
 };
 
 
+/** Binary texture file
+ * 
+*/
 struct idk::__tex_file_t
 {
     int w=0, h=0; // width*height == number of uint8_t, not pixels

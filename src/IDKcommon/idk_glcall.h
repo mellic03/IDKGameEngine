@@ -4,7 +4,8 @@
 #include <GL/glu.h>
 #include <assert.h>
 
-#define IDK_DEBUG
+#define assertm(exp, msg) assert(((void)msg, exp))
+
 
 #define GLClearError() \
 { \

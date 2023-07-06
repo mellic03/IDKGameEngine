@@ -33,10 +33,11 @@ private:
 
     void                                        _idk_CS_stage_A();
     void                                        _idk_CS_stage_B();
-    void                                        _idk_CS_onCreation( int obj_id );
-    void                                        _idk_CS_onDeletion( int obj_id );
-    void                                        _idk_CS_onCopy( int src_obj_id, int dest_obj_id );
+    void                                        _idk_CS_checkDependencies( int obj_id, int component_id );
     void                                        _idk_CS_onAssignment( int component_id, int obj_id );
+    void                                        _idk_CS_onGameObjectCreation( int obj_id );
+    void                                        _idk_CS_onGameObjectDeletion( int obj_id );
+    void                                        _idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id );
 
 public:
                                                 Engine( size_t w = 1000, size_t h = 1000 );
@@ -70,12 +71,12 @@ public:
     template <typename... Args> void            giveComponents( int obj_id,  int, Args... );
     void                                        removeComponent( int obj_id, int component_id );
     bool                                        hasComponent( int obj_id, int component_id );
+    bool                                        hasComponent( int obj_id, std::string component_name );
 
     template <typename module_t> int            registerCS( std::string name );
     template <typename module_t> module_t &     getCS( int component_id );
     template <typename module_t> module_t &     getCS( std::string name );
 };
-
 
 
 template <typename... Args>

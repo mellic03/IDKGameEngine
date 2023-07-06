@@ -2,15 +2,13 @@
 
 #include "IDKcommon/IDKcommon.h"
 
-namespace idk
+namespace idk::lightsource
 {
-    namespace lightsource
-    {
-        struct Point;
-        struct Spot;
-        struct Dir;
-    };
+    struct Point;
+    struct Spot;
+    struct Dir;
 };
+
 
 struct idk::lightsource::Point
 {
@@ -30,25 +28,29 @@ struct idk::lightsource::Point
 
 struct idk::lightsource::Spot
 {
-    uint            transform_id;
+    Transform       transform;
 
     glm::vec3       ambient;
     glm::vec3       diffuse;
+    float           attentuation_constant   = 0.5f;
+    float           attentuation_linear     = 0.05f;
+    float           attentuation_quadratic  = 0.0f;
 
-                    Spot() {  };
-                    Spot(uint tID): ambient(0.0f), diffuse(1.0f), transform_id(tID) {  };
+    float           inner_cutoff            = 2.5f;
+    float           outer_cutoff            = 45.5f;
+
+                    Spot(): ambient(0.1f), diffuse(1.0f) {  };
 };
 
 
 struct idk::lightsource::Dir
 {
-    uint            transform_id;
+    Transform       transform;
 
     glm::vec3       ambient;
     glm::vec3       diffuse;
 
-                    Dir() {  };
-                    Dir(uint tID): ambient(0.0f), diffuse(1.0f), transform_id(tID) {  };
+                    Dir(): ambient(0.1f), diffuse(1.0f) {  };
 
 };
 

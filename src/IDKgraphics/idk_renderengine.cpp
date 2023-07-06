@@ -124,19 +124,26 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in )
 }
 
 
-uint
+int
 idk::RenderEngine::createCamera()
 {
-    uint camera_id = _camera_allocator.add();
+    int camera_id = _camera_allocator.add();
     _camera_allocator.get(camera_id).aspect(_screen_width, _screen_height);
     return camera_id;
 }
 
 
-uint
-idk::RenderEngine::createPointLight()
+int
+idk::RenderEngine::createPointlight()
 {
     return _pointlight_allocator.add();
+}
+
+
+int
+idk::RenderEngine::createSpotlight()
+{
+    return _spotlight_allocator.add();
 }
 
 
@@ -233,6 +240,9 @@ idk::RenderEngine::endFrame()
         glInterface::useProgram(shader_id);
 
         glInterface::setUniform_int("un_num_pointlights", _pointlight_allocator.size());
+        glInterface::setUniform_int("un_num_spotlights", _spotlight_allocator.size());
+
+        idk::Camera &camera = getCamera();
 
         int count = 0;
         pointlights().for_each(
@@ -252,7 +262,31 @@ idk::RenderEngine::endFrame()
             }
         );
 
-        idk::Camera &camera = _camera_allocator.get(_active_camera_id);
+
+        count = 0;
+        spotlights().for_each(
+            [&camera, &count](lightsource::Spot &spotlight)
+            {
+                idk::Transform &transform = spotlight.transform;
+                std::string str = std::to_string(count);
+                glInterface::setUniform_vec3("un_spotlights[" + str + "].ambient", spotlight.ambient);
+                glInterface::setUniform_vec3("un_spotlights[" + str + "].diffuse", spotlight.diffuse);
+                glInterface::setUniform_vec3("un_spotlights[" + str + "].position", transform.position());
+                glInterface::setUniform_vec3("un_spotlights[" + str + "].direction", camera.front());
+
+                glInterface::setUniform_float("un_spotlights[" + str + "].attenuation_constant", spotlight.attentuation_constant);
+                glInterface::setUniform_float("un_spotlights[" + str + "].attentuation_linear", spotlight.attentuation_linear);
+                glInterface::setUniform_float("un_spotlights[" + str + "].attentuation_quadratic", spotlight.attentuation_quadratic);
+                
+                glInterface::setUniform_float("un_spotlights[" + str + "].inner_cutoff", glm::radians(spotlight.inner_cutoff));
+                glInterface::setUniform_float("un_spotlights[" + str + "].outer_cutoff", glm::radians(spotlight.outer_cutoff));
+
+                count += 1;
+            }
+        );
+
+
+
         glm::mat4 view = camera.view();
         glm::mat4 proj = camera.projection();
 

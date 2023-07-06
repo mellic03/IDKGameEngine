@@ -6,7 +6,7 @@ namespace demos
 
 
 
-void cube_physics( idk::Engine &engine, uint TRANS, uint MOD, uint PHYS, uint GRAB )
+void cube_physics( idk::Engine &engine, int TRANS, int MOD, int PHYS, int GRAB )
 {
     auto &tCS = engine.getCS<Transform_CS>(TRANS);
     auto &mCS = engine.getCS<Model_CS>(MOD);
@@ -28,7 +28,6 @@ void cube_physics( idk::Engine &engine, uint TRANS, uint MOD, uint PHYS, uint GR
     tCS.getTransform(obj1).translate(glm::vec3(0.0f, -10.0f, 0.0f));
     pCS.giveBoxCollider(obj1, 0.0f);
 
-
     for (int i=0; i<10; i++)
     {
         for (int j=0; j<10; j++)
@@ -41,7 +40,7 @@ void cube_physics( idk::Engine &engine, uint TRANS, uint MOD, uint PHYS, uint GR
 
                 idk::Transform &transform = tCS.getTransform(cube2);
 
-                transform.translate(glm::vec3(i+5, 15+j, k+5));
+                transform.translate(glm::vec3(i-5, 1.1+j, k-5));
                 transform.scale(glm::vec3(0.45f));
 
                 pCS.giveBoxCollider(cube2, 10.0f);
