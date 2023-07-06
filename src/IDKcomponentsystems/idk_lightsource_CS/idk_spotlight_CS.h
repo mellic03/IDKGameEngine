@@ -10,7 +10,7 @@ private:
     std::vector<int> _spotlight_ids;  // v[obj_id] = lightsource_id
 
 public:
-    void        init( idk::Engine & )       {  };
+    void        init( idk::Engine & );
     void        stage_A( idk::Engine & )    {  };
     void        stage_B( idk::Engine & );
 

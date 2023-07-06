@@ -1,6 +1,15 @@
 #include "idk_spotlight_CS.h"
 #include "../idk_transform_CS.h"
 
+
+
+void
+SpotLight_CS::init( idk::Engine &engine )
+{
+    addDependencies("transform");
+}
+
+
 void
 SpotLight_CS::stage_B( idk::Engine &engine )
 {
@@ -18,7 +27,6 @@ SpotLight_CS::stage_B( idk::Engine &engine )
         if (_draw_spotlight[obj_id])
         {
             ren.drawModel(ren.solid_shader, ren.SPHERE_PRIMITIVE, spotlight.transform);
-            ren.setUniform_vec3(ren.solid_shader, "un_color", spotlight.diffuse);
         }        
     }
 

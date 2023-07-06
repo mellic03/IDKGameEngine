@@ -319,3 +319,71 @@ idk::glInterface::setUniform_texture(std::string name, GLuint texture_id)
 }
 
 
+
+
+void
+idk::glInterface::setUniform_int(GLint loc, int i)
+{
+    GLCALL(
+        glUniform1i(loc, i);
+    )
+}
+
+void
+idk::glInterface::setUniform_float(GLint loc, float f)
+{
+    GLCALL(
+        glUniform1f(loc, f);
+    )
+}
+
+void
+idk::glInterface::setUniform_vec2(GLint loc, glm::vec2 v)
+{
+    GLCALL(
+        glUniform2fv(loc, 1, glm::value_ptr(v));
+    )
+}
+
+void
+idk::glInterface::setUniform_vec3(GLint loc, glm::vec3 v)
+{
+    GLCALL(
+        glUniform3fv(loc, 1, glm::value_ptr(v));
+    )
+}
+
+void
+idk::glInterface::setUniform_vec4(GLint loc, glm::vec4 v)
+{
+    GLCALL(
+        glUniform4fv(loc, 1, glm::value_ptr(v));
+    )
+}
+
+void
+idk::glInterface::setUniform_mat3(GLint loc, glm::mat3 m)
+{
+    GLCALL(
+        glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(m));
+    )
+}
+
+void
+idk::glInterface::setUniform_mat4(GLint loc, glm::mat4 m)
+{
+    GLCALL(
+        glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m));
+    )
+}
+
+
+void
+idk::glInterface::setUniform_texture(GLint loc, GLuint texture_id)
+{
+    GLuint texture_unit = popTextureUnitID();
+    GLCALL( glActiveTexture(texture_unit); )
+    GLCALL( glBindTexture(GL_TEXTURE_2D, texture_id); )
+    setUniform_int(loc, texture_unit - GL_TEXTURE0);
+}
+

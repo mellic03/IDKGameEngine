@@ -7,6 +7,11 @@
 #include "datastructures_decl.h"
 
 
+/**
+ * idk::Allocator<T> is good.
+ * 
+*/
+
 template <typename T>
 class idk::Allocator
 {
@@ -18,8 +23,13 @@ private:
 public:
                             Allocator();
 
+    /** Add a new object to the allocator and return its ID
+    */
     int                     add();
+    /** Add a new object to the allocator and return its ID
+    */
     int                     add( const T &data );
+
     T &                     get( int id );
     void                    remove( int id );
     size_t                  size() const { return _objects.size() - _unnocupied_indices.size(); };

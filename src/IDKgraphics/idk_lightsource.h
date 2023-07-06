@@ -39,7 +39,7 @@ struct idk::lightsource::Spot
     float           inner_cutoff            = 2.5f;
     float           outer_cutoff            = 45.5f;
 
-                    Spot(): ambient(0.1f), diffuse(1.0f) {  };
+                    Spot(): ambient(0.01f), diffuse(1.0f) {  };
 };
 
 

@@ -18,8 +18,6 @@ void school( idk::Engine &engine, int TRANS, int MOD, int PHYS, int GRAB )
     engine.giveComponents(obj2, TRANS, MOD);
     mCS.useModel(obj2, plane_id);
 
-    std::cout << plane_id << "\n" << obj2 << std::endl;
-
 }
 
 

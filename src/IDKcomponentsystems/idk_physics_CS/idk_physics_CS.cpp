@@ -20,6 +20,8 @@ static btVector3 btVec3_cast(glm::vec3 v)
 void
 Physics_CS::init( idk::Engine &engine )
 {
+    addDependencies("transform");
+
     _engineptr = &engine;
     _physicsworld.init();
 }

@@ -1,8 +1,9 @@
 struct pointlight
 {
+    vec3 position;
+
     vec3 ambient;
     vec3 diffuse;
-    vec3 position;
 
     float attenuation_constant;
     float attentuation_linear;
@@ -11,17 +12,19 @@ struct pointlight
 
 struct dirlight
 {
+    vec3 direction;
+
     vec3 ambient;
     vec3 diffuse;
-    vec3 direction;
 };
 
 struct spotlight
 {
-    vec3 ambient;
-    vec3 diffuse;
     vec3 position;
     vec3 direction;
+
+    vec3 ambient;
+    vec3 diffuse;
 
     float attenuation_constant;
     float attentuation_linear;

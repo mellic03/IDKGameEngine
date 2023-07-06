@@ -13,7 +13,7 @@
 
 namespace idk { class RenderEngine; };
 
-#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::triple<int, idk::Transform, idk::glUniforms>>>
+#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::pair<int, idk::Transform>>>
 
 class idk::RenderEngine
 {
@@ -73,7 +73,8 @@ private:
     void                _render_screenquad( GLuint shader, glFramebuffer &in );
 
     void                _bind_material( idk::Material & );
-    void                _draw_model( idk::Model &, idk::Transform &, idk::glUniforms & );
+    void                _draw_model( idk::Model &, idk::Transform & );
+    void                _draw_wireframe( idk::Model &, idk::Transform & );
     // ------------------------------------------------------------------------------------
 
 
@@ -108,7 +109,6 @@ public:
 
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
     void                                drawWireframe( GLuint shader_id, int model_id, Transform &transform );
-    void                                setUniform_vec3( GLuint shader_id, std::string name, glm::vec3 v );
     // ------------------------------------------------------------------------------------
 
 

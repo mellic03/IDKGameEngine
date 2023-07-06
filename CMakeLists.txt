@@ -25,40 +25,39 @@ add_executable(
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     IDKengine
-    IDKcomponentsystems
 )
 
 
 
 
-project(objconvert)
+# project(objconvert)
 
-include_directories(src)
+# include_directories(src)
 
-add_executable(
-    ${PROJECT_NAME} "src/IDKtools/objconvert.cpp"
-)
+# add_executable(
+#     ${PROJECT_NAME} "src/IDKtools/objconvert.cpp"
+# )
 
-target_link_libraries(
-    ${PROJECT_NAME} PUBLIC
-    IDKengine
-)
-
-
+# target_link_libraries(
+#     ${PROJECT_NAME} PUBLIC
+#     IDKengine
+# )
 
 
-project(convexdecompose)
 
-include_directories(src)
 
-add_executable(
-    ${PROJECT_NAME} "src/IDKtools/convexdecompose.cpp"
-)
+# project(convexdecompose)
 
-target_link_libraries(
-    ${PROJECT_NAME} PUBLIC
-    IDKengine
-)
+# include_directories(src)
+
+# add_executable(
+#     ${PROJECT_NAME} "src/IDKtools/convexdecompose.cpp"
+# )
+
+# target_link_libraries(
+#     ${PROJECT_NAME} PUBLIC
+#     IDKengine
+# )
     
     
 

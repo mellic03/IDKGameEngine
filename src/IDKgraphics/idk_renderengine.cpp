@@ -35,8 +35,7 @@ idk::RenderEngine::_init_SDL_OpenGL(size_t w, size_t h)
         exit(1);
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
 }
 
 
@@ -88,6 +87,7 @@ _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
     glInterface::genIdkFramebuffer(_screen_width, _screen_height, _screenquad_buffer);
     glInterface::genIdkFramebuffer(_screen_width, _screen_height, _colorgrade_buffer);
 
+    _gb_geometry_shader = glInterface::compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
     _screenquad_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
     _colorgrade_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "colorgrade.fs");
     _fxaa_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "fxaa.fs");
@@ -150,21 +150,14 @@ idk::RenderEngine::createSpotlight()
 void
 idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transform )
 {
-    _model_draw_queue[shader_id].push({model_id, transform, glUniforms()});
+    _model_draw_queue[shader_id].push({model_id, transform});
 }
 
 
 void
 idk::RenderEngine::drawWireframe( GLuint shader_id, int model_id, Transform &transform )
 {
-    _wireframe_draw_queue[shader_id].push({model_id, transform, glUniforms()});
-}
-
-
-void
-idk::RenderEngine::setUniform_vec3( GLuint shader_id, std::string name, glm::vec3 v )
-{
-    _model_draw_queue[shader_id].back().third.setvec3(name, v);
+    _wireframe_draw_queue[shader_id].push({model_id, transform});
 }
 
 
@@ -178,7 +171,7 @@ idk::RenderEngine::_bind_material( idk::Material &material )
 
 
 void
-idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform, idk::glUniforms &uniforms )
+idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform )
 {
     glm::mat4 model_mat = transform.modelMatrix();
     glInterface::setUniform_mat4("un_model", model_mat);
@@ -201,19 +194,19 @@ idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform, id
 
 
 void
-_draw_wireframe( idk::Model &model, idk::Transform &transform )
+idk::RenderEngine::_draw_wireframe( idk::Model &model, idk::Transform &transform )
 {
     glm::mat4 model_mat = transform.modelMatrix();
     idk::glInterface::setUniform_mat4("un_model", model_mat);
 
-    glBindVertexArray(model.VAO);
+    gl::bindVertexArray(model.VAO);
     for (int i=0; i<model.meshes.size(); i++)
     {
         idk::Mesh &mesh = model.meshes[i];
         idk::gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
         idk::gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
     }
-    glBindVertexArray(0);
+    gl::bindVertexArray(0);
 
     idk::glInterface::freeTextureUnitIDs();
 }
@@ -294,12 +287,11 @@ idk::RenderEngine::endFrame()
         glInterface::setUniform_mat4("un_view", view);
         glInterface::setUniform_mat4("un_projection", proj);
 
-        for (auto &[model_id, transform, glUniform]: vec)
+        for (auto &[model_id, transform]: vec)
         {
             _draw_model(
                 modelManager().getModel(model_id),
-                transform,
-                glUniform
+                transform
             );
         }
         vec.clear();
@@ -320,7 +312,7 @@ idk::RenderEngine::endFrame()
         glInterface::setUniform_mat4("un_view", view);
         glInterface::setUniform_mat4("un_projection", proj);
 
-        for (auto &[model_id, transform, glUniform]: vec)
+        for (auto &[model_id, transform]: vec)
         {
             _draw_wireframe(
                 modelManager().getModel(model_id),

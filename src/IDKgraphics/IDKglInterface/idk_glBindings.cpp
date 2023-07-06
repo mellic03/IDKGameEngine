@@ -70,6 +70,16 @@ void idk::gl::drawElements( GLenum mode, GLsizei count, GLenum type, const void 
 // ---------------------------------------------------------------------------------------
 
 
+// Uniforms ------------------------------------------------------------------------------
+GLint
+idk::gl::getUniformLocation( GLuint program, std::string name )
+{
+    return glGetUniformLocation(program, name.c_str());
+}
+// ---------------------------------------------------------------------------------------
+
+
+
 void
 idk::gl::bufferData( GLenum target, GLsizeiptr size, const void *data, GLenum usage )
 {

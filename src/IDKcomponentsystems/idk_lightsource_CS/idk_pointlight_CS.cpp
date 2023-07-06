@@ -1,6 +1,14 @@
 #include "idk_pointlight_CS.h"
 #include "../idk_transform_CS.h"
 
+
+void
+PointLight_CS::init( idk::Engine &engine )
+{
+    addDependencies("transform");
+}
+
+
 void
 PointLight_CS::stage_B( idk::Engine &engine )
 {
@@ -22,7 +30,6 @@ PointLight_CS::stage_B( idk::Engine &engine )
         [&ren](idk::lightsource::Point &light)
         {
             ren.drawModel(ren.solid_shader, ren.SPHERE_PRIMITIVE, light.transform);
-            ren.setUniform_vec3(ren.solid_shader, "un_color", light.diffuse);
         }
     );
 

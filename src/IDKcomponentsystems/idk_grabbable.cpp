@@ -31,6 +31,13 @@ static btVector3 tobt(glm::vec3 v)
 
 
 void
+Grabbable_CS::init( idk::Engine &engine )
+{
+    addDependencies("transform", "physics");
+}
+
+
+void
 Grabbable_CS::stage_B( idk::Engine &engine )
 {
     Physics_CS &pCS = engine.getCS<Physics_CS>("physics");

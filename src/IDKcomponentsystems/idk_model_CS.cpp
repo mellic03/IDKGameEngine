@@ -8,6 +8,8 @@ Model_CS::init(idk::Engine &engine)
     _default_shader = idk::glInterface::compileShaderProgram(
         "assets/shaders/", "gb_geom.vs", "gb_geom.fs"
     );
+
+    addDependencies("transform");
 }
 
 

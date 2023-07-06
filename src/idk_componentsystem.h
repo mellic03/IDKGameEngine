@@ -8,6 +8,11 @@
 namespace idk { class Engine; };
 namespace idk { class ComponentSystem; };
 
+
+/**
+ * ## Dependency-related methods are only called if IDK_DEBUG is defined
+*/
+
 class idk::ComponentSystem
 {
 protected:
@@ -26,20 +31,9 @@ public:
     virtual void    stage_B( idk::Engine & ) = 0;
 
 
-    /*              ----- Dependencies are only checked if IDK_DEBUG is defined -----
-
-                    Ensure an object has all required components.
-                    E.g. model component may need a transform component.
-                    Called when the component is assigned but before onAssignment().
-    */
     void    addDependency( std::string name ) { _dependencies.push_back(name); };
     void    addDependencies()                 { /* Base case */                };
-    /*              ----- Dependencies are only checked if IDK_DEBUG is defined -----
 
-                    Ensure an object has all required components.
-                    E.g. model component may need a transform component.
-                    Called when the component is assigned but before onAssignment().
-    */ 
     template <typename ...Args> void    addDependencies( std::string head, Args... );
     const std::vector<std::string> &    getDependencies() const { return _dependencies; };
 
@@ -64,7 +58,6 @@ public:
     virtual void    onGameObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine & ) = 0;
 
 };
-
 
 
 

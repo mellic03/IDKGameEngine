@@ -36,4 +36,13 @@ namespace idk::glInterface
     void                    setUniform_mat3(std::string, glm::mat3);
     void                    setUniform_mat4(std::string, glm::mat4);
 
+    void                    setUniform_texture(GLint loc, GLuint texture_id);
+    void                    setUniform_int(GLint loc, int);
+    void                    setUniform_float(GLint loc, float);
+    void                    setUniform_vec2(GLint loc, glm::vec2);
+    void                    setUniform_vec3(GLint loc, glm::vec3);
+    void                    setUniform_vec4(GLint loc, glm::vec4);
+    void                    setUniform_mat3(GLint loc, glm::mat3);
+    void                    setUniform_mat4(GLint loc, glm::mat4);
+
 };
