@@ -13,24 +13,6 @@ void cube_physics( idk::Engine &engine, int TRANS, int MOD, int PHYS, int GRAB )
 
     // idk::RenderEngine &ren = engine.rengine();
 
-<<<<<<< HEAD
-    int cube = ren.modelManager().loadOBJ("assets/models/", "cube.obj", "cube.mtl");
-    int stoneplane = ren.modelManager().loadOBJ("assets/models/", "stoneplane.obj", "stoneplane.mtl");
-    
-    int obj1 = engine.createGameObject();
-    engine.giveComponents(obj1, TRANS, MOD, PHYS);
-    mCS.useModel(obj1, cube);
-    tCS.getTransform(obj1).scale(glm::vec3(10.0f, 1.0f, 10.0f));
-    pCS.giveBoxCollider(obj1, 0.0f);
-
-
-    obj1 = engine.createGameObject();
-    engine.giveComponents(obj1, TRANS, MOD, PHYS);
-    mCS.useModel(obj1, stoneplane);
-    tCS.getTransform(obj1).scale(glm::vec3(40.0f, 1.0f, 40.0f));
-    tCS.getTransform(obj1).translate(glm::vec3(0.0f, -10.0f, 0.0f));
-    pCS.giveBoxCollider(obj1, 0.0f);
-=======
     // int cube = ren.modelManager().loadOBJ("assets/models/", "cube.obj", "cube.mtl");
     // int stoneplane = ren.modelManager().loadOBJ("assets/models/", "stoneplane.obj", "stoneplane.mtl");
     
@@ -40,7 +22,6 @@ void cube_physics( idk::Engine &engine, int TRANS, int MOD, int PHYS, int GRAB )
     // tCS.getTransform(obj1).scale(glm::vec3(10.0f, 1.0f, 10.0f));
     // pCS.giveBoxCollider(obj1, 0.0f);
 
->>>>>>> 88feb98 (woop)
 
     // obj1 = engine.createGameObject();
     // engine.giveComponents(obj1, TRANS, MOD, PHYS);

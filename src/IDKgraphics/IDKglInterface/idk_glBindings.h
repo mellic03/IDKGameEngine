@@ -70,10 +70,6 @@ namespace idk::gl
     GLint getUniformLocation( GLuint program, std::string name );
     // ---------------------------------------------------------------------------------------
 
-    // Uniforms ------------------------------------------------------------------------------
-    GLint getUniformLocation( GLuint program, std::string name );
-    // ---------------------------------------------------------------------------------------
-
     void vertexAttribPointer( GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLuint offset );
     void enableVertexAttribArray( GLuint index );
 

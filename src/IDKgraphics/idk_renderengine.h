@@ -75,15 +75,9 @@ private:
     void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );
     void                _render_screenquad( GLuint shader, glFramebuffer &in );
 
-<<<<<<< HEAD
-    void                _bind_material( idk::Material & );
-    void                _draw_model( idk::Model &, idk::Transform & );
-    void                _draw_wireframe( idk::Model &, idk::Transform & );
-=======
     // void                _bind_material( idk::Material & );
     // void                _draw_model( idk::Model &, idk::Transform & );
     // void                _draw_basic( idk::Model &, idk::Transform & );
->>>>>>> 88feb98 (woop)
     // ------------------------------------------------------------------------------------
 
 
@@ -112,13 +106,7 @@ public:
 
     ModelManager &                      modelManager()  { return _model_manager; };
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
-<<<<<<< HEAD
-    void                                drawWireframe( GLuint shader_id, int model_id, Transform &transform );
-    // ------------------------------------------------------------------------------------
-
-=======
     void                                drawUntextured( GLuint shader_id, int model_id, Transform &transform );
->>>>>>> 88feb98 (woop)
 
     void                                beginFrame();
     void                                endFrame();

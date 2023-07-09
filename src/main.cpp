@@ -34,25 +34,45 @@ int ENTRY(int argc, const char **argv)
     ren.getCamera().ylock(true);
     ren.getCamera().transform().translate(glm::vec3(0.0f, 0.0f, 20.0f));
 
-    int spotlight_obj = engine.createGameObject();
-    engine.giveComponents(spotlight_obj, TRANSFORM, SPOTLIGHT );
-    tCS.translate(spotlight_obj, glm::vec3(-20.0f, 20.0f, 40.0f));
+    GLuint default_shader = idk::glInterface::compileProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
+    GLuint skydome_shader = idk::glInterface::compileProgram("assets/shaders/", "gb_geom.vs", "skydome.fs");
+
+    int player_obj = engine.createGameObject();
+    engine.giveComponents(player_obj, TRANSFORM, PHYSICS, CAMERA, PLAYERCONTROL);
 
     int spotlight_obj = engine.createGameObject();
     engine.giveComponents(spotlight_obj, TRANSFORM, SPOTLIGHT );
     transCS.translate(spotlight_obj, glm::vec3(-20.0f, 20.0f, 40.0f));
 
+    int skydome_obj = engine.createGameObject();
+    int skydome_model = ren.modelManager().loadOBJ("assets/models/", "skydome.obj", "skydome.mtl");
+    engine.giveComponents(skydome_obj, TRANSFORM, MODEL);
+    modelCS.useModel(skydome_obj, skydome_model, skydome_shader);
+    transCS.getTransform(skydome_obj).scale(glm::vec3(120.0f));
+
+    int tree_obj = engine.createGameObject();
+    int tree_model = ren.modelManager().loadOBJ("assets/models/", "tree.obj", "tree.mtl");
+    engine.giveComponents(tree_obj, TRANSFORM, MODEL);
+    modelCS.useModel(tree_obj, tree_model, default_shader);
+
     // demos::cube_physics(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
-    demos::school(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
+    // demos::school(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
+
+    glm::vec3 last_dir = ren.getCamera().front();
 
     while (engine.running())
     {
         engine.beginFrame();
 
-        auto &transform = tCS.getTransform(spotlight_obj);
-        transform = ren.getCamera().transform();
-        transform.translate(-1.0f * ren.getCamera().front());
-    
+        auto &transform = transCS.getTransform(spotlight_obj);
+        transform = idk::Transform(glm::inverse(ren.getCamera().view()));
+        
+        glm::vec3 front = glm::mat3(ren.getCamera().transform().modelMatrix()) * glm::vec3(0.0f, 0.0f, -1.0f);
+        glm::vec3 dir = (front - last_dir);
+        last_dir += 10.0f * engine.deltaTime() * dir;
+        
+        spotCS.getSpotlight(spotlight_obj).direction = last_dir;
+
         engine.endFrame();
     }
 

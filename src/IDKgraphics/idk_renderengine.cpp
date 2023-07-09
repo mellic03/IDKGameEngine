@@ -100,14 +100,6 @@ _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
     _fxaa_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "fxaa.fs");
     solid_shader = glInterface::compileProgram("assets/shaders/", "vsin_pos_only.vs", "solid.fs");
 
-<<<<<<< HEAD
-    _gb_geometry_shader = glInterface::compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
-    _screenquad_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
-    _colorgrade_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "colorgrade.fs");
-    _fxaa_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "fxaa.fs");
-    solid_shader = glInterface::compileShaderProgram("assets/shaders/", "vsin_pos_only.vs", "solid.fs");
-    wireframe_shader = glInterface::compileShaderProgram("assets/shaders/", "vsin_pos_only.vs", "wireframe.fs");
-=======
     glInterface::genIdkFramebuffer(_res_x, _res_y, _gb_geometry_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _screenquad_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _colorgrade_buffer);
@@ -116,7 +108,6 @@ _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
     _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec3));
     _UBO_pointlights = glUBO(3, 10*sizeof(lightsource::Point));
     _UBO_spotlights  = glUBO(4, 10*sizeof(lightsource::Spot));
->>>>>>> 88feb98 (woop)
 }
 
 
@@ -185,9 +176,6 @@ idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transfo
 void
 idk::RenderEngine::drawUntextured( GLuint shader_id, int model_id, Transform &transform )
 {
-<<<<<<< HEAD
-    _wireframe_draw_queue[shader_id].push({model_id, transform});
-=======
     _untextured_model_queue[shader_id].push({model_id, transform});
 }
 
@@ -201,7 +189,6 @@ idk::RenderEngine::_update_UBO_camera()
     _UBO_camera.add<glm::mat4>(glm::value_ptr(camera.projection()));
     _UBO_camera.add<glm::vec3>(glm::value_ptr(camera.transform().position()));
     _UBO_camera.unbind();
->>>>>>> 88feb98 (woop)
 }
 
 
@@ -214,21 +201,9 @@ idk::RenderEngine::_update_UBO_pointlights()
     std::vector<glm::vec4> diffuse(10);
     std::vector<glm::vec4> attenuation(10);
 
-<<<<<<< HEAD
-
-void
-idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform )
-{
-    glm::mat4 model_mat = transform.modelMatrix();
-    glInterface::setUniform_mat4("un_model", model_mat);
-
-    glBindVertexArray(model.VAO);
-    for (int i=0; i<model.meshes.size(); i++)
-=======
     int i = 0;
     pointlights().for_each(
     [&i, &position, &ambient, &diffuse, &attenuation](lightsource::Point &light)
->>>>>>> 88feb98 (woop)
     {
         position[i] = glm::vec4(light.transform.position(), 0.0f);
         ambient[i] = glm::vec4(light.ambient, 0.0f);
@@ -254,11 +229,7 @@ idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform )
 
 
 void
-<<<<<<< HEAD
-idk::RenderEngine::_draw_wireframe( idk::Model &model, idk::Transform &transform )
-=======
 idk::RenderEngine::_update_UBO_spotlights()
->>>>>>> 88feb98 (woop)
 {
     int num_spotlights = spotlights().size();
     std::vector<glm::vec4> position(10);
@@ -268,16 +239,6 @@ idk::RenderEngine::_update_UBO_spotlights()
     std::vector<glm::vec4> attenuation(10);
     std::vector<glm::vec4> cutoff(10);
 
-<<<<<<< HEAD
-    gl::bindVertexArray(model.VAO);
-    for (int i=0; i<model.meshes.size(); i++)
-    {
-        idk::Mesh &mesh = model.meshes[i];
-        idk::gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
-        idk::gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
-    }
-    gl::bindVertexArray(0);
-=======
     int i = 0;
     spotlights().for_each(
     [&i, &position, &direction, &ambient, &diffuse, &attenuation, &cutoff](lightsource::Spot &light)
@@ -298,7 +259,6 @@ idk::RenderEngine::_update_UBO_spotlights()
             0.0f,
             0.0f
         );
->>>>>>> 88feb98 (woop)
 
         i += 1;
     });
@@ -340,75 +300,12 @@ idk::RenderEngine::endFrame()
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
         glInterface::useProgram(shader_id);
-<<<<<<< HEAD
-
-        glInterface::setUniform_int("un_num_pointlights", _pointlight_allocator.size());
-        glInterface::setUniform_int("un_num_spotlights", _spotlight_allocator.size());
-
-        idk::Camera &camera = getCamera();
-
-        int count = 0;
-        pointlights().for_each(
-            [&count](lightsource::Point &pointlight)
-            {
-                idk::Transform &transform = pointlight.transform;
-                std::string str = std::to_string(count);
-                glInterface::setUniform_vec3("un_pointlights[" + str + "].ambient", pointlight.ambient);
-                glInterface::setUniform_vec3("un_pointlights[" + str + "].diffuse", pointlight.diffuse);
-                glInterface::setUniform_vec3("un_pointlights[" + str + "].position", pointlight.transform.position());
-
-                glInterface::setUniform_float("un_pointlights[" + str + "].attenuation_constant", pointlight.attentuation_constant);
-                glInterface::setUniform_float("un_pointlights[" + str + "].attentuation_linear", pointlight.attentuation_linear);
-                glInterface::setUniform_float("un_pointlights[" + str + "].attentuation_quadratic", pointlight.attentuation_quadratic);
-
-                count += 1;
-            }
-        );
-
-
-        count = 0;
-        spotlights().for_each(
-            [&camera, &count](lightsource::Spot &spotlight)
-            {
-                idk::Transform &transform = spotlight.transform;
-                std::string str = std::to_string(count);
-                glInterface::setUniform_vec3("un_spotlights[" + str + "].ambient", spotlight.ambient);
-                glInterface::setUniform_vec3("un_spotlights[" + str + "].diffuse", spotlight.diffuse);
-                glInterface::setUniform_vec3("un_spotlights[" + str + "].position", transform.position());
-                glInterface::setUniform_vec3("un_spotlights[" + str + "].direction", camera.front());
-
-                glInterface::setUniform_float("un_spotlights[" + str + "].attenuation_constant", spotlight.attentuation_constant);
-                glInterface::setUniform_float("un_spotlights[" + str + "].attentuation_linear", spotlight.attentuation_linear);
-                glInterface::setUniform_float("un_spotlights[" + str + "].attentuation_quadratic", spotlight.attentuation_quadratic);
-                
-                glInterface::setUniform_float("un_spotlights[" + str + "].inner_cutoff", glm::radians(spotlight.inner_cutoff));
-                glInterface::setUniform_float("un_spotlights[" + str + "].outer_cutoff", glm::radians(spotlight.outer_cutoff));
-
-                count += 1;
-            }
-        );
-
-
-
-        glm::mat4 view = camera.view();
-        glm::mat4 proj = camera.projection();
-
-        glInterface::setUniform_vec3("un_viewpos", camera.transform().position());
-        glInterface::setUniform_mat4("un_view", view);
-        glInterface::setUniform_mat4("un_projection", proj);
-
-=======
->>>>>>> 88feb98 (woop)
         for (auto &[model_id, transform]: vec)
         {
             drawmethods::draw_textured(
                 modelManager().getModel(model_id),
-<<<<<<< HEAD
-                transform
-=======
                 transform,
                 modelManager().getMaterials()
->>>>>>> 88feb98 (woop)
             );
         }
         vec.clear();
@@ -418,18 +315,6 @@ idk::RenderEngine::endFrame()
     for (auto &[shader_id, vec]: _untextured_model_queue)
     {
         glInterface::useProgram(shader_id);
-<<<<<<< HEAD
-
-        idk::Camera &camera = _camera_allocator.get(_active_camera_id);
-        glm::mat4 view = camera.view();
-        glm::mat4 proj = camera.projection();
-
-        glInterface::setUniform_vec3("un_viewpos", camera.transform().position());
-        glInterface::setUniform_mat4("un_view", view);
-        glInterface::setUniform_mat4("un_projection", proj);
-
-=======
->>>>>>> 88feb98 (woop)
         for (auto &[model_id, transform]: vec)
         {
             drawmethods::draw_untextured(

@@ -1,8 +1,8 @@
 #version 440 core
 
-#include "structs.glsl"
+#define MAX_POINTLIGHTS 10
 
-#include "util.glsl"
+#include "lighting/lightsources.glsl"
 
 
 layout (location = 0) out vec4 fsout_frag_color_0;
@@ -19,8 +19,9 @@ uniform sampler2D un_specular_texture;
 uniform sampler2D un_normal_texture;
 uniform float un_specular_exponent;
 
-#include "lighting/lightingmethods.glsl"
+#include "UBOs/UBOs.glsl"
 
+#include "lighting/lightingmethods.glsl"
 
 void main()
 {

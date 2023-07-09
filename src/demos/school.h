@@ -13,17 +13,10 @@ void school( idk::Engine &engine, int TRANS, int MOD, int PHYS, int GRAB )
 
     // idk::RenderEngine &ren = engine.rengine();
 
-<<<<<<< HEAD
-    int plane_id = ren.modelManager().loadOBJ("assets/models/", "rob.obj", "rob.mtl");
-    int obj2 = engine.createGameObject();
-    engine.giveComponents(obj2, TRANS, MOD);
-    mCS.useModel(obj2, plane_id);
-=======
     // int plane_id = ren.modelManager().loadOBJ("assets/models/", "rob.obj", "rob.mtl");
     // int obj2 = engine.createGameObject();
     // engine.giveComponents(obj2, TRANS, MOD);
     // mCS.useModel(obj2, plane_id);
->>>>>>> 88feb98 (woop)
 
 }
 

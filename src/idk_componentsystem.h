@@ -47,16 +47,7 @@ public:
     virtual void    stage_A( idk::Engine & ) = 0;
     virtual void    stage_B( idk::Engine & ) = 0;
 
-
-    void    addDependency( std::string name ) { _dependencies.push_back(name); };
-    void    addDependencies()                 { /* Base case */                };
-
-    template <typename ...Args> void    addDependencies( std::string head, Args... );
-    const std::vector<std::string> &    getDependencies() const { return _dependencies; };
-
-
-    /*              Called when the component is assigned.
-    */
+    /*              Called when the component is assigned. */
     virtual void    onAssignment( int obj_id, idk::Engine & ) = 0;
 
     /*              Called when a new idk::GameObject is created. */
