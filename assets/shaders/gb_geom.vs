@@ -9,8 +9,9 @@ out vec3 fsin_normal;
 out vec2 fsin_texcoords;
 
 uniform mat4 un_model;
-uniform mat4 un_view;
-uniform mat4 un_projection;
+
+#include "UBOs/UBOs.glsl"
+
 
 void main()
 {

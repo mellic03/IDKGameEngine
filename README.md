@@ -41,6 +41,24 @@ textureID vts0ID vts1ID vts2ID ...
 - [Bullet3](https://github.com/bulletphysics/bullet3)
 
 
+# Shader Uniform Buffers
+- Global Matrices
+    ```GLSL
+    layout (std140, binding = 2) uniform un_global_matrices
+    {
+        mat4 un_view;
+        mat4 un_projection;
+    
+    
+        //vec4 un_view_pos;
+        //vec4 un_view_dir;
+        mat4 un_view_pos_dir;
+
+    };
+    ```
+
+
+
 # Model Loading
 Before loading any models, all textures to be used must first be loaded with `idk::ModelManager::loadTextures( rootpath )`. Where `rootpath` is a directory containing image files.
 

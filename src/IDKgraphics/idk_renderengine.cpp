@@ -3,8 +3,20 @@
 #include <filesystem>
 
 
+// Static methods -------------------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------------------------------
+
+
+
+
+// Static members -----------------------------
+GLuint  idk::RenderEngine::SPHERE_PRIMITIVE;
+GLuint  idk::RenderEngine::CUBE_PRIMITIVE;
+// --------------------------------------------
+
 void
-idk::RenderEngine::_init_SDL_OpenGL(size_t w, size_t h)
+idk::RenderEngine::_init_SDL_OpenGL( std::string windowname, size_t w, size_t h)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -13,14 +25,13 @@ idk::RenderEngine::_init_SDL_OpenGL(size_t w, size_t h)
     }
 
     _SDL_window = SDL_CreateWindow(
-        "IDK Engine",
+        windowname.c_str(),
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         w,
         h,
         SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
 
@@ -70,36 +81,49 @@ idk::RenderEngine::_init_screenquad()
 }
 
 
-idk::RenderEngine::RenderEngine(size_t w, size_t h):
-_screen_width(w), _screen_height(h),
+idk::RenderEngine::RenderEngine( std::string windowname, size_t w, size_t h ):
+_res_x(w), _res_y(h),
 _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
 {
     glInterface::init();
-    _init_SDL_OpenGL(_screen_width, _screen_height);
+    _init_SDL_OpenGL(windowname, _res_x, _res_y);
     _init_screenquad();
 
     _active_camera_id = createCamera();
 
-    CUBE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::cube, "");
-    SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
+    RenderEngine::CUBE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::cube, "");
+    RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
 
-    glInterface::genIdkFramebuffer(_screen_width, _screen_height, _gb_geometry_buffer);
-    glInterface::genIdkFramebuffer(_screen_width, _screen_height, _screenquad_buffer);
-    glInterface::genIdkFramebuffer(_screen_width, _screen_height, _colorgrade_buffer);
+    _gb_geometry_shader = glInterface::compileProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
+    _screenquad_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
+    _colorgrade_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "colorgrade.fs");
+    _fxaa_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "fxaa.fs");
+    solid_shader = glInterface::compileProgram("assets/shaders/", "vsin_pos_only.vs", "solid.fs");
 
+<<<<<<< HEAD
     _gb_geometry_shader = glInterface::compileShaderProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
     _screenquad_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
     _colorgrade_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "colorgrade.fs");
     _fxaa_shader = glInterface::compileShaderProgram("assets/shaders/", "screenquad.vs", "fxaa.fs");
     solid_shader = glInterface::compileShaderProgram("assets/shaders/", "vsin_pos_only.vs", "solid.fs");
     wireframe_shader = glInterface::compileShaderProgram("assets/shaders/", "vsin_pos_only.vs", "wireframe.fs");
+=======
+    glInterface::genIdkFramebuffer(_res_x, _res_y, _gb_geometry_buffer);
+    glInterface::genIdkFramebuffer(_res_x, _res_y, _screenquad_buffer);
+    glInterface::genIdkFramebuffer(_res_x, _res_y, _colorgrade_buffer);
+
+
+    _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec3));
+    _UBO_pointlights = glUBO(3, 10*sizeof(lightsource::Point));
+    _UBO_spotlights  = glUBO(4, 10*sizeof(lightsource::Spot));
+>>>>>>> 88feb98 (woop)
 }
 
 
 void
 idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out )
 {
-    glInterface::bindIdkFramebuffer(_screen_width, _screen_height, out);
+    glInterface::bindIdkFramebuffer(_res_x, _res_y, out);
     glInterface::useProgram(shader);
 
     for (int i=0; i < in.textures.size(); i++)
@@ -107,13 +131,15 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFrame
 
     gl::bindVertexArray(_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
+
+    glInterface::freeTextureUnitIDs();
 }
 
 
 void
 idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in )
 {
-    glInterface::unbindIdkFramebuffer(_screen_width, _screen_height);
+    glInterface::unbindIdkFramebuffer(_res_x, _res_y);
     glInterface::useProgram(shader);
 
     for (int i=0; i < in.textures.size(); i++)
@@ -121,6 +147,8 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in )
 
     gl::bindVertexArray(_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
+
+    glInterface::freeTextureUnitIDs();
 }
 
 
@@ -128,7 +156,7 @@ int
 idk::RenderEngine::createCamera()
 {
     int camera_id = _camera_allocator.add();
-    _camera_allocator.get(camera_id).aspect(_screen_width, _screen_height);
+    _camera_allocator.get(camera_id).aspect(_res_x, _res_y);
     return camera_id;
 }
 
@@ -155,20 +183,38 @@ idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transfo
 
 
 void
-idk::RenderEngine::drawWireframe( GLuint shader_id, int model_id, Transform &transform )
+idk::RenderEngine::drawUntextured( GLuint shader_id, int model_id, Transform &transform )
 {
+<<<<<<< HEAD
     _wireframe_draw_queue[shader_id].push({model_id, transform});
+=======
+    _untextured_model_queue[shader_id].push({model_id, transform});
 }
 
 
 void
-idk::RenderEngine::_bind_material( idk::Material &material )
+idk::RenderEngine::_update_UBO_camera()
 {
-    glInterface::setUniform_texture("un_albedo_texture", material.albedo_gl_id);
-    glInterface::setUniform_texture("un_specular_texture", material.specular_gl_id);
-    glInterface::setUniform_float("un_specular_exponent", material.specular_exponent);
+    idk::Camera &camera = getCamera();
+    _UBO_camera.bind();
+    _UBO_camera.add<glm::mat4>(glm::value_ptr(camera.view()));
+    _UBO_camera.add<glm::mat4>(glm::value_ptr(camera.projection()));
+    _UBO_camera.add<glm::vec3>(glm::value_ptr(camera.transform().position()));
+    _UBO_camera.unbind();
+>>>>>>> 88feb98 (woop)
 }
 
+
+void
+idk::RenderEngine::_update_UBO_pointlights()
+{
+    int num_pointlights = pointlights().size();
+    std::vector<glm::vec4> position(10);
+    std::vector<glm::vec4> ambient(10);
+    std::vector<glm::vec4> diffuse(10);
+    std::vector<glm::vec4> attenuation(10);
+
+<<<<<<< HEAD
 
 void
 idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform )
@@ -178,27 +224,51 @@ idk::RenderEngine::_draw_model( idk::Model &model, idk::Transform &transform )
 
     glBindVertexArray(model.VAO);
     for (int i=0; i<model.meshes.size(); i++)
+=======
+    int i = 0;
+    pointlights().for_each(
+    [&i, &position, &ambient, &diffuse, &attenuation](lightsource::Point &light)
+>>>>>>> 88feb98 (woop)
     {
-        idk::Mesh &mesh = model.meshes[i];
+        position[i] = glm::vec4(light.transform.position(), 0.0f);
+        ambient[i] = glm::vec4(light.ambient, 0.0f);
+        diffuse[i] = glm::vec4(light.diffuse, 0.0f);
+        attenuation[i] = glm::vec4(
+            light.attentuation_constant,
+            light.attentuation_linear,
+            light.attentuation_quadratic,
+            0.0f
+        );
 
-        if (mesh.material_id != -1)
-            _bind_material(modelManager().getMaterials().get(mesh.material_id));
+        i += 1;
+    });
 
-        gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
-        gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
-    }
-    glBindVertexArray(0);
-
-    glInterface::freeTextureUnitIDs();
+    _UBO_pointlights.bind();
+    _UBO_pointlights.add<int>(&num_pointlights);
+    _UBO_pointlights.add(16*IDK_MAX_POINTLIGHTS, &(position[0]));
+    _UBO_pointlights.add(16*IDK_MAX_POINTLIGHTS, &(ambient[0]));
+    _UBO_pointlights.add(16*IDK_MAX_POINTLIGHTS, &(diffuse[0]));
+    _UBO_pointlights.add(16*IDK_MAX_POINTLIGHTS, &(attenuation[0]));
+    _UBO_pointlights.unbind();
 }
 
 
 void
+<<<<<<< HEAD
 idk::RenderEngine::_draw_wireframe( idk::Model &model, idk::Transform &transform )
+=======
+idk::RenderEngine::_update_UBO_spotlights()
+>>>>>>> 88feb98 (woop)
 {
-    glm::mat4 model_mat = transform.modelMatrix();
-    idk::glInterface::setUniform_mat4("un_model", model_mat);
+    int num_spotlights = spotlights().size();
+    std::vector<glm::vec4> position(10);
+    std::vector<glm::vec4> direction(10);
+    std::vector<glm::vec4> ambient(10);
+    std::vector<glm::vec4> diffuse(10);
+    std::vector<glm::vec4> attenuation(10);
+    std::vector<glm::vec4> cutoff(10);
 
+<<<<<<< HEAD
     gl::bindVertexArray(model.VAO);
     for (int i=0; i<model.meshes.size(); i++)
     {
@@ -207,8 +277,42 @@ idk::RenderEngine::_draw_wireframe( idk::Model &model, idk::Transform &transform
         idk::gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
     }
     gl::bindVertexArray(0);
+=======
+    int i = 0;
+    spotlights().for_each(
+    [&i, &position, &direction, &ambient, &diffuse, &attenuation, &cutoff](lightsource::Spot &light)
+    {
+        position[i] = glm::vec4(light.transform.position(), 0.0f);
+        direction[i] = glm::vec4(light.direction, 0.0f);
+        ambient[i] = glm::vec4(light.ambient, 0.0f);
+        diffuse[i] = glm::vec4(light.diffuse, 0.0f);
+        attenuation[i] = glm::vec4(
+            light.attentuation_constant,
+            light.attentuation_linear,
+            light.attentuation_quadratic,
+            0.0f
+        );
+        cutoff[i] = glm::vec4(
+            glm::radians(light.inner_cutoff),
+            glm::radians(light.outer_cutoff),
+            0.0f,
+            0.0f
+        );
+>>>>>>> 88feb98 (woop)
 
-    idk::glInterface::freeTextureUnitIDs();
+        i += 1;
+    });
+
+
+    _UBO_spotlights.bind();
+    _UBO_spotlights.add<int>(&num_spotlights);
+    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(position[0]));
+    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(direction[0]));
+    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(ambient[0]));
+    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(diffuse[0]));
+    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(attenuation[0]));
+    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(cutoff[0]));
+    _UBO_spotlights.unbind();
 }
 
 
@@ -226,11 +330,17 @@ idk::RenderEngine::beginFrame()
 void
 idk::RenderEngine::endFrame()
 {
-    glInterface::bindIdkFramebuffer(_screen_width, _screen_height, _gb_geometry_buffer);
+    glInterface::bindIdkFramebuffer(_res_x, _res_y, _gb_geometry_buffer);
+    idk::Camera &camera = getCamera();
+
+    _update_UBO_camera();
+    _update_UBO_pointlights();
+    _update_UBO_spotlights();
 
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
         glInterface::useProgram(shader_id);
+<<<<<<< HEAD
 
         glInterface::setUniform_int("un_num_pointlights", _pointlight_allocator.size());
         glInterface::setUniform_int("un_num_spotlights", _spotlight_allocator.size());
@@ -287,22 +397,28 @@ idk::RenderEngine::endFrame()
         glInterface::setUniform_mat4("un_view", view);
         glInterface::setUniform_mat4("un_projection", proj);
 
+=======
+>>>>>>> 88feb98 (woop)
         for (auto &[model_id, transform]: vec)
         {
-            _draw_model(
+            drawmethods::draw_textured(
                 modelManager().getModel(model_id),
+<<<<<<< HEAD
                 transform
+=======
+                transform,
+                modelManager().getMaterials()
+>>>>>>> 88feb98 (woop)
             );
         }
         vec.clear();
     }
     _model_draw_queue.clear();
 
-
-
-    for (auto &[shader_id, vec]: _wireframe_draw_queue)
+    for (auto &[shader_id, vec]: _untextured_model_queue)
     {
         glInterface::useProgram(shader_id);
+<<<<<<< HEAD
 
         idk::Camera &camera = _camera_allocator.get(_active_camera_id);
         glm::mat4 view = camera.view();
@@ -312,17 +428,18 @@ idk::RenderEngine::endFrame()
         glInterface::setUniform_mat4("un_view", view);
         glInterface::setUniform_mat4("un_projection", proj);
 
+=======
+>>>>>>> 88feb98 (woop)
         for (auto &[model_id, transform]: vec)
         {
-            _draw_wireframe(
+            drawmethods::draw_untextured(
                 modelManager().getModel(model_id),
                 transform
             );
         }
         vec.clear();
     }
-    _wireframe_draw_queue.clear();
-
+    _untextured_model_queue.clear();
 
 
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
@@ -330,15 +447,14 @@ idk::RenderEngine::endFrame()
     _render_screenquad(_colorgrade_shader, _screenquad_buffer, _colorgrade_buffer);
     _render_screenquad(_fxaa_shader, _colorgrade_buffer);
     gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
-
 }
 
 
 void
 idk::RenderEngine::resize( int w, int h )
 {
-    _screen_width = w;
-    _screen_height = h;
+    _res_x = w;
+    _res_y = h;
 
     glInterface::genIdkFramebuffer(w, h, _gb_geometry_buffer);
     glInterface::genIdkFramebuffer(w, h, _screenquad_buffer);

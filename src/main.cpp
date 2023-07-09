@@ -11,20 +11,20 @@
 
 int ENTRY(int argc, const char **argv)
 {
-    idk::Engine engine(1920, 1080);
+    idk::Engine engine("IDK Game", 1920, 1080);
 
     const int TRANSFORM     = engine.registerCS<Transform_CS>("transform");
     const int MODEL         = engine.registerCS<Model_CS>("model");
-    const int PLAYERCONTORL = engine.registerCS<PlayerControl_CS>("playercontrol");
+    const int PLAYERCONTROL = engine.registerCS<PlayerControl_CS>("playercontrol");
     const int PHYSICS       = engine.registerCS<Physics_CS>("physics");
-    const int UI_SYS        = engine.registerCS<Builtin_UI>("ui");
     const int GRABBABLE     = engine.registerCS<Grabbable_CS>("grabbable");
     const int POINTLIGHT    = engine.registerCS<PointLight_CS>("pointlight");
     const int SPOTLIGHT     = engine.registerCS<SpotLight_CS>("spotlight");
+    const int CAMERA        = engine.registerCS<Camera_CS>("camera");
 
-    auto &tCS = engine.getCS<Transform_CS>(TRANSFORM);
-    auto &mCS = engine.getCS<Model_CS>(MODEL);
-    auto &pCS = engine.getCS<Physics_CS>(PHYSICS);
+    auto &transCS = engine.getCS<Transform_CS>(TRANSFORM);
+    auto &modelCS = engine.getCS<Model_CS>(MODEL);
+    auto &physCS = engine.getCS<Physics_CS>(PHYSICS);
     auto &pointCS = engine.getCS<PointLight_CS>(POINTLIGHT);
     auto &spotCS = engine.getCS<SpotLight_CS>(SPOTLIGHT);
     auto &grabCS = engine.getCS<Grabbable_CS>(GRABBABLE);
@@ -38,9 +38,9 @@ int ENTRY(int argc, const char **argv)
     engine.giveComponents(spotlight_obj, TRANSFORM, SPOTLIGHT );
     tCS.translate(spotlight_obj, glm::vec3(-20.0f, 20.0f, 40.0f));
 
-    int pointlight_obj = engine.createGameObject();
-    engine.giveComponents(pointlight_obj, TRANSFORM, POINTLIGHT );
-    tCS.translate(pointlight_obj, glm::vec3(-20.0f, 20.0f, 40.0f));
+    int spotlight_obj = engine.createGameObject();
+    engine.giveComponents(spotlight_obj, TRANSFORM, SPOTLIGHT );
+    transCS.translate(spotlight_obj, glm::vec3(-20.0f, 20.0f, 40.0f));
 
     // demos::cube_physics(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
     demos::school(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
@@ -58,6 +58,3 @@ int ENTRY(int argc, const char **argv)
 
     return 0;
 }
-
-
-

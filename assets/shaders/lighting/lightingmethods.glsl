@@ -1,9 +1,28 @@
+<<<<<<< HEAD
 vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap, float spec_exponent)
 {
     pointlight light = un_pointlights[idx];
     float d = distance(fsin_fragpos, light.position);
 
     vec3 frag_to_light = normalize(light.position - fsin_fragpos);
+=======
+
+vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap, float spec_exponent)
+{
+    vec3 light_position = ubo_pointlight_position[idx].xyz;
+
+    vec3 light_ambient = ubo_pointlight_ambient[idx].xyz;
+    vec3 light_diffuse = ubo_pointlight_ambient[idx].xyz;
+
+    float attenuation_constant = ubo_pointlight_attenuation[idx].x;
+    float attentuation_linear = ubo_pointlight_attenuation[idx].y;
+    float attentuation_quadratic = ubo_pointlight_attenuation[idx].z;
+
+
+    float d = distance(fsin_fragpos, light_position);
+
+    vec3 frag_to_light = normalize(light_position - fsin_fragpos);
+>>>>>>> 88feb98 (woop)
     float diffuse_f = max(dot(fsin_normal, frag_to_light), 0.0);
 
     vec3 halfway_dir = normalize(frag_to_light + view_dir);  

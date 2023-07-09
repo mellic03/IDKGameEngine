@@ -14,14 +14,6 @@ in vec3 fsin_fragpos;
 in vec3 fsin_normal;
 in vec2 fsin_texcoords;
 
-uniform vec3 un_viewpos;
-
-uniform pointlight un_pointlights[10];
-uniform int un_num_pointlights;
-
-uniform spotlight un_spotlights[10];
-uniform int un_num_spotlights;
-
 uniform sampler2D un_albedo_texture;
 uniform sampler2D un_specular_texture;
 uniform sampler2D un_normal_texture;
@@ -37,16 +29,15 @@ void main()
     vec3 specular_map = texture(un_specular_texture, fsin_texcoords).rgb;
 
     vec3 color = vec3(0.0);
-    for (int i = 0; i < un_num_pointlights; i++)
+    for (int i = 0; i < ubo_num_pointlights; i++)
     {
         color += pointlight_contribution(i, view_dir, albedo_map, specular_map, un_specular_exponent);
     }
 
-    for (int i = 0; i < un_num_spotlights; i++)
+    for (int i = 0; i < ubo_num_spotlights; i++)
     {
         color += spotlight_contribution(i, view_dir, albedo_map, specular_map, un_specular_exponent);
     }
-
 
     fsout_frag_color_0 = vec4(color, 1.0);
     fsout_frag_color_1 = vec4(0.0, 0.0, 0.0, 1.0);

@@ -3,6 +3,7 @@
 
 
 // glGenXXX ------------------------------------------------------------------------------
+/**/
 void idk::gl::genVertexArrays( GLsizei n, GLuint *arrays )
 {
     GLCALL( glGenVertexArrays(n, arrays); )
@@ -21,6 +22,7 @@ void idk::gl::genTextures( GLsizei n, GLuint *textures )
 
 
 // glDeleteXXX ---------------------------------------------------------------------------
+/**/
 void idk::gl::deleteVertexArrays( GLsizei n, GLuint *arrays )
 {
     GLCALL( glDeleteVertexArrays(n, arrays); )
@@ -39,6 +41,7 @@ void idk::gl::deleteTextures( GLsizei n, GLuint *textures )
 
 
 // glBindXXX -----------------------------------------------------------------------------
+/**/
 void idk::gl::bindVertexArray( GLuint VAO )
 {
     GLCALL( glBindVertexArray(VAO); )
@@ -49,15 +52,33 @@ void idk::gl::bindBuffer( GLenum type, GLuint buf )
     GLCALL( glBindBuffer(type, buf); )
 }
 
+void
+idk::gl::bindBufferBase( GLenum target, GLuint index, GLuint buffer )
+{
+    glBindBufferBase(target, index, buffer);
+}
+
+void
+idk::gl::bindBufferBase( GLenum target, UBOloc loc, GLuint buffer )
+{
+    glBindBufferBase(target, static_cast<GLuint>(loc), buffer);
+}
+
 void idk::gl::bindFramebuffer( GLenum target, GLint framebuffer )
 {
     GLCALL( glBindFramebuffer(target, framebuffer); )
+}
+
+void idk::gl::bindTexture( GLenum target, GLuint texture )
+{
+    GLCALL( glBindTexture(target, texture); )
 }
 
 // ---------------------------------------------------------------------------------------
 
 
 // glDrawXXX -----------------------------------------------------------------------------
+/**/
 void idk::gl::drawArrays( GLenum mode, GLint first, GLsizei count )
 {
     GLCALL( glDrawArrays(mode, first, count); )
@@ -70,6 +91,7 @@ void idk::gl::drawElements( GLenum mode, GLsizei count, GLenum type, const void 
 // ---------------------------------------------------------------------------------------
 
 
+<<<<<<< HEAD
 // Uniforms ------------------------------------------------------------------------------
 GLint
 idk::gl::getUniformLocation( GLuint program, std::string name )
@@ -80,11 +102,43 @@ idk::gl::getUniformLocation( GLuint program, std::string name )
 
 
 
+=======
+// glBufferXXX ---------------------------------------------------------------------------
+/**/
+>>>>>>> 88feb98 (woop)
 void
 idk::gl::bufferData( GLenum target, GLsizeiptr size, const void *data, GLenum usage )
 {
     GLCALL( glBufferData(target, size, data, usage); )
 }
+void
+idk::gl::bufferSubData( GLenum target, GLintptr offset, GLsizeiptr size, const void *data)
+{
+    GLCALL( glBufferSubData(target, offset, size, data); )
+}
+// ---------------------------------------------------------------------------------------
+
+
+// glActiveXXX ---------------------------------------------------------------------------
+/**/
+/**/
+void
+idk::gl::activeTexture( GLenum texture )
+{
+    GLCALL( glActiveTexture(texture); )
+}
+// ---------------------------------------------------------------------------------------
+
+
+// Uniforms ------------------------------------------------------------------------------
+/**/
+GLint
+idk::gl::getUniformLocation( GLuint program, std::string name )
+{
+    return glGetUniformLocation(program, name.c_str());
+}
+// ---------------------------------------------------------------------------------------
+
 
 void
 idk::gl::vertexAttribPointer( GLuint index, GLint size,

@@ -1,10 +1,10 @@
 #include "idk_engine.h"
 
 
-idk::Engine::Engine(size_t w, size_t h):
-_frame_time(1), _render_engine(w, h), _mouse_captured(false)
+idk::Engine::Engine( std::string windowname, size_t w, size_t h ):
+_frame_time(1), _render_engine(windowname, w, h), _mouse_captured(false)
 {
-    _mouse_down = idk::vector<bool>(3, false); // { LEFT, MIDDLE, RIGHT }
+    // _mouse_down = idk::vector<bool>(3, false); // { LEFT, MIDDLE, RIGHT }
 
 }
 
@@ -17,43 +17,58 @@ idk::Engine::_process_key_input()
 }
 
 
+
+void
+idk::Engine::_process_mouse_input_SDL2()
+{
+    #ifdef IDK_SDL2
+        while (SDL_PollEvent(&_SDL_event)) {
+        switch (_SDL_event.type)
+        {
+            case (SDL_QUIT):
+                _running = false;
+                break;
+
+            case SDL_WINDOWEVENT:
+                if (_SDL_event.window.event == SDL_WINDOWEVENT_CLOSE)
+                    _running = false;
+                else if (_SDL_event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                    _render_engine.resize(_SDL_event.window.data1, _SDL_event.window.data2);
+                break;
+
+            case (SDL_MOUSEBUTTONDOWN):
+                _mouse_down[_SDL_event.button.button - 1] = true;
+                _mouse_up[_SDL_event.button.button - 1] = false;
+                break;
+
+            case (SDL_MOUSEBUTTONUP):
+                _mouse_down[_SDL_event.button.button - 1] = false;
+                _mouse_up[_SDL_event.button.button - 1] = true;
+                break;
+        }}
+
+        int x, y;
+
+        SDL_GetMouseState(&x, &y);
+        _mouse_position.x = float(x);
+        _mouse_position.y = float(y);
+
+        SDL_GetRelativeMouseState(&x, &y);
+        _delta_mouse_position.x = float(x);
+        _delta_mouse_position.y = float(y);
+    #endif
+
+}
+
+
 void
 idk::Engine::_process_mouse_input()
 {
-    while (SDL_PollEvent(&_SDL_event)) {
-    switch (_SDL_event.type)
-    {
-        case (SDL_QUIT):
-            _running = false;
-            break;
-
-        case SDL_WINDOWEVENT:
-            if (_SDL_event.window.event == SDL_WINDOWEVENT_CLOSE)
-                _running = false;
-            else if (_SDL_event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                _render_engine.resize(_SDL_event.window.data1, _SDL_event.window.data2);
-            break;
-
-        case (SDL_MOUSEMOTION):
-            _delta_mouse_position.x = _SDL_event.motion.xrel;
-            _delta_mouse_position.y = _SDL_event.motion.yrel;
-            break;
-        
-        case (SDL_MOUSEBUTTONDOWN):
-            _mouse_down[_SDL_event.button.button - 1] = true;
-            break;
-
-        case (SDL_MOUSEBUTTONUP):
-            _mouse_down[_SDL_event.button.button - 1] = false;
-            break;
-    }}
-
-
-    int x, y;
-    SDL_GetMouseState(&x, &y);
-
-    _mouse_position.x = float(x);
-    _mouse_position.y = float(y);
+    #ifdef IDK_SDL2
+        _process_mouse_input_SDL2();
+    #elif defined(IDK_SFML)
+        _process_mouse_input_SFML();
+    #endif
 }
 
 
@@ -100,7 +115,6 @@ idk::Engine::_idk_CS_checkDependencies( int obj_id, int component_id )
             exit(1);
         }
     }
-
 }
 
 
@@ -157,7 +171,7 @@ idk::Engine::mouseCaptured()
 bool
 idk::Engine::mouseUp( idk::MouseButton mb )
 {
-    return false;
+    return _mouse_up[static_cast<bool>(mb)];
 }
 
 
@@ -255,7 +269,7 @@ idk::Engine::hasComponent( int obj_id, std::string component_name )
 void
 idk::Engine::beginFrame()
 {
-    _frame_start = SDL_GetTicks64();
+    _frame_start = SDL_GetPerformanceCounter();
     _process_key_input();
     _process_mouse_input();
     
@@ -273,8 +287,8 @@ idk::Engine::endFrame()
     _idk_CS_stage_B();
     
     _delta_mouse_position = glm::vec2(0.0f);
-    _frame_end = SDL_GetTicks64();
-    _frame_time = (_frame_end - _frame_start) / 1000.0f;
+    _frame_end = SDL_GetPerformanceCounter();
+    _frame_time = ((double)(_frame_end - _frame_start)) / (double)SDL_GetPerformanceFrequency();
 }
 
 

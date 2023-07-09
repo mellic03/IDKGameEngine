@@ -29,11 +29,12 @@ struct idk::lightsource::Point
 struct idk::lightsource::Spot
 {
     Transform       transform;
+    glm::vec3       direction;
 
     glm::vec3       ambient;
     glm::vec3       diffuse;
     float           attentuation_constant   = 0.5f;
-    float           attentuation_linear     = 0.05f;
+    float           attentuation_linear     = 0.25f;
     float           attentuation_quadratic  = 0.0f;
 
     float           inner_cutoff            = 2.5f;

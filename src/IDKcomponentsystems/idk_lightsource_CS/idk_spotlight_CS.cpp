@@ -7,6 +7,10 @@ void
 SpotLight_CS::init( idk::Engine &engine )
 {
     addDependencies("transform");
+<<<<<<< HEAD
+=======
+    _engineptr = &engine;
+>>>>>>> 88feb98 (woop)
 }
 
 

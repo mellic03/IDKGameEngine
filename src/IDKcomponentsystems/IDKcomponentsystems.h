@@ -7,5 +7,6 @@
 #include "idk_grabbable.h"
 #include "idk_ui.h"
 #include "idk_lightsource_CS/idk_lightsource_CS.h"
+#include "idk_camera_CS.h"
 
 

@@ -17,7 +17,8 @@ private:
     idk::RenderEngine                           _render_engine;
     SDL_Event                                   _SDL_event;
     idk::Keylog                                 _keylog;
-    idk::vector<bool>                           _mouse_down;
+    bool                                       _mouse_down  [3];
+    bool                                       _mouse_up    [3];
 
     glm::vec2                                   _delta_mouse_position;
     glm::vec2                                   _mouse_position;
@@ -30,6 +31,8 @@ private:
 
     void                                        _process_key_input();
     void                                        _process_mouse_input();
+    void                                        _process_mouse_input_SDL2();
+    void                                        _process_mouse_input_SFML();
 
     void                                        _idk_CS_stage_A();
     void                                        _idk_CS_stage_B();
@@ -40,7 +43,7 @@ private:
     void                                        _idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id );
 
 public:
-                                                Engine( size_t w = 1000, size_t h = 1000 );
+                                                Engine( std::string windowname, size_t w = 1000, size_t h = 1000 );
 
     idk::RenderEngine &                         rengine()   { return _render_engine; };
     Keylog &                                    keylog()    { return _keylog; };

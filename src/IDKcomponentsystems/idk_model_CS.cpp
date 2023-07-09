@@ -5,7 +5,7 @@
 void
 Model_CS::init(idk::Engine &engine)
 {
-    _default_shader = idk::glInterface::compileShaderProgram(
+    _default_shader = idk::glInterface::compileProgram(
         "assets/shaders/", "gb_geom.vs", "gb_geom.fs"
     );
 
@@ -23,7 +23,7 @@ Model_CS::stage_A(idk::Engine &engine)
     std::vector<int> obj_ids = engine.gameObjects_byComponent(_component_index);
     for (int obj_id: obj_ids)
     {
-        ren.drawModel(_default_shader, _model_ids[obj_id], tCS.getTransform(obj_id));
+        ren.drawModel(_shader_ids[obj_id], _model_ids[obj_id], tCS.getTransform(obj_id));
     }
 }
 
@@ -32,9 +32,14 @@ void
 Model_CS::onGameObjectCreation( int obj_id, idk::Engine &engine )
 {
     if (obj_id >= _model_ids.size())
+    {
         _model_ids.resize(obj_id+1, -1);
+        _shader_ids.resize(obj_id+1, -1);
+    }
     else
+    {
         _model_ids[obj_id] = -1;
+    }
 }
 
 
@@ -45,8 +50,10 @@ Model_CS::onGameObjectDeletion( int obj_id, idk::Engine &engine )
 }
 
 
+
 void
 Model_CS::onGameObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine &engine )
 {
     _model_ids[dest_obj_id] = _model_ids[src_obj_id];
+    _shader_ids[dest_obj_id] = _shader_ids[src_obj_id];
 }

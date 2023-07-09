@@ -17,7 +17,6 @@ idk::glInterface::init()
 
 
 
-
 static bool
 _line_has_include( std::string &line )
 {
@@ -78,7 +77,7 @@ _parse_shader_source( std::string root, std::string glsl )
 
 
 GLuint
-idk::glInterface::compileShaderProgram( std::string root, std::string vs, std::string fs )
+idk::glInterface::compileProgram( std::string root, std::string vs, std::string fs )
 {
     std::ifstream instream;
     std::string line;
@@ -188,12 +187,12 @@ idk::glInterface::genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint 
     GLCALL( glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RBO); )
 
     GLCALL( glBindRenderbuffer(GL_RENDERBUFFER, 0); )
-    GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, 0); )
+    gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
 void
-idk::glInterface::genIdkFramebuffer(int width, int height, idk::glFramebuffer &fb)
+idk::glInterface::genIdkFramebuffer(int width, int height, glFramebuffer &fb)
 {
     genIdkFramebuffer(width, height, fb.FBO, fb.RBO, fb.textures);
 }
@@ -226,7 +225,7 @@ idk::glInterface::useProgram(GLuint shader_id)
 
 
 void
-idk::glInterface::bindIdkFramebuffer( int width, int height, idk::glFramebuffer &framebuffer )
+idk::glInterface::bindIdkFramebuffer( int width, int height, glFramebuffer &framebuffer )
 {
     gl::viewport(0, 0, width, height);
     gl::bindFramebuffer(GL_FRAMEBUFFER, framebuffer.FBO);
@@ -308,18 +307,18 @@ idk::glInterface::setUniform_mat4(std::string name, glm::mat4 m)
     )
 }
 
-
 void
 idk::glInterface::setUniform_texture(std::string name, GLuint texture_id)
 {
     GLuint texture_unit = popTextureUnitID();
-    GLCALL( glActiveTexture(texture_unit); )
-    GLCALL( glBindTexture(GL_TEXTURE_2D, texture_id); )
+    gl::activeTexture(texture_unit);
+    gl::bindTexture(GL_TEXTURE_2D, texture_id);
     setUniform_int(name.c_str(), texture_unit - GL_TEXTURE0);
 }
 
 
 
+<<<<<<< HEAD
 
 void
 idk::glInterface::setUniform_int(GLint loc, int i)
@@ -327,54 +326,84 @@ idk::glInterface::setUniform_int(GLint loc, int i)
     GLCALL(
         glUniform1i(loc, i);
     )
+=======
+void
+idk::glInterface::setUniform_int(GLint loc, int i)
+{
+    GLCALL( glUniform1i(loc, i); )
+>>>>>>> 88feb98 (woop)
 }
 
 void
 idk::glInterface::setUniform_float(GLint loc, float f)
 {
+<<<<<<< HEAD
     GLCALL(
         glUniform1f(loc, f);
     )
+=======
+    GLCALL( glUniform1f(loc, f); )
+>>>>>>> 88feb98 (woop)
 }
 
 void
 idk::glInterface::setUniform_vec2(GLint loc, glm::vec2 v)
 {
+<<<<<<< HEAD
     GLCALL(
         glUniform2fv(loc, 1, glm::value_ptr(v));
     )
+=======
+    GLCALL( glUniform2fv(loc, 1, glm::value_ptr(v)); )
+>>>>>>> 88feb98 (woop)
 }
 
 void
 idk::glInterface::setUniform_vec3(GLint loc, glm::vec3 v)
 {
+<<<<<<< HEAD
     GLCALL(
         glUniform3fv(loc, 1, glm::value_ptr(v));
     )
+=======
+    GLCALL( glUniform3fv(loc, 1, glm::value_ptr(v)); )
+>>>>>>> 88feb98 (woop)
 }
 
 void
 idk::glInterface::setUniform_vec4(GLint loc, glm::vec4 v)
 {
+<<<<<<< HEAD
     GLCALL(
         glUniform4fv(loc, 1, glm::value_ptr(v));
     )
+=======
+    GLCALL( glUniform4fv(loc, 1, glm::value_ptr(v)); )
+>>>>>>> 88feb98 (woop)
 }
 
 void
 idk::glInterface::setUniform_mat3(GLint loc, glm::mat3 m)
 {
+<<<<<<< HEAD
     GLCALL(
         glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(m));
     )
+=======
+    GLCALL( glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(m)); )
+>>>>>>> 88feb98 (woop)
 }
 
 void
 idk::glInterface::setUniform_mat4(GLint loc, glm::mat4 m)
 {
+<<<<<<< HEAD
     GLCALL(
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m));
     )
+=======
+    GLCALL( glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m)); )
+>>>>>>> 88feb98 (woop)
 }
 
 
@@ -382,8 +411,13 @@ void
 idk::glInterface::setUniform_texture(GLint loc, GLuint texture_id)
 {
     GLuint texture_unit = popTextureUnitID();
+<<<<<<< HEAD
     GLCALL( glActiveTexture(texture_unit); )
     GLCALL( glBindTexture(GL_TEXTURE_2D, texture_id); )
+=======
+    gl::activeTexture(texture_unit);
+    gl::bindTexture(GL_TEXTURE_2D, texture_id);
+>>>>>>> 88feb98 (woop)
     setUniform_int(loc, texture_unit - GL_TEXTURE0);
 }
 

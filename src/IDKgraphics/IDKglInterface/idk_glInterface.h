@@ -3,12 +3,12 @@
 #include <string>
 #include "IDKcommon/IDKcommon.h"
 
-#include "idk_glUniforms.h"
 #include "idk_glFramebuffer.h"
 #include "idk_glBindings.h"
 
 
 #define IDK_GLINTERFACE_MAX_TEXTUREi (GL_TEXTURE0 + 32)
+
 
 namespace idk::glInterface
 {
@@ -21,7 +21,7 @@ namespace idk::glInterface
     void                    bindIdkFramebuffer(int width, int height, glFramebuffer &);
     void                    unbindIdkFramebuffer(int width, int height);
 
-    GLuint                  compileShaderProgram(std::string root, std::string vs, std::string fs);
+    GLuint                  compileProgram(std::string root, std::string vs, std::string fs);
     void                    useProgram(GLuint shader_id);
 
     GLuint                  popTextureUnitID();

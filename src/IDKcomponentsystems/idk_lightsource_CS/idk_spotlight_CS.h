@@ -9,6 +9,8 @@ private:
     std::vector<bool> _draw_spotlight;
     std::vector<int> _spotlight_ids;  // v[obj_id] = lightsource_id
 
+    idk::Engine *   _engineptr;
+
 public:
     void        init( idk::Engine & );
     void        stage_A( idk::Engine & )    {  };
@@ -21,4 +23,5 @@ public:
 
     void        visualize( int obj_id, bool draw ) { _draw_spotlight[obj_id] = draw; };
 
+    idk::lightsource::Spot &getSpotlight( int obj_id ) { return _engineptr->rengine().spotlights().get(_spotlight_ids[obj_id]); };
 };

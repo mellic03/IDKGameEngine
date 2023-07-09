@@ -9,6 +9,7 @@ find_package(OpenGL REQUIRED)
 
 
 file(GLOB SOURCES
+    "./*.cpp"
     "idk_datastructures/*.cpp"
 )
 
