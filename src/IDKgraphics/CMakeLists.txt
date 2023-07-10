@@ -5,6 +5,7 @@ project(IDKgraphics)
 
 file(GLOB SOURCES
     "./*.cpp"
+    "./IDKlightsource/*.cpp"
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})

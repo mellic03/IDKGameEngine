@@ -105,9 +105,9 @@ _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
     glInterface::genIdkFramebuffer(_res_x, _res_y, _colorgrade_buffer);
 
 
-    _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec3));
-    _UBO_pointlights = glUBO(3, 10*sizeof(lightsource::Point));
-    _UBO_spotlights  = glUBO(4, 10*sizeof(lightsource::Spot));
+    _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
+    _UBO_pointlights = glUBO(3, 16 + 10*4*sizeof(glm::vec4));
+    _UBO_spotlights  = glUBO(4, 16 + 10*6*sizeof(glm::vec4));
 }
 
 
@@ -196,34 +196,30 @@ void
 idk::RenderEngine::_update_UBO_pointlights()
 {
     int num_pointlights = pointlights().size();
-    std::vector<glm::vec4> position(10);
-    std::vector<glm::vec4> ambient(10);
-    std::vector<glm::vec4> diffuse(10);
-    std::vector<glm::vec4> attenuation(10);
+    std::vector<glm::vec4> position(IDK_MAX_POINTLIGHTS);
+    std::vector<glm::vec4> ambient(IDK_MAX_POINTLIGHTS);
+    std::vector<glm::vec4> diffuse(IDK_MAX_POINTLIGHTS);
+    std::vector<glm::vec4> attenuation(IDK_MAX_POINTLIGHTS);
 
     int i = 0;
     pointlights().for_each(
     [&i, &position, &ambient, &diffuse, &attenuation](lightsource::Point &light)
     {
-        position[i] = glm::vec4(light.transform.position(), 0.0f);
-        ambient[i] = glm::vec4(light.ambient, 0.0f);
-        diffuse[i] = glm::vec4(light.diffuse, 0.0f);
-        attenuation[i] = glm::vec4(
-            light.attentuation_constant,
-            light.attentuation_linear,
-            light.attentuation_quadratic,
-            0.0f
-        );
-
+        position[i] = light.position;
+        ambient[i] = light.ambient;
+        diffuse[i] = light.diffuse;
+        attenuation[i] = light.attenuation;
         i += 1;
     });
 
+    size_t sizeof_vec = 4*sizeof(float) * IDK_MAX_POINTLIGHTS;
+
     _UBO_pointlights.bind();
     _UBO_pointlights.add<int>(&num_pointlights);
-    _UBO_pointlights.add(16*IDK_MAX_POINTLIGHTS, &(position[0]));
-    _UBO_pointlights.add(16*IDK_MAX_POINTLIGHTS, &(ambient[0]));
-    _UBO_pointlights.add(16*IDK_MAX_POINTLIGHTS, &(diffuse[0]));
-    _UBO_pointlights.add(16*IDK_MAX_POINTLIGHTS, &(attenuation[0]));
+    _UBO_pointlights.add(sizeof_vec, &(position[0]));
+    _UBO_pointlights.add(sizeof_vec, &(ambient[0]));
+    _UBO_pointlights.add(sizeof_vec, &(diffuse[0]));
+    _UBO_pointlights.add(sizeof_vec, &(attenuation[0]));
     _UBO_pointlights.unbind();
 }
 
@@ -232,27 +228,22 @@ void
 idk::RenderEngine::_update_UBO_spotlights()
 {
     int num_spotlights = spotlights().size();
-    std::vector<glm::vec4> position(10);
-    std::vector<glm::vec4> direction(10);
-    std::vector<glm::vec4> ambient(10);
-    std::vector<glm::vec4> diffuse(10);
-    std::vector<glm::vec4> attenuation(10);
-    std::vector<glm::vec4> cutoff(10);
+    std::vector<glm::vec4> position(IDK_MAX_SPOTLIGHTS);
+    std::vector<glm::vec4> direction(IDK_MAX_SPOTLIGHTS);
+    std::vector<glm::vec4> ambient(IDK_MAX_SPOTLIGHTS);
+    std::vector<glm::vec4> diffuse(IDK_MAX_SPOTLIGHTS);
+    std::vector<glm::vec4> attenuation(IDK_MAX_SPOTLIGHTS);
+    std::vector<glm::vec4> cutoff(IDK_MAX_SPOTLIGHTS);
 
     int i = 0;
     spotlights().for_each(
     [&i, &position, &direction, &ambient, &diffuse, &attenuation, &cutoff](lightsource::Spot &light)
     {
-        position[i] = glm::vec4(light.transform.position(), 0.0f);
-        direction[i] = glm::vec4(light.direction, 0.0f);
-        ambient[i] = glm::vec4(light.ambient, 0.0f);
-        diffuse[i] = glm::vec4(light.diffuse, 0.0f);
-        attenuation[i] = glm::vec4(
-            light.attentuation_constant,
-            light.attentuation_linear,
-            light.attentuation_quadratic,
-            0.0f
-        );
+        position[i] = light.position;
+        direction[i] = light.direction;
+        ambient[i] = light.ambient;
+        diffuse[i] = light.diffuse;
+        attenuation[i] = light.attenuation;
         cutoff[i] = glm::vec4(
             glm::radians(light.inner_cutoff),
             glm::radians(light.outer_cutoff),
@@ -263,15 +254,16 @@ idk::RenderEngine::_update_UBO_spotlights()
         i += 1;
     });
 
+    size_t sizeof_vec = 4*sizeof(float) * IDK_MAX_SPOTLIGHTS;
 
     _UBO_spotlights.bind();
     _UBO_spotlights.add<int>(&num_spotlights);
-    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(position[0]));
-    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(direction[0]));
-    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(ambient[0]));
-    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(diffuse[0]));
-    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(attenuation[0]));
-    _UBO_spotlights.add(16*IDK_MAX_SPOTLIGHTS, &(cutoff[0]));
+    _UBO_spotlights.add(sizeof_vec, &(position[0]));
+    _UBO_spotlights.add(sizeof_vec, &(direction[0]));
+    _UBO_spotlights.add(sizeof_vec, &(ambient[0]));
+    _UBO_spotlights.add(sizeof_vec, &(diffuse[0]));
+    _UBO_spotlights.add(sizeof_vec, &(attenuation[0]));
+    _UBO_spotlights.add(sizeof_vec, &(cutoff[0]));
     _UBO_spotlights.unbind();
 }
 

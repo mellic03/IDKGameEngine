@@ -4,7 +4,7 @@ vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specul
     vec3 light_position = ubo_pointlight_position[idx].xyz;
 
     vec3 light_ambient = ubo_pointlight_ambient[idx].xyz;
-    vec3 light_diffuse = ubo_pointlight_ambient[idx].xyz;
+    vec3 light_diffuse = ubo_pointlight_diffuse[idx].xyz;
 
     float attenuation_constant = ubo_pointlight_attenuation[idx].x;
     float attentuation_linear = ubo_pointlight_attenuation[idx].y;

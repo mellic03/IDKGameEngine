@@ -22,12 +22,11 @@ SpotLight_CS::stage_B( idk::Engine &engine )
     {
         auto &obj_transform = tCS.getTransform(obj_id);
         idk::lightsource::Spot &spotlight = ren.spotlights().get(_spotlight_ids[obj_id]);
-        spotlight.transform = obj_transform;
-        spotlight.transform.scale(glm::vec3(0.2f));
+        spotlight.position = glm::vec4(obj_transform.position(), 1.0f);
 
         if (_draw_spotlight[obj_id])
         {
-            ren.drawModel(ren.solid_shader, ren.SPHERE_PRIMITIVE, spotlight.transform);
+            ren.drawModel(ren.solid_shader, ren.SPHERE_PRIMITIVE, obj_transform);
         }        
     }
 

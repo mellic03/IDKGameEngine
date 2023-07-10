@@ -8,7 +8,7 @@
 #include "idk_drawmethods.h"
 
 #include "idk_camera.h"
-#include "idk_lightsource.h"
+#include "IDKlightsource/IDKlightsource.h"
 #include "primitives/primitives.h"
 
 #define IDK_MAX_POINTLIGHTS 10
@@ -21,33 +21,33 @@ namespace idk { class RenderEngine; };
 class idk::RenderEngine
 {
 private:
-    int                 _res_x, _res_y;
+    int                                 _res_x, _res_y;
 
-    SDL_Window *        _SDL_window;
-    SDL_GLContext       _SDL_gl_context;
+    SDL_Window *                        _SDL_window;
+    SDL_GLContext                       _SDL_gl_context;
 
     // idk::glFramebuffers ------------------------------------
     /***/
-    glFramebuffer       _gb_geometry_buffer;
-    glFramebuffer       _screenquad_buffer;
-    glFramebuffer       _colorgrade_buffer;
+    glFramebuffer                       _gb_geometry_buffer;
+    glFramebuffer                       _screenquad_buffer;
+    glFramebuffer                       _colorgrade_buffer;
     // --------------------------------------------------------
 
     // Shaders ------------------------------------------------
     /***/
-    GLuint              _gb_geometry_shader;
-    GLuint              _screenquad_shader;
-    GLuint              _colorgrade_shader;
-    GLuint              _fxaa_shader;
+    GLuint                              _gb_geometry_shader;
+    GLuint                              _screenquad_shader;
+    GLuint                              _colorgrade_shader;
+    GLuint                              _fxaa_shader;
     // --------------------------------------------------------
 
     // UBO ----------------------------------------------------
-    glUBO               _UBO_camera;
-    glUBO               _UBO_pointlights;
-    glUBO               _UBO_spotlights;
+    glUBO                               _UBO_camera;
+    glUBO                               _UBO_pointlights;
+    glUBO                               _UBO_spotlights;
     // --------------------------------------------------------
 
-    GLuint              _quad_VAO, _quad_VBO;
+    GLuint                              _quad_VAO, _quad_VBO;
 
     int                                 _active_camera_id;
     Allocator<Camera>                   _camera_allocator;

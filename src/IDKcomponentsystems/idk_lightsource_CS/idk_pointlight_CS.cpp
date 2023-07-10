@@ -20,19 +20,10 @@ PointLight_CS::stage_B( idk::Engine &engine )
     {
         auto &obj_transform = tCS.getTransform(obj_id);
         idk::lightsource::Point &plight = ren.pointlights().get(_pointlight_ids[obj_id]);
-        plight.transform = obj_transform;
-        plight.transform.scale(glm::vec3(0.2f));
+        plight.position = glm::vec4(obj_transform.position(), 1.0f);
+
+        ren.drawModel(ren.solid_shader, ren.SPHERE_PRIMITIVE, obj_transform);
     }
-
-
-    // Draw sphere primitive for every point light
-    ren.pointlights().for_each(
-        [&ren](idk::lightsource::Point &light)
-        {
-            ren.drawModel(ren.solid_shader, ren.SPHERE_PRIMITIVE, light.transform);
-        }
-    );
-
 }
 
 
