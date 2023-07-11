@@ -4,8 +4,8 @@
 idk::Engine::Engine( std::string windowname, size_t w, size_t h ):
 _frame_time(1), _render_engine(windowname, w, h), _mouse_captured(false)
 {
-    // _mouse_down = idk::vector<bool>(3, false); // { LEFT, MIDDLE, RIGHT }
-
+    _mouse_up = std::vector<bool>(3, false);
+    _mouse_down = std::vector<bool>(3, false);
 }
 
 
@@ -21,43 +21,40 @@ idk::Engine::_process_key_input()
 void
 idk::Engine::_process_mouse_input_SDL2()
 {
-    #ifdef IDK_SDL2
-        while (SDL_PollEvent(&_SDL_event)) {
-        switch (_SDL_event.type)
-        {
-            case (SDL_QUIT):
+    while (SDL_PollEvent(&_SDL_event)) {
+    switch (_SDL_event.type)
+    {
+        case (SDL_QUIT):
+            _running = false;
+            break;
+
+        case SDL_WINDOWEVENT:
+            if (_SDL_event.window.event == SDL_WINDOWEVENT_CLOSE)
                 _running = false;
-                break;
+            else if (_SDL_event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                _render_engine.resize(_SDL_event.window.data1, _SDL_event.window.data2);
+            break;
 
-            case SDL_WINDOWEVENT:
-                if (_SDL_event.window.event == SDL_WINDOWEVENT_CLOSE)
-                    _running = false;
-                else if (_SDL_event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                    _render_engine.resize(_SDL_event.window.data1, _SDL_event.window.data2);
-                break;
+        case (SDL_MOUSEBUTTONDOWN):
+            _mouse_down[_SDL_event.button.button - 1] = true;
+            _mouse_up[_SDL_event.button.button - 1] = false;
+            break;
 
-            case (SDL_MOUSEBUTTONDOWN):
-                _mouse_down[_SDL_event.button.button - 1] = true;
-                _mouse_up[_SDL_event.button.button - 1] = false;
-                break;
+        case (SDL_MOUSEBUTTONUP):
+            _mouse_down[_SDL_event.button.button - 1] = false;
+            _mouse_up[_SDL_event.button.button - 1] = true;
+            break;
+    }}
 
-            case (SDL_MOUSEBUTTONUP):
-                _mouse_down[_SDL_event.button.button - 1] = false;
-                _mouse_up[_SDL_event.button.button - 1] = true;
-                break;
-        }}
+    int x, y;
 
-        int x, y;
+    SDL_GetMouseState(&x, &y);
+    _mouse_position.x = float(x);
+    _mouse_position.y = float(y);
 
-        SDL_GetMouseState(&x, &y);
-        _mouse_position.x = float(x);
-        _mouse_position.y = float(y);
-
-        SDL_GetRelativeMouseState(&x, &y);
-        _delta_mouse_position.x = float(x);
-        _delta_mouse_position.y = float(y);
-    #endif
-
+    SDL_GetRelativeMouseState(&x, &y);
+    _delta_mouse_position.x = float(x);
+    _delta_mouse_position.y = float(y);
 }
 
 

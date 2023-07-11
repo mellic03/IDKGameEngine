@@ -57,6 +57,14 @@ Physics_CS::stage_B( idk::Engine &engine )
             trans.getOpenGLMatrix(glm::value_ptr(mmmmm));
             tCS.getTransform(i) = idk::Transform(mmmmm);
         }
+
+        else if (_has_capsule[i])
+        {
+            btTransform trans = _capsules[i]->getWorldTransform();
+            glm::mat4 mmmmm;
+            trans.getOpenGLMatrix(glm::value_ptr(mmmmm));
+            tCS.getTransform(i) = idk::Transform(mmmmm);
+        }
     }
 
 }
@@ -77,6 +85,9 @@ Physics_CS::onGameObjectCreation( int obj_id, idk::Engine &engine )
     {
         _has_mesh.resize(obj_id+1, false);
         _meshbodies.resize(obj_id+1);
+
+        _has_capsule.resize(obj_id+1, false);
+        _capsules.resize(obj_id+1);
 
         _has_rigidbody.resize(obj_id+1, false);
         _rigidbodies.resize(obj_id+1);
@@ -198,3 +209,56 @@ Physics_CS::giveBoxCollider( int obj_id, idk_physics::BoxColliderConfig &config 
     _has_rigidbody[obj_id] = true;
 }
 
+
+void
+Physics_CS::giveCapsuleCollider( int obj_id )
+{
+    Transform_CS &tCS = _engineptr->getCS<Transform_CS>("transform");
+    idk::Transform &transform = tCS.getTransform(obj_id);
+
+    float mass = 0.2f;
+
+    btCapsuleShape *shape = new btCapsuleShape(0.5f, 1.0f);
+    btDefaultMotionState *motionstate = new btDefaultMotionState(
+        bullet3_tools::translate(btVec3_cast(transform.position()))
+    );
+
+    btRigidBody *rigidbody = new btRigidBody(mass, motionstate, shape);
+   
+    _capsules[obj_id] = rigidbody;
+    _has_capsule[obj_id] = true;
+
+    _physicsworld._dynamicsWorld->addRigidBody(rigidbody);
+}
+
+
+
+void
+Physics_CS::giveMeshCollider( int obj_id, std::vector<idk::Vertex> &vertices )
+{
+    auto &tCS = _engineptr->getCS<Transform_CS>("transform");
+
+    btTriangleMesh *trimesh = new btTriangleMesh();
+
+    for (int i=0; i<vertices.size(); i+=3)
+    {
+        trimesh->addTriangle(
+            btVec3_cast(vertices[i+0].position),
+            btVec3_cast(vertices[i+1].position),
+            btVec3_cast(vertices[i+2].position)
+        );
+    }
+
+	btTransform	trans;
+	trans.setIdentity();
+	trans.setOrigin( btVec3_cast(tCS.getTransform(obj_id).position()) );
+
+    btCollisionShape *trishape = new btBvhTriangleMeshShape(trimesh, false);
+	btDefaultMotionState* motionstate = new btDefaultMotionState( trans );
+	btRigidBody* body = new btRigidBody( 0.0f, motionstate, trishape );
+
+    _physicsworld._dynamicsWorld->addRigidBody(body);
+
+    _meshbodies[obj_id] = body;
+    _has_mesh[obj_id] = true;
+}

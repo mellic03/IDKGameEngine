@@ -17,8 +17,8 @@ private:
     idk::RenderEngine                           _render_engine;
     SDL_Event                                   _SDL_event;
     idk::Keylog                                 _keylog;
-    bool                                       _mouse_down  [3];
-    bool                                       _mouse_up    [3];
+    std::vector<bool>                           _mouse_up;
+    std::vector<bool>                           _mouse_down;
 
     glm::vec2                                   _delta_mouse_position;
     glm::vec2                                   _mouse_position;

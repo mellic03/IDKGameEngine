@@ -14,8 +14,8 @@ idk::lightsource::Spot::Spot()
     position                = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     direction               = glm::vec4(0.0f);
     ambient                 = glm::vec4(0.01f);
-    diffuse                 = glm::vec4(1.0f);
-    attenuation             = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    diffuse                 = glm::vec4(5.0f, 5.0f, 6.0f, 0.0f);
+    attenuation             = glm::vec4(0.0f, 0.0f, 2.0f, 0.0f);
     inner_cutoff            = 35.5f;
-    outer_cutoff            = 45.5f;
+    outer_cutoff            = 50.5f;
 }

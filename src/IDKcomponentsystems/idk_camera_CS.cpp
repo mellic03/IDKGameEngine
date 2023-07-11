@@ -17,8 +17,6 @@ Camera_CS::stage_A( idk::Engine &engine )
     if (_current_cammed_object == -1)
         return;
 
-    idk::Camera &camera = engine.rengine().getCamera();
-    camera.transform() = tCS.getTransform(_current_cammed_object);
 }
 
 

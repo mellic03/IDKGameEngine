@@ -1,7 +1,6 @@
 #pragma once
 
-#include <bullet/btBulletDynamicsCommon.h>
-#include <glm/glm.hpp>
+#include "idk_bullet3_tools.h"
 
 
 namespace idk_physics

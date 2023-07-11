@@ -1,11 +1,14 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 namespace idk
 {
     template <typename T> T         min( T, T );
     template <typename T> T         max( T, T );
     template <typename T> T         clamp( T, T, T );
                           int       roundup( int n, int multipleof );
+                          float     distanceSq( glm::vec3 a, glm::vec3 b );
 };
 
 

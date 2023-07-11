@@ -43,7 +43,7 @@ void cube_physics( idk::Engine &engine, int TRANS, int MOD, int PHYS, int GRAB )
 
                 idk::Transform &transform = tCS.getTransform(cube2);
 
-                transform.translate(glm::vec3(i-5, 1.1+j, k-5));
+                transform.translate(glm::vec3(i-5, 30+j, k-5));
                 transform.scale(glm::vec3(0.45f));
 
                 pCS.giveBoxCollider(cube2, 10.0f);

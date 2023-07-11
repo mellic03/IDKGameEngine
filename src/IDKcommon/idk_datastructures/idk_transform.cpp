@@ -15,6 +15,20 @@ idk::Transform::Transform( glm::mat4 m ): _model_mat(m)
 
 
 glm::vec3
+idk::Transform::position()
+{
+    return glm::vec3(_model_mat[3]);
+}
+
+void
+idk::Transform::position( glm::vec3 v )
+{
+    translate(-position());
+    translate(v);
+}
+
+
+glm::vec3
 idk::Transform::scale()
 {
     return glm::vec3(
