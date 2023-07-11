@@ -13,6 +13,7 @@
 
 #define IDK_MAX_POINTLIGHTS 10
 #define IDK_MAX_SPOTLIGHTS 10
+#define IDK_MAX_DIRLIGHTS 3
 
 namespace idk { class RenderEngine; };
 
@@ -45,6 +46,7 @@ private:
     glUBO                               _UBO_camera;
     glUBO                               _UBO_pointlights;
     glUBO                               _UBO_spotlights;
+    glUBO                               _UBO_dirlights;
     // --------------------------------------------------------
 
     GLuint                              _quad_VAO, _quad_VBO;
@@ -71,7 +73,8 @@ private:
     void                _update_UBO_camera();
     void                _update_UBO_pointlights();
     void                _update_UBO_spotlights();
-
+    void                _update_UBO_dirlights();
+    
     void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );
     void                _render_screenquad( GLuint shader, glFramebuffer &in );
 
@@ -99,10 +102,13 @@ public:
     int                                 createCamera();
     idk::Camera &                       getCamera()         { return _camera_allocator.get(_active_camera_id); };
 
-    int                                 createSpotlight();
     int                                 createPointlight();
+    int                                 createSpotlight();
+    int                                 createDirlight();
+
     Allocator<lightsource::Point> &     pointlights()   { return _pointlight_allocator; };
     Allocator<lightsource::Spot> &      spotlights()    { return _spotlight_allocator; };
+    Allocator<lightsource::Dir> &       dirlights()     { return _dirlight_allocator; };
 
     ModelManager &                      modelManager()  { return _model_manager; };
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );

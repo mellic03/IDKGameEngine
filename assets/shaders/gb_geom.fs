@@ -40,6 +40,11 @@ void main()
         color += spotlight_contribution(i, view_dir, albedo_map, specular_map, un_specular_exponent);
     }
 
+    for (int i = 0; i < ubo_num_dirlights; i++)
+    {
+        color += dirlight_contribution(i, view_dir, albedo_map, specular_map, un_specular_exponent);
+    }
+
     fsout_frag_color_0 = vec4(color, 1.0);
     fsout_frag_color_1 = vec4(0.0, 0.0, 0.0, 1.0);
     fsout_frag_color_2 = vec4(0.0, 0.0, 0.0, 1.0);

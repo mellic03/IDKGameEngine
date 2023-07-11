@@ -38,11 +38,11 @@ int ENTRY(int argc, const char **argv)
     GLuint skydome_shader = idk::glInterface::compileProgram("assets/shaders/", "gb_geom.vs", "skydome.fs");
 
     int player_obj = engine.createGameObject();
-    engine.giveComponents(player_obj, TRANSFORM, POINTLIGHT, PHYSICS, CAMERA, PLAYERCONTROL);
+    engine.giveComponents(player_obj, TRANSFORM, PHYSICS, CAMERA, PLAYERCONTROL);
     transCS.translate(player_obj, glm::vec3(0.0f, 20.0f, 0.0f));
     physCS.giveCapsuleCollider(player_obj);
-    idk::lightsource::Point &pointlight = pointCS.getPointlight(player_obj);
-    pointlight.attenuation = glm::vec4(0.0f, 1.0f, 1.0f, 0.0f);
+    // idk::lightsource::Point &pointlight = pointCS.getPointlight(player_obj);
+    // pointlight.attenuation = glm::vec4(0.0f, 1.0f, 1.0f, 0.0f);
 
     int skydome_obj = engine.createGameObject();
     int skydome_model = ren.modelManager().loadOBJ("assets/models/", "skydome.obj", "skydome.mtl");
@@ -60,12 +60,16 @@ int ENTRY(int argc, const char **argv)
     // demos::cube_physics(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
     // demos::school(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
 
+    // int pointlight_obj = engine.createGameObject();
+    // engine.giveComponents(pointlight_obj, TRANSFORM, POINTLIGHT );
+    // transCS.translate(pointlight_obj, glm::vec3(10.0f, 15.0f, 0.0f));
+
 
     int spotlight_obj = engine.createGameObject();
-    engine.giveComponents(spotlight_obj, TRANSFORM, SPOTLIGHT );
+    engine.giveComponents(spotlight_obj, TRANSFORM, SPOTLIGHT);
     glm::vec3 last_dir = ren.getCamera().front();
 
-    bool flag = true;
+
 
     while (engine.running())
     {
@@ -80,18 +84,6 @@ int ENTRY(int argc, const char **argv)
         last_dir += 10.0f * engine.deltaTime() * dir;
         
         spotCS.getSpotlight(spotlight_obj).direction = glm::vec4(last_dir, 0.0f);
-
-        pointlight.diffuse = glm::vec4(0.0f);
-        if (engine.mouseDown(idk::MouseButton::LEFT) && flag)
-        {
-            pointlight.diffuse = glm::vec4(1.5f, 1.3f, 1.0f, 0.0f);
-            flag = false;
-        }
-
-        else
-        {
-            flag = true;
-        }
 
         engine.endFrame();
     }

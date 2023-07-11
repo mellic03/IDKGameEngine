@@ -106,8 +106,9 @@ _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
 
 
     _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
-    _UBO_pointlights = glUBO(3, 16 + 10*4*sizeof(glm::vec4));
-    _UBO_spotlights  = glUBO(4, 16 + 10*6*sizeof(glm::vec4));
+    _UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(lightsource::Point));
+    _UBO_spotlights  = glUBO(4, 16 + IDK_MAX_SPOTLIGHTS*sizeof(lightsource::Spot));
+    _UBO_dirlights   = glUBO(5, 16 + IDK_MAX_DIRLIGHTS*sizeof(lightsource::Dir));
 }
 
 
@@ -166,6 +167,13 @@ idk::RenderEngine::createSpotlight()
 }
 
 
+int
+idk::RenderEngine::createDirlight()
+{
+    return _dirlight_allocator.add();
+}
+
+
 void
 idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transform )
 {
@@ -196,30 +204,19 @@ void
 idk::RenderEngine::_update_UBO_pointlights()
 {
     int num_pointlights = pointlights().size();
-    std::vector<glm::vec4> position(IDK_MAX_POINTLIGHTS);
-    std::vector<glm::vec4> ambient(IDK_MAX_POINTLIGHTS);
-    std::vector<glm::vec4> diffuse(IDK_MAX_POINTLIGHTS);
-    std::vector<glm::vec4> attenuation(IDK_MAX_POINTLIGHTS);
 
-    int i = 0;
+    std::vector<idk::lightsource::Point> lights;
     pointlights().for_each(
-    [&i, &position, &ambient, &diffuse, &attenuation](lightsource::Point &light)
-    {
-        position[i] = light.position;
-        ambient[i] = light.ambient;
-        diffuse[i] = light.diffuse;
-        attenuation[i] = light.attenuation;
-        i += 1;
-    });
-
-    size_t sizeof_vec = 4*sizeof(float) * IDK_MAX_POINTLIGHTS;
+        [&lights](lightsource::Point &light)
+        {
+            lights.push_back(light);
+        }
+    );
+    lights.resize(IDK_MAX_POINTLIGHTS);
 
     _UBO_pointlights.bind();
     _UBO_pointlights.add<int>(&num_pointlights);
-    _UBO_pointlights.add(sizeof_vec, &(position[0]));
-    _UBO_pointlights.add(sizeof_vec, &(ambient[0]));
-    _UBO_pointlights.add(sizeof_vec, &(diffuse[0]));
-    _UBO_pointlights.add(sizeof_vec, &(attenuation[0]));
+    _UBO_pointlights.add(sizeof(lightsource::Point)*IDK_MAX_SPOTLIGHTS, &(lights[0]));
     _UBO_pointlights.unbind();
 }
 
@@ -228,43 +225,41 @@ void
 idk::RenderEngine::_update_UBO_spotlights()
 {
     int num_spotlights = spotlights().size();
-    std::vector<glm::vec4> position(IDK_MAX_SPOTLIGHTS);
-    std::vector<glm::vec4> direction(IDK_MAX_SPOTLIGHTS);
-    std::vector<glm::vec4> ambient(IDK_MAX_SPOTLIGHTS);
-    std::vector<glm::vec4> diffuse(IDK_MAX_SPOTLIGHTS);
-    std::vector<glm::vec4> attenuation(IDK_MAX_SPOTLIGHTS);
-    std::vector<glm::vec4> cutoff(IDK_MAX_SPOTLIGHTS);
 
-    int i = 0;
+    std::vector<idk::lightsource::Spot> lights;
     spotlights().for_each(
-    [&i, &position, &direction, &ambient, &diffuse, &attenuation, &cutoff](lightsource::Spot &light)
-    {
-        position[i] = light.position;
-        direction[i] = light.direction;
-        ambient[i] = light.ambient;
-        diffuse[i] = light.diffuse;
-        attenuation[i] = light.attenuation;
-        cutoff[i] = glm::vec4(
-            glm::radians(light.inner_cutoff),
-            glm::radians(light.outer_cutoff),
-            0.0f,
-            0.0f
-        );
-
-        i += 1;
-    });
-
-    size_t sizeof_vec = 4*sizeof(float) * IDK_MAX_SPOTLIGHTS;
+        [&lights](lightsource::Spot &light)
+        {
+            lights.push_back(light);
+        }
+    );
+    lights.resize(IDK_MAX_SPOTLIGHTS);
 
     _UBO_spotlights.bind();
     _UBO_spotlights.add<int>(&num_spotlights);
-    _UBO_spotlights.add(sizeof_vec, &(position[0]));
-    _UBO_spotlights.add(sizeof_vec, &(direction[0]));
-    _UBO_spotlights.add(sizeof_vec, &(ambient[0]));
-    _UBO_spotlights.add(sizeof_vec, &(diffuse[0]));
-    _UBO_spotlights.add(sizeof_vec, &(attenuation[0]));
-    _UBO_spotlights.add(sizeof_vec, &(cutoff[0]));
+    _UBO_spotlights.add(sizeof(lightsource::Spot)*IDK_MAX_SPOTLIGHTS, &(lights[0]));
     _UBO_spotlights.unbind();
+}
+
+
+void
+idk::RenderEngine::_update_UBO_dirlights()
+{
+    int num_dirlights = dirlights().size();
+
+    std::vector<idk::lightsource::Dir> lights;
+    dirlights().for_each(
+        [&lights](lightsource::Dir &light)
+        {
+            lights.push_back(light);
+        }
+    );
+    lights.resize(IDK_MAX_DIRLIGHTS);
+
+    _UBO_dirlights.bind();
+    _UBO_dirlights.add<int>(&num_dirlights);
+    _UBO_dirlights.add(sizeof(lightsource::Dir)*IDK_MAX_DIRLIGHTS, &(lights[0]));
+    _UBO_dirlights.unbind();
 }
 
 
@@ -288,6 +283,7 @@ idk::RenderEngine::endFrame()
     _update_UBO_camera();
     _update_UBO_pointlights();
     _update_UBO_spotlights();
+    _update_UBO_dirlights();
 
     for (auto &[shader_id, vec]: _model_draw_queue)
     {

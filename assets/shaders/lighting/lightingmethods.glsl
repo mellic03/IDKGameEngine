@@ -1,14 +1,14 @@
 
 vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap, float spec_exponent)
 {
-    vec3 light_position = ubo_pointlight_position[idx].xyz;
+    vec3 light_position = ubo_pointlights[idx].position.xyz;
 
-    vec3 light_ambient = ubo_pointlight_ambient[idx].xyz;
-    vec3 light_diffuse = ubo_pointlight_diffuse[idx].xyz;
+    vec3 light_ambient = ubo_pointlights[idx].ambient.xyz;
+    vec3 light_diffuse = ubo_pointlights[idx].diffuse.xyz;
 
-    float attenuation_constant = ubo_pointlight_attenuation[idx].x;
-    float attentuation_linear = ubo_pointlight_attenuation[idx].y;
-    float attentuation_quadratic = ubo_pointlight_attenuation[idx].z;
+    float attenuation_constant = ubo_pointlights[idx].attenuation.x;
+    float attentuation_linear = ubo_pointlights[idx].attenuation.y;
+    float attentuation_quadratic = ubo_pointlights[idx].attenuation.z;
 
 
     float d = distance(fsin_fragpos, light_position);
@@ -38,18 +38,20 @@ vec3 pointlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specul
 
 vec3 spotlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap, float spec_exponent)
 {
-    vec3 light_position = ubo_spotlight_position[idx].xyz;
-    vec3 light_direction = normalize(ubo_spotlight_direction[idx].xyz);
+    SpotLight light = ubo_spotlights[idx];
 
-    vec3 light_ambient = ubo_spotlight_ambient[idx].xyz;
-    vec3 light_diffuse = ubo_spotlight_diffuse[idx].xyz;
+    vec3 light_position = light.position.xyz;
+    vec3 light_direction = light.direction.xyz;
 
-    float light_attenuation_constant = ubo_spotlight_attenuation[idx].x;
-    float light_attentuation_linear = ubo_spotlight_attenuation[idx].y;
-    float light_attentuation_quadratic = ubo_spotlight_attenuation[idx].z;
+    vec3 light_ambient = light.ambient.xyz;
+    vec3 light_diffuse = light.diffuse.xyz;
 
-    float light_inner_cutoff = ubo_spotlight_cutoff[idx].x;
-    float light_outer_cutoff = ubo_spotlight_cutoff[idx].y;
+    float light_attenuation_constant = light.attenuation.x;
+    float light_attentuation_linear = light.attenuation.y;
+    float light_attentuation_quadratic = light.attenuation.z;
+
+    float light_inner_cutoff = light.cutoff.x;
+    float light_outer_cutoff = light.cutoff.y;
 
 
     float d = distance(fsin_fragpos, light_position);
@@ -79,3 +81,30 @@ vec3 spotlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specula
 
     return result;
 }
+
+
+
+vec3 dirlight_contribution(int idx, vec3 view_dir, vec3 albedomap, vec3 specularmap, float spec_exponent)
+{
+    DirLight light = ubo_dirlights[idx];
+
+    vec3 light_direction = light.direction.xyz;
+    vec3 light_ambient = light.ambient.xyz;
+    vec3 light_diffuse = light.diffuse.xyz;
+
+    vec3 frag_to_light = normalize(-light_direction);
+    float diffuse_f = max(dot(fsin_normal, frag_to_light), 0.0);
+
+    vec3 halfway_dir = normalize(frag_to_light + view_dir);  
+    float specular_f = pow(max(dot(fsin_normal, halfway_dir), 0.0), spec_exponent);
+
+
+    vec3 ambient  = albedomap * light_ambient;
+    vec3 diffuse  = albedomap * diffuse_f * light_diffuse;
+    vec3 specular = albedomap * specular_f * 255*specularmap;
+
+    vec3 result = ambient + diffuse + specular;
+
+    return result; 
+}
+

@@ -23,7 +23,7 @@ PointLight_CS::stage_B( idk::Engine &engine )
         idk::lightsource::Point &plight = ren.pointlights().get(_pointlight_ids[obj_id]);
         plight.position = glm::vec4(obj_transform.position(), 1.0f);
 
-        // ren.drawModel(ren.solid_shader, ren.SPHERE_PRIMITIVE, obj_transform);
+        ren.drawModel(ren.solid_shader, ren.SPHERE_PRIMITIVE, obj_transform);
     }
 }
 
