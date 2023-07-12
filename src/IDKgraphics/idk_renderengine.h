@@ -59,8 +59,10 @@ private:
     ModelManager                        _model_manager;
     Allocator<lightsource::Point>       _pointlight_allocator;
     Allocator<lightsource::Spot>        _spotlight_allocator;
+
     Allocator<lightsource::Dir>         _dirlight_allocator;
     Allocator<GLuint>                   _dirlight_shadowmap_allocator;
+    Allocator<glm::mat4>                _dirlight_lightspacematrix_allocator;
 
 
     modelqueue_t        _model_draw_queue;
@@ -79,6 +81,8 @@ private:
     void                _update_UBO_spotlights();
     void                _update_UBO_dirlights();
     
+    void                _shadowpass_pointlights();
+    void                _shadowpass_spotlights();
     void                _shadowpass_dirlights();
 
     void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );

@@ -9,6 +9,16 @@
 #include "demos/demos.h"
 
 
+/*
+    What do on Thursday??
+
+    1. Implement deferred shading
+    2. Implement volumetrics
+
+*/
+
+
+
 int ENTRY(int argc, const char **argv)
 {
     idk::Engine engine("IDK Game", 1920, 1080);
@@ -24,11 +34,11 @@ int ENTRY(int argc, const char **argv)
 
     auto &transCS = engine.getCS<Transform_CS>(TRANSFORM);
     auto &modelCS = engine.getCS<Model_CS>(MODEL);
-    auto &physCS = engine.getCS<Physics_CS>(PHYSICS);
+    auto &physCS  = engine.getCS<Physics_CS>(PHYSICS);
     auto &pointCS = engine.getCS<PointLight_CS>(POINTLIGHT);
-    auto &spotCS = engine.getCS<SpotLight_CS>(SPOTLIGHT);
-    auto &grabCS = engine.getCS<Grabbable_CS>(GRABBABLE);
-    auto &charCS = engine.getCS<CharacterController_CS>(CHARCONTROL);
+    auto &spotCS  = engine.getCS<SpotLight_CS>(SPOTLIGHT);
+    auto &grabCS  = engine.getCS<Grabbable_CS>(GRABBABLE);
+    auto &charCS  = engine.getCS<CharacterController_CS>(CHARCONTROL);
 
     idk::RenderEngine &ren = engine.rengine();
     ren.modelManager().loadTextures("assets/textures/");

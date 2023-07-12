@@ -26,7 +26,6 @@ idk::drawmethods::draw_textured( Model &model, Transform &transform, Allocator<M
         gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
         gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
     }
-    glInterface::freeTextureUnitIDs();
 }
 
 
@@ -43,5 +42,4 @@ idk::drawmethods::draw_untextured( Model &model, Transform &transform )
         gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
         gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
     }
-    glInterface::freeTextureUnitIDs();
 }

@@ -194,6 +194,8 @@ idk::glInterface::genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint 
 void
 idk::glInterface::genIdkFramebuffer(int width, int height, glFramebuffer &fb)
 {
+    fb.width = width;
+    fb.height = height;
     genIdkFramebuffer(width, height, fb.FBO, fb.RBO, fb.textures);
 }
 
@@ -201,6 +203,16 @@ idk::glInterface::genIdkFramebuffer(int width, int height, glFramebuffer &fb)
 GLuint
 idk::glInterface::popTextureUnitID()
 {
+    #ifdef IDK_DEBUG
+    if (_available_glTextureUnits.size() == 0)
+    {
+        std::cout << "Ruh roh, "
+                  << "_available_glTextureUnits.size() == 0"
+                  << std::endl;
+        exit(1);
+    }
+    #endif
+
     GLuint textureunit_id = _available_glTextureUnits.pop();
     _unavailable_glTextureUnits.push(textureunit_id);
     return textureunit_id;
@@ -225,9 +237,9 @@ idk::glInterface::useProgram(GLuint shader_id)
 
 
 void
-idk::glInterface::bindIdkFramebuffer( int width, int height, glFramebuffer &framebuffer )
+idk::glInterface::bindIdkFramebuffer( glFramebuffer &framebuffer )
 {
-    gl::viewport(0, 0, width, height);
+    gl::viewport(0, 0, framebuffer.width, framebuffer.height);
     gl::bindFramebuffer(GL_FRAMEBUFFER, framebuffer.FBO);
     gl::clearColor(0.0f, 0.0f, 0.0f, 0.0f);
     gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

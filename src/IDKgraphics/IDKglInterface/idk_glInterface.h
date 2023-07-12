@@ -18,7 +18,7 @@ namespace idk::glInterface
 
     void                    genIdkFramebuffer(int width, int height, GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures);
     void                    genIdkFramebuffer(int width, int height, glFramebuffer &);
-    void                    bindIdkFramebuffer(int width, int height, glFramebuffer &);
+    void                    bindIdkFramebuffer( glFramebuffer & );
     void                    unbindIdkFramebuffer(int width, int height);
 
     GLuint                  compileProgram(std::string root, std::string vs, std::string fs);

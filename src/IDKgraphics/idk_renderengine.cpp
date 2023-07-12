@@ -105,7 +105,7 @@ _dirlight_depthmap_buffer(1)
     glInterface::genIdkFramebuffer(_res_x, _res_y, _gb_geometry_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _screenquad_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _colorgrade_buffer);
-    glInterface::genIdkFramebuffer(_res_x, _res_y, _dirlight_depthmap_buffer);
+    glInterface::genIdkFramebuffer(2048, 2048, _dirlight_depthmap_buffer);
 
 
     _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
@@ -118,7 +118,7 @@ _dirlight_depthmap_buffer(1)
 void
 idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out )
 {
-    glInterface::bindIdkFramebuffer(_res_x, _res_y, out);
+    glInterface::bindIdkFramebuffer(out);
     glInterface::useProgram(shader);
 
     for (int i=0; i < in.textures.size(); i++)
@@ -174,6 +174,7 @@ int
 idk::RenderEngine::createDirlight()
 {
     _dirlight_shadowmap_allocator.add();
+    _dirlight_lightspacematrix_allocator.add();
     return _dirlight_allocator.add();
 }
 
@@ -189,6 +190,66 @@ void
 idk::RenderEngine::drawUntextured( GLuint shader_id, int model_id, Transform &transform )
 {
     _untextured_model_queue[shader_id].push({model_id, transform});
+}
+
+
+void
+idk::RenderEngine::_shadowpass_pointlights()
+{
+
+}
+
+
+void
+idk::RenderEngine::_shadowpass_spotlights()
+{
+
+}
+
+
+void
+idk::RenderEngine::_shadowpass_dirlights()
+{
+    glInterface::bindIdkFramebuffer(_dirlight_depthmap_buffer);
+    glInterface::useProgram(_dirshadow_shader);
+
+    float near_plane = 1.0f, far_plane = 50.0f;
+
+    RenderEngine &ren = *this;
+    auto &queue = _model_draw_queue;
+    auto &depthmaps = _dirlight_shadowmap_allocator;
+    auto &framebuffer = _dirlight_depthmap_buffer;
+    auto &lmats = _dirlight_lightspacematrix_allocator;
+
+    int i = 0;
+    dirlights().for_each(
+    [&i, &ren, &queue, &depthmaps, &lmats, &framebuffer](int light_id, lightsource::Dir &light)
+    {
+        glm::mat4 projection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, 0.1f, 50.0f);
+        glm::mat4 view = glm::lookAt(
+           -10.0f*glm::vec3(light.direction) + ren.getCamera().transform().position(),
+            glm::vec3(0.0f) + ren.getCamera().transform().position(),
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+        glInterface::setUniform_mat4("un_dirlight_projection", projection);
+        glInterface::setUniform_mat4("un_dirlight_view", view);
+
+        for (auto &[shader_id, vec]: queue)
+        {
+            for (auto &[model_id, transform]: vec)
+            {
+                drawmethods::draw_untextured(
+                    ren.modelManager().getModel(model_id),
+                    transform
+                );
+            }
+        }
+
+        depthmaps.get(light_id) = framebuffer.textures[0];
+        lmats.get(light_id) = projection * view;
+
+        i += 1;
+    });
 }
 
 
@@ -267,51 +328,6 @@ idk::RenderEngine::_update_UBO_dirlights()
 }
 
 
-
-void
-idk::RenderEngine::_shadowpass_dirlights()
-{
-    glInterface::bindIdkFramebuffer(_res_x, _res_y, _dirlight_depthmap_buffer);
-    glInterface::useProgram(_dirshadow_shader);
-
-    float near_plane = 1.0f, far_plane = 50.0f;
-    glm::mat4 projection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane, far_plane);
-    glInterface::setUniform_mat4("un_dirlight_projection", projection);
-
-    RenderEngine &ren = *this;
-    auto &queue = _model_draw_queue;
-    auto &depthmaps = _dirlight_shadowmap_allocator;
-    auto &framebuffer = _dirlight_depthmap_buffer;
-
-    int i = 0;
-    dirlights().for_each(
-    [&i, &ren, &queue, &depthmaps, &framebuffer](int light_id, lightsource::Dir &light)
-    {
-        glm::mat4 view = glm::lookAt(
-           -glm::vec3(light.direction) + ren.getCamera().transform().position(),
-            glm::vec3(0.0f) + ren.getCamera().transform().position(),
-            glm::vec3(0.0f, 1.0f, 0.0f)
-        );
-        glInterface::setUniform_mat4("un_dirlight_view", view);
-
-        for (auto &[shader_id, vec]: queue)
-        {
-            for (auto &[model_id, transform]: vec)
-            {
-                drawmethods::draw_untextured(
-                    ren.modelManager().getModel(model_id),
-                    transform
-                );
-            }
-        }
-
-        depthmaps.get(light_id) = framebuffer.textures[0];
-    
-        i += 1;
-    });
-}
-
-
 void
 idk::RenderEngine::beginFrame()
 {
@@ -326,21 +342,27 @@ idk::RenderEngine::beginFrame()
 void
 idk::RenderEngine::endFrame()
 {
+    _shadowpass_pointlights();
+    _shadowpass_spotlights();
+    _shadowpass_dirlights();
+
     _update_UBO_camera();
     _update_UBO_pointlights();
     _update_UBO_spotlights();
     _update_UBO_dirlights();
 
-    _shadowpass_dirlights();
-
-
-    glInterface::bindIdkFramebuffer(_res_x, _res_y, _gb_geometry_buffer);
+    glInterface::bindIdkFramebuffer(_gb_geometry_buffer);
     idk::Camera &camera = getCamera();
 
 
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
         glInterface::useProgram(shader_id);
+
+
+        glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
+        glInterface::setUniform_mat4("un_dirlight_lightspacematrices[0]", _dirlight_lightspacematrix_allocator.get(0));
+
         for (auto &[model_id, transform]: vec)
         {
             drawmethods::draw_textured(
@@ -348,6 +370,7 @@ idk::RenderEngine::endFrame()
                 transform,
                 modelManager().getMaterials()
             );
+            glInterface::freeTextureUnitIDs();
         }
         vec.clear();
     }
@@ -362,6 +385,7 @@ idk::RenderEngine::endFrame()
                 modelManager().getModel(model_id),
                 transform
             );
+            glInterface::freeTextureUnitIDs();
         }
         vec.clear();
     }
@@ -387,7 +411,6 @@ idk::RenderEngine::resize( int w, int h )
     glInterface::genIdkFramebuffer(w, h, _gb_geometry_buffer);
     glInterface::genIdkFramebuffer(w, h, _screenquad_buffer);
     glInterface::genIdkFramebuffer(w, h, _colorgrade_buffer);
-    glInterface::genIdkFramebuffer(w, h, _dirlight_depthmap_buffer);
 
     getCamera().aspect(w, h);
 }

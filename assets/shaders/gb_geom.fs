@@ -13,6 +13,8 @@ layout (location = 3) out vec4 fsout_frag_color_3;
 in vec3 fsin_fragpos;
 in vec3 fsin_normal;
 in vec2 fsin_texcoords;
+in vec4 fsin_fragpos_dirlightspace[10];
+
 
 uniform sampler2D un_albedo_texture;
 uniform sampler2D un_specular_texture;
@@ -22,6 +24,7 @@ uniform float un_specular_exponent;
 #include "UBOs/UBOs.glsl"
 
 #include "lighting/lightingmethods.glsl"
+
 
 void main()
 {
@@ -42,7 +45,11 @@ void main()
 
     for (int i = 0; i < ubo_num_dirlights; i++)
     {
-        color += dirlight_contribution(i, view_dir, albedo_map, specular_map, un_specular_exponent);
+        color += dirlight_contribution(
+            i, view_dir, albedo_map, specular_map,
+            un_specular_exponent,
+            fsin_fragpos_dirlightspace[i]
+        );
     }
 
     fsout_frag_color_0 = vec4(color, 1.0);
