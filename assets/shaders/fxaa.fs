@@ -70,6 +70,4 @@ void main() {
 
     vec3 color = fxaa(un_texture_0, textureSize(un_texture_0, 0), fsin_texcoords);
     fsout_frag_color = vec4(color, 1.0);
-    // fsout_frag_color = vec4(fsin_texcoords, 0.0, 1.0);
-
 }

@@ -8,6 +8,6 @@
 #include "idk_ui.h"
 #include "idk_lightsource_CS/idk_lightsource_CS.h"
 #include "idk_camera_CS.h"
-#include "idk_character_controller.h"
+#include "idk_character_controller_CS/idk_character_controller.h"
 
 

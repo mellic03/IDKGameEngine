@@ -220,7 +220,7 @@ Physics_CS::giveCapsuleCollider( int obj_id )
 
     btCapsuleShape *shape = new btCapsuleShape(0.5f, 1.0f);
     btDefaultMotionState *motionstate = new btDefaultMotionState(
-        bullet3_tools::translate(btVec3_cast(transform.position()))
+        b3::translate(btVec3_cast(transform.position()))
     );
 
     btRigidBody *rigidbody = new btRigidBody(mass, motionstate, shape);

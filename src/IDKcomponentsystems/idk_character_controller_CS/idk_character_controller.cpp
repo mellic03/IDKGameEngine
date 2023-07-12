@@ -1,9 +1,9 @@
 #include "idk_character_controller.h"
-#include "idk_physics_CS/idk_physics_CS.h"
+#include "../idk_physics_CS/idk_physics_CS.h"
 
 
 void
-CharacterController_CS::controlMethod(int obj_id, std::function<void(int, idk::Engine &)> &lambda)
+CharacterController_CS::controlMethod(int obj_id, std::function<void(int, idk::Engine &)> lambda)
 {
     int controller_id = _controller_ids[obj_id];
     _controllers.get(controller_id).controlMethod = lambda;
@@ -17,14 +17,15 @@ CharacterController_CS::init( idk::Engine &engine )
 }
 
 
-
 void
 CharacterController_CS::onAssignment( int obj_id, idk::Engine &engine )
 {
     auto &pCS = engine.getCS<Physics_CS>("physics");
     pCS.giveCapsuleCollider(obj_id);
 
-    _controllers.add(CharacterController());
+    CharacterController controller;
+    controller.obj_id = obj_id;
+    _controller_ids[obj_id] = _controllers.add(controller);
 }
 
 
@@ -34,7 +35,7 @@ CharacterController_CS::stage_B( idk::Engine &engine )
     _controllers.for_each(
         [&engine](CharacterController &controller)
         {
-            controller.controlMethod(0, engine);
+            controller.controlMethod(controller.obj_id, engine);
         }
     );
 }

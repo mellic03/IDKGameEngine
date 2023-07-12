@@ -73,7 +73,6 @@ void idk::gl::bindTexture( GLenum target, GLuint texture )
 {
     GLCALL( glBindTexture(target, texture); )
 }
-
 // ---------------------------------------------------------------------------------------
 
 
@@ -155,6 +154,7 @@ idk::gl::clearColor( float r, float g, float b, float a )
 {
     GLCALL( glClearColor(r, g, b, a); )
 }
+
 
 void idk::gl::clear( GLbitfield mask )
 {

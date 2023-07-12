@@ -76,13 +76,13 @@ idk::Camera::pitch(float f)
 void
 idk::Camera::roll(float f)
 {
-    // _view = glm::rotate(_view, f, _front);
+    _view = glm::rotate(_view, f, _front);
 
-    // if (_noroll == false)
-    // {
-    //     _right = glm::inverse(_view) * _default_right;
-    //     _up = glm::inverse(_view) * _default_up;
-    // }
+    if (_noroll == false)
+    {
+        _right = glm::inverse(_view) * _default_right;
+        _up = glm::inverse(_view) * _default_up;
+    }
 }
 
 

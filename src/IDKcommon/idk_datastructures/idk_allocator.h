@@ -31,6 +31,7 @@ public:
     size_t                  size() const { return _objects.size() - _unnocupied_indices.size(); };
 
     void                    for_each(std::function<void(T&)>);
+    void                    for_each(std::function<void(int, T&)>);
     void                    for_each_pair(std::function<void(T&, T&)>);
 };
 
@@ -134,6 +135,20 @@ idk::Allocator<T>::for_each(std::function<void(T&)> lambda_fn)
             continue;
 
         lambda_fn(_objects[i]);
+    }
+}
+
+
+template <typename T>
+void
+idk::Allocator<T>::for_each(std::function<void(int, T&)> lambda_fn)
+{
+    for (size_t i=0; i<_objects.size(); i++)
+    {
+        if (_is_occupied[i] == false)
+            continue;
+
+        lambda_fn(i, _objects[i]);
     }
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "IDK_builtin_CS_common.h"
-
+#include "../IDK_builtin_CS_common.h"
+#include "controlmethods.h"
 
 
 class CharacterController
@@ -10,7 +10,7 @@ private:
 
 public:
     std::function<void(int, idk::Engine &)>      controlMethod;
-
+    int     obj_id;
 };
 
 
@@ -31,7 +31,7 @@ public:
     void        onGameObjectDeletion( int obj_id, idk::Engine & );
     void        onGameObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine & );
 
-    void        controlMethod(int obj_id, std::function<void(int, idk::Engine &)> &lambda);
+    void        controlMethod(int obj_id, std::function<void(int, idk::Engine &)> lambda);
 
 };
 

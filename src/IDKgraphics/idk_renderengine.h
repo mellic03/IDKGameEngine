@@ -36,6 +36,7 @@ private:
 
     // Shaders ------------------------------------------------
     /***/
+    GLuint                              _dirshadow_shader;
     GLuint                              _gb_geometry_shader;
     GLuint                              _screenquad_shader;
     GLuint                              _colorgrade_shader;
@@ -47,6 +48,8 @@ private:
     glUBO                               _UBO_pointlights;
     glUBO                               _UBO_spotlights;
     glUBO                               _UBO_dirlights;
+
+    glFramebuffer                       _dirlight_depthmap_buffer;
     // --------------------------------------------------------
 
     GLuint                              _quad_VAO, _quad_VBO;
@@ -57,6 +60,7 @@ private:
     Allocator<lightsource::Point>       _pointlight_allocator;
     Allocator<lightsource::Spot>        _spotlight_allocator;
     Allocator<lightsource::Dir>         _dirlight_allocator;
+    Allocator<GLuint>                   _dirlight_shadowmap_allocator;
 
 
     modelqueue_t        _model_draw_queue;
@@ -75,6 +79,8 @@ private:
     void                _update_UBO_spotlights();
     void                _update_UBO_dirlights();
     
+    void                _shadowpass_dirlights();
+
     void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );
     void                _render_screenquad( GLuint shader, glFramebuffer &in );
 

@@ -10,7 +10,7 @@ idk_physics::createBoxCollider( float mass, glm::vec3 pos, glm::vec3 size )
     BoxCollider box;
 
     box.shape = new btBoxShape(btVector3(size.x, size.y, size.z));
-    box.motionstate = new btDefaultMotionState(bullet3_tools::translate(btVector3(pos.x, pos.y, pos.z)));
+    box.motionstate = new btDefaultMotionState(b3::translate(btVector3(pos.x, pos.y, pos.z)));
 
     btVector3 local_inertia = {0, 0, 0};
     box.shape->calculateLocalInertia(mass, local_inertia);
@@ -28,7 +28,7 @@ idk_physics::createBoxCollider(  BoxColliderConfig config  )
 
     box.shape = new btBoxShape(btVector3(config.size.x, config.size.y, config.size.z));
 
-    box.motionstate = new btDefaultMotionState(bullet3_tools::translate(btVector3(config.pos.x, config.pos.y, config.pos.z)));
+    box.motionstate = new btDefaultMotionState(b3::translate(btVector3(config.pos.x, config.pos.y, config.pos.z)));
 
     btVector3 local_inertia = {0, 0, 0};
     box.shape->calculateLocalInertia(config.mass, local_inertia);

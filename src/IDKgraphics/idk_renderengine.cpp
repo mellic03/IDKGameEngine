@@ -83,7 +83,8 @@ idk::RenderEngine::_init_screenquad()
 
 idk::RenderEngine::RenderEngine( std::string windowname, size_t w, size_t h ):
 _res_x(w), _res_y(h),
-_gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
+_gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1),
+_dirlight_depthmap_buffer(1)
 {
     glInterface::init();
     _init_SDL_OpenGL(windowname, _res_x, _res_y);
@@ -94,6 +95,7 @@ _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
     RenderEngine::CUBE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::cube, "");
     RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
 
+    _dirshadow_shader = glInterface::compileProgram("assets/shaders/", "dirshadow.vs", "dirshadow.fs");
     _gb_geometry_shader = glInterface::compileProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
     _screenquad_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
     _colorgrade_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "colorgrade.fs");
@@ -103,6 +105,7 @@ _gb_geometry_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1)
     glInterface::genIdkFramebuffer(_res_x, _res_y, _gb_geometry_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _screenquad_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _colorgrade_buffer);
+    glInterface::genIdkFramebuffer(_res_x, _res_y, _dirlight_depthmap_buffer);
 
 
     _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
@@ -170,6 +173,7 @@ idk::RenderEngine::createSpotlight()
 int
 idk::RenderEngine::createDirlight()
 {
+    _dirlight_shadowmap_allocator.add();
     return _dirlight_allocator.add();
 }
 
@@ -263,6 +267,51 @@ idk::RenderEngine::_update_UBO_dirlights()
 }
 
 
+
+void
+idk::RenderEngine::_shadowpass_dirlights()
+{
+    glInterface::bindIdkFramebuffer(_res_x, _res_y, _dirlight_depthmap_buffer);
+    glInterface::useProgram(_dirshadow_shader);
+
+    float near_plane = 1.0f, far_plane = 50.0f;
+    glm::mat4 projection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, near_plane, far_plane);
+    glInterface::setUniform_mat4("un_dirlight_projection", projection);
+
+    RenderEngine &ren = *this;
+    auto &queue = _model_draw_queue;
+    auto &depthmaps = _dirlight_shadowmap_allocator;
+    auto &framebuffer = _dirlight_depthmap_buffer;
+
+    int i = 0;
+    dirlights().for_each(
+    [&i, &ren, &queue, &depthmaps, &framebuffer](int light_id, lightsource::Dir &light)
+    {
+        glm::mat4 view = glm::lookAt(
+           -glm::vec3(light.direction) + ren.getCamera().transform().position(),
+            glm::vec3(0.0f) + ren.getCamera().transform().position(),
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+        glInterface::setUniform_mat4("un_dirlight_view", view);
+
+        for (auto &[shader_id, vec]: queue)
+        {
+            for (auto &[model_id, transform]: vec)
+            {
+                drawmethods::draw_untextured(
+                    ren.modelManager().getModel(model_id),
+                    transform
+                );
+            }
+        }
+
+        depthmaps.get(light_id) = framebuffer.textures[0];
+    
+        i += 1;
+    });
+}
+
+
 void
 idk::RenderEngine::beginFrame()
 {
@@ -270,20 +319,24 @@ idk::RenderEngine::beginFrame()
 
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
     gl::clearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    GLCALL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); )
+    gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 
 void
 idk::RenderEngine::endFrame()
 {
-    glInterface::bindIdkFramebuffer(_res_x, _res_y, _gb_geometry_buffer);
-    idk::Camera &camera = getCamera();
-
     _update_UBO_camera();
     _update_UBO_pointlights();
     _update_UBO_spotlights();
     _update_UBO_dirlights();
+
+    _shadowpass_dirlights();
+
+
+    glInterface::bindIdkFramebuffer(_res_x, _res_y, _gb_geometry_buffer);
+    idk::Camera &camera = getCamera();
+
 
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
@@ -314,6 +367,8 @@ idk::RenderEngine::endFrame()
     }
     _untextured_model_queue.clear();
 
+    gl::bindVertexArray(0);
+
 
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
     _render_screenquad(_screenquad_shader, _gb_geometry_buffer, _screenquad_buffer);
@@ -332,6 +387,7 @@ idk::RenderEngine::resize( int w, int h )
     glInterface::genIdkFramebuffer(w, h, _gb_geometry_buffer);
     glInterface::genIdkFramebuffer(w, h, _screenquad_buffer);
     glInterface::genIdkFramebuffer(w, h, _colorgrade_buffer);
+    glInterface::genIdkFramebuffer(w, h, _dirlight_depthmap_buffer);
 
     getCamera().aspect(w, h);
 }

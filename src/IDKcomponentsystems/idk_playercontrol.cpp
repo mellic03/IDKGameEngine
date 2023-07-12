@@ -48,11 +48,11 @@ PlayerControl_CS::stage_A(idk::Engine &engine)
             res.m_hitPointWorld.getZ()
         );
 
-        glm::vec3 cam_pos = bullet3_tools::glmvec3_cast(pos);
-        glm::vec3 normal = bullet3_tools::glmvec3_cast(res.m_hitNormalWorld);
+        glm::vec3 cam_pos = b3::glmvec3_cast(pos);
+        glm::vec3 normal = b3::glmvec3_cast(res.m_hitNormalWorld);
         slopeforce = glm::vec3(0.0f, 1.0f, 0.0f) - normal;
     }
-    rigidbody->applyCentralForce(bullet3_tools::btVec3_cast(5.0f*slopeforce));
+    rigidbody->applyCentralForce(b3::btVec3_cast(5.0f*slopeforce));
 
 
     if (_current_player_obj == -1)
@@ -87,7 +87,7 @@ PlayerControl_CS::stage_A(idk::Engine &engine)
         force = force * glm::mat3(camera.view());
         force.y = 0.00001f;
         force = speed * glm::normalize(force);
-        rigidbody->applyCentralForce(bullet3_tools::btVec3_cast(force));
+        rigidbody->applyCentralForce(b3::btVec3_cast(force));
     }
 
     if (keylog.keyDown(idk_keycode::S))
@@ -96,14 +96,14 @@ PlayerControl_CS::stage_A(idk::Engine &engine)
         force = force * glm::mat3(camera.view());
         force.y = 0.00001f;
         force = speed * glm::normalize(force);
-        rigidbody->applyCentralForce(bullet3_tools::btVec3_cast(force));
+        rigidbody->applyCentralForce(b3::btVec3_cast(force));
     }
 
     if (keylog.keyDown(idk_keycode::A))
     {
         glm::vec3 force = glm::vec3(-speed, 0.0f, 0.0f);
         force = force * glm::mat3(camera.view());
-        rigidbody->applyCentralForce(bullet3_tools::btVec3_cast(force));
+        rigidbody->applyCentralForce(b3::btVec3_cast(force));
         roll_sway += speed * SWAY_SPEED_MOVE * engine.deltaTime();
     }
 
@@ -111,7 +111,7 @@ PlayerControl_CS::stage_A(idk::Engine &engine)
     {
         glm::vec3 force = glm::vec3(+speed, 0.0f, 0.0f);
         force = force * glm::mat3(camera.view());
-        rigidbody->applyCentralForce(bullet3_tools::btVec3_cast(force));
+        rigidbody->applyCentralForce(b3::btVec3_cast(force));
         roll_sway -= speed * SWAY_SPEED_MOVE * engine.deltaTime();
     }
 
@@ -134,7 +134,7 @@ PlayerControl_CS::stage_A(idk::Engine &engine)
     }
 
 
-    glm::vec3 rpos = bullet3_tools::glmvec3_cast(pos);
+    glm::vec3 rpos = b3::glmvec3_cast(pos);
     glm::vec3 campos = camera.transform().position();
     glm::vec3 dir = 10.0f * dtime * (rpos - campos);
     camera.transform().translate(dir);

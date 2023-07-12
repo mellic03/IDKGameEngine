@@ -8,6 +8,5 @@ uniform mat4 un_model;
 
 void main()
 {
-    vec4 pos = vec4(vsin_pos, 1.0);
-    gl_Position = un_projection * un_view * un_model * pos;
+    gl_Position = un_projection * un_view * un_model * vec4(vsin_pos, 1.0);
 }

@@ -15,7 +15,7 @@ int ENTRY(int argc, const char **argv)
 
     const int TRANSFORM     = engine.registerCS<Transform_CS>("transform");
     const int MODEL         = engine.registerCS<Model_CS>("model");
-    const int PLAYERCONTROL = engine.registerCS<PlayerControl_CS>("playercontrol");
+    const int CHARCONTROL   = engine.registerCS<CharacterController_CS>("charactercontrol");
     const int PHYSICS       = engine.registerCS<Physics_CS>("physics");
     const int GRABBABLE     = engine.registerCS<Grabbable_CS>("grabbable");
     const int POINTLIGHT    = engine.registerCS<PointLight_CS>("pointlight");
@@ -28,6 +28,7 @@ int ENTRY(int argc, const char **argv)
     auto &pointCS = engine.getCS<PointLight_CS>(POINTLIGHT);
     auto &spotCS = engine.getCS<SpotLight_CS>(SPOTLIGHT);
     auto &grabCS = engine.getCS<Grabbable_CS>(GRABBABLE);
+    auto &charCS = engine.getCS<CharacterController_CS>(CHARCONTROL);
 
     idk::RenderEngine &ren = engine.rengine();
     ren.modelManager().loadTextures("assets/textures/");
@@ -38,9 +39,10 @@ int ENTRY(int argc, const char **argv)
     GLuint skydome_shader = idk::glInterface::compileProgram("assets/shaders/", "gb_geom.vs", "skydome.fs");
 
     int player_obj = engine.createGameObject();
-    engine.giveComponents(player_obj, TRANSFORM, PHYSICS, CAMERA, PLAYERCONTROL);
+    engine.giveComponents(player_obj, TRANSFORM, PHYSICS, CAMERA, CHARCONTROL);
     transCS.translate(player_obj, glm::vec3(0.0f, 20.0f, 0.0f));
     physCS.giveCapsuleCollider(player_obj);
+    charCS.controlMethod(player_obj, controlmethods::player);
     // idk::lightsource::Point &pointlight = pointCS.getPointlight(player_obj);
     // pointlight.attenuation = glm::vec4(0.0f, 1.0f, 1.0f, 0.0f);
 
@@ -60,9 +62,7 @@ int ENTRY(int argc, const char **argv)
     // demos::cube_physics(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
     // demos::school(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
 
-    // int pointlight_obj = engine.createGameObject();
-    // engine.giveComponents(pointlight_obj, TRANSFORM, POINTLIGHT );
-    // transCS.translate(pointlight_obj, glm::vec3(10.0f, 15.0f, 0.0f));
+    ren.createDirlight();
 
 
     int spotlight_obj = engine.createGameObject();
