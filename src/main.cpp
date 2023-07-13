@@ -12,7 +12,7 @@
 /*
     What do on Thursday??
 
-    1. Implement deferred shading
+    1. Implement deferred shading -- DONE --
     2. Implement volumetrics
 
 
