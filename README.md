@@ -41,22 +41,55 @@ textureID vts0ID vts1ID vts2ID ...
 - [Bullet3](https://github.com/bulletphysics/bullet3)
 
 
-# Shader Uniform Buffers
-- Global Matrices
-    ```GLSL
-    layout (std140, binding = 2) uniform un_global_matrices
-    {
-        mat4 un_view;
-        mat4 un_projection;
-    
-    
-        //vec4 un_view_pos;
-        //vec4 un_view_dir;
-        mat4 un_view_pos_dir;
+# Shader Standardization
+- Texture uniforms follow the below naming convention:
+    - un_texture_0
+    - un_texture_1
+    - un_texture_2
+    - un_texture_n
 
-    };
+- Deferred lighting
+    ```GLSL
+    uniform sampler2D un_texture_0;  // albedo + specular
+    uniform sampler2D un_texture_1;  // position
+    uniform sampler2D un_texture_2;  // normal
+    uniform sampler2D un_texture_3;  // emission
     ```
 
+
+- Globally accessible UBO data
+    ```GLSL
+    // UBO_camera.glsl
+    // --------------------------------------------------
+    layout (std140, binding = 2) uniform UBO_camera_data
+    {
+        mat4 ubo_view;
+        mat4 ubo_projection;
+        vec3 ubo_viewpos;
+    };
+    // --------------------------------------------------
+
+    // UBO_lightsources.glsl
+    // --------------------------------------------------
+    layout (std140, binding = 3) uniform UBO_pointlights
+    {
+        int         ubo_num_pointlights;
+        PointLight  ubo_pointlights[MAX_POINTLIGHTS];
+    };
+
+    layout (std140, binding = 4) uniform UBO_spotlights
+    {
+        int         ubo_num_spotlights;
+        SpotLight   ubo_spotlights[MAX_SPOTLIGHTS];
+    };
+
+    layout (std140, binding = 5) uniform UBO_dirlights
+    {
+        int         ubo_num_dirlights;
+        DirLight    ubo_dirlights[MAX_DIRLIGHTS];
+    };
+    // --------------------------------------------------
+    ```
 
 
 # Model Loading

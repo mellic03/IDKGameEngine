@@ -88,12 +88,14 @@ vec3 spotlight_contribution( int idx, vec3 view_dir, vec3 position,
 
 
 
-float dirlight_shadow(int idx, vec4 fragpos_lightspace)
+float dirlight_shadow(int idx, vec3 position)
 {
+    vec4 fragpos_lightspace = un_dirlight_matrices[0] * vec4(position, 1.0);
+
     vec3 projCoords = fragpos_lightspace.xyz / fragpos_lightspace.w;
     projCoords = projCoords * 0.5 + 0.5; 
 
-    float closestDepth = texture(un_dirlight_depthmaps[idx], projCoords.xy).r;   
+    float closestDepth = texture(un_dirlight_depthmaps[0], projCoords.xy).r;   
     float currentDepth = projCoords.z;
 
     float bias = 0.005;
@@ -101,7 +103,6 @@ float dirlight_shadow(int idx, vec4 fragpos_lightspace)
 
     return shadow;
 }
-
 
 
 
@@ -125,36 +126,9 @@ vec3 dirlight_contribution( int idx, vec3 view_dir, vec3 position,
     vec3 diffuse  = albedo * diffuse_f * light_diffuse;
     vec3 specular = albedo * specular_f * 255*spec;
 
-    vec3 result = ambient + diffuse + specular;
+    float shadow = dirlight_shadow(idx, position);
+    vec3 result = ambient + shadow*(diffuse + specular);
 
     return result; 
 }
-
-
-
-// vec3 dirlight_contribution(int idx, vec3 view_dir, vec3 albedo, vec3 specularmap, float spec_exponent, vec4 lightspacepos)
-// {
-//     DirLight light = ubo_dirlights[idx];
-
-//     vec3 light_direction = light.direction.xyz;
-//     vec3 light_ambient = light.ambient.xyz;
-//     vec3 light_diffuse = light.diffuse.xyz;
-
-//     vec3 frag_to_light = normalize(-light_direction);
-//     float diffuse_f = max(dot(normal, frag_to_light), 0.0);
-
-//     vec3 halfway_dir = normalize(frag_to_light + view_dir);  
-//     float specular_f = pow(max(dot(normal, halfway_dir), 0.0), spec_exponent);
-
-
-//     vec3 ambient  = albedo * light_ambient;
-//     vec3 diffuse  = albedo * diffuse_f * light_diffuse;
-//     vec3 specular = albedo * specular_f * 255*specularmap;
-
-//     float shadow = dirlight_shadow(idx, lightspacepos);
-
-//     vec3 result = ambient + shadow*(diffuse + specular);
-
-//     return result; 
-// }
 

@@ -15,7 +15,6 @@
     1. Implement deferred shading -- DONE --
     2. Implement volumetrics
 
-
 */
 
 
@@ -62,8 +61,6 @@ int ENTRY(int argc, const char **argv)
     transCS.translate(player_obj, glm::vec3(0.0f, 20.0f, 0.0f));
     physCS.giveCapsuleCollider(player_obj);
     charCS.controlMethod(player_obj, controlmethods::player);
-    // idk::lightsource::Point &pointlight = pointCS.getPointlight(player_obj);
-    // pointlight.attenuation = glm::vec4(0.0f, 1.0f, 1.0f, 0.0f);
 
     int skydome_obj = engine.createGameObject();
     int skydome_model = ren.modelManager().loadOBJ("assets/models/", "skydome.obj", "skydome.mtl");
@@ -83,12 +80,9 @@ int ENTRY(int argc, const char **argv)
 
     ren.createDirlight();
 
-
     int spotlight_obj = engine.createGameObject();
     engine.giveComponents(spotlight_obj, TRANSFORM, SPOTLIGHT);
     glm::vec3 last_dir = ren.getCamera().front();
-
-
 
     while (engine.running())
     {

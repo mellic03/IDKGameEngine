@@ -27,14 +27,11 @@ struct DirLight
     vec4 diffuse;
 };
 
-
 layout (std140, binding = 3) uniform UBO_pointlights
 {
     int         ubo_num_pointlights;
     PointLight  ubo_pointlights[MAX_POINTLIGHTS];
-
 };
-
 
 layout (std140, binding = 4) uniform UBO_spotlights
 {
@@ -42,12 +39,11 @@ layout (std140, binding = 4) uniform UBO_spotlights
     SpotLight   ubo_spotlights[MAX_SPOTLIGHTS];
 };
 
-
 layout (std140, binding = 5) uniform UBO_dirlights
 {
     int         ubo_num_dirlights;
     DirLight    ubo_dirlights[MAX_DIRLIGHTS];
 };
 uniform sampler2D   un_dirlight_depthmaps[MAX_DIRLIGHTS];
-uniform mat4        un_dirlight_lightspacematrices[MAX_DIRLIGHTS];
+uniform mat4        un_dirlight_matrices[MAX_DIRLIGHTS];
 

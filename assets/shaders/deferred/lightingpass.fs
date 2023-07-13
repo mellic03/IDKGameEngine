@@ -5,6 +5,8 @@ layout (location = 0) out vec4 fsout_frag_color;
 #include "UBO_lightsources.glsl"
 
 in vec2 fsin_texcoords;
+in vec4 fsin_fragpos_dirlightspace[10];
+
 
 uniform sampler2D un_texture_0;
 uniform sampler2D un_texture_1;
@@ -30,14 +32,14 @@ void main()
     vec3 position   = texture( un_texture_1, fsin_texcoords ).xyz;
     vec3 normal     = texture( un_texture_2, fsin_texcoords ).xyz;
     vec3 emission   = texture( un_texture_3, fsin_texcoords ).xyz;
-
     vec3 view_dir = normalize(un_viewpos - position);
 
     vec3 color = vec3(0.0);
-    // for (int i = 0; i < ubo_num_pointlights; i++)
-    // {
-    //     color += pointlight_contribution(i, view_dir, albedo, specular, 32.0);
-    // }
+
+    for (int i = 0; i < ubo_num_pointlights; i++)
+    {
+        color += pointlight_contribution(i, view_dir, position, normal, albedo, specular, 32.0);
+    }
 
     for (int i = 0; i < ubo_num_spotlights; i++)
     {
@@ -46,17 +48,12 @@ void main()
 
     for (int i = 0; i < ubo_num_dirlights; i++)
     {
-        color += dirlight_contribution(i, view_dir, position, normal, albedo, specular, 32.0);
+        color += dirlight_contribution(
+            i,       view_dir,   position,
+            normal,  albedo,     specular,
+            32.0
+        );
     }
-
-    // for (int i = 0; i < ubo_num_dirlights; i++)
-    // {
-    //     color += dirlight_contribution(
-    //         i, view_dir, albedo, specular_map,
-    //         un_specular_exponent,
-    //         fsin_fragpos_dirlightspace[i]
-    //     );
-    // }
 
     fsout_frag_color = vec4(color, 1.0);
 }

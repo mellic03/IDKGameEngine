@@ -21,8 +21,8 @@ idk::lightsource::Spot::Spot()
 
 idk::lightsource::Dir::Dir()
 {
-    direction               = glm::normalize(glm::vec4(-1.0f, -2.0f, 0.0, 0.0f));
-    ambient                 = glm::vec4(0.01f);
-    diffuse                 = glm::vec4(1.2f, 1.0f, 1.0f, 0.0f);
+    direction               = glm::normalize(glm::vec4(1.0f, -2.0f, 0.0, 0.0f));
+    ambient                 = glm::vec4(0.0f);
+    diffuse                 = glm::vec4(0.01f, 0.01f, 0.012f, 0.0f);
 }
 

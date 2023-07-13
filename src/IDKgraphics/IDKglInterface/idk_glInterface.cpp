@@ -241,8 +241,8 @@ idk::glInterface::useProgram(GLuint shader_id)
 void
 idk::glInterface::bindIdkFramebuffer( glFramebuffer &framebuffer )
 {
-    gl::viewport(0, 0, framebuffer.width, framebuffer.height);
     gl::bindFramebuffer(GL_FRAMEBUFFER, framebuffer.FBO);
+    gl::viewport(0, 0, framebuffer.width, framebuffer.height);
 }
 
 

@@ -83,8 +83,9 @@ idk::RenderEngine::_init_screenquad()
 
 idk::RenderEngine::RenderEngine( std::string windowname, size_t w, size_t h ):
 _res_x(w), _res_y(h),
-_deferred_geometrypass_buffer(4), _screenquad_buffer(1), _colorgrade_buffer(1),
-_dirlight_depthmap_buffer(1)
+_deferred_geometrypass_buffer(4),   _deferred_dirlight_volumetrics_buffer(1),
+_fxaa_buffer(1),                    _colorgrade_buffer(1),
+_dirlight_depthmap_buffer(1),       _final_buffer(1)
 {
     glInterface::init();
     _init_SDL_OpenGL(windowname, _res_x, _res_y);
@@ -96,8 +97,10 @@ _dirlight_depthmap_buffer(1)
     RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
 
     glInterface::genIdkFramebuffer(_res_x, _res_y, _deferred_geometrypass_buffer);
-    glInterface::genIdkFramebuffer(_res_x, _res_y, _screenquad_buffer);
+    glInterface::genIdkFramebuffer(_res_x, _res_y, _deferred_dirlight_volumetrics_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _colorgrade_buffer);
+    glInterface::genIdkFramebuffer(_res_x, _res_y, _fxaa_buffer);
+    glInterface::genIdkFramebuffer(_res_x, _res_y, _final_buffer);
     glInterface::genIdkFramebuffer(2048, 2048, _dirlight_depthmap_buffer);
 
     _deferred_geometrypass_shader = glInterface::compileProgram(
@@ -106,11 +109,15 @@ _dirlight_depthmap_buffer(1)
     _deferred_lightingpass_shader = glInterface::compileProgram(
         "assets/shaders/deferred/", "lightingpass.vs", "lightingpass.fs"
     );
-
-    _dirshadow_shader = glInterface::compileProgram("assets/shaders/", "dirshadow.vs", "dirshadow.fs");
-    _screenquad_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "screenquad.fs");
+    _deferred_dirlight_volumetrics_shader = glInterface::compileProgram(
+        "assets/shaders/deferred/", "screenquad.vs", "volumetric_dirlight.fs"
+    );
+    _additive_shader = glInterface::compileProgram(
+        "assets/shaders/", "screenquad.vs", "postprocess/additive.fs"
+    );
     _colorgrade_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
     _fxaa_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "postprocess/fxaa.fs");
+    _dirshadow_shader = glInterface::compileProgram("assets/shaders/", "dirshadow.vs", "dirshadow.fs");
     solid_shader = glInterface::compileProgram("assets/shaders/", "vsin_pos_only.vs", "solid.fs");
 
     _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
@@ -125,6 +132,9 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFrame
 {
     glInterface::bindIdkFramebuffer(out);
     glInterface::useProgram(shader);
+
+    glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
+    glInterface::setUniform_mat4("un_dirlight_matrices[0]", _dirlight_lightspacematrix_allocator.get(0));
 
     for (int i=0; i < in.textures.size(); i++)
     {
@@ -147,6 +157,41 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in )
 
     for (int i=0; i < in.textures.size(); i++)
         glInterface::setUniform_texture("un_texture_" + std::to_string(i), in.textures[0]);
+
+    gl::bindVertexArray(_quad_VAO);
+    gl::drawArrays(GL_TRIANGLES, 0, 6);
+
+    glInterface::freeTextureUnitIDs();
+}
+
+
+void
+idk::RenderEngine::_render_screenquad( GLuint shader, GLuint tex0, GLuint tex1 )
+{
+    glInterface::unbindIdkFramebuffer(_res_x, _res_y);
+    glInterface::useProgram(shader);
+
+    glInterface::setUniform_texture("un_texture_0", tex0);
+    glInterface::setUniform_texture("un_texture_1", tex1);
+
+    gl::bindVertexArray(_quad_VAO);
+    gl::drawArrays(GL_TRIANGLES, 0, 6);
+
+    glInterface::freeTextureUnitIDs();
+}
+
+
+void
+idk::RenderEngine::_render_screenquad( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out )
+{
+    glInterface::bindIdkFramebuffer(out);
+    glInterface::useProgram(shader);
+
+    glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
+    glInterface::setUniform_mat4("un_dirlight_matrices[0]", _dirlight_lightspacematrix_allocator.get(0));
+
+    glInterface::setUniform_texture("un_texture_0", tex0);
+    glInterface::setUniform_texture("un_texture_1", tex1);
 
     gl::bindVertexArray(_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
@@ -217,6 +262,7 @@ idk::RenderEngine::_shadowpass_spotlights()
 void
 idk::RenderEngine::_shadowpass_dirlights()
 {
+    glInterface::clearIdkFramebuffer(_dirlight_depthmap_buffer);
     glInterface::bindIdkFramebuffer(_dirlight_depthmap_buffer);
     glInterface::useProgram(_dirshadow_shader);
 
@@ -258,8 +304,6 @@ idk::RenderEngine::_shadowpass_dirlights()
 
         i += 1;
     });
-
-    glInterface::clearIdkFramebuffer(_dirlight_depthmap_buffer);
 }
 
 
@@ -365,13 +409,9 @@ idk::RenderEngine::endFrame()
 
     // Deferred geometry pass --------------------------------------------
     glInterface::bindIdkFramebuffer(_deferred_geometrypass_buffer);
-
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
         glInterface::useProgram(shader_id);
-
-        // glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
-        // glInterface::setUniform_mat4("un_dirlight_lightspacematrices[0]", _dirlight_lightspacematrix_allocator.get(0));
 
         for (auto &[model_id, transform]: vec)
         {
@@ -385,38 +425,47 @@ idk::RenderEngine::endFrame()
         vec.clear();
     }
     _model_draw_queue.clear();
-
-    // for (auto &[shader_id, vec]: _untextured_model_queue)
-    // {
-    //     glInterface::useProgram(shader_id);
-    //     for (auto &[model_id, transform]: vec)
-    //     {
-    //         drawmethods::draw_untextured(
-    //             modelManager().getModel(model_id),
-    //             transform,
-    //             modelManager().getMaterials()
-    //         );
-    //         glInterface::freeTextureUnitIDs();
-    //     }
-    //     vec.clear();
-    // }
-    // _untextured_model_queue.clear();
     gl::bindVertexArray(0);
     // -------------------------------------------------------------------
 
-
     // Deferred lighting pass --------------------------------------------
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
-    _render_screenquad(_deferred_lightingpass_shader, _deferred_geometrypass_buffer, _screenquad_buffer);
-    _render_screenquad(_fxaa_shader, _screenquad_buffer, _colorgrade_buffer);
-    _render_screenquad(_colorgrade_shader, _colorgrade_buffer);
+    
+    // Blinn-Phong lighting
+    _render_screenquad(
+        _deferred_lightingpass_shader,
+        _deferred_geometrypass_buffer,
+        _final_buffer
+    );
+
+    // Volumetric directional lights
+    _render_screenquad(
+        _deferred_dirlight_volumetrics_shader,
+        _deferred_geometrypass_buffer,
+        _deferred_dirlight_volumetrics_buffer
+    );
+
+    // Combine Blinn-Phong and volumetrics    
+    _render_screenquad(
+        _additive_shader,
+        _final_buffer.textures[0],
+        _deferred_dirlight_volumetrics_buffer.textures[0],
+        _colorgrade_buffer
+    );
+
+    // Post processing
+    _render_screenquad(_colorgrade_shader, _colorgrade_buffer, _fxaa_buffer);
+    _render_screenquad(_fxaa_shader, _fxaa_buffer);
+
     gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
     // -------------------------------------------------------------------
 
     glInterface::clearIdkFramebuffers(
         _deferred_geometrypass_buffer,
-        _screenquad_buffer,
-        _colorgrade_buffer
+        _deferred_dirlight_volumetrics_buffer,
+        _fxaa_buffer,
+        _colorgrade_buffer,
+        _final_buffer
     );
 }
 
@@ -428,8 +477,10 @@ idk::RenderEngine::resize( int w, int h )
     _res_y = h;
 
     glInterface::genIdkFramebuffer(w, h, _deferred_geometrypass_buffer);
-    glInterface::genIdkFramebuffer(w, h, _screenquad_buffer);
+    glInterface::genIdkFramebuffer(w, h, _deferred_dirlight_volumetrics_buffer);
     glInterface::genIdkFramebuffer(w, h, _colorgrade_buffer);
+    glInterface::genIdkFramebuffer(w, h, _fxaa_buffer);
+    glInterface::genIdkFramebuffer(w, h, _final_buffer);
 
     getCamera().aspect(w, h);
 }

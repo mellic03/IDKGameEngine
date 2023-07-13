@@ -30,18 +30,24 @@ private:
     // idk::glFramebuffers ------------------------------------
     /***/
     glFramebuffer                       _deferred_geometrypass_buffer;
-    glFramebuffer                       _screenquad_buffer;
+    glFramebuffer                       _deferred_dirlight_volumetrics_buffer;
     glFramebuffer                       _colorgrade_buffer;
+    glFramebuffer                       _fxaa_buffer;
+    glFramebuffer                       _final_buffer;
+
     // --------------------------------------------------------
 
     // Shaders ------------------------------------------------
     /***/
     GLuint                              _deferred_geometrypass_shader;
     GLuint                              _deferred_lightingpass_shader;
+    GLuint                              _deferred_dirlight_volumetrics_shader;
 
     GLuint                              _dirshadow_shader;
     GLuint                              _screenquad_shader;
+
     GLuint                              _colorgrade_shader;
+    GLuint                              _additive_shader;
     GLuint                              _fxaa_shader;
     // --------------------------------------------------------
 
@@ -89,6 +95,8 @@ private:
 
     void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );
     void                _render_screenquad( GLuint shader, glFramebuffer &in );
+    void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1 );
+    void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
 
     // void                _bind_material( idk::Material & );
     // void                _draw_model( idk::Model &, idk::Transform & );
