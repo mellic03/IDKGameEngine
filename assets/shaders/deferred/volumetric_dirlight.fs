@@ -27,9 +27,11 @@ void main()
 {
     vec3  fragpos = texture( un_texture_1, fsin_texcoords ).xyz;
     float fragdist = length(fragpos - un_viewpos);    
-    vec3  dir = STEP_SIZE * normalize(fragpos - un_viewpos);
+    vec3  dir = normalize(fragpos - un_viewpos);
 
-    vec3 ray_pos   = un_viewpos;
+    float step_size = 0.1;
+
+    vec3 ray_pos = un_viewpos;
     float ray_dist = 0.0;
     vec3 accum = vec3(0.0);
 
@@ -45,8 +47,9 @@ void main()
             break;
         }
 
-        ray_pos += dir;
-        ray_dist += STEP_SIZE;
+        step_size += 0.01;
+        ray_pos += step_size * dir;
+        ray_dist += step_size;
     }
 
     fsout_frag_color = vec4(accum, 1.0);

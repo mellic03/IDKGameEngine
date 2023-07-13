@@ -10,10 +10,12 @@
 
 
 /*
-    What do on Thursday??
+    What do on Friday??
 
-    1. Implement deferred shading -- DONE --
-    2. Implement volumetrics
+    1. Write a guassian blur shader
+    2. Blur volumetrics using guassian blur
+    3. Implement hardware blur
+    4. Blur volumetrics using hardware blur
 
 */
 
