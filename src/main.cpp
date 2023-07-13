@@ -46,8 +46,16 @@ int ENTRY(int argc, const char **argv)
     ren.getCamera().ylock(true);
     ren.getCamera().transform().translate(glm::vec3(0.0f, 0.0f, 20.0f));
 
-    GLuint default_shader = idk::glInterface::compileProgram("assets/shaders/", "gb_geom.vs", "gb_geom.fs");
-    GLuint skydome_shader = idk::glInterface::compileProgram("assets/shaders/", "gb_geom.vs", "skydome.fs");
+    GLuint default_geometrypass = idk::glInterface::compileProgram(
+        "assets/shaders/deferred/", "geometrypass.vs", "geometrypass.fs"
+    );
+    GLuint default_lightingpass = idk::glInterface::compileProgram(
+        "assets/shaders/deferred/", "lightingpass.vs", "lightingpass.fs"
+    );
+    GLuint skydome_shader = idk::glInterface::compileProgram(
+        "assets/shaders/", "deferred/geometrypass.vs", "skydome.fs"
+    );
+
 
     int player_obj = engine.createGameObject();
     engine.giveComponents(player_obj, TRANSFORM, PHYSICS, CAMERA, CHARCONTROL);
@@ -68,7 +76,7 @@ int ENTRY(int argc, const char **argv)
     engine.giveComponents(terrain_obj, TRANSFORM, MODEL, PHYSICS);
     physCS.giveMeshCollider(terrain_obj, ren.modelManager().getModel(terrain_model).vertices);
     physCS.drawMeshColliders(true);
-    modelCS.useModel(terrain_obj, terrain_model, default_shader);
+    modelCS.useModel(terrain_obj, terrain_model, default_geometrypass);
 
     // demos::cube_physics(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);
     // demos::school(engine, TRANSFORM, MODEL, PHYSICS, GRABBABLE);

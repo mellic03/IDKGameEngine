@@ -30,7 +30,7 @@ idk::drawmethods::draw_textured( Model &model, Transform &transform, Allocator<M
 
 
 void
-idk::drawmethods::draw_untextured( Model &model, Transform &transform )
+idk::drawmethods::draw_untextured( Model &model, Transform &transform, Allocator<Material> &materials )
 {
     glm::mat4 model_mat = transform.modelMatrix();
     glInterface::setUniform_mat4("un_model", model_mat);

@@ -85,7 +85,7 @@ idk::glInterface::compileProgram( std::string root, std::string vs, std::string 
     std::string vert_src = _parse_shader_source(root, vs);
     std::string frag_src = _parse_shader_source(root, fs);
 
-    auto compile_shader = [](std::string &src, GLenum type)
+    auto compile_shader = [](std::string &src, GLenum type, std::string root, std::string stem)
     {
         const char *str = src.c_str();
         GLuint shader_id = glCreateShader(type);
@@ -101,6 +101,8 @@ idk::glInterface::compileProgram( std::string root, std::string vs, std::string 
             char *message = (char *)alloca(length * sizeof(char));
             GLCALL( glGetShaderInfoLog(shader_id, length, &length, message); )
 
+            std::cout << "File " << root + stem << std::endl;
+
             std::cout << "Failed to compile "
                       << (type == GL_VERTEX_SHADER ? "vertex" : "fragment")
                       << " shader\n" << std::endl; 
@@ -111,8 +113,8 @@ idk::glInterface::compileProgram( std::string root, std::string vs, std::string 
         return shader_id;
     };
 
-    GLuint vert_id = compile_shader(vert_src, GL_VERTEX_SHADER);
-    GLuint frag_id = compile_shader(frag_src, GL_FRAGMENT_SHADER);
+    GLuint vert_id = compile_shader(vert_src, GL_VERTEX_SHADER, root, vs);
+    GLuint frag_id = compile_shader(frag_src, GL_FRAGMENT_SHADER, root, fs);
 
     GLuint program_id = glCreateProgram();
     GLCALL( glAttachShader(program_id, vert_id); )
@@ -160,17 +162,17 @@ idk::glInterface::genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint 
 {
     GLCALL( glDeleteFramebuffers(1, &FBO); )
     GLCALL( glDeleteRenderbuffers(1, &RBO); )
-    GLCALL( glDeleteTextures(textures.size(), &textures[0]); )
+    gl::deleteTextures(textures.size(), &(textures[0]));
 
     GLCALL( glGenFramebuffers(1, &FBO); )
     GLCALL( glGenRenderbuffers(1, &RBO); )
-    GLCALL( glGenTextures(textures.size(), &textures[0]); )
+    gl::genTextures(textures.size(), &(textures[0]));
 
-    GLCALL( glBindFramebuffer(GL_FRAMEBUFFER, FBO); )
+    gl::bindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-    for (size_t i=0; i<textures.size(); i++)
+    for (int i=0; i<textures.size(); i++)
     {
-        GLCALL( glBindTexture(GL_TEXTURE_2D, textures[i]); )
+        gl::bindTexture(GL_TEXTURE_2D, textures[i]);
         GLCALL( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL); )
         GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); )
         GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); )
@@ -178,9 +180,9 @@ idk::glInterface::genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint 
     }
 
     idk::vector<GLuint> attachments(textures.size());
-    for (size_t i=0; i<textures.size(); i++)
+    for (int i=0; i<textures.size(); i++)
         attachments[i] = GL_COLOR_ATTACHMENT0 + i;
-    GLCALL( glDrawBuffers(textures.size(), &attachments[0]); )
+    GLCALL( glDrawBuffers(textures.size(), &(attachments[0])); )
      
     GLCALL( glBindRenderbuffer(GL_RENDERBUFFER, RBO); )
     GLCALL( glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height); )
@@ -232,7 +234,7 @@ idk::glInterface::useProgram(GLuint shader_id)
 {
     freeTextureUnitIDs();
     _active_shader_id = shader_id;
-    GLCALL( glUseProgram(_active_shader_id); )
+    gl::useProgram(_active_shader_id);
 }
 
 
@@ -241,18 +243,29 @@ idk::glInterface::bindIdkFramebuffer( glFramebuffer &framebuffer )
 {
     gl::viewport(0, 0, framebuffer.width, framebuffer.height);
     gl::bindFramebuffer(GL_FRAMEBUFFER, framebuffer.FBO);
-    gl::clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 
 void
 idk::glInterface::unbindIdkFramebuffer( int width, int height )
 {
-    gl::viewport(0, 0, width, height);
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
+void
+idk::glInterface::clearIdkFramebuffer( glFramebuffer &fb )
+{
+    gl::bindFramebuffer(GL_FRAMEBUFFER, fb.FBO);
     gl::clearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
+}
+
+
+void
+idk::glInterface::clearIdkFramebuffers(  )
+{
+
 }
 
 

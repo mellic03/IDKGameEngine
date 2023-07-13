@@ -17,7 +17,7 @@
 
 namespace idk { class RenderEngine; };
 
-#define modelqueue_t std::unordered_map<GLuint, idk::vector<idk::pair<int, idk::Transform>>>
+#define modelqueue_t   std::unordered_map<GLuint, idk::vector<idk::pair<int, idk::Transform>>>
 
 class idk::RenderEngine
 {
@@ -29,15 +29,17 @@ private:
 
     // idk::glFramebuffers ------------------------------------
     /***/
-    glFramebuffer                       _gb_geometry_buffer;
+    glFramebuffer                       _deferred_geometrypass_buffer;
     glFramebuffer                       _screenquad_buffer;
     glFramebuffer                       _colorgrade_buffer;
     // --------------------------------------------------------
 
     // Shaders ------------------------------------------------
     /***/
+    GLuint                              _deferred_geometrypass_shader;
+    GLuint                              _deferred_lightingpass_shader;
+
     GLuint                              _dirshadow_shader;
-    GLuint                              _gb_geometry_shader;
     GLuint                              _screenquad_shader;
     GLuint                              _colorgrade_shader;
     GLuint                              _fxaa_shader;

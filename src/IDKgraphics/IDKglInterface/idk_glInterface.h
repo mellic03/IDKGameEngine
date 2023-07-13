@@ -20,6 +20,10 @@ namespace idk::glInterface
     void                    genIdkFramebuffer(int width, int height, glFramebuffer &);
     void                    bindIdkFramebuffer( glFramebuffer & );
     void                    unbindIdkFramebuffer(int width, int height);
+    
+    void                                clearIdkFramebuffer( glFramebuffer &fb );
+    void                                clearIdkFramebuffers();
+    template <typename... Args> void    clearIdkFramebuffers( glFramebuffer &fb, Args... );
 
     GLuint                  compileProgram(std::string root, std::string vs, std::string fs);
     void                    useProgram(GLuint shader_id);
@@ -46,3 +50,16 @@ namespace idk::glInterface
     void                    setUniform_mat4(GLint loc, glm::mat4);
 
 };
+
+
+
+
+
+template <typename ...Args>
+void
+idk::glInterface::clearIdkFramebuffers( glFramebuffer &fb, Args... rest )
+{
+    clearIdkFramebuffer(fb);
+    clearIdkFramebuffers(rest...);
+}
+

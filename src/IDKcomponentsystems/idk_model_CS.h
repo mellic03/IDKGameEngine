@@ -7,7 +7,6 @@
 class Model_CS: public idk::ComponentSystem
 {
 private:
-    GLuint              _default_shader;
     std::vector<int>    _model_ids;
     std::vector<GLuint> _shader_ids;
 
