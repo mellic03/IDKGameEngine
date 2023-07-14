@@ -126,8 +126,8 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFrame
     glInterface::bindIdkFramebuffer(out);
     glInterface::useProgram(shader);
 
-    // glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
-    // glInterface::setUniform_mat4("un_dirlight_matrices[0]", _dirlight_lightspacematrix_allocator.get(0));
+    glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
+    glInterface::setUniform_mat4("un_dirlight_matrices[0]", _dirlight_lightspacematrix_allocator.get(0));
 
     for (int i=0; i < in.textures.size(); i++)
     {
@@ -180,8 +180,8 @@ idk::RenderEngine::_render_screenquad( GLuint shader, GLuint tex0, GLuint tex1, 
     glInterface::bindIdkFramebuffer(out);
     glInterface::useProgram(shader);
 
-    // glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
-    // glInterface::setUniform_mat4("un_dirlight_matrices[0]", _dirlight_lightspacematrix_allocator.get(0));
+    glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
+    glInterface::setUniform_mat4("un_dirlight_matrices[0]", _dirlight_lightspacematrix_allocator.get(0));
 
     glInterface::setUniform_texture("un_texture_0", tex0);
     glInterface::setUniform_texture("un_texture_1", tex1);
@@ -389,14 +389,14 @@ idk::RenderEngine::beginFrame()
 void
 idk::RenderEngine::endFrame()
 {
-    // _shadowpass_pointlights();
-    // _shadowpass_spotlights();
-    // _shadowpass_dirlights();
+    _shadowpass_pointlights();
+    _shadowpass_spotlights();
+    _shadowpass_dirlights();
 
-    // _update_UBO_camera();
-    // _update_UBO_pointlights();
-    // _update_UBO_spotlights();
-    // _update_UBO_dirlights();
+    _update_UBO_camera();
+    _update_UBO_pointlights();
+    _update_UBO_spotlights();
+    _update_UBO_dirlights();
 
     idk::Camera &camera = getCamera();
 
