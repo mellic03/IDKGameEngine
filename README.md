@@ -31,17 +31,17 @@ textureID vts0ID vts1ID vts2ID ...
  -->
 
 
+# IDK Game Engine
 
 
-#  Dependencies
+##  Dependencies
 - [OpenGL Mathematics (glm)](https://github.com/g-truc/glm)
 - [OpenGL Extension Wrangler (GLEW)](https://github.com/nigels-com/glew)
 - [SDL2](https://github.com/libsdl-org/SDL)
 - [SDL_image](https://github.com/libsdl-org/SDL_image)
-- [Bullet3](https://github.com/bulletphysics/bullet3)
 
 
-# Shader Standardization
+## Shader Standardization
 - Texture uniforms follow the below naming convention:
     - un_texture_0
     - un_texture_1
@@ -92,7 +92,7 @@ textureID vts0ID vts1ID vts2ID ...
     ```
 
 
-# Model Loading
+## Model Loading
 Before loading any models, all textures to be used must first be loaded with `idk::ModelManager::loadTextures( rootpath )`. Where `rootpath` is a directory containing image files.
 
 Afterwards, either .obj + .mtl files or native .mdl files can be loaded using `idk::ModelManager::loadOBJ()` or `idk::ModelManager::loadMDL()` respectively. \
@@ -136,10 +136,10 @@ int main()
 ```
 
 
-# Game Objects
+## Game Objects
 Like models, game objects are represented as integers. Calling `idk::Engine::createGameObject()` will return an integer which can be used to reference an object.
 
-# Component Systems
+## Component Systems
 IDK Engine uses an Entity Component System (ECS) to manage game object properties.
 
 
