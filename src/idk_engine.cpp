@@ -77,6 +77,12 @@ idk::Engine::_idk_CS_stage_A()
         idk::ComponentSystem *CS = _idk_componentsystems[i];
         CS->stage_A(*this);
     }
+
+    for (size_t i=0; i<_idk_modules.size(); i++)
+    {
+        idk::Module *mod = _idk_modules[i];
+        mod->stage_A(*this);
+    }
 }
 
 
@@ -87,6 +93,12 @@ idk::Engine::_idk_CS_stage_B()
     {
         idk::ComponentSystem *CS = _idk_componentsystems[i];
         CS->stage_B(*this);
+    }
+
+    for (size_t i=0; i<_idk_modules.size(); i++)
+    {
+        idk::Module *mod = _idk_modules[i];
+        mod->stage_B(*this);
     }
 }
 

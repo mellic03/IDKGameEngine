@@ -24,6 +24,9 @@ private:
     glm::vec2                                   _mouse_position;
     bool                                        _mouse_captured;
 
+    std::vector<idk::Module *>                  _idk_modules;
+    std::unordered_map<std::string, uint>       _idk_module_ids;
+
     idk::Allocator<int>                         _gameobjects;
     std::vector<std::vector<int>>               _component_matrix; // v[object_id][cs_id]
     std::vector<idk::ComponentSystem *>         _idk_componentsystems;
@@ -76,10 +79,50 @@ public:
     bool                                        hasComponent( int obj_id, int component_id );
     bool                                        hasComponent( int obj_id, std::string component_name );
 
-    template <typename module_t> int            registerCS( std::string name );
-    template <typename module_t> module_t &     getCS( int component_id );
-    template <typename module_t> module_t &     getCS( std::string name );
+    template <typename module_t> int            registerModule( std::string name );
+    template <typename module_t> module_t &     getModule( int module_id );
+    template <typename module_t> module_t &     getModule( std::string name );
+
+    template <typename comp_t> int              registerCS( std::string name );
+    template <typename comp_t> comp_t &         getCS( int component_id );
+    template <typename comp_t> comp_t &         getCS( std::string name );
 };
+
+
+
+
+template <typename module_t>
+int
+idk::Engine::registerModule( std::string name )
+{   
+    int module_id = _idk_modules.size();
+    _idk_modules.push_back(new module_t());
+    _idk_modules.back()->base_init(_idk_modules.size()-1, name);
+    _idk_modules.back()->init(*this);
+    _idk_module_ids[name] = module_id;
+    return module_id;
+}
+
+
+template <typename module_t>
+module_t &
+idk::Engine::getModule( int component_id )
+{   
+    return *dynamic_cast<module_t *>(_idk_modules[component_id]);
+}
+
+
+template <typename module_t>
+module_t &
+idk::Engine::getModule( std::string name )
+{
+    int module_id = _idk_module_ids[name];
+    return *dynamic_cast<module_t *>(_idk_modules[module_id]);
+}
+
+
+
+
 
 
 template <typename... Args>
@@ -91,12 +134,12 @@ idk::Engine::giveComponents( int obj_id, int first, Args... rest )
 }
 
 
-template <typename module_t>
+template <typename comp_t>
 int
 idk::Engine::registerCS( std::string name )
 {   
     int cs_id = _idk_componentsystems.size();
-    _idk_componentsystems.push_back(new module_t());
+    _idk_componentsystems.push_back(new comp_t());
     _idk_componentsystems.back()->base_init(_idk_componentsystems.size()-1, name);
     _idk_componentsystems.back()->init(*this);
     _idk_componentsystem_ids[name] = cs_id;
@@ -104,19 +147,19 @@ idk::Engine::registerCS( std::string name )
 }
 
 
-template <typename module_t>
-module_t &
+template <typename comp_t>
+comp_t &
 idk::Engine::getCS( int component_id )
 {   
-    return *dynamic_cast<module_t *>(_idk_componentsystems[component_id]);
+    return *dynamic_cast<comp_t *>(_idk_componentsystems[component_id]);
 }
 
 
-template <typename module_t>
-module_t &
+template <typename comp_t>
+comp_t &
 idk::Engine::getCS( std::string name )
 {
     int cs_id = _idk_componentsystem_ids[name];
-    return *dynamic_cast<module_t *>(_idk_componentsystems[cs_id]);
+    return *dynamic_cast<comp_t *>(_idk_componentsystems[cs_id]);
 }
 
