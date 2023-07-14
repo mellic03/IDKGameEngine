@@ -12,13 +12,19 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/${idkengin
 
 add_subdirectory(IDKcommon)
 add_subdirectory(IDKgraphics)
-add_subdirectory(IDKcomponentsystems)
+# add_subdirectory(IDKcomponentsystems)
 
+
+# target_link_libraries(
+#     ${PROJECT_NAME} PUBLIC
+#     IDKcommon
+#     IDKgraphics
+#     IDKcomponentsystems
+# )
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     IDKcommon
     IDKgraphics
-    IDKcomponentsystems
 )
 

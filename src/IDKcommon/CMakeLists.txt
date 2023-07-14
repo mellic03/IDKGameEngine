@@ -13,15 +13,13 @@ file(GLOB SOURCES
     "idk_datastructures/*.cpp"
 )
 
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_image_INCLUDE_DIRS})
 
-set_target_properties(${PROJECT_NAME}
-                      PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
@@ -31,7 +29,4 @@ target_link_libraries(
     ${OPENGL_LIBRARIES}
     ${EXTRA_LIBS}
 )
-
-set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
-    CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
 
