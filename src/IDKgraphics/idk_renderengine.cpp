@@ -3,13 +3,6 @@
 #include <filesystem>
 
 
-// Static methods -------------------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------------------------------
-
-
-
-
 // Static members -----------------------------
 GLuint  idk::RenderEngine::SPHERE_PRIMITIVE;
 GLuint  idk::RenderEngine::CUBE_PRIMITIVE;
@@ -104,21 +97,21 @@ _dirlight_depthmap_buffer(1),       _final_buffer(1)
     glInterface::genIdkFramebuffer(2048, 2048, _dirlight_depthmap_buffer);
 
     _deferred_geometrypass_shader = glInterface::compileProgram(
-        "assets/shaders/deferred/", "geometrypass.vs", "geometrypass.fs"
+        "shaders/deferred/", "geometrypass.vs", "geometrypass.fs"
     );
     _deferred_lightingpass_shader = glInterface::compileProgram(
-        "assets/shaders/deferred/", "lightingpass.vs", "lightingpass.fs"
+        "shaders/deferred/", "lightingpass.vs", "lightingpass.fs"
     );
     _deferred_dirlight_volumetrics_shader = glInterface::compileProgram(
-        "assets/shaders/deferred/", "screenquad.vs", "volumetric_dirlight.fs"
+        "shaders/deferred/", "screenquad.vs", "volumetric_dirlight.fs"
     );
     _additive_shader = glInterface::compileProgram(
-        "assets/shaders/", "screenquad.vs", "postprocess/additive.fs"
+        "shaders/", "screenquad.vs", "postprocess/additive.fs"
     );
-    _colorgrade_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
-    _fxaa_shader = glInterface::compileProgram("assets/shaders/", "screenquad.vs", "postprocess/fxaa.fs");
-    _dirshadow_shader = glInterface::compileProgram("assets/shaders/", "dirshadow.vs", "dirshadow.fs");
-    solid_shader = glInterface::compileProgram("assets/shaders/", "vsin_pos_only.vs", "solid.fs");
+    _colorgrade_shader = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
+    _fxaa_shader = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/fxaa.fs");
+    _dirshadow_shader = glInterface::compileProgram("shaders/", "dirshadow.vs", "dirshadow.fs");
+    solid_shader = glInterface::compileProgram("shaders/", "vsin_pos_only.vs", "solid.fs");
 
     _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
     _UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(lightsource::Point));
