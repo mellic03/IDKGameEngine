@@ -14,7 +14,7 @@ namespace idk::glInterface
 {
     void                    init();
 
-    GLuint                  loadTexture( std::string filepath, int w, int h, uint8_t* &data, bool srgb = false );
+    GLuint                  loadTexture( int w, int h, uint32_t *data, bool srgb = false );
 
     void                    genIdkFramebuffer(int width, int height, GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures);
     void                    genIdkFramebuffer(int width, int height, glFramebuffer &);

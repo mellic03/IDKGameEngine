@@ -1,20 +1,13 @@
 #include "idk_filetools.h"
-
-
-std::ofstream &operator << (std::ofstream &stream, idk::__tex_file_t &tex)
-{
-    stream.write((const char *)(&tex.w), sizeof(int));
-    stream.write((const char *)(&tex.h), sizeof(int));
-    stream.write(reinterpret_cast<const char *>(tex.data),  tex.w*tex.h*sizeof(uint8_t));
-    return stream;
-}
-
+#include <stdlib.h>
 
 void
 idk::filetools::tex_save(std::string filepath, idk::__tex_file_t &tex)
 {
     std::ofstream stream(filepath, std::ios_base::binary);
-    stream << tex;
+    stream.write(reinterpret_cast<const char *>(&tex.w), sizeof(int));
+    stream.write(reinterpret_cast<const char *>(&tex.h), sizeof(int));
+    stream.write(reinterpret_cast<const char *>(tex.data),  tex.w*tex.h*sizeof(uint32_t));
     stream.close();
 }
 
@@ -23,13 +16,13 @@ void
 idk::filetools::tex_load(std::string filepath, idk::__tex_file_t &tex)
 {
     std::ifstream stream(filepath, std::ios_base::binary);
-
-    stream.read(reinterpret_cast<char *>(tex.w), sizeof(int));
-    stream.read(reinterpret_cast<char *>(tex.h), sizeof(int));
-
-    tex.data = new uint8_t[tex.w*tex.h];
-    stream.read(reinterpret_cast<char *>(tex.data), tex.w*tex.h*sizeof(uint8_t));
-
+    
+    stream.read(reinterpret_cast<char *>(&tex.w), sizeof(int));
+    stream.read(reinterpret_cast<char *>(&tex.h), sizeof(int));
+   
+    tex.data = new uint32_t[tex.w*tex.h];
+    stream.read(reinterpret_cast<char *>(tex.data), tex.w*tex.h*sizeof(uint32_t));
+    
     stream.close();
 }
 
@@ -42,7 +35,6 @@ idk::filetools::mat_save(std::string filepath, idk::__mat_file_t &mat)
     stream.write((const char *)(mat.diff), 3*sizeof(float));
     stream.write((const char *)(mat.spec), 3*sizeof(float));
     stream.write((const char *)(&mat.spec_exp), sizeof(float));
-    stream << mat.diffuse_tex << mat.specular_tex << mat.normal_tex;
 
     stream.close();
 }
@@ -127,8 +119,7 @@ idk::filetools::mdl_load(std::string filepath, idk::__mdl_file_t &mdl)
 idk::__tex_file_t
 idk::filetools::loadImage( std::string filepath )
 {
-    SDL_Surface *img;
-    img = IMG_Load(filepath.c_str());
-    return { img->w, img->h, (uint8_t *)(img->pixels) };
+    SDL_Surface *img = IMG_Load(filepath.c_str());
+    return { img->w, img->h, (uint32_t *)(img->pixels) };
 }
 

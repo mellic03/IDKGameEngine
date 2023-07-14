@@ -130,7 +130,7 @@ idk::glInterface::compileProgram( std::string root, std::string vs, std::string 
 
 
 GLuint
-idk::glInterface::loadTexture( std::string path, int w, int h, uint8_t* &data, bool srgb )
+idk::glInterface::loadTexture( int w, int h, uint32_t *data, bool srgb )
 {
     GLuint texture_id;
 

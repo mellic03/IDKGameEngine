@@ -168,8 +168,8 @@ idk::ModelManager::loadTexture( std::string filepath )
 {
     __tex_file_t tex = filetools::loadImage(filepath);
 
-    GLuint tex_linr = glInterface::loadTexture(filepath, tex.w, tex.h, tex.data, false);
-    GLuint tex_srgb = glInterface::loadTexture(filepath, tex.w, tex.h, tex.data, true);
+    GLuint tex_linr = glInterface::loadTexture(tex.w, tex.h, tex.data, false);
+    GLuint tex_srgb = glInterface::loadTexture(tex.w, tex.h, tex.data, true);
 
     _texture_linr_IDs[filepath] = tex_linr;
     _texture_srgb_IDs[filepath] = tex_srgb;
@@ -195,29 +195,30 @@ idk::ModelManager::loadTextures( std::string root )
 void
 idk::ModelManager::loadTEX( std::string filepath )
 {
-    // __tex_file_t tex = filetools::loadImage(filepath);
+    __tex_file_t tex;
+    filetools::tex_load(filepath, tex);
 
-    // GLuint tex_linr = glInterface::loadTexture(filepath, tex.w, tex.h, tex.data, false);
-    // GLuint tex_srgb = glInterface::loadTexture(filepath, tex.w, tex.h, tex.data, true);
+    GLuint tex_linr = glInterface::loadTexture(tex.w, tex.h, tex.data, false);
+    GLuint tex_srgb = glInterface::loadTexture(tex.w, tex.h, tex.data, true);
 
-    // _texture_linr_IDs[filepath] = tex_linr;
-    // _texture_srgb_IDs[filepath] = tex_srgb;
+    _texture_linr_IDs[filepath] = tex_linr;
+    _texture_srgb_IDs[filepath] = tex_srgb;
 }
 
 
 void
 idk::ModelManager::loadTEXs( std::string root )
 {
-    // using namespace std;
+    using namespace std;
 
-    // filesystem::path rootpath(root);
-    // for (auto const &dir_entry: filesystem::recursive_directory_iterator{rootpath})
-    // {
-    //     if (dir_entry.is_directory())
-    //         continue;
-
-    //     loadTexture( dir_entry.path().string() );
-    // }
+    filesystem::path rootpath(root);
+    for (auto const &dir_entry: filesystem::recursive_directory_iterator{rootpath})
+    {
+        if (dir_entry.is_directory())
+            continue;
+        std::cout << "loading file: " << dir_entry.path().string() << std::endl;
+        loadTEX( dir_entry.path().string() );
+    }
 }
 
 

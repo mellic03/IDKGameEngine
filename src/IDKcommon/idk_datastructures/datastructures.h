@@ -6,4 +6,5 @@
 #include "idk_pair.h"
 #include "idk_transform.h"
 #include "idk_keylog.h"
+#include "idk_graph.h"
 

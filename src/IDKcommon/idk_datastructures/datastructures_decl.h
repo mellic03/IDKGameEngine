@@ -12,6 +12,7 @@ namespace idk
 
     template <typename T> class stack;
     template <typename T> class vector;
+    template <typename T> class Graph;
 
     class Transform;
 };

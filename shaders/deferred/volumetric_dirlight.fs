@@ -39,7 +39,7 @@ void main()
     {
         for (int idx = 0; idx < ubo_num_dirlights; idx++)
         {
-            accum += dirlight_shadow(idx, ray_pos) * ubo_dirlights[idx].diffuse.xyz;
+            accum += 0.1 * dirlight_shadow(idx, ray_pos) * ubo_dirlights[idx].diffuse.xyz;
         }
 
         if (ray_dist >= fragdist)

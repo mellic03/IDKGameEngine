@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IDKgraphics/IDKgraphics.h"
+#include "IDKaudio/IDKaudio.h"
 #include "idk_componentsystem.h"
 
 namespace idk { class Engine; };
@@ -15,6 +16,8 @@ private:
     bool                                        _running = true;
 
     idk::RenderEngine                           _render_engine;
+    idk::AudioEngine                            _audio_engine;
+
     SDL_Event                                   _SDL_event;
     idk::Keylog                                 _keylog;
     std::vector<bool>                           _mouse_up;
@@ -49,6 +52,7 @@ public:
                                                 Engine( std::string windowname, size_t w = 1000, size_t h = 1000 );
 
     idk::RenderEngine &                         rengine()   { return _render_engine; };
+    idk::AudioEngine &                          aengine()   { return _audio_engine;  };
     Keylog &                                    keylog()    { return _keylog; };
 
     bool                                        running()   { return _running; };
