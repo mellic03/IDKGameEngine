@@ -47,7 +47,7 @@ void main()
             break;
         }
 
-        step_size += 0.01;
+        step_size *= 1.001;
         ray_pos += step_size * dir;
         ray_dist += step_size;
     }
