@@ -29,12 +29,9 @@ public:
                         /** Load only vertices from .obj file */
     void                loadVertices( std::string filepath, std::vector<idk::Vertex> &vertices );
 
-    void                loadTexture( std::string filepath );
-    void                loadTextures( std::string rootpath );
-
-    void                loadIDKtex( std::string filepath, bool srgb = false );
-    void                loadIDKtexs( std::string rootpath, bool srgb = false );
-    void                loadIDKtexpak( std::string filepath, bool srgb = false );
+    void                loadIDKtex( std::string filepath, bool srgb );
+    void                loadIDKtexs( std::string rootpath, bool srgb );
+    void                loadIDKtexpak( std::string filepath, bool srgb );
 
 
     Model &             getModel( int id )  { return _models.get(id); };

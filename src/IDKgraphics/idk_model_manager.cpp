@@ -164,33 +164,6 @@ idk::ModelManager::_load_obj( std::string raw_obj )
 
 
 void
-idk::ModelManager::loadTexture( std::string filepath )
-{
-    __tex_file_t tex = filetools::texFromIMG(filepath);
-
-    GLuint tex_id = glInterface::loadTexture(tex.w, tex.h, tex.data, false);
-
-    _texture_IDs[filepath] = tex_id;
-}
-
-
-void
-idk::ModelManager::loadTextures( std::string root )
-{
-    using namespace std;
-
-    filesystem::path rootpath(root);
-    for (auto const &dir_entry: filesystem::recursive_directory_iterator{rootpath})
-    {
-        if (dir_entry.is_directory())
-            continue;
-
-        loadTexture( dir_entry.path().string() );
-    }
-}
-
-
-void
 idk::ModelManager::loadIDKtex( std::string filepath, bool srgb )
 {
     __tex_file_t tex;

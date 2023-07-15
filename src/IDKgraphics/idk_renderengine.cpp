@@ -47,13 +47,13 @@ void
 idk::RenderEngine::_init_screenquad()
 {
     float quad_vertices[] = {
-      -1.0f,  1.0f,  0.0f,  1.0f,
-      -1.0f, -1.0f,  0.0f,  0.0f,
-       1.0f, -1.0f,  1.0f,  0.0f,
+      -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+      -1.0f, -1.0f,  0.0f,  0.0f,  0.0f,
+       1.0f, -1.0f,  0.0f,  1.0f,  0.0f,
 
-      -1.0f,  1.0f,  0.0f,  1.0f,
-       1.0f, -1.0f,  1.0f,  0.0f,
-       1.0f,  1.0f,  1.0f,  1.0f
+      -1.0f,  1.0f,  0.0f,  0.0f,  1.0f,
+       1.0f, -1.0f,  0.0f,  1.0f,  0.0f,
+       1.0f,  1.0f,  0.0f,  1.0f,  1.0f
     };
 
     // Send screen quad to GPU
@@ -65,12 +65,46 @@ idk::RenderEngine::_init_screenquad()
     gl::bindBuffer(GL_ARRAY_BUFFER, _quad_VBO);
     gl::bufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), quad_vertices, GL_STATIC_DRAW);
 
-    gl::vertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), 0);
+    gl::vertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), 0);
     gl::enableVertexAttribArray(0);
 
-    gl::vertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), 2*sizeof(float));
+    gl::vertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), 3*sizeof(float));
     gl::enableVertexAttribArray(1);
     // ------------------------------------------------------------------------------------
+}
+
+
+void
+idk::RenderEngine::compileShaders()
+{
+    std::cout << "recompiling shaders\n";
+
+    _background_shader = glInterface::compileProgram(
+        "shaders/deferred/", "background.vs", "background.fs"
+    );
+    _lighting_background_shader = glInterface::compileProgram(
+        "shaders/deferred/", "lightingpass.vs", "lightingpass_background.fs"
+    );
+    _deferred_geometrypass_shader = glInterface::compileProgram(
+        "shaders/deferred/", "geometrypass.vs", "geometrypass.fs"
+    );
+    _deferred_lightingpass_shader = glInterface::compileProgram(
+        "shaders/deferred/", "lightingpass.vs", "lightingpass.fs"
+    );
+    _deferred_dirlight_volumetrics_shader = glInterface::compileProgram(
+        "shaders/deferred/", "screenquad.vs", "volumetric_dirlight.fs"
+    );
+    _additive_shader = glInterface::compileProgram(
+        "shaders/", "screenquad.vs", "postprocess/additive.fs"
+    );
+    // _guassian_blur_shader = glInterface::compileProgram(
+    //     "shaders/", "screenquad.vs", "postprocess/guassianblur.fs"
+    // );
+
+    _colorgrade_shader = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
+    _fxaa_shader = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/fxaa.fs");
+    _dirshadow_shader = glInterface::compileProgram("shaders/", "dirshadow.vs", "dirshadow.fs");
+    solid_shader = glInterface::compileProgram("shaders/", "vsin_pos_only.vs", "solid.fs");
 }
 
 
@@ -90,28 +124,13 @@ _dirlight_depthmap_buffer(1),       _final_buffer(1)
     RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
 
     glInterface::genIdkFramebuffer(_res_x, _res_y, _deferred_geometrypass_buffer);
-    glInterface::genIdkFramebuffer(_res_x/1, _res_y/1, _deferred_dirlight_volumetrics_buffer);
+    glInterface::genIdkFramebuffer(_res_x/4, _res_y/4, _deferred_dirlight_volumetrics_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _colorgrade_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _fxaa_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _final_buffer);
     glInterface::genIdkFramebuffer(2048, 2048, _dirlight_depthmap_buffer);
 
-    _deferred_geometrypass_shader = glInterface::compileProgram(
-        "shaders/deferred/", "geometrypass.vs", "geometrypass.fs"
-    );
-    _deferred_lightingpass_shader = glInterface::compileProgram(
-        "shaders/deferred/", "lightingpass.vs", "lightingpass.fs"
-    );
-    _deferred_dirlight_volumetrics_shader = glInterface::compileProgram(
-        "shaders/deferred/", "screenquad.vs", "volumetric_dirlight.fs"
-    );
-    _additive_shader = glInterface::compileProgram(
-        "shaders/", "screenquad.vs", "postprocess/additive.fs"
-    );
-    _colorgrade_shader = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
-    _fxaa_shader = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/fxaa.fs");
-    _dirshadow_shader = glInterface::compileProgram("shaders/", "dirshadow.vs", "dirshadow.fs");
-    solid_shader = glInterface::compileProgram("shaders/", "vsin_pos_only.vs", "solid.fs");
+    this->compileShaders();
 
     _UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
     _UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(lightsource::Point));
@@ -402,6 +421,7 @@ idk::RenderEngine::endFrame()
 
     // Deferred geometry pass --------------------------------------------
     glInterface::bindIdkFramebuffer(_deferred_geometrypass_buffer);
+
     for (auto &[shader_id, vec]: _model_draw_queue)
     {
         glInterface::useProgram(shader_id);
@@ -422,8 +442,18 @@ idk::RenderEngine::endFrame()
     // -------------------------------------------------------------------
 
     // Deferred lighting pass --------------------------------------------
+
+    glInterface::useProgram(_background_shader);
+    glm::mat4 modelmat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.9f * camera.farPlane()));
+    modelmat = glm::scale(modelmat, glm::vec3(300.0f, 300.0f, 1.0f));
+    glInterface::setUniform_mat4("un_model", modelmat);
+
+    gl::bindVertexArray(_quad_VAO);
+    gl::drawArrays(GL_TRIANGLES, 0, 6);
+    gl::bindVertexArray(0);
+
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
-    
+
     // Blinn-Phong lighting
     _render_screenquad(
         _deferred_lightingpass_shader,
@@ -437,6 +467,14 @@ idk::RenderEngine::endFrame()
         _deferred_geometrypass_buffer,
         _deferred_dirlight_volumetrics_buffer
     );
+
+
+    // // Blur volumetric directional lights
+    // _render_screenquad(
+    //     _guassian_blur_shader,
+    //     _deferred_dirlight_volumetrics_buffer,
+    //     _deferred_geometrypass_buffer
+    // );
 
     // Combine Blinn-Phong and volumetrics    
     _render_screenquad(
@@ -470,7 +508,7 @@ idk::RenderEngine::resize( int w, int h )
     _res_y = h;
 
     glInterface::genIdkFramebuffer(w, h, _deferred_geometrypass_buffer);
-    glInterface::genIdkFramebuffer(w/1, h/1, _deferred_dirlight_volumetrics_buffer);
+    glInterface::genIdkFramebuffer(w/4, h/4, _deferred_dirlight_volumetrics_buffer);
     glInterface::genIdkFramebuffer(w, h, _colorgrade_buffer);
     glInterface::genIdkFramebuffer(w, h, _fxaa_buffer);
     glInterface::genIdkFramebuffer(w, h, _final_buffer);

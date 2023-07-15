@@ -51,5 +51,8 @@ public:
     void                ylock(bool lock)  { _ylock = lock;  };
     void                noroll(bool lock) { _noroll = lock; };
 
+    float               nearPlane() const { return _near; };
+    float               farPlane()  const { return _far;  };
+
 };
 

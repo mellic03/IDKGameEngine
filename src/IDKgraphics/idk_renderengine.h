@@ -42,6 +42,10 @@ private:
     GLuint                              _deferred_geometrypass_shader;
     GLuint                              _deferred_lightingpass_shader;
     GLuint                              _deferred_dirlight_volumetrics_shader;
+    GLuint                              _background_shader;
+    GLuint                              _lighting_background_shader;
+
+    GLuint                              _guassian_blur_shader;
 
     GLuint                              _dirshadow_shader;
     GLuint                              _screenquad_shader;
@@ -93,14 +97,14 @@ private:
     void                _shadowpass_spotlights();
     void                _shadowpass_dirlights();
 
+    /** Run a shader on the output textures of in and render the result to out */
     void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );
+    
+    /** Run a shader on the output textures of in and render the result to the default frame buffer */
     void                _render_screenquad( GLuint shader, glFramebuffer &in );
-    void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1 );
-    void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
 
-    // void                _bind_material( idk::Material & );
-    // void                _draw_model( idk::Model &, idk::Transform & );
-    // void                _draw_basic( idk::Model &, idk::Transform & );
+    void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
+    void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1 );
     // ------------------------------------------------------------------------------------
 
 
@@ -116,6 +120,7 @@ public:
     static GLuint                       SPHERE_PRIMITIVE;
     static GLuint                       CUBE_PRIMITIVE;
     // ------------------------------------------------------------------------------------
+    void                                compileShaders();
 
                                         RenderEngine( std::string windowname, size_t w, size_t h );
 
