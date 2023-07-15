@@ -90,7 +90,7 @@ _dirlight_depthmap_buffer(1),       _final_buffer(1)
     RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
 
     glInterface::genIdkFramebuffer(_res_x, _res_y, _deferred_geometrypass_buffer);
-    glInterface::genIdkFramebuffer(_res_x, _res_y, _deferred_dirlight_volumetrics_buffer);
+    glInterface::genIdkFramebuffer(_res_x/1, _res_y/1, _deferred_dirlight_volumetrics_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _colorgrade_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _fxaa_buffer);
     glInterface::genIdkFramebuffer(_res_x, _res_y, _final_buffer);
@@ -470,7 +470,7 @@ idk::RenderEngine::resize( int w, int h )
     _res_y = h;
 
     glInterface::genIdkFramebuffer(w, h, _deferred_geometrypass_buffer);
-    glInterface::genIdkFramebuffer(w, h, _deferred_dirlight_volumetrics_buffer);
+    glInterface::genIdkFramebuffer(w/1, h/1, _deferred_dirlight_volumetrics_buffer);
     glInterface::genIdkFramebuffer(w, h, _colorgrade_buffer);
     glInterface::genIdkFramebuffer(w, h, _fxaa_buffer);
     glInterface::genIdkFramebuffer(w, h, _final_buffer);

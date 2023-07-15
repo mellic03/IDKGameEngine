@@ -6,11 +6,13 @@
 #include <fstream>
 
 #include "idk_vertex.h"
-
+#include "IDKcommon/IDKcommon.h"
 
 namespace idk
 {
-    struct __tex_file_t; // texture
+    struct __tex_file_t;    // texture
+    struct __texpak_file_t; // package of textures
+
     struct __mat_file_t; // material
     struct __idx_file_t; // indices
     struct __vts_file_t; // vertices
@@ -18,12 +20,17 @@ namespace idk
 };
 
 
-/** Binary texture file
-*/
 struct idk::__tex_file_t
 {
-    int w, h;       // width*height == number of uint8_t, not pixels
+    char *name;
+    int w, h;
     uint32_t *data;
+};
+
+
+struct idk::__texpak_file_t
+{
+    idk::vector<idk::__tex_file_t>  texfiles;
 };
 
 

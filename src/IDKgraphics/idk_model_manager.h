@@ -15,12 +15,11 @@ private:
     Allocator<Model>        _models;
 
     std::unordered_map<std::string, idk::Texture>   _textures;
-    std::unordered_map<std::string, GLuint>         _texture_linr_IDs;
-    std::unordered_map<std::string, GLuint>         _texture_srgb_IDs;
+    std::unordered_map<std::string, GLuint>         _texture_IDs;
     std::unordered_map<std::string, int>            _material_IDs;
 
-    void                    _load_mtl( std::string );
-    idk::Model              _load_obj( std::string );
+    void                _load_mtl( std::string );
+    idk::Model          _load_obj( std::string );
 
 public:
 
@@ -33,8 +32,10 @@ public:
     void                loadTexture( std::string filepath );
     void                loadTextures( std::string rootpath );
 
-    void                loadTEX( std::string filepath );
-    void                loadTEXs( std::string rootpath );
+    void                loadIDKtex( std::string filepath, bool srgb = false );
+    void                loadIDKtexs( std::string rootpath, bool srgb = false );
+    void                loadIDKtexpak( std::string filepath, bool srgb = false );
+
 
     Model &             getModel( int id )  { return _models.get(id); };
     

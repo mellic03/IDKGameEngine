@@ -59,14 +59,14 @@ idk::ModelManager::_load_mtl( std::string raw_mtl )
         {
             size_t root = line.find("assets/");
             line = line.substr(root);
-            _materials.get(material_id).albedo_gl_id = _texture_srgb_IDs[line];
+            _materials.get(material_id).albedo_gl_id = _texture_IDs[line];
         }
 
         else if (line.find("map_Ks") != std::string::npos)
         {
             size_t root = line.find("assets/");
             line = line.substr(root);
-            _materials.get(material_id).specular_gl_id = _texture_linr_IDs[line];
+            _materials.get(material_id).specular_gl_id = _texture_IDs[line];
         }
     }
 }
@@ -166,13 +166,11 @@ idk::ModelManager::_load_obj( std::string raw_obj )
 void
 idk::ModelManager::loadTexture( std::string filepath )
 {
-    __tex_file_t tex = filetools::loadImage(filepath);
+    __tex_file_t tex = filetools::texFromIMG(filepath);
 
-    GLuint tex_linr = glInterface::loadTexture(tex.w, tex.h, tex.data, false);
-    GLuint tex_srgb = glInterface::loadTexture(tex.w, tex.h, tex.data, true);
+    GLuint tex_id = glInterface::loadTexture(tex.w, tex.h, tex.data, false);
 
-    _texture_linr_IDs[filepath] = tex_linr;
-    _texture_srgb_IDs[filepath] = tex_srgb;
+    _texture_IDs[filepath] = tex_id;
 }
 
 
@@ -193,21 +191,18 @@ idk::ModelManager::loadTextures( std::string root )
 
 
 void
-idk::ModelManager::loadTEX( std::string filepath )
+idk::ModelManager::loadIDKtex( std::string filepath, bool srgb )
 {
     __tex_file_t tex;
     filetools::tex_load(filepath, tex);
 
-    GLuint tex_linr = glInterface::loadTexture(tex.w, tex.h, tex.data, false);
-    GLuint tex_srgb = glInterface::loadTexture(tex.w, tex.h, tex.data, true);
-
-    _texture_linr_IDs[filepath] = tex_linr;
-    _texture_srgb_IDs[filepath] = tex_srgb;
+    GLuint tex_id = glInterface::loadTexture(tex.w, tex.h, tex.data, srgb);
+    _texture_IDs[filepath] = tex_id;
 }
 
 
 void
-idk::ModelManager::loadTEXs( std::string root )
+idk::ModelManager::loadIDKtexs( std::string root, bool srgb )
 {
     using namespace std;
 
@@ -216,8 +211,22 @@ idk::ModelManager::loadTEXs( std::string root )
     {
         if (dir_entry.is_directory())
             continue;
-        std::cout << "loading file: " << dir_entry.path().string() << std::endl;
-        loadTEX( dir_entry.path().string() );
+
+        loadIDKtex( dir_entry.path().string(), srgb );
+    }
+}
+
+
+void
+idk::ModelManager::loadIDKtexpak( std::string filepath, bool srgb )
+{
+    idk::__texpak_file_t texpak;
+    idk::filetools::texpak_load(filepath, texpak);
+
+    for (idk::__tex_file_t &tex: texpak.texfiles)
+    {
+        GLuint tex_id = glInterface::loadTexture(tex.w, tex.h, tex.data, srgb);
+        _texture_IDs[tex.name] = tex_id;
     }
 }
 

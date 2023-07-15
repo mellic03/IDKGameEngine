@@ -10,6 +10,8 @@ namespace idk::filetools
 {
     void    tex_save(std::string filepath, idk::__tex_file_t &);
     void    tex_load(std::string filepath, idk::__tex_file_t &);
+    void    texpak_save(std::string filepath, idk::__texpak_file_t &);
+    void    texpak_load(std::string filepath, idk::__texpak_file_t &);
 
     void    mat_save(std::string filepath, idk::__mat_file_t &);
     void    mat_load(std::string filepath, idk::__mat_file_t &);
@@ -28,7 +30,7 @@ namespace idk::filetools
     template <typename T>
     void    vector_from_bin( std::string filepath, std::vector<T> &v );
 
-    __tex_file_t    loadImage( std::string filepath );
+    __tex_file_t    texFromIMG( std::string filepath );
 };
 
 
