@@ -1,7 +1,7 @@
 #include "idk_lightsource.h"
 
 
-idk::lightsource::Point::Point()
+idk::Pointlight::Pointlight()
 {
     position                = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     ambient                 = glm::vec4(0.01f);
@@ -9,7 +9,7 @@ idk::lightsource::Point::Point()
     attenuation             = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
 }
 
-idk::lightsource::Spot::Spot()
+idk::Spotlight::Spotlight()
 {
     position                = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     direction               = glm::vec4(0.0f);
@@ -19,7 +19,7 @@ idk::lightsource::Spot::Spot()
     cutoff                  = glm::vec4(glm::radians(35.5f), glm::radians(45.5f), 0.0f, 0.0f);
 }
 
-idk::lightsource::Dir::Dir()
+idk::Dirlight::Dirlight()
 {
     direction               = glm::normalize(glm::vec4(1.0f, -2.0f, 0.0, 0.0f));
     ambient                 = glm::vec4(0.0f);

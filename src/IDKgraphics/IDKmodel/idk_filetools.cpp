@@ -4,12 +4,12 @@
 
 std::ofstream &operator << (std::ofstream &stream, idk::__tex_file_t &tex)
 {
-    int strsize = strlen(tex.name) + 1;
-    stream.write(reinterpret_cast<const char *>(&strsize), sizeof(int));
+    size_t strsize = strlen(tex.name) + 1;
+    stream.write(reinterpret_cast<const char *>(&strsize), sizeof(size_t));
    
     stream.write(reinterpret_cast<const char *>(tex.name), sizeof(char)*strsize);    
-    stream.write(reinterpret_cast<const char *>(&tex.w), sizeof(int));
-    stream.write(reinterpret_cast<const char *>(&tex.h), sizeof(int));
+    stream.write(reinterpret_cast<const char *>(&tex.w), sizeof(size_t));
+    stream.write(reinterpret_cast<const char *>(&tex.h), sizeof(size_t));
     stream.write(reinterpret_cast<const char *>(tex.data),  tex.w*tex.h*sizeof(uint32_t));
 
     return stream;
@@ -18,14 +18,14 @@ std::ofstream &operator << (std::ofstream &stream, idk::__tex_file_t &tex)
 
 std::ifstream &operator >> (std::ifstream &stream, idk::__tex_file_t &tex)
 {
-    int strsize;
-    stream.read(reinterpret_cast<char *>(&strsize), sizeof(int));
+    size_t strsize;
+    stream.read(reinterpret_cast<char *>(&strsize), sizeof(size_t));
     
     tex.name = new char[strsize];
     stream.read(reinterpret_cast<char *>(tex.name), sizeof(char)*strsize);
     
-    stream.read(reinterpret_cast<char *>(&tex.w), sizeof(int));
-    stream.read(reinterpret_cast<char *>(&tex.h), sizeof(int));
+    stream.read(reinterpret_cast<char *>(&tex.w), sizeof(size_t));
+    stream.read(reinterpret_cast<char *>(&tex.h), sizeof(size_t));
     
     tex.data = new uint32_t[tex.w*tex.h];
     stream.read(reinterpret_cast<char *>(tex.data), tex.w*tex.h*sizeof(uint32_t));
@@ -57,8 +57,8 @@ idk::filetools::texpak_save(std::string filepath, idk::__texpak_file_t &texpak)
 {
     std::ofstream stream(filepath, std::ios_base::binary);
 
-    int num_texfiles = texpak.texfiles.size();
-    stream.write(reinterpret_cast<const char *>(&num_texfiles), sizeof(int));
+    size_t num_texfiles = texpak.texfiles.size();
+    stream.write(reinterpret_cast<const char *>(&num_texfiles), sizeof(size_t));
 
     for (idk::__tex_file_t &tex: texpak.texfiles)
     {
@@ -74,11 +74,11 @@ idk::filetools::texpak_load(std::string filepath, idk::__texpak_file_t &texpak)
 {
     std::ifstream stream(filepath, std::ios_base::binary);
 
-    int num_texfiles;
-    stream.read(reinterpret_cast<char *>(&num_texfiles), sizeof(int));
+    size_t num_texfiles;
+    stream.read(reinterpret_cast<char *>(&num_texfiles), sizeof(size_t));
     texpak.texfiles.resize(num_texfiles);    
 
-    for (int i=0; i<num_texfiles; i++)
+    for (size_t i=0; i<num_texfiles; i++)
     {
         stream >> texpak.texfiles[i];
     }
@@ -145,7 +145,7 @@ void
 idk::filetools::vts_save(std::string filepath, idk::__vts_file_t &vts)
 {
     std::ofstream stream(filepath, std::ios_base::binary);
-    stream.write(reinterpret_cast<const char *>(&vts.size), sizeof(int));
+    stream.write(reinterpret_cast<const char *>(&vts.size), sizeof(size_t));
     stream.write(reinterpret_cast<const char *>(vts.data),  vts.size*sizeof(idk::Vertex));
     stream.close();
 }
@@ -162,7 +162,7 @@ idk::filetools::mdl_save(std::string filepath, idk::__mdl_file_t &mdl)
 {
     std::ofstream stream(filepath);
     
-    for (int i=0; i<mdl.tex_filepaths.size(); i++)
+    for (size_t i=0; i<mdl.tex_filepaths.size(); i++)
     {
         stream << mdl.tex_filepaths[i] << " " << mdl.vts_filepaths[i] << std::endl;
     }
@@ -185,6 +185,6 @@ idk::filetools::texFromIMG( std::string filepath )
     char *name = new char[path.size()];
     strcpy(name, path.c_str());
 
-    return { name, img->w, img->h, (uint32_t *)(img->pixels) };
+    return { name, (size_t)img->w, (size_t)img->h, (uint32_t *)(img->pixels) };
 }
 

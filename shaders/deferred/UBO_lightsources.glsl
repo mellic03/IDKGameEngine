@@ -1,6 +1,6 @@
 #define MAX_POINTLIGHTS 10
 #define MAX_SPOTLIGHTS 10
-#define MAX_DIRLIGHTS 10
+#define MAX_DIRLIGHTS 3
 
 struct PointLight
 {

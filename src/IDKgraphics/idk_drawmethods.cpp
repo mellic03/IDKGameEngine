@@ -16,7 +16,7 @@ idk::drawmethods::draw_textured( Model &model, Transform &transform, Allocator<M
     glInterface::setUniform_mat4("un_model", model_mat);
 
     gl::bindVertexArray(model.VAO);
-    for (int i=0; i<model.meshes.size(); i++)
+    for (size_t i=0; i<model.meshes.size(); i++)
     {
         Mesh &mesh = model.meshes[i];
 
@@ -36,7 +36,7 @@ idk::drawmethods::draw_untextured( Model &model, Transform &transform, Allocator
     glInterface::setUniform_mat4("un_model", model_mat);
 
     gl::bindVertexArray(model.VAO);
-    for (int i=0; i<model.meshes.size(); i++)
+    for (size_t i=0; i<model.meshes.size(); i++)
     {
         Mesh &mesh = model.meshes[i];
         gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);

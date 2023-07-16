@@ -2,26 +2,26 @@
 
 #include "IDKcommon/IDKcommon.h"
 
-namespace idk::lightsource
+namespace idk
 {
-    struct Point;
-    struct Spot;
-    struct Dir;
+    struct Pointlight;
+    struct Spotlight;
+    struct Dirlight;
 };
 
 
-struct idk::lightsource::Point
+struct idk::Pointlight
 {
     glm::vec4       position;
     glm::vec4       ambient;
     glm::vec4       diffuse;
     glm::vec4       attenuation;
 
-                    Point();
+                    Pointlight();
 };
 
 
-struct idk::lightsource::Spot
+struct idk::Spotlight
 {
     glm::vec4       position;
     glm::vec4       direction;
@@ -30,16 +30,16 @@ struct idk::lightsource::Spot
     glm::vec4       attenuation;
     glm::vec4       cutoff;
 
-                    Spot();
+                    Spotlight();
 };
 
 
-struct idk::lightsource::Dir
+struct idk::Dirlight
 {
     glm::vec4       direction;
     glm::vec4       ambient;
     glm::vec4       diffuse;
 
-                    Dir();
+                    Dirlight();
 };
 

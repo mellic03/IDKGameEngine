@@ -23,7 +23,7 @@ namespace idk
 struct idk::__tex_file_t
 {
     char *name;
-    int w, h;
+    size_t w, h;
     uint32_t *data;
 };
 
@@ -48,7 +48,7 @@ struct idk::__mat_file_t
 
 struct idk::__vts_file_t
 {
-    int size; // number of Vertices
+    size_t size; // number of Vertices
     idk::Vertex *data;
 };
 

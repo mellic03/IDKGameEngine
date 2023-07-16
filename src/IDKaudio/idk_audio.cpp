@@ -6,7 +6,7 @@ idk::AudioEngine::AudioEngine()
     constexpr int AUDIOENGINE_NUM_CHANNELS = 8;
     for (int i=0; i<AUDIOENGINE_NUM_CHANNELS; i++)
     {
-        _audio_channels.push(i);
+        m_audio_channels.push(i);
     }
 
     int audio_rate = 44100;
@@ -36,37 +36,37 @@ idk::AudioEngine::loadWav( std::string filepath )
     }
     #endif
 
-    return _mixchunk_allocator.add(mc);
+    return m_mixchunk_allocator.add(mc);
 }
 
 
 int
 idk::AudioEngine::createEmitter()
 {
-    return _emitter_allocator.add();
+    return m_emitter_allocator.add();
 }
 
 
 int
 idk::AudioEngine::createEmitter( int mix_chunk_id, idk::Transform &transform )
 {
-    Mix_Chunk *mc = _mixchunk_allocator.get(mix_chunk_id);
-    return _emitter_allocator.add(  { -1, mc, &transform }  );
+    Mix_Chunk *mc = m_mixchunk_allocator.get(mix_chunk_id);
+    return m_emitter_allocator.add(  { -1, mc, &transform }  );
 }
 
 
 void
 idk::AudioEngine::listenerPosition( idk::Transform *transform )
 {
-    _listener_position = transform;
+    m_listener_transform = transform;
 }
 
 
 void
 idk::AudioEngine::playSound( int emitter_id )
 {
-    AudioEngine::Emitter emitter = _emitter_allocator.get(emitter_id);
-    emitter.channel = _audio_channels.pop();
+    AudioEngine::Emitter emitter = m_emitter_allocator.get(emitter_id);
+    emitter.channel = m_audio_channels.pop();
     Mix_PlayChannel(emitter.channel, emitter.mc, -1);
 }
 
@@ -74,7 +74,7 @@ idk::AudioEngine::playSound( int emitter_id )
 void
 idk::AudioEngine::stopSound( int emitter_id )
 {
-    AudioEngine::Emitter emitter = _emitter_allocator.get(emitter_id);
+    AudioEngine::Emitter emitter = m_emitter_allocator.get(emitter_id);
 
     #ifdef IDK_DEBUG
     if (emitter.channel == -1)
@@ -85,7 +85,7 @@ idk::AudioEngine::stopSound( int emitter_id )
     #endif
 
     Mix_HaltChannel(emitter.channel);
-    _audio_channels.push(emitter.channel);
+    m_audio_channels.push(emitter.channel);
     emitter.channel = -1;
 }
 
@@ -94,7 +94,7 @@ idk::AudioEngine::stopSound( int emitter_id )
 void
 idk::AudioEngine::update()
 {
-    this->_emitter_allocator.for_each(
+    this->m_emitter_allocator.for_each(
         [*this](AudioEngine::Emitter &emitter)
         {
 

@@ -9,8 +9,8 @@ namespace idk { class glUBO; };
 class idk::glUBO
 {
 private:
-    GLuint      _UBO;
-    GLintptr    _offset;
+    GLuint      _UBO    = 0;
+    GLintptr    _offset = 0;
 
 public:
                 glUBO() {  };

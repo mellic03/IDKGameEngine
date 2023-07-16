@@ -23,11 +23,11 @@ public:
 
 
 private:
-    Allocator<Mix_Chunk *>  _mixchunk_allocator;
-    Allocator<Sound>        _sound_allocator;
-    Allocator<Emitter>      _emitter_allocator;
-    Transform *             _listener_position;
-    idk::stack<int>         _audio_channels;
+    Allocator<Mix_Chunk *>  m_mixchunk_allocator;
+    Allocator<Sound>        m_sound_allocator;
+    Allocator<Emitter>      m_emitter_allocator;
+    Transform *             m_listener_transform;
+    idk::stack<int>         m_audio_channels;
 
 
 public:
@@ -41,7 +41,6 @@ public:
     int         createEmitter( int mix_chunk_id, idk::Transform & );
 
     void        listenerPosition( idk::Transform * );
-
 
     void        playSound( int emitter_id );
     void        stopSound( int emitter_id );

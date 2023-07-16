@@ -200,9 +200,8 @@ idk::glInterface::genIdkFramebuffer(int width, int height, int num_render_target
     idk::glFramebuffer fb;
     fb.width = width;
     fb.height = height;
-    fb.FBO = 0;
-    fb.RBO = 0;
-    fb.output_textures.resize(num_render_targets);
+    for (int i=0; i<num_render_targets; i++)
+        fb.output_textures.push_back(0);
 
     weewa_genIdkFramebuffer(width, height, fb.FBO, fb.RBO, fb.output_textures);
 

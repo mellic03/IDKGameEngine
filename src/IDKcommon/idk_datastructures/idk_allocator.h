@@ -28,7 +28,7 @@ public:
 
     T &                     get( int id );
     void                    remove( int id );
-    size_t                  size() const { return _objects.size() - _unnocupied_indices.size(); };
+    int                     size() const { return _objects.size() - _unnocupied_indices.size(); };
 
     void                    for_each(std::function<void(T&)>);
     void                    for_each(std::function<void(int, T&)>);
@@ -91,7 +91,7 @@ T &
 idk::Allocator<T>::get(int id)
 {
     #ifdef IDK_DEBUG
-    if (id >= _objects.size())
+    if (id >= (int)_objects.size())
     {
         std::cout
         << "Runtime error in idk::Allocator<T>::get(int id)\n" 
@@ -110,7 +110,7 @@ void
 idk::Allocator<T>::remove(int id)
 {
     #ifdef IDK_DEBUG
-    if (id >= _objects.size())
+    if (id >= (int)_objects.size())
     {
         std::cout
         << "Runtime error in idk::Allocator<T>::remove(int id)\n" 

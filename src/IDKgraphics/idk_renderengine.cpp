@@ -100,10 +100,10 @@ idk::RenderEngine::f_compile_shaders()
         "shaders/deferred/", "screenquad.vs", "volumetric_dirlight.fs"
     );
 
-    _additive_shader   = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/additive.fs");
-    _colorgrade_shader = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
-    _fxaa_shader       = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/fxaa.fs");
-    _dirshadow_shader  = glInterface::compileProgram("shaders/", "dirshadow.vs", "dirshadow.fs");
+    m_additive_shader   = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/additive.fs");
+    m_colorgrade_shader = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
+    m_fxaa_shader       = glInterface::compileProgram("shaders/", "screenquad.vs", "postprocess/fxaa.fs");
+    m_dirshadow_shader  = glInterface::compileProgram("shaders/", "dirshadow.vs", "dirshadow.fs");
     solid_shader       = glInterface::compileProgram("shaders/", "vsin_pos_only.vs", "solid.fs");
 }
 
@@ -138,21 +138,21 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
     m_active_camera_id = createCamera();
 
     m_UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
-    m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(lightsource::Point));
-    m_UBO_spotlights  = glUBO(4, 16 + IDK_MAX_SPOTLIGHTS*sizeof(lightsource::Spot));
-    m_UBO_dirlights   = glUBO(5, 16 + IDK_MAX_DIRLIGHTS * (sizeof(lightsource::Dir) + sizeof(glm::mat4)));
+    m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
+    m_UBO_spotlights  = glUBO(4, 16 + IDK_MAX_SPOTLIGHTS*sizeof(Spotlight));
+    m_UBO_dirlights   = glUBO(5, 16 + IDK_MAX_DIRLIGHTS*sizeof(Dirlight) + IDK_MAX_DIRLIGHTS*sizeof(glm::mat4));
 }
 
 
 void
-idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out )
+idk::RenderEngine::f_fbfb( GLuint shader, glFramebuffer &in, glFramebuffer &out )
 {
     glInterface::bindIdkFramebuffer(out);
     glInterface::useProgram(shader);
 
     glInterface::setUniform_texture("un_dirlight_depthmaps[0]", _dirlight_shadowmap_allocator.get(0));
 
-    for (int i=0; i < in.output_textures.size(); i++)
+    for (size_t i=0; i < in.output_textures.size(); i++)
     {
         std::string name = "un_texture_" + std::to_string(i);
         glInterface::setUniform_texture(name, in.output_textures[i]);
@@ -166,12 +166,12 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in, glFrame
 
 
 void
-idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in )
+idk::RenderEngine::f_fbfb( GLuint shader, glFramebuffer &in )
 {
     glInterface::unbindIdkFramebuffer(m_resolution.x, m_resolution.y);
     glInterface::useProgram(shader);
 
-    for (int i=0; i < in.output_textures.size(); i++)
+    for (size_t i=0; i < in.output_textures.size(); i++)
         glInterface::setUniform_texture("un_texture_" + std::to_string(i), in.output_textures[0]);
 
     gl::bindVertexArray(_quad_VAO);
@@ -182,7 +182,7 @@ idk::RenderEngine::_render_screenquad( GLuint shader, glFramebuffer &in )
 
 
 void
-idk::RenderEngine::_render_screenquad( GLuint shader, GLuint tex0, GLuint tex1 )
+idk::RenderEngine::f_fbfb( GLuint shader, GLuint tex0, GLuint tex1 )
 {
     glInterface::unbindIdkFramebuffer(m_resolution.x, m_resolution.y);
     glInterface::useProgram(shader);
@@ -198,7 +198,7 @@ idk::RenderEngine::_render_screenquad( GLuint shader, GLuint tex0, GLuint tex1 )
 
 
 void
-idk::RenderEngine::_render_screenquad( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out )
+idk::RenderEngine::f_fbfb( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out )
 {
     glInterface::bindIdkFramebuffer(out);
     glInterface::useProgram(shader);
@@ -277,9 +277,9 @@ idk::RenderEngine::_shadowpass_spotlights()
 void
 idk::RenderEngine::_shadowpass_dirlights()
 {
-    // glInterface::clearIdkFramebuffer(m_dirlight_depthmap_buffer);
+    glInterface::clearIdkFramebuffer(m_dirlight_depthmap_buffer);
     glInterface::bindIdkFramebuffer(m_dirlight_depthmap_buffer);
-    glInterface::useProgram(_dirshadow_shader);
+    glInterface::useProgram(m_dirshadow_shader);
 
     float near_plane = 1.0f, far_plane = 50.0f;
 
@@ -287,19 +287,18 @@ idk::RenderEngine::_shadowpass_dirlights()
     auto &queue = _model_draw_queue;
     auto &depthmaps = _dirlight_shadowmap_allocator;
     auto &framebuffer = m_dirlight_depthmap_buffer;
-    auto &lmats = _dirlight_lightspacematrix_allocator;
 
     int i = 0;
     dirlights().for_each(
-    [&i, &ren, &queue, &depthmaps, &lmats, &framebuffer](int light_id, lightsource::Dir &light)
+    [&i, &ren, &queue, &depthmaps, &framebuffer](int light_id, Dirlight &light)
     {
         glm::mat4 projection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, 0.1f, 50.0f);
         glm::mat4 view = glm::lookAt(
-           -10.0f*glm::vec3(light.direction) + ren.getCamera().transform().position(),
+            -10.0f*glm::vec3(light.direction) + ren.getCamera().transform().position(),
             glm::vec3(0.0f) + ren.getCamera().transform().position(),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
-    
+
         glm::mat4 lightspacematrix = projection * view;
         glInterface::setUniform_mat4("un_lightspacematrix", lightspacematrix);
 
@@ -316,8 +315,6 @@ idk::RenderEngine::_shadowpass_dirlights()
         }
 
         depthmaps.get(light_id) = framebuffer.output_textures[0];
-        lmats.get(light_id) = lightspacematrix;
-
         i += 1;
     });
 }
@@ -340,9 +337,9 @@ idk::RenderEngine::_update_UBO_pointlights()
 {
     int num_pointlights = pointlights().size();
 
-    std::vector<idk::lightsource::Point> lights;
+    std::vector<idk::Pointlight> lights;
     pointlights().for_each(
-        [&lights](lightsource::Point &light)
+        [&lights](Pointlight &light)
         {
             lights.push_back(light);
         }
@@ -351,7 +348,7 @@ idk::RenderEngine::_update_UBO_pointlights()
 
     m_UBO_pointlights.bind();
     m_UBO_pointlights.add<int>(&num_pointlights);
-    m_UBO_pointlights.add(sizeof(lightsource::Point)*IDK_MAX_SPOTLIGHTS, &(lights[0]));
+    m_UBO_pointlights.add(sizeof(Pointlight)*IDK_MAX_SPOTLIGHTS, &(lights[0]));
     m_UBO_pointlights.unbind();
 }
 
@@ -361,9 +358,9 @@ idk::RenderEngine::_update_UBO_spotlights()
 {
     int num_spotlights = spotlights().size();
 
-    std::vector<idk::lightsource::Spot> lights;
+    std::vector<idk::Spotlight> lights;
     spotlights().for_each(
-        [&lights](lightsource::Spot &light)
+        [&lights](Spotlight &light)
         {
             lights.push_back(light);
         }
@@ -372,7 +369,7 @@ idk::RenderEngine::_update_UBO_spotlights()
 
     m_UBO_spotlights.bind();
     m_UBO_spotlights.add<int>(&num_spotlights);
-    m_UBO_spotlights.add(sizeof(lightsource::Spot)*IDK_MAX_SPOTLIGHTS, &(lights[0]));
+    m_UBO_spotlights.add(sizeof(Spotlight)*IDK_MAX_SPOTLIGHTS, &(lights[0]));
     m_UBO_spotlights.unbind();
 }
 
@@ -382,28 +379,35 @@ idk::RenderEngine::_update_UBO_dirlights()
 {
     int num_dirlights = dirlights().size();
 
-    std::vector<idk::lightsource::Dir> lights;
+    std::vector<idk::Dirlight> lights;
     std::vector<glm::mat4> matrices;
 
+    idk::Camera &camera = getCamera();
+
     dirlights().for_each(
-        [&lights](lightsource::Dir &light)
+        [&lights, &matrices, &camera](Dirlight &light)
         {
             lights.push_back(light);
+
+            glm::mat4 projection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, 0.1f, 50.0f);
+            glm::mat4 view = glm::lookAt(
+                -10.0f*glm::vec3(light.direction) + camera.transform().position(),
+                glm::vec3(0.0f) + camera.transform().position(),
+                glm::vec3(0.0f, 1.0f, 0.0f)
+            );
+
+            glm::mat4 lightspacematrix = projection * view;
+            matrices.push_back(lightspacematrix);
         }
     );
-    _dirlight_lightspacematrix_allocator.for_each(
-        [&matrices](glm::mat4 &mat)
-        {
-            matrices.push_back(mat);
-        }
-    );
+
 
     lights.resize(IDK_MAX_DIRLIGHTS);
     matrices.resize(IDK_MAX_DIRLIGHTS);
 
     m_UBO_dirlights.bind();
     m_UBO_dirlights.add<int>(&num_dirlights);
-    m_UBO_dirlights.add(sizeof(lightsource::Dir)*IDK_MAX_DIRLIGHTS, &(lights[0]));
+    m_UBO_dirlights.add(sizeof(Dirlight)*IDK_MAX_DIRLIGHTS, &(lights[0]));
     m_UBO_dirlights.add(sizeof(glm::mat4)*IDK_MAX_DIRLIGHTS, &(matrices[0]));
     m_UBO_dirlights.unbind();
 }
@@ -412,7 +416,10 @@ idk::RenderEngine::_update_UBO_dirlights()
 void
 idk::RenderEngine::beginFrame()
 {
-    glInterface::unbindIdkFramebuffer(m_resolution.x, m_resolution.y);
+    gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl::viewport(0, 0, m_resolution.x, m_resolution.y);
+    gl::clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 
@@ -465,30 +472,30 @@ idk::RenderEngine::endFrame()
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
 
     // Blinn-Phong lighting
-    _render_screenquad(
+    f_fbfb(
         m_deferred_lightingpass_shader,
         m_deferred_geom_buffer,
         m_final_buffer
     );
 
     // Volumetric directional lights
-    _render_screenquad(
+    f_fbfb(
         m_dirlight_vol_shader,
         m_deferred_geom_buffer,
         m_volumetrics_buffer
     );
 
     // Combine Blinn-Phong and volumetrics    
-    _render_screenquad(
-        _additive_shader,
+    f_fbfb(
+        m_additive_shader,
         m_final_buffer.output_textures[0],
         m_volumetrics_buffer.output_textures[0],
         m_colorgrade_buffer
     );
 
     // Post processing
-    _render_screenquad(_colorgrade_shader, m_colorgrade_buffer, m_fxaa_buffer);
-    _render_screenquad(_fxaa_shader, m_fxaa_buffer);
+    f_fbfb(m_colorgrade_shader, m_colorgrade_buffer, m_fxaa_buffer);
+    f_fbfb(m_fxaa_shader, m_fxaa_buffer);
 
     gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
     // -------------------------------------------------------------------
@@ -500,6 +507,8 @@ idk::RenderEngine::endFrame()
         m_colorgrade_buffer,
         m_final_buffer
     );
+
+    glInterface::unbindIdkFramebuffer(m_resolution.x, m_resolution.y);
 }
 
 

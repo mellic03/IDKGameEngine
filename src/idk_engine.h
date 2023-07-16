@@ -11,8 +11,8 @@ namespace idk { class Engine; };
 class idk::Engine
 {
 private:
-    Uint64                                      _frame_start;
-    Uint64                                      _frame_end;
+    Uint64                                      _frame_start  = 0;
+    Uint64                                      _frame_end    = 0;
     float                                       _frame_time   = 1.0f;
     bool                                        _running      = true;
 
@@ -20,21 +20,21 @@ private:
     idk::AudioEngine                            m_audio_engine;
     idk::EventManager                           m_event_manager;
 
-    std::vector<idk::Module *>                  _idk_modules;
-    std::unordered_map<std::string, uint>       _idk_module_ids;
+    std::vector<idk::Module *>                  m_idk_modules;
+    std::unordered_map<std::string, uint>       m_idk_module_ids;
 
-    idk::Allocator<int>                         _gameobjects;
-    std::vector<std::vector<int>>               _component_matrix; // v[object_id][cs_id]
-    std::vector<idk::ComponentSystem *>         _idk_componentsystems;
-    std::unordered_map<std::string, uint>       _idk_componentsystem_ids; // map[cs_name] = cs_id;
+    idk::Allocator<int>                         m_gameobjects;
+    std::vector<std::vector<int>>               m_component_matrix; // v[object_id][cs_id]
+    std::vector<idk::ComponentSystem *>         m_idk_componentsystems;
+    std::unordered_map<std::string, uint>       m_idk_componentsystem_ids; // map[cs_name] = cs_id;
 
-    void                                        _idk_CS_stage_A();
-    void                                        _idk_CS_stage_B();
-    void                                        _idk_CS_checkDependencies( int obj_id, int component_id );
-    void                                        _idk_CS_onAssignment( int component_id, int obj_id );
-    void                                        _idk_CS_onGameObjectCreation( int obj_id );
-    void                                        _idk_CS_onGameObjectDeletion( int obj_id );
-    void                                        _idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id );
+    void                                        f_idk_CS_stage_A();
+    void                                        f_idk_CS_stage_B();
+    void                                        f_idk_CS_checkDependencies( int obj_id, int component_id );
+    void                                        f_idk_CS_onAssignment( int component_id, int obj_id );
+    void                                        f_idk_CS_onGameObjectCreation( int obj_id );
+    void                                        f_idk_CS_onGameObjectDeletion( int obj_id );
+    void                                        f_idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id );
 
 public:
                                                 Engine( std::string name, int w, int h, int res_divisor );
@@ -54,11 +54,11 @@ public:
     int                                         createGameObject();
     int                                         createGameObject( int prefab_id );
     void                                        deleteGameObject( int obj_id );
-    Allocator<int> &                            gameObjects() { return _gameobjects; };
+    Allocator<int> &                            gameObjects() { return m_gameobjects; };
     std::vector<int>                            gameObjects_byComponent( int component_id );
 
     void                                        giveComponent( int obj_id, int component_id );
-    void                                        giveComponents( int obj_id ) {  }; // Base case
+    void                                        giveComponents( int obj_id ) {  };
     template <typename... Args> void            giveComponents( int obj_id,  int, Args... );
     void                                        removeComponent( int obj_id, int component_id );
     bool                                        hasComponent( int obj_id, int component_id );
@@ -80,11 +80,11 @@ template <typename module_t>
 int
 idk::Engine::registerModule( std::string name )
 {   
-    int module_id = _idk_modules.size();
-    _idk_modules.push_back(new module_t());
-    _idk_modules.back()->base_init(_idk_modules.size()-1, name);
-    _idk_modules.back()->init(*this);
-    _idk_module_ids[name] = module_id;
+    int module_id = m_idk_modules.size();
+    m_idk_modules.push_back(new module_t());
+    m_idk_modules.back()->base_init(m_idk_modules.size()-1, name);
+    m_idk_modules.back()->init(*this);
+    m_idk_module_ids[name] = module_id;
     return module_id;
 }
 
@@ -93,7 +93,7 @@ template <typename module_t>
 module_t &
 idk::Engine::getModule( int component_id )
 {   
-    return *dynamic_cast<module_t *>(_idk_modules[component_id]);
+    return *dynamic_cast<module_t *>(m_idk_modules[component_id]);
 }
 
 
@@ -101,8 +101,8 @@ template <typename module_t>
 module_t &
 idk::Engine::getModule( std::string name )
 {
-    int module_id = _idk_module_ids[name];
-    return *dynamic_cast<module_t *>(_idk_modules[module_id]);
+    int module_id = m_idk_module_ids[name];
+    return *dynamic_cast<module_t *>(m_idk_modules[module_id]);
 }
 
 
@@ -123,11 +123,11 @@ template <typename comp_t>
 int
 idk::Engine::registerCS( std::string name )
 {   
-    int cs_id = _idk_componentsystems.size();
-    _idk_componentsystems.push_back(new comp_t());
-    _idk_componentsystems.back()->base_init(_idk_componentsystems.size()-1, name);
-    _idk_componentsystems.back()->init(*this);
-    _idk_componentsystem_ids[name] = cs_id;
+    int cs_id = m_idk_componentsystems.size();
+    m_idk_componentsystems.push_back(new comp_t());
+    m_idk_componentsystems.back()->base_init(m_idk_componentsystems.size()-1, name);
+    m_idk_componentsystems.back()->init(*this);
+    m_idk_componentsystem_ids[name] = cs_id;
     return cs_id;
 }
 
@@ -136,7 +136,7 @@ template <typename comp_t>
 comp_t &
 idk::Engine::getCS( int component_id )
 {   
-    return *dynamic_cast<comp_t *>(_idk_componentsystems[component_id]);
+    return *dynamic_cast<comp_t *>(m_idk_componentsystems[component_id]);
 }
 
 
@@ -144,7 +144,7 @@ template <typename comp_t>
 comp_t &
 idk::Engine::getCS( std::string name )
 {
-    int cs_id = _idk_componentsystem_ids[name];
-    return *dynamic_cast<comp_t *>(_idk_componentsystems[cs_id]);
+    int cs_id = m_idk_componentsystem_ids[name];
+    return *dynamic_cast<comp_t *>(m_idk_componentsystems[cs_id]);
 }
 

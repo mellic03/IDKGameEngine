@@ -56,7 +56,7 @@ public:
         _ptr += 1;
         return *this;
     };
-    iterator &operator ++ (int)
+    iterator operator ++ (int)
     {
         iterator temp = *this;
         _ptr += 1;

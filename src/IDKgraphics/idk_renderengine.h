@@ -45,14 +45,14 @@ private:
     GLuint                              m_background_shader;
     GLuint                              m_lighting_background_shader;
 
-    GLuint                              _guassian_blur_shader;
+    GLuint                              m_guassian_blur_shader;
 
-    GLuint                              _dirshadow_shader;
-    GLuint                              _screenquad_shader;
+    GLuint                              m_dirshadow_shader;
+    GLuint                              m_screenquad_shader;
 
-    GLuint                              _colorgrade_shader;
-    GLuint                              _additive_shader;
-    GLuint                              _fxaa_shader;
+    GLuint                              m_colorgrade_shader;
+    GLuint                              m_additive_shader;
+    GLuint                              m_fxaa_shader;
     // --------------------------------------------------------
 
     // UBO ----------------------------------------------------
@@ -69,10 +69,10 @@ private:
     int                                 m_active_camera_id;
     Allocator<Camera>                   _camera_allocator;
     ModelManager                        _model_manager;
-    Allocator<lightsource::Point>       _pointlight_allocator;
-    Allocator<lightsource::Spot>        _spotlight_allocator;
+    Allocator<Pointlight>               _pointlight_allocator;
+    Allocator<Spotlight>                _spotlight_allocator;
 
-    Allocator<lightsource::Dir>         _dirlight_allocator;
+    Allocator<Dirlight>                 _dirlight_allocator;
     Allocator<GLuint>                   _dirlight_shadowmap_allocator;
     Allocator<glm::mat4>                _dirlight_lightspacematrix_allocator;
 
@@ -98,14 +98,15 @@ private:
     void                _shadowpass_spotlights();
     void                _shadowpass_dirlights();
 
+
     /** Run a shader on the output textures of "in" and render the result to "out" */
-    void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );
+    void                f_fbfb( GLuint shader, glFramebuffer &in, glFramebuffer &out );
     
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
-    void                _render_screenquad( GLuint shader, glFramebuffer &in );
+    void                f_fbfb( GLuint shader, glFramebuffer &in );
 
-    void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
-    void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1 );
+    void                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
+    void                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1 );
     // ------------------------------------------------------------------------------------
 
 
@@ -134,9 +135,9 @@ public:
     int                                 createSpotlight();
     int                                 createDirlight();
 
-    Allocator<lightsource::Point> &     pointlights()   { return _pointlight_allocator; };
-    Allocator<lightsource::Spot> &      spotlights()    { return _spotlight_allocator; };
-    Allocator<lightsource::Dir> &       dirlights()     { return _dirlight_allocator; };
+    Allocator<Pointlight> &             pointlights()   { return _pointlight_allocator; };
+    Allocator<Spotlight> &              spotlights()    { return _spotlight_allocator; };
+    Allocator<Dirlight> &               dirlights()     { return _dirlight_allocator; };
 
     ModelManager &                      modelManager()  { return _model_manager; };
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
