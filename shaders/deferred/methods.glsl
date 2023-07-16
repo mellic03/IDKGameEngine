@@ -90,7 +90,7 @@ vec3 spotlight_contribution( int idx, vec3 view_dir, vec3 position,
 
 float dirlight_shadow(int idx, vec3 position)
 {
-    vec4 fragpos_lightspace = un_dirlight_matrices[0] * vec4(position, 1.0);
+    vec4 fragpos_lightspace = ubo_dirlight_lightspacematrices[0] * vec4(position, 1.0);
 
     vec3 projCoords = fragpos_lightspace.xyz / fragpos_lightspace.w;
     projCoords = projCoords * 0.5 + 0.5; 

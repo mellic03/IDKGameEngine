@@ -16,8 +16,7 @@ namespace idk::glInterface
 
     GLuint                  loadTexture( int w, int h, uint32_t *data, bool srgb = false );
 
-    void                    genIdkFramebuffer(int width, int height, GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures);
-    void                    genIdkFramebuffer(int width, int height, glFramebuffer &);
+    glFramebuffer           genIdkFramebuffer(int width, int height, int num_render_targets);
     void                    bindIdkFramebuffer( glFramebuffer & );
     void                    unbindIdkFramebuffer(int width, int height);
     

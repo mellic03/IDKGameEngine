@@ -44,7 +44,7 @@ namespace idk::gl
     void bindBuffer( GLenum type, GLuint buf );
     void bindBufferBase( GLenum target, GLuint index, GLuint buffer );
     void bindBufferBase( GLenum target, UBOloc loc, GLuint buffer );
-    void bindFramebuffer( GLenum target, GLint framebuffer );
+    void bindFramebuffer( GLenum target, GLuint framebuffer );
     void bindTexture( GLenum target, GLuint texture );
     // ---------------------------------------------------------------------------------------
 

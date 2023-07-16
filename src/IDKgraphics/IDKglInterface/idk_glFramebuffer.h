@@ -9,8 +9,7 @@ struct idk::glFramebuffer
 {
     int width, height;
     GLuint FBO, RBO;
-    idk::vector<GLuint> textures;
-    glFramebuffer(size_t num_textures): textures(num_textures) {  };
+    std::vector<GLuint> output_textures;
 };
 
 

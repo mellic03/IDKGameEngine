@@ -158,21 +158,21 @@ idk::glInterface::loadTexture( int w, int h, uint32_t *data, bool srgb )
 
 
 void
-idk::glInterface::genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint &RBO, idk::vector<GLuint> &textures )
+weewa_genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint &RBO, std::vector<GLuint> &textures )
 {
     GLCALL( glDeleteFramebuffers(1, &FBO); )
     GLCALL( glDeleteRenderbuffers(1, &RBO); )
-    gl::deleteTextures(textures.size(), &(textures[0]));
+    idk::gl::deleteTextures(textures.size(), &(textures[0]));
 
     GLCALL( glGenFramebuffers(1, &FBO); )
     GLCALL( glGenRenderbuffers(1, &RBO); )
-    gl::genTextures(textures.size(), &(textures[0]));
+    idk::gl::genTextures(textures.size(), &(textures[0]));
 
-    gl::bindFramebuffer(GL_FRAMEBUFFER, FBO);
+    idk::gl::bindFramebuffer(GL_FRAMEBUFFER, FBO);
 
     for (int i=0; i<textures.size(); i++)
     {
-        gl::bindTexture(GL_TEXTURE_2D, textures[i]);
+        idk::gl::bindTexture(GL_TEXTURE_2D, textures[i]);
         GLCALL( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL); )
         GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); )
         GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); )
@@ -183,22 +183,30 @@ idk::glInterface::genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint 
     for (int i=0; i<textures.size(); i++)
         attachments[i] = GL_COLOR_ATTACHMENT0 + i;
     GLCALL( glDrawBuffers(textures.size(), &(attachments[0])); )
-     
+
     GLCALL( glBindRenderbuffer(GL_RENDERBUFFER, RBO); )
     GLCALL( glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height); )
     GLCALL( glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, RBO); )
 
     GLCALL( glBindRenderbuffer(GL_RENDERBUFFER, 0); )
-    gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+    idk::gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
-void
-idk::glInterface::genIdkFramebuffer(int width, int height, glFramebuffer &fb)
+
+idk::glFramebuffer
+idk::glInterface::genIdkFramebuffer(int width, int height, int num_render_targets)
 {
+    idk::glFramebuffer fb;
     fb.width = width;
     fb.height = height;
-    genIdkFramebuffer(width, height, fb.FBO, fb.RBO, fb.textures);
+    fb.FBO = 0;
+    fb.RBO = 0;
+    fb.output_textures.resize(num_render_targets);
+
+    weewa_genIdkFramebuffer(width, height, fb.FBO, fb.RBO, fb.output_textures);
+
+    return fb;
 }
 
 

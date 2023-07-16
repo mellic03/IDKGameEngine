@@ -64,7 +64,7 @@ idk::gl::bindBufferBase( GLenum target, UBOloc loc, GLuint buffer )
     glBindBufferBase(target, static_cast<GLuint>(loc), buffer);
 }
 
-void idk::gl::bindFramebuffer( GLenum target, GLint framebuffer )
+void idk::gl::bindFramebuffer( GLenum target, GLuint framebuffer )
 {
     GLCALL( glBindFramebuffer(target, framebuffer); )
 }

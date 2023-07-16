@@ -43,7 +43,7 @@ layout (std140, binding = 5) uniform UBO_dirlights
 {
     int         ubo_num_dirlights;
     DirLight    ubo_dirlights[MAX_DIRLIGHTS];
+    mat4        ubo_dirlight_lightspacematrices[MAX_DIRLIGHTS];
 };
 uniform sampler2D   un_dirlight_depthmaps[MAX_DIRLIGHTS];
-uniform mat4        un_dirlight_matrices[MAX_DIRLIGHTS];
 

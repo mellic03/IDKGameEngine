@@ -13,18 +13,12 @@ class idk::Engine
 private:
     Uint64                                      _frame_start;
     Uint64                                      _frame_end;
-    float                                       _frame_time;
-    bool                                        _running = true;
+    float                                       _frame_time   = 1.0f;
+    bool                                        _running      = true;
 
     idk::RenderEngine                           m_render_engine;
     idk::AudioEngine                            m_audio_engine;
     idk::EventManager                           m_event_manager;
-
-
-
-    glm::vec2                                   _delta_mouse_position;
-    glm::vec2                                   _mouse_position;
-    bool                                        _mouse_captured;
 
     std::vector<idk::Module *>                  _idk_modules;
     std::unordered_map<std::string, uint>       _idk_module_ids;
@@ -43,7 +37,7 @@ private:
     void                                        _idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id );
 
 public:
-                                                Engine( std::string windowname, size_t w = 1000, size_t h = 1000 );
+                                                Engine( std::string name, int w, int h, int res_divisor );
 
     idk::RenderEngine &                         rengine()   { return m_render_engine; };
     idk::AudioEngine &                          aengine()   { return m_audio_engine;  };

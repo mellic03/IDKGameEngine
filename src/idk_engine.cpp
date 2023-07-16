@@ -1,8 +1,8 @@
 #include "idk_engine.h"
 
 
-idk::Engine::Engine( std::string windowname, size_t w, size_t h ):
-_frame_time(1), m_render_engine(windowname, w, h), _mouse_captured(false)
+idk::Engine::Engine( std::string name, int w, int h, int res_divisor ):
+m_render_engine(name, w, h, res_divisor )
 {
     idk::Engine &engine = *this;
     idk::RenderEngine &ren = m_render_engine;
@@ -10,14 +10,12 @@ _frame_time(1), m_render_engine(windowname, w, h), _mouse_captured(false)
 
     auto resize_lambda = [&ren, &eman]()
     {
-        std::cout << "ren.resize()" << std::endl;
         auto windata = eman.windowData();
         ren.resize(windata.width, windata.height);
     };
 
     auto exit_lambda = [&engine]()
     {
-        std::cout << "engine.shutdown()" << std::endl;
         engine.shutdown();
     };
 
@@ -226,7 +224,6 @@ idk::Engine::endFrame()
     _idk_CS_stage_B();
     m_render_engine.swapWindow();
 
-    _delta_mouse_position = glm::vec2(0.0f);
     _frame_end = SDL_GetPerformanceCounter();
     _frame_time = ((double)(_frame_end - _frame_start)) / (double)SDL_GetPerformanceFrequency();
 }

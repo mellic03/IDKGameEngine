@@ -22,28 +22,28 @@ namespace idk { class RenderEngine; };
 class idk::RenderEngine
 {
 private:
-    int                                 _res_x, _res_y;
+    glm::ivec2                          m_resolution;
 
-    SDL_Window *                        _SDL_window;
-    SDL_GLContext                       _SDL_gl_context;
+    SDL_Window *                        m_SDL_window;
+    SDL_GLContext                       m_SDL_gl_context;
 
     // idk::glFramebuffers ------------------------------------
     /***/
-    glFramebuffer                       _deferred_geometrypass_buffer;
-    glFramebuffer                       _deferred_dirlight_volumetrics_buffer;
-    glFramebuffer                       _colorgrade_buffer;
-    glFramebuffer                       _fxaa_buffer;
-    glFramebuffer                       _final_buffer;
+    glFramebuffer                       m_deferred_geom_buffer;
+    glFramebuffer                       m_volumetrics_buffer;
+    glFramebuffer                       m_colorgrade_buffer;
+    glFramebuffer                       m_fxaa_buffer;
+    glFramebuffer                       m_final_buffer;
 
     // --------------------------------------------------------
 
     // Shaders ------------------------------------------------
     /***/
-    GLuint                              _deferred_geometrypass_shader;
-    GLuint                              _deferred_lightingpass_shader;
-    GLuint                              _deferred_dirlight_volumetrics_shader;
-    GLuint                              _background_shader;
-    GLuint                              _lighting_background_shader;
+    GLuint                              m_deferred_geometrypass_shader;
+    GLuint                              m_deferred_lightingpass_shader;
+    GLuint                              m_dirlight_vol_shader;
+    GLuint                              m_background_shader;
+    GLuint                              m_lighting_background_shader;
 
     GLuint                              _guassian_blur_shader;
 
@@ -56,17 +56,17 @@ private:
     // --------------------------------------------------------
 
     // UBO ----------------------------------------------------
-    glUBO                               _UBO_camera;
-    glUBO                               _UBO_pointlights;
-    glUBO                               _UBO_spotlights;
-    glUBO                               _UBO_dirlights;
+    glUBO                               m_UBO_camera;
+    glUBO                               m_UBO_pointlights;
+    glUBO                               m_UBO_spotlights;
+    glUBO                               m_UBO_dirlights;
 
-    glFramebuffer                       _dirlight_depthmap_buffer;
+    glFramebuffer                       m_dirlight_depthmap_buffer;
     // --------------------------------------------------------
 
     GLuint                              _quad_VAO, _quad_VBO;
 
-    int                                 _active_camera_id;
+    int                                 m_active_camera_id;
     Allocator<Camera>                   _camera_allocator;
     ModelManager                        _model_manager;
     Allocator<lightsource::Point>       _pointlight_allocator;
@@ -82,8 +82,9 @@ private:
 
     // Initialization ---------------------------------------------------------------------
     /***/
-    void                _init_SDL_OpenGL( std::string windowname, size_t w, size_t h );
-    void                _init_screenquad();
+    void                f_init_SDL_OpenGL( std::string windowname, size_t w, size_t h );
+    void                f_init_screenquad();
+    void                f_gen_idk_framebuffers( int width, int height );
     // ------------------------------------------------------------------------------------
 
     // Draw-related methods ---------------------------------------------------------------
@@ -97,10 +98,10 @@ private:
     void                _shadowpass_spotlights();
     void                _shadowpass_dirlights();
 
-    /** Run a shader on the output textures of in and render the result to out */
+    /** Run a shader on the output textures of "in" and render the result to "out" */
     void                _render_screenquad( GLuint shader, glFramebuffer &in, glFramebuffer &out );
     
-    /** Run a shader on the output textures of in and render the result to the default frame buffer */
+    /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
     void                _render_screenquad( GLuint shader, glFramebuffer &in );
 
     void                _render_screenquad( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
@@ -120,14 +121,14 @@ public:
     static GLuint                       SPHERE_PRIMITIVE;
     static GLuint                       CUBE_PRIMITIVE;
     // ------------------------------------------------------------------------------------
-    void                                compileShaders();
+    void                                f_compile_shaders();
 
-                                        RenderEngine( std::string windowname, size_t w, size_t h );
-    SDL_Window *                        SDLWindow()     { return _SDL_window;      };
-    SDL_GLContext *                     SDLGLContext()  { return &_SDL_gl_context; };
+                                        RenderEngine( std::string name, int w, int h, int res_divisor );
+    SDL_Window *                        SDLWindow()     { return m_SDL_window;      };
+    SDL_GLContext *                     SDLGLContext()  { return &m_SDL_gl_context; };
 
     int                                 createCamera();
-    idk::Camera &                       getCamera()         { return _camera_allocator.get(_active_camera_id); };
+    idk::Camera &                       getCamera()         { return _camera_allocator.get(m_active_camera_id); };
 
     int                                 createPointlight();
     int                                 createSpotlight();
@@ -146,8 +147,9 @@ public:
     void                                swapWindow();
     void                                resize( int w, int h );
 
-    int                                 width()  const  { return _res_x; };
-    int                                 height() const  { return _res_y; };
+    glm::ivec2                          resolution() const { return m_resolution;   };
+    int                                 width()      const { return m_resolution.x; };
+    int                                 height()     const { return m_resolution.y; };
 
 };
 
