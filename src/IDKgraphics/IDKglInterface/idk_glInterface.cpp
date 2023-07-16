@@ -250,6 +250,7 @@ void
 idk::glInterface::unbindIdkFramebuffer( int width, int height )
 {
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl::viewport(0, 0, width, height);
 }
 
 
@@ -257,13 +258,14 @@ void
 idk::glInterface::clearIdkFramebuffer( glFramebuffer &fb )
 {
     gl::bindFramebuffer(GL_FRAMEBUFFER, fb.FBO);
+    gl::viewport(0, 0, fb.width, fb.height);
     gl::clearColor(0.0f, 0.0f, 0.0f, 0.0f);
     gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 }
 
 
 void
-idk::glInterface::clearIdkFramebuffers(  )
+idk::glInterface::clearIdkFramebuffers( )
 {
 
 }

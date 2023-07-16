@@ -13,6 +13,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/${idkengin
 add_subdirectory(IDKcommon)
 add_subdirectory(IDKgraphics)
 add_subdirectory(IDKaudio)
+add_subdirectory(IDKevents)
 
 
 target_link_libraries(
@@ -20,4 +21,5 @@ target_link_libraries(
     IDKcommon
     IDKgraphics
     IDKaudio
+    IDKevents
 )

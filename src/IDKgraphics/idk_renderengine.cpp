@@ -17,6 +17,10 @@ idk::RenderEngine::_init_SDL_OpenGL( std::string windowname, size_t w, size_t h)
         exit(1);
     }
 
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
     _SDL_window = SDL_CreateWindow(
         windowname.c_str(),
         SDL_WINDOWPOS_CENTERED,
@@ -27,6 +31,7 @@ idk::RenderEngine::_init_SDL_OpenGL( std::string windowname, size_t w, size_t h)
     );
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 4);
+
 
     _SDL_gl_context = SDL_GL_CreateContext(_SDL_window);
     SDL_GL_MakeCurrent(_SDL_window, _SDL_gl_context);
@@ -397,8 +402,6 @@ idk::RenderEngine::_update_UBO_dirlights()
 void
 idk::RenderEngine::beginFrame()
 {
-    SDL_GL_SwapWindow(_SDL_window);
-
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
     gl::clearColor(0.0f, 0.0f, 0.0f, 1.0f);
     gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -468,14 +471,6 @@ idk::RenderEngine::endFrame()
         _deferred_dirlight_volumetrics_buffer
     );
 
-
-    // // Blur volumetric directional lights
-    // _render_screenquad(
-    //     _guassian_blur_shader,
-    //     _deferred_dirlight_volumetrics_buffer,
-    //     _deferred_geometrypass_buffer
-    // );
-
     // Combine Blinn-Phong and volumetrics    
     _render_screenquad(
         _additive_shader,
@@ -498,6 +493,15 @@ idk::RenderEngine::endFrame()
         _colorgrade_buffer,
         _final_buffer
     );
+
+    glInterface::unbindIdkFramebuffer(_res_x, _res_y);
+}
+
+
+void
+idk::RenderEngine::swapWindow()
+{
+    SDL_GL_SwapWindow(_SDL_window);
 }
 
 
@@ -512,6 +516,7 @@ idk::RenderEngine::resize( int w, int h )
     glInterface::genIdkFramebuffer(w, h, _colorgrade_buffer);
     glInterface::genIdkFramebuffer(w, h, _fxaa_buffer);
     glInterface::genIdkFramebuffer(w, h, _final_buffer);
+
 
     getCamera().aspect(w, h);
 }

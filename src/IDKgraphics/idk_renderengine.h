@@ -123,6 +123,8 @@ public:
     void                                compileShaders();
 
                                         RenderEngine( std::string windowname, size_t w, size_t h );
+    SDL_Window *                        SDLWindow()     { return _SDL_window;      };
+    SDL_GLContext *                     SDLGLContext()  { return &_SDL_gl_context; };
 
     int                                 createCamera();
     idk::Camera &                       getCamera()         { return _camera_allocator.get(_active_camera_id); };
@@ -141,6 +143,7 @@ public:
 
     void                                beginFrame();
     void                                endFrame();
+    void                                swapWindow();
     void                                resize( int w, int h );
 
     int                                 width()  const  { return _res_x; };

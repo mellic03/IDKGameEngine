@@ -2,6 +2,7 @@
 
 #include "IDKgraphics/IDKgraphics.h"
 #include "IDKaudio/IDKaudio.h"
+#include "IDKevents/idk_event_manager.h"
 #include "idk_componentsystem.h"
 
 namespace idk { class Engine; };
@@ -15,13 +16,11 @@ private:
     float                                       _frame_time;
     bool                                        _running = true;
 
-    idk::RenderEngine                           _render_engine;
-    idk::AudioEngine                            _audio_engine;
+    idk::RenderEngine                           m_render_engine;
+    idk::AudioEngine                            m_audio_engine;
+    idk::EventManager                           m_event_manager;
 
-    SDL_Event                                   _SDL_event;
-    idk::Keylog                                 _keylog;
-    std::vector<bool>                           _mouse_up;
-    std::vector<bool>                           _mouse_down;
+
 
     glm::vec2                                   _delta_mouse_position;
     glm::vec2                                   _mouse_position;
@@ -35,11 +34,6 @@ private:
     std::vector<idk::ComponentSystem *>         _idk_componentsystems;
     std::unordered_map<std::string, uint>       _idk_componentsystem_ids; // map[cs_name] = cs_id;
 
-    void                                        _process_key_input();
-    void                                        _process_mouse_input();
-    void                                        _process_mouse_input_SDL2();
-    void                                        _process_mouse_input_SFML();
-
     void                                        _idk_CS_stage_A();
     void                                        _idk_CS_stage_B();
     void                                        _idk_CS_checkDependencies( int obj_id, int component_id );
@@ -51,9 +45,9 @@ private:
 public:
                                                 Engine( std::string windowname, size_t w = 1000, size_t h = 1000 );
 
-    idk::RenderEngine &                         rengine()   { return _render_engine; };
-    idk::AudioEngine &                          aengine()   { return _audio_engine;  };
-    Keylog &                                    keylog()    { return _keylog; };
+    idk::RenderEngine &                         rengine()   { return m_render_engine; };
+    idk::AudioEngine &                          aengine()   { return m_audio_engine;  };
+    idk::EventManager &                         eventManager() { return m_event_manager; };
 
     bool                                        running()   { return _running; };
     void                                        beginFrame();
@@ -62,13 +56,6 @@ public:
 
     float                                       deltaTime() { return _frame_time;        };
     float                                       frameRate() { return 1.0f / deltaTime(); };
-
-    glm::vec2                                   mouse()     { return _mouse_position;       };
-    glm::vec2                                   dMouse()    { return _delta_mouse_position; };
-    bool                                        mouseUp( idk::MouseButton mb );
-    bool                                        mouseDown( idk::MouseButton mb );
-    void                                        mouseCapture( bool capture );
-    bool                                        mouseCaptured();
 
     int                                         createGameObject();
     int                                         createGameObject( int prefab_id );
