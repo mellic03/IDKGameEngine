@@ -21,7 +21,6 @@ m_render_engine(name, w, h, res_divisor )
 
     m_event_manager.onWindowEvent(WindowEvent::RESIZE, resize_lambda);
     m_event_manager.onWindowEvent(WindowEvent::EXIT,   exit_lambda);
-
 }
 
 
@@ -55,6 +54,23 @@ idk::Engine::f_idk_CS_stage_B()
     {
         idk::Module *mod = m_idk_modules[i];
         mod->stage_B(*this);
+    }
+}
+
+
+void
+idk::Engine::f_idk_CS_stage_C()
+{
+    for (size_t i=0; i<m_idk_componentsystems.size(); i++)
+    {
+        idk::ComponentSystem *CS = m_idk_componentsystems[i];
+        CS->stage_C(*this);
+    }
+
+    for (size_t i=0; i<m_idk_modules.size(); i++)
+    {
+        idk::Module *mod = m_idk_modules[i];
+        mod->stage_C(*this);
     }
 }
 
@@ -205,7 +221,7 @@ idk::Engine::hasComponent( int obj_id, std::string component_name )
 void
 idk::Engine::beginFrame()
 {
-    _frame_start = SDL_GetPerformanceCounter();
+    m_frame_start = SDL_GetPerformanceCounter();
    
     m_event_manager.processKeyInput();
     m_event_manager.processMouseInput();
@@ -223,15 +239,16 @@ idk::Engine::endFrame()
     m_render_engine.endFrame();
     f_idk_CS_stage_B();
     m_render_engine.swapWindow();
+    f_idk_CS_stage_C();
 
-    _frame_end = SDL_GetPerformanceCounter();
-    _frame_time = ((double)(_frame_end - _frame_start)) / (double)SDL_GetPerformanceFrequency();
+    m_frame_end = SDL_GetPerformanceCounter();
+    m_frame_time = ((double)(m_frame_end - m_frame_start)) / (double)SDL_GetPerformanceFrequency();
 }
 
 
 void
 idk::Engine::shutdown()
 {
-    _running = false;
+    m_running = false;
 }
 

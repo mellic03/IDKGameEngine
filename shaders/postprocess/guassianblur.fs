@@ -8,7 +8,7 @@ uniform sampler2D un_texture_0;
 
 void main()
 {
-    const float offset = 1.0 / 150.0;
+    const float offset = 1.0 / 350.0;
 
     vec2 offsets[9] = vec2[](
         vec2(-offset,  offset), // top-left

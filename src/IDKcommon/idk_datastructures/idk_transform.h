@@ -6,11 +6,11 @@
 class idk::Transform
 {
 private:
-    glm::vec3           _front      = glm::vec3( 0.0f,  0.0f, -1.0f );
-    glm::vec3           _right      = glm::vec3( 1.0f,  0.0f,  0.0f );
-    glm::vec3           _up         = glm::vec3( 0.0f,  1.0f,  0.0f );
-    glm::vec3           _scale      = glm::vec3( 1.0f );
-    glm::mat4           _model_mat  = glm::mat4( 1.0f );
+    glm::vec3           m_front      = glm::vec3( 0.0f,  0.0f, -1.0f );
+    glm::vec3           m_right      = glm::vec3( 1.0f,  0.0f,  0.0f );
+    glm::vec3           m_up         = glm::vec3( 0.0f,  1.0f,  0.0f );
+    glm::vec3           m_scale      = glm::vec3( 1.0f );
+    glm::mat4           m_model_mat  = glm::mat4( 1.0f );
 
 public:
                         Transform();

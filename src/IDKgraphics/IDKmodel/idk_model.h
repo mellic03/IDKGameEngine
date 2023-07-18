@@ -18,7 +18,7 @@ namespace idk
 
 struct idk::Texture
 {
-    GLuint gl_id;
+    GLuint gl_id = 0;
     idk::__tex_file_t tex_file;
 };
 
@@ -42,9 +42,10 @@ struct idk::Material
 
 struct idk::Mesh
 {
-    int material_id = -1;
+    int material_id;
     GLuint IBO;
     std::vector<GLuint> vertex_indices;
+    Mesh(): material_id(0), IBO(0) {  };
 };
 
 

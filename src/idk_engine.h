@@ -11,10 +11,10 @@ namespace idk { class Engine; };
 class idk::Engine
 {
 private:
-    Uint64                                      _frame_start  = 0;
-    Uint64                                      _frame_end    = 0;
-    float                                       _frame_time   = 1.0f;
-    bool                                        _running      = true;
+    Uint64                                      m_frame_start = 0;
+    Uint64                                      m_frame_end   = 0;
+    float                                       m_frame_time  = 1.0f;
+    bool                                        m_running     = true;
 
     idk::RenderEngine                           m_render_engine;
     idk::AudioEngine                            m_audio_engine;
@@ -30,6 +30,7 @@ private:
 
     void                                        f_idk_CS_stage_A();
     void                                        f_idk_CS_stage_B();
+    void                                        f_idk_CS_stage_C();
     void                                        f_idk_CS_checkDependencies( int obj_id, int component_id );
     void                                        f_idk_CS_onAssignment( int component_id, int obj_id );
     void                                        f_idk_CS_onGameObjectCreation( int obj_id );
@@ -43,12 +44,12 @@ public:
     idk::AudioEngine &                          aengine()   { return m_audio_engine;  };
     idk::EventManager &                         eventManager() { return m_event_manager; };
 
-    bool                                        running()   { return _running; };
+    bool                                        running()   { return m_running; };
     void                                        beginFrame();
     void                                        endFrame();
     void                                        shutdown();
 
-    float                                       deltaTime() { return _frame_time;        };
+    float                                       deltaTime() { return m_frame_time;        };
     float                                       frameRate() { return 1.0f / deltaTime(); };
 
     int                                         createGameObject();

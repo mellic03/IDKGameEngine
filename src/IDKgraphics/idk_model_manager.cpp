@@ -26,7 +26,7 @@ idk::ModelManager::_load_mtl( std::string raw_mtl )
 {
     std::stringstream stream(raw_mtl);
     std::string line;
-    uint material_id;
+    int material_id = -1;
 
     while (getline(stream, line))
     {

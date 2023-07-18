@@ -16,9 +16,9 @@ template <typename T>
 class idk::Allocator
 {
 private:
-    std::vector<bool>       _is_occupied;
-    std::vector<int>        _unnocupied_indices;
-    std::vector<T>          _objects;
+    std::vector<bool>       m_is_occupied;
+    std::vector<int>        m_unnocupied_indices;
+    std::vector<T>          m_objects;
 
 public:
                             Allocator();
@@ -28,7 +28,7 @@ public:
 
     T &                     get( int id );
     void                    remove( int id );
-    int                     size() const { return _objects.size() - _unnocupied_indices.size(); };
+    int                     size() const { return m_objects.size() - m_unnocupied_indices.size(); };
 
     void                    for_each(std::function<void(T&)>);
     void                    for_each(std::function<void(int, T&)>);
@@ -37,7 +37,7 @@ public:
 
 
 template <typename T>
-idk::Allocator<T>::Allocator(): _is_occupied(0), _unnocupied_indices(0), _objects(0)
+idk::Allocator<T>::Allocator(): m_is_occupied(0), m_unnocupied_indices(0), m_objects(0)
 {
 
 }
@@ -47,18 +47,18 @@ template <typename T>
 int
 idk::Allocator<T>::add()
 {
-    if (_unnocupied_indices.empty())
+    if (m_unnocupied_indices.empty())
     {
-        _is_occupied.push_back(true);
-        _objects.push_back(T());
-        return _objects.size()-1;
+        m_is_occupied.push_back(true);
+        m_objects.push_back(T());
+        return m_objects.size()-1;
     }
 
     else
     {
-        int id = _unnocupied_indices.back(); _unnocupied_indices.pop_back();
-        _objects[id] = T();
-        _is_occupied[id] = true;
+        int id = m_unnocupied_indices.back(); m_unnocupied_indices.pop_back();
+        m_objects[id] = T();
+        m_is_occupied[id] = true;
         return id;
     }
 };
@@ -68,18 +68,18 @@ template <typename T>
 int
 idk::Allocator<T>::add(const T &data)
 {
-    if (_unnocupied_indices.empty())
+    if (m_unnocupied_indices.empty())
     {
-        _is_occupied.push_back(true);
-        _objects.push_back(data);
-        return _objects.size()-1;
+        m_is_occupied.push_back(true);
+        m_objects.push_back(data);
+        return m_objects.size()-1;
     }
 
     else
     {
-        int id = _unnocupied_indices.back(); _unnocupied_indices.pop_back();
-        _objects[id] = data;
-        _is_occupied[id] = true;
+        int id = m_unnocupied_indices.back(); m_unnocupied_indices.pop_back();
+        m_objects[id] = data;
+        m_is_occupied[id] = true;
         return id;
     }
 };
@@ -91,17 +91,17 @@ T &
 idk::Allocator<T>::get(int id)
 {
     #ifdef IDK_DEBUG
-    if (id >= (int)_objects.size())
+    if (id >= (int)m_objects.size())
     {
         std::cout
         << "Runtime error in idk::Allocator<T>::get(int id)\n" 
-        << "\tid " << id << " is >= size (" << _objects.size() << ")"
+        << "\tid " << id << " is >= size (" << m_objects.size() << ")"
         << std::endl;
         exit(1);
     }
     #endif
 
-    return _objects[id];
+    return m_objects[id];
 };
 
 
@@ -110,18 +110,18 @@ void
 idk::Allocator<T>::remove(int id)
 {
     #ifdef IDK_DEBUG
-    if (id >= (int)_objects.size())
+    if (id >= (int)m_objects.size())
     {
         std::cout
         << "Runtime error in idk::Allocator<T>::remove(int id)\n" 
-        << "\tid " << id << " is >= size (" << _objects.size() << ")"
+        << "\tid " << id << " is >= size (" << m_objects.size() << ")"
         << std::endl;
         exit(1);
     }
     #endif
 
-    _is_occupied[id] = false;
-    _unnocupied_indices.push_back(id);
+    m_is_occupied[id] = false;
+    m_unnocupied_indices.push_back(id);
 };
 
 
@@ -129,12 +129,12 @@ template <typename T>
 void
 idk::Allocator<T>::for_each(std::function<void(T&)> lambda_fn)
 {
-    for (size_t i=0; i<_objects.size(); i++)
+    for (size_t i=0; i<m_objects.size(); i++)
     {
-        if (_is_occupied[i] == false)
+        if (m_is_occupied[i] == false)
             continue;
 
-        lambda_fn(_objects[i]);
+        lambda_fn(m_objects[i]);
     }
 }
 
@@ -143,12 +143,12 @@ template <typename T>
 void
 idk::Allocator<T>::for_each(std::function<void(int, T&)> lambda_fn)
 {
-    for (size_t i=0; i<_objects.size(); i++)
+    for (size_t i=0; i<m_objects.size(); i++)
     {
-        if (_is_occupied[i] == false)
+        if (m_is_occupied[i] == false)
             continue;
 
-        lambda_fn(i, _objects[i]);
+        lambda_fn(i, m_objects[i]);
     }
 }
 
@@ -157,17 +157,17 @@ template <typename T>
 void
 idk::Allocator<T>::for_each_pair(std::function<void(T&, T&)> lambda_fn)
 {
-    for (size_t i=0; i<_objects.size(); i++)
+    for (size_t i=0; i<m_objects.size(); i++)
     {
-        if (_is_occupied[i] == false)
+        if (m_is_occupied[i] == false)
             continue;
 
-        for (size_t j=i+1; j<_objects.size(); j++)
+        for (size_t j=i+1; j<m_objects.size(); j++)
         {
-            if (_is_occupied[j] == false)
+            if (m_is_occupied[j] == false)
                 continue;
 
-            lambda_fn(_objects[i], _objects[j]);
+            lambda_fn(m_objects[i], m_objects[j]);
         }
     }
 }

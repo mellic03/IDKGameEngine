@@ -14,8 +14,8 @@ template <typename T>
 class idk::Graph
 {
 private:
-    adjlist_t           _edges;
-    std::map<int, T>    _vertices;
+    adjlist_t           m_edges;
+    std::map<int, T>    m_vertices;
 
 public:
                         Graph() {  };
@@ -38,7 +38,7 @@ template <typename T>
 void
 idk::Graph<T>::addVertex( int v, const T &data )
 {
-    _vertices[v] = data;
+    m_vertices[v] = data;
 }
 
 
@@ -46,7 +46,7 @@ template <typename T>
 const T&
 idk::Graph<T>::getVertex( int v )
 {
-    return _vertices[v];
+    return m_vertices[v];
 }
 
 
@@ -54,7 +54,7 @@ template <typename T>
 void
 idk::Graph<T>::addEdge( int v0, int v1, float weight )
 {
-    _edges[v0][v1] = weight;
+    m_edges[v0][v1] = weight;
 }
 
 
@@ -62,7 +62,7 @@ template <typename T>
 void
 idk::Graph<T>::removeEdge( int v0, int v1 )
 {
-    _edges[v0][v1] = std::numeric_limits<float>::infinity();
+    m_edges[v0][v1] = std::numeric_limits<float>::infinity();
 }
 
 
@@ -71,8 +71,8 @@ void
 idk::Graph<T>::shortestPath( int start, int end, idk::vector<T> &path )
 {
     std::set<std::pair<float, int>> pq;
-    idk::vector<float> dist(_vertices.size(), std::numeric_limits<float>::infinity());
-    idk::vector<int> prev(_vertices.size(), -1);
+    idk::vector<float> dist(m_vertices.size(), std::numeric_limits<float>::infinity());
+    idk::vector<int> prev(m_vertices.size(), -1);
 
     dist[start] = 0.0f;
     pq.insert({0.0f, start});
@@ -82,7 +82,7 @@ idk::Graph<T>::shortestPath( int start, int end, idk::vector<T> &path )
         int u = pq.begin()->second;
         pq.erase(pq.begin());
 
-        for (auto &p: _edges[u])
+        for (auto &p: m_edges[u])
         {
             int v = p.first;
             float weight = p.second;
@@ -102,7 +102,7 @@ idk::Graph<T>::shortestPath( int start, int end, idk::vector<T> &path )
     int idx = end;
     while (idx != -1)
     {
-        path.push(_vertices[idx]);
+        path.push(m_vertices[idx]);
         idx = prev[idx];
     }
 }

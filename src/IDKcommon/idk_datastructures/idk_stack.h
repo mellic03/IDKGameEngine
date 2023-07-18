@@ -8,20 +8,20 @@ template <typename T>
 class idk::stack
 {
 private:
-    T *_data;
-    size_t _size, _cap;
+    T *m_data;
+    size_t m_size, m_cap;
 
     void _resize(size_t cap);
 
 public:
-                stack(): _size(0), _cap(1), _data(new T[1]) {  };
-                ~stack() { if (_data) delete[] _data; };
+                stack(): m_size(0), m_cap(1), m_data(new T[1]) {  };
+                ~stack() { if (m_data) delete[] m_data; };
 
     void        push(const T &data);
-    T &         top()               { return _data[_size];   };
-    T           pop()               { return _data[--_size]; };
-    size_t      size() const        { return _size;          };
-    bool        empty()             { return _size == 0;     };
+    T &         top()               { return m_data[m_size];   };
+    T           pop()               { return m_data[--m_size]; };
+    size_t      size() const        { return m_size;          };
+    bool        empty()             { return m_size == 0;     };
 };
 
 
@@ -29,16 +29,16 @@ template <typename T>
 void
 idk::stack<T>::_resize(size_t cap)
 {
-    T *temp = new T[_size];
-    memcpy((void *)temp, (void *)_data, _size * sizeof(T));
+    T *temp = new T[m_size];
+    memcpy((void *)temp, (void *)m_data, m_size * sizeof(T));
 
-    delete[] _data;
-    _data = new T[cap];
+    delete[] m_data;
+    m_data = new T[cap];
 
-    memcpy((void *)_data, (void *)temp, _size * sizeof(T));
+    memcpy((void *)m_data, (void *)temp, m_size * sizeof(T));
 
     delete[] temp;
-    _cap = cap;
+    m_cap = cap;
 }
 
 
@@ -46,10 +46,10 @@ template <typename T>
 void
 idk::stack<T>::push(const T &data)
 {
-    if (_size+1 > _cap)
-        _resize(2*_cap);
+    if (m_size+1 > m_cap)
+        _resize(2*m_cap);
 
-    _data[_size] = data;
-    _size += 1;
+    m_data[m_size] = data;
+    m_size += 1;
 }
 

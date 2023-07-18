@@ -3,16 +3,16 @@
 #include <sstream>
 #include <iostream>
 
-static    GLuint                  _active_shader_id;
-static    idk::vector<GLuint>     _available_glTextureUnits;
-static    idk::vector<GLuint>     _unavailable_glTextureUnits;
+static    GLuint                  m_active_shader_id;
+static    idk::vector<GLuint>     m_available_glTextureUnits;
+static    idk::vector<GLuint>     m_unavailable_glTextureUnits;
 
 
 void
 idk::glInterface::init()
 {
     for (GLint i = GL_TEXTURE0; i < IDK_GLINTERFACE_MAX_TEXTUREi; i++)
-        _available_glTextureUnits.push(i);
+        m_available_glTextureUnits.push(i);
 }
 
 
@@ -174,8 +174,8 @@ weewa_genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint &RBO, std::v
     {
         idk::gl::bindTexture(GL_TEXTURE_2D, textures[i]);
         GLCALL( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL); )
-        GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); )
-        GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); )
+        GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); )
+        GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); )
         GLCALL( glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, textures[i], 0);   )
     }
 
@@ -213,17 +213,17 @@ GLuint
 idk::glInterface::popTextureUnitID()
 {
     #ifdef IDK_DEBUG
-    if (_available_glTextureUnits.size() == 0)
+    if (m_available_glTextureUnits.size() == 0)
     {
         std::cout << "Ruh roh, "
-                  << "_available_glTextureUnits.size() == 0"
+                  << "m_available_glTextureUnits.size() == 0"
                   << std::endl;
         exit(1);
     }
     #endif
 
-    GLuint textureunit_id = _available_glTextureUnits.pop();
-    _unavailable_glTextureUnits.push(textureunit_id);
+    GLuint textureunit_id = m_available_glTextureUnits.pop();
+    m_unavailable_glTextureUnits.push(textureunit_id);
     return textureunit_id;
 }
 
@@ -231,8 +231,8 @@ idk::glInterface::popTextureUnitID()
 void
 idk::glInterface::freeTextureUnitIDs()
 {
-    while (_unavailable_glTextureUnits.empty() == false)
-        _available_glTextureUnits.push(_unavailable_glTextureUnits.pop());
+    while (m_unavailable_glTextureUnits.empty() == false)
+        m_available_glTextureUnits.push(m_unavailable_glTextureUnits.pop());
 }
 
 
@@ -240,8 +240,8 @@ void
 idk::glInterface::useProgram(GLuint shader_id)
 {
     freeTextureUnitIDs();
-    _active_shader_id = shader_id;
-    gl::useProgram(_active_shader_id);
+    m_active_shader_id = shader_id;
+    gl::useProgram(m_active_shader_id);
 }
 
 
@@ -282,7 +282,7 @@ void
 idk::glInterface::setUniform_int(std::string name, int i)
 {
     GLCALL(
-        GLuint loc = glGetUniformLocation(_active_shader_id, name.c_str());
+        GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
         glUniform1i(loc, i);
     )
 }
@@ -291,7 +291,7 @@ void
 idk::glInterface::setUniform_float(std::string name, float f)
 {
     GLCALL(
-        GLuint loc = glGetUniformLocation(_active_shader_id, name.c_str());
+        GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
         glUniform1f(loc, f);
     )
 }
@@ -300,7 +300,7 @@ void
 idk::glInterface::setUniform_vec2(std::string name, glm::vec2 v)
 {
     GLCALL(
-        GLuint loc = glGetUniformLocation(_active_shader_id, name.c_str());
+        GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
         glUniform2fv(loc, 1, glm::value_ptr(v));
     )
 }
@@ -309,7 +309,7 @@ void
 idk::glInterface::setUniform_vec3(std::string name, glm::vec3 v)
 {
     GLCALL(
-        GLuint loc = glGetUniformLocation(_active_shader_id, name.c_str());
+        GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
         glUniform3fv(loc, 1, glm::value_ptr(v));
     )
 }
@@ -318,7 +318,7 @@ void
 idk::glInterface::setUniform_vec4(std::string name, glm::vec4 v)
 {
     GLCALL(
-        GLuint loc = glGetUniformLocation(_active_shader_id, name.c_str());
+        GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
         glUniform4fv(loc, 1, glm::value_ptr(v));
     )
 }
@@ -327,7 +327,7 @@ void
 idk::glInterface::setUniform_mat3(std::string name, glm::mat3 m)
 {
     GLCALL(
-        GLuint loc = glGetUniformLocation(_active_shader_id, name.c_str());
+        GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
         glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(m));
     )
 }
@@ -336,7 +336,7 @@ void
 idk::glInterface::setUniform_mat4(std::string name, glm::mat4 m)
 {
     GLCALL(
-        GLuint loc = glGetUniformLocation(_active_shader_id, name.c_str());
+        GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m));
     )
 }

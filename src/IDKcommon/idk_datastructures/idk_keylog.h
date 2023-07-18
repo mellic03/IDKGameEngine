@@ -17,9 +17,9 @@ namespace idk { class Keylog; };
 class idk::Keylog
 {
 private:
-    bool _key_down[idk_keycode::NUM_KEYCODES] = { false };
-    bool _key_up[idk_keycode::NUM_KEYCODES] = { false };
-    bool _key_tapped[idk_keycode::NUM_KEYCODES] = { false };
+    bool m_key_down[idk_keycode::NUM_KEYCODES] = { false };
+    bool m_key_up[idk_keycode::NUM_KEYCODES] = { false };
+    bool m_key_tapped[idk_keycode::NUM_KEYCODES] = { false };
 
 public:
 
@@ -27,33 +27,33 @@ public:
     {
         for (int i=0; i<idk_keycode::NUM_KEYCODES; i++)
         {
-            _key_tapped[i] = false;
+            m_key_tapped[i] = false;
 
-            if (_key_down[i] == false && state[i] == true)
-                _key_tapped[i] = true;
+            if (m_key_down[i] == false && state[i] == true)
+                m_key_tapped[i] = true;
 
-            if (_key_down[i] == true && state[i] == false)
-                _key_up[i] = true;
+            if (m_key_down[i] == true && state[i] == false)
+                m_key_up[i] = true;
 
             else
-                _key_up[i] = false;
+                m_key_up[i] = false;
 
-            _key_down[i] = state[i];
+            m_key_down[i] = state[i];
         }
     };
 
     bool keyDown(idk_keycode keycode) const
     {
-        return _key_down[keycode];
+        return m_key_down[keycode];
     };
 
     bool keyUp(idk_keycode keycode) const
     {
-        return _key_up[keycode];
+        return m_key_up[keycode];
     };
 
     bool keyTapped(idk_keycode keycode) const
     {
-        return _key_tapped[keycode];
+        return m_key_tapped[keycode];
     };
 };

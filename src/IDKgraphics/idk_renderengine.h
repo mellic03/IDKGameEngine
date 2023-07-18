@@ -33,6 +33,8 @@ private:
     glFramebuffer                       m_volumetrics_buffer;
     glFramebuffer                       m_colorgrade_buffer;
     glFramebuffer                       m_fxaa_buffer;
+    glFramebuffer                       m_blurred_buffer;
+    glFramebuffer                       m_blurred_buffer2;
     glFramebuffer                       m_final_buffer;
 
     // --------------------------------------------------------
@@ -64,49 +66,49 @@ private:
     glFramebuffer                       m_dirlight_depthmap_buffer;
     // --------------------------------------------------------
 
-    GLuint                              _quad_VAO, _quad_VBO;
+    GLuint                              m_quad_VAO, m_quad_VBO;
 
     int                                 m_active_camera_id;
-    Allocator<Camera>                   _camera_allocator;
-    ModelManager                        _model_manager;
-    Allocator<Pointlight>               _pointlight_allocator;
-    Allocator<Spotlight>                _spotlight_allocator;
+    Allocator<Camera>                   m_camera_allocator;
+    ModelManager                        m_model_manager;
+    Allocator<Pointlight>               m_pointlight_allocator;
+    Allocator<Spotlight>                m_spotlight_allocator;
 
-    Allocator<Dirlight>                 _dirlight_allocator;
-    Allocator<GLuint>                   _dirlight_shadowmap_allocator;
-    Allocator<glm::mat4>                _dirlight_lightspacematrix_allocator;
+    Allocator<Dirlight>                 m_dirlight_allocator;
+    Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
+    Allocator<glm::mat4>                m_dirlight_lightspacematrix_allocator;
 
 
-    modelqueue_t        _model_draw_queue;
-    modelqueue_t        _untextured_model_queue;
+    modelqueue_t                        m_model_draw_queue;
+    modelqueue_t                        m_untextured_model_queue;
 
     // Initialization ---------------------------------------------------------------------
     /***/
-    void                f_init_SDL_OpenGL( std::string windowname, size_t w, size_t h );
-    void                f_init_screenquad();
-    void                f_gen_idk_framebuffers( int width, int height );
+    void                                f_init_SDL_OpenGL( std::string windowname, size_t w, size_t h );
+    void                                f_init_screenquad();
+    void                                f_gen_idk_framebuffers( int width, int height );
     // ------------------------------------------------------------------------------------
 
     // Draw-related methods ---------------------------------------------------------------
     /***/
-    void                _update_UBO_camera();
-    void                _update_UBO_pointlights();
-    void                _update_UBO_spotlights();
-    void                _update_UBO_dirlights();
+    void                                f_update_UBO_camera();
+    void                                f_update_UBO_pointlights();
+    void                                f_update_UBO_spotlights();
+    void                                f_update_UBO_dirlights();
     
-    void                _shadowpass_pointlights();
-    void                _shadowpass_spotlights();
-    void                _shadowpass_dirlights();
+    void                                f_shadowpass_pointlights();
+    void                                f_shadowpass_spotlights();
+    void                                f_shadowpass_dirlights();
 
 
     /** Run a shader on the output textures of "in" and render the result to "out" */
-    void                f_fbfb( GLuint shader, glFramebuffer &in, glFramebuffer &out );
+    void                                f_fbfb( GLuint shader, glFramebuffer &in, glFramebuffer &out );
     
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
-    void                f_fbfb( GLuint shader, glFramebuffer &in );
+    void                                f_fbfb( GLuint shader, glFramebuffer &in );
 
-    void                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
-    void                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1 );
+    void                                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
+    void                                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1 );
     // ------------------------------------------------------------------------------------
 
 
@@ -122,24 +124,24 @@ public:
     static GLuint                       SPHERE_PRIMITIVE;
     static GLuint                       CUBE_PRIMITIVE;
     // ------------------------------------------------------------------------------------
-    void                                f_compile_shaders();
+    void                                compileShaders();
 
                                         RenderEngine( std::string name, int w, int h, int res_divisor );
     SDL_Window *                        SDLWindow()     { return m_SDL_window;      };
-    SDL_GLContext *                     SDLGLContext()  { return &m_SDL_gl_context; };
+    SDL_GLContext                       SDLGLContext()  { return m_SDL_gl_context;  };
 
     int                                 createCamera();
-    idk::Camera &                       getCamera()         { return _camera_allocator.get(m_active_camera_id); };
+    idk::Camera &                       getCamera()         { return m_camera_allocator.get(m_active_camera_id); };
 
     int                                 createPointlight();
     int                                 createSpotlight();
     int                                 createDirlight();
 
-    Allocator<Pointlight> &             pointlights()   { return _pointlight_allocator; };
-    Allocator<Spotlight> &              spotlights()    { return _spotlight_allocator; };
-    Allocator<Dirlight> &               dirlights()     { return _dirlight_allocator; };
+    Allocator<Pointlight> &             pointlights()   { return m_pointlight_allocator; };
+    Allocator<Spotlight> &              spotlights()    { return m_spotlight_allocator; };
+    Allocator<Dirlight> &               dirlights()     { return m_dirlight_allocator; };
 
-    ModelManager &                      modelManager()  { return _model_manager; };
+    ModelManager &                      modelManager()  { return m_model_manager; };
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
     void                                drawUntextured( GLuint shader_id, int model_id, Transform &transform );
 
