@@ -33,8 +33,6 @@ textureID vts0ID vts1ID vts2ID ...
 
 # IDK Game Engine
 
-
-## Gallery
 <img src="scr1.png">
 <img src="scr2.png">
 
