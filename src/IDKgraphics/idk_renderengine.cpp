@@ -116,7 +116,7 @@ void
 idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
 {
     m_deferred_geom_buffer      = glInterface::genIdkFramebuffer(    w,     h,   4);
-    m_volumetrics_buffer        = glInterface::genIdkFramebuffer(  w/2,   h/2,   1);
+    m_volumetrics_buffer        = glInterface::genIdkFramebuffer(  w/4,   h/4,   1);
     m_colorgrade_buffer         = glInterface::genIdkFramebuffer(    w,     h,   1);
     m_fxaa_buffer               = glInterface::genIdkFramebuffer(    w,     h,   1);
     m_blurred_buffer            = glInterface::genIdkFramebuffer(    w,     h,   1);
