@@ -115,6 +115,31 @@ idk::gl::activeTexture( GLenum texture )
 }
 // ---------------------------------------------------------------------------------------
 
+// glTexXXX ------------------------------------------------------------------------------
+/**/
+void
+idk::gl::texImage3D( GLenum target, GLint level, GLint internalformat, GLsizei w, GLsizei h,
+                     GLsizei d, GLint border, GLenum format, GLenum type, const void *data )
+{
+    GLCALL( glTexImage3D(target, level, internalformat, w, h, d, border, format, type, data); )
+}
+
+
+void
+idk::gl::texParameteri( GLenum target, GLenum pname, GLint param )
+{
+    GLCALL( glTexParameteri(target, pname, param); )
+}
+
+
+void
+idk::gl::generateMipmap( GLenum target )
+{
+    GLCALL( glGenerateMipmap(target); )
+}
+
+// ---------------------------------------------------------------------------------------
+
 
 // Uniforms ------------------------------------------------------------------------------
 /**/

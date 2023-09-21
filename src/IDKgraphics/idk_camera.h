@@ -8,15 +8,15 @@ namespace idk { class Camera; };
 class idk::Camera
 {
 private:
-    idk::Transform      _transform;
-    glm::mat4           _projection;
-    glm::mat4           _view;
+    idk::Transform      m_transform;
+    glm::mat4           m_projection;
+    glm::mat4           m_view;
 
     glm::vec3           _right;
     glm::vec3           _front;
     glm::vec3           _up;
 
-    glm::vec3           _default_pos;
+    glm::vec3           m_default_pos;
     glm::vec4           _default_right;
     glm::vec4           _default_front;
     glm::vec4           _default_up;
@@ -34,9 +34,11 @@ public:
                         Camera(float fov, float near, float far);
                         Camera();
 
-    idk::Transform &    transform()     { return _transform;  };
-    glm::mat4 &         projection()    { return _projection; };
+    idk::Transform &    transform()     { return m_transform;  };
+    glm::mat4 &         projection()    { return m_projection; };
     glm::mat4           view();
+
+    void                offset(const glm::vec3 &v);
 
     void                translate(glm::vec3 v);
     void                elevation(float f);

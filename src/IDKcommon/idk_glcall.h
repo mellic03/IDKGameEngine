@@ -20,9 +20,9 @@
     GLenum err = glGetError(); \
     if (err != GL_NO_ERROR) \
     { \
-      printf("OpenGL Error: %s\n", gluErrorString(err)); \
-      fflush(stdout); \
-      assert(err == GL_NO_ERROR); \
+        printf("OpenGL Error: %s\n", gluErrorString(err)); \
+        fflush(stdout); \
+        assert(err == GL_NO_ERROR); \
     } \
   }
 #else

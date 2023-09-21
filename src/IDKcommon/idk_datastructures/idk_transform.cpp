@@ -76,9 +76,9 @@ idk::Transform::localTranslate( glm::vec3 t )
 void
 idk::Transform::pitch( float f )
 {
-//     _view = glm::rotate(_view, f, _right);
-//     _front = glm::inverse(_view) * _default_front;
-//     _up = glm::inverse(_view) * _default_up;
+//     m_view = glm::rotate(m_view, f, _right);
+//     _front = glm::inverse(m_view) * _default_front;
+//     _up = glm::inverse(m_view) * _default_up;
 
     glm::mat4 rot = glm::rotate(f, glm::vec3(1.0f, 0.0f, 0.0f));
     m_model_mat = m_model_mat * rot;
@@ -88,12 +88,12 @@ idk::Transform::pitch( float f )
 void
 idk::Transform::roll( float f )
 {
-    // _view = glm::rotate(_view, f, _front);
+    // m_view = glm::rotate(m_view, f, _front);
 
     // // if (_noroll == false)
     // // {
-    //     _right = glm::inverse(_view) * _default_right;
-    //     _up = glm::inverse(_view) * _default_up;
+    //     _right = glm::inverse(m_view) * _default_right;
+    //     _up = glm::inverse(m_view) * _default_up;
     // }
 }
 
@@ -105,12 +105,12 @@ idk::Transform::yaw( float f )
     m_model_mat = m_model_mat * rot;
 
     // if (_ylock)
-    //     _view = glm::rotate(_view, f, glm::vec3(0.0f, 1.0f, 0.0f));
+    //     m_view = glm::rotate(m_view, f, glm::vec3(0.0f, 1.0f, 0.0f));
     // // else
-    // //     _view = glm::rotate(_view, f, _up);
+    // //     m_view = glm::rotate(m_view, f, _up);
 
-    // _right = glm::inverse(_view) * _default_right;
-    // _front = glm::inverse(_view) * _default_front;
+    // _right = glm::inverse(m_view) * _default_right;
+    // _front = glm::inverse(m_view) * _default_front;
 }
 
 

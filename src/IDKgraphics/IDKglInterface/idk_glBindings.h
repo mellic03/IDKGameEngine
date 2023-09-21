@@ -16,10 +16,10 @@ enum class UBOloc: GLuint
 
 namespace idk::gl
 {
-    inline void                    enable(GLenum cap)      { GLCALL( glEnable(cap);  ) };
-    inline void                    disable(GLenum cap)     { GLCALL( glDisable(cap); ) };
-    inline void                    enable()  {  };
-    inline void                    disable() {  };
+    inline void enable(GLenum cap)      { GLCALL( glEnable(cap);  ) };
+    inline void disable(GLenum cap)     { GLCALL( glDisable(cap); ) };
+    inline void enable()  {  };
+    inline void disable() {  };
 
     template <typename... GLenums> inline void     enable( GLenum, GLenums... );
     template <typename... GLenums> inline void     disable( GLenum, GLenums... );
@@ -64,6 +64,15 @@ namespace idk::gl
     /**/
     void activeTexture( GLenum texture );
     // ---------------------------------------------------------------------------------------
+
+    // glTexXXX ------------------------------------------------------------------------------
+    /**/
+    void texImage3D( GLenum target, GLint level, GLint internalformat, GLsizei w, GLsizei h,
+                     GLsizei d, GLint border, GLenum format, GLenum type, const void *data );
+    void texParameteri( GLenum target, GLenum pname, GLint param );
+    // ---------------------------------------------------------------------------------------
+    void generateMipmap( GLenum target );
+
 
     // Uniforms ------------------------------------------------------------------------------
     /**/

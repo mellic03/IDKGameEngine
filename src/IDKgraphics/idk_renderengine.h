@@ -63,7 +63,6 @@ private:
     glUBO                               m_UBO_spotlights;
     glUBO                               m_UBO_dirlights;
 
-    glFramebuffer                       m_dirlight_depthmap_buffer;
     // --------------------------------------------------------
 
     GLuint                              m_quad_VAO, m_quad_VBO;
@@ -109,10 +108,12 @@ private:
 
     void                                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
     void                                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1 );
+
     // ------------------------------------------------------------------------------------
 
 
 public:
+    glFramebuffer                       m_dirlight_depthmap_buffer;
 
     // Built-in shaders -------------------------------------------------------------------
     /***/

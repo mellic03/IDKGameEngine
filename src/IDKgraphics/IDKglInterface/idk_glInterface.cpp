@@ -170,7 +170,7 @@ weewa_genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint &RBO, std::v
 
     idk::gl::bindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-    for (int i=0; i<textures.size(); i++)
+    for (size_t i=0; i<textures.size(); i++)
     {
         idk::gl::bindTexture(GL_TEXTURE_2D, textures[i]);
         GLCALL( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL); )
@@ -180,7 +180,7 @@ weewa_genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint &RBO, std::v
     }
 
     idk::vector<GLuint> attachments(textures.size());
-    for (int i=0; i<textures.size(); i++)
+    for (size_t i=0; i<textures.size(); i++)
         attachments[i] = GL_COLOR_ATTACHMENT0 + i;
     GLCALL( glDrawBuffers(textures.size(), &(attachments[0])); )
 
@@ -350,6 +350,15 @@ idk::glInterface::setUniform_texture(std::string name, GLuint texture_id)
     setUniform_int(name.c_str(), texture_unit - GL_TEXTURE0);
 }
 
+
+void
+idk::glInterface::setUniform_texture3D(std::string name, GLuint texture_id)
+{
+    GLuint texture_unit = popTextureUnitID();
+    gl::activeTexture(texture_unit);
+    gl::bindTexture(GL_TEXTURE_3D, texture_id);
+    setUniform_int(name.c_str(), texture_unit - GL_TEXTURE0);
+}
 
 
 void

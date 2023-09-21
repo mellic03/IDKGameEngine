@@ -3,6 +3,96 @@
 #include <filesystem>
 
 
+GLuint worley_texture;
+
+
+float dist_to_closest(glm::vec3 point, std::vector<glm::vec3> points)
+{
+    float min_dist = INFINITY;
+
+    for (glm::vec3 p: points)
+    {
+        float dist = glm::distance(point, p);
+
+        if (dist < min_dist)
+            min_dist = dist;
+    }
+
+    return min_dist;
+}
+
+
+GLuint noisegen_3D_Worley()
+{
+    GLuint texture;
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_3D, texture);
+
+
+    constexpr int num_points = 1000;
+    constexpr int width = 50;
+
+    std::vector<glm::vec3> points(num_points);
+    for (int i=0; i<num_points; i++)
+    {
+        float x = (float)(rand() % (width*1000)) / 1000.0f;
+        float y = (float)(rand() % (width*1000)) / 1000.0f;
+        float z = (float)(rand() % (width*1000)) / 1000.0f;
+
+        points[i] = glm::vec3(x, y, z);
+    }
+
+    float *texture_data = new float[width*width*width];
+
+    float max_value = 0.0f;
+
+    for (int z=0; z<width; z++)
+    {
+        for (int y=0; y<width; y++)
+        {
+            for (int x=0; x<width; x++)
+            {
+                float dist = dist_to_closest(glm::vec3(x, y, z), points);
+                if (dist > max_value)
+                    max_value = dist;
+                texture_data[z*width*width + y*width + x] = dist;
+            }
+        }
+    }
+
+
+    for (int z=0; z<width; z++)
+    {
+        for (int y=0; y<width; y++)
+        {
+            for (int x=0; x<width; x++)
+            {
+                texture_data[z*width*width + y*width + x] /= max_value;
+                texture_data[z*width*width + y*width + x] = texture_data[z*width*width + y*width + x];
+            }
+        }
+    }
+
+
+    glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F, width, width, width,
+                         0, GL_RED, GL_FLOAT, texture_data );
+
+    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+
+    glGenerateMipmap(GL_TEXTURE_3D);
+    glBindTexture(GL_TEXTURE_3D, 0);
+
+    delete[] texture_data;
+
+    return texture;
+}
+
+
 // Static members -----------------------------
 GLuint  idk::RenderEngine::SPHERE_PRIMITIVE;
 GLuint  idk::RenderEngine::CUBE_PRIMITIVE;
@@ -18,7 +108,7 @@ idk::RenderEngine::f_init_SDL_OpenGL( std::string windowname, size_t w, size_t h
     }
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     m_SDL_window = SDL_CreateWindow(
@@ -116,13 +206,13 @@ void
 idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
 {
     m_deferred_geom_buffer      = glInterface::genIdkFramebuffer(    w,     h,   4);
-    m_volumetrics_buffer        = glInterface::genIdkFramebuffer(  w/4,   h/4,   1);
+    m_volumetrics_buffer        = glInterface::genIdkFramebuffer(  w/2,   h/2,   1);
     m_colorgrade_buffer         = glInterface::genIdkFramebuffer(    w,     h,   1);
     m_fxaa_buffer               = glInterface::genIdkFramebuffer(    w,     h,   1);
     m_blurred_buffer            = glInterface::genIdkFramebuffer(    w,     h,   1);
     m_blurred_buffer2           = glInterface::genIdkFramebuffer(    w,     h,   1);
     m_final_buffer              = glInterface::genIdkFramebuffer(    w,     h,   1);
-    m_dirlight_depthmap_buffer  = glInterface::genIdkFramebuffer( 2048,  2048,   4);
+    m_dirlight_depthmap_buffer  = glInterface::genIdkFramebuffer( 4096,  4096,   4);
 
 }
 
@@ -148,16 +238,34 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
     m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
     m_UBO_spotlights  = glUBO(4, 16 + IDK_MAX_SPOTLIGHTS*sizeof(Spotlight));
     m_UBO_dirlights   = glUBO(5, 16 + IDK_MAX_DIRLIGHTS*sizeof(Dirlight) + IDK_MAX_DIRLIGHTS*sizeof(glm::mat4));
+
+    worley_texture = noisegen_3D_Worley();
 }
+
 
 
 void
 idk::RenderEngine::f_fbfb( GLuint shader, glFramebuffer &in, glFramebuffer &out )
 {
+    static float inc0 = 0.0f;
+    static float inc1 = 0.0f;
+    static float inc2 = 0.0f;
+
+
     glInterface::bindIdkFramebuffer(out);
     glInterface::useProgram(shader);
 
     glInterface::setUniform_texture("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
+    glInterface::setUniform_texture3D("un_worley", worley_texture);
+    glInterface::setUniform_float("un_increment_0", inc0);
+    glInterface::setUniform_float("un_increment_1", inc1);
+    glInterface::setUniform_float("un_increment_2", inc2);
+
+
+    inc0 += 0.0001f;
+    inc1 += 0.000015f;
+    inc2 += 0.00003f;
+
 
     for (size_t i=0; i < in.output_textures.size(); i++)
     {
@@ -299,7 +407,7 @@ idk::RenderEngine::f_shadowpass_dirlights()
     dirlights().for_each(
     [&i, &ren, &queue, &depthmaps, &framebuffer](int light_id, Dirlight &light)
     {
-        glm::mat4 projection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, 0.1f, 50.0f);
+        glm::mat4 projection = glm::ortho(-70.0f, 70.0f, -70.0f, 70.0f, 0.1f, 150.0f);
         glm::mat4 view = glm::lookAt(
             -10.0f*glm::vec3(light.direction) + ren.getCamera().transform().position(),
             glm::vec3(0.0f) + ren.getCamera().transform().position(),
@@ -396,7 +504,7 @@ idk::RenderEngine::f_update_UBO_dirlights()
         {
             lights.push(light);
 
-            glm::mat4 projection = glm::ortho(-30.0f, 30.0f, -30.0f, 30.0f, 0.1f, 50.0f);
+            glm::mat4 projection = glm::ortho(-70.0f, 70.0f, -70.0f, 70.0f, 0.1f, 150.0f);
             glm::mat4 view = glm::lookAt(
                 -10.0f*glm::vec3(light.direction) + camera.transform().position(),
                 glm::vec3(0.0f) + camera.transform().position(),
@@ -493,21 +601,22 @@ idk::RenderEngine::endFrame()
     );
 
     // f_fbfb(
-    //     m_fxaa_shader,
+    //     m_guassian_blur_shader,
     //     m_volumetrics_buffer,
     //     m_blurred_buffer
     // );
-    // f_fbfb(
-    //     m_guassian_blur_shader,
-    //     m_blurred_buffer,
-    //     m_blurred_buffer2
-    // );
+
+    f_fbfb(
+        m_fxaa_shader,
+        m_volumetrics_buffer,
+        m_blurred_buffer
+    );
 
     // Combine Blinn-Phong and volumetrics    
     f_fbfb(
         m_additive_shader,
         m_final_buffer.output_textures[0],
-        m_volumetrics_buffer.output_textures[0],
+        m_blurred_buffer.output_textures[0],
         m_colorgrade_buffer
     );
 

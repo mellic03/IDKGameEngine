@@ -31,6 +31,7 @@ namespace idk::glInterface
     void                    freeTextureUnitIDs();
 
     void                    setUniform_texture(std::string name, GLuint texture_id);
+    void                    setUniform_texture3D(std::string name, GLuint texture_id);
     void                    setUniform_int(std::string, int);
     void                    setUniform_float(std::string, float);
     void                    setUniform_vec2(std::string, glm::vec2);
