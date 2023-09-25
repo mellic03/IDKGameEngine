@@ -25,38 +25,60 @@ layout (std140, binding = 2) uniform UBO_camera_data
 #include "methods.glsl"
 
 
-#define MAX_STEPS 128
-#define STEP_SIZE 0.1
+float PHG (float g, float cosTheta)
+{
+    const float Inv4Pi = 0.07957747154594766788;
+    
+    float gSq = g * g;
+    float denomPreMul = 1 + gSq - (2.0 * g * cosTheta);
+    return (1 - gSq) * Inv4Pi * inversesqrt(denomPreMul * denomPreMul * denomPreMul);
+}
+
+float miePhase (float cosTheta)
+{
+    return mix (PHG (0.8, cosTheta), PHG (-0.5, cosTheta), 0.5);
+}
+
+#define MAX_STEPS 256
+
 
 void main()
 {
-    vec3  fragpos = texture( un_texture_1, fsin_texcoords ).xyz;
+    vec3  fragpos = texture(un_texture_1, fsin_texcoords).xyz;
     float fragdist = length(fragpos - un_viewpos);    
     vec3  ray_dir = normalize(fragpos - un_viewpos);
+    float step_size = 0.15;
 
-    float step_size = 0.1;
+    vec3 diffff = ubo_dirlights[0].diffuse.xyz;
+
+    if (fragdist > MAX_STEPS*step_size)
+    {
+        vec3 dirlight_dir = normalize(ubo_dirlights[0].direction.xyz);
+        float mie = miePhase(-dot(ray_dir, dirlight_dir));
+
+        fsout_frag_color = vec4(15.0*mie*diffff, 1.0);
+        return;
+    }
+
 
     vec3 ray_pos = un_viewpos;
     float ray_dist = 0.0;
     vec3 accum = vec3(0.0);
 
+    vec3 offset = vec3(-50*un_increment_0, 0.0, 50*un_increment_0);
 
     for (float i=0; i<MAX_STEPS; i++)
     {
+        float displacement = 0.2*(texture(un_worley, ray_pos + 0.01*offset).r - 0.5);
+        float density      = texture(un_worley, ray_pos + 0.01*offset).r;
+        float intensity    = 0.02;
+
+
         for (int idx = 0; idx < ubo_num_dirlights; idx++)
         {
-            vec3 dirlight_dir = normalize(ubo_dirlights[0].direction.xyz);
-            float angle = dot(ray_dir, dirlight_dir);
-            float rayleigh = ((3.0*3.14159) / 16.0) * (1.0 + angle * angle);
-
-            vec3 offset = vec3(un_increment_1*-85, 0.0, un_increment_0*85);
-            float noise = texture(un_worley, 0.3*ray_pos + 0.01*offset).r;
-
-            vec3 offsetw = vec3(-0.1*un_increment_0, 0.0, 0.1*un_increment_0);
-            float noisew = 0.2*texture(un_worley, 0.3*ray_pos + 0.01*offsetw).r;
-
-            accum += rayleigh * 0.01 * noise * dirlight_shadow(idx, ray_pos+noisew) * ubo_dirlights[idx].diffuse.xyz;
-            accum += 0.002 * noise * ubo_dirlights[0].ambient.xyz;
+            float shadow = dirlight_shadow(idx, ray_pos+displacement);
+            vec3 diffuse = ubo_dirlights[idx].diffuse.xyz;
+            accum += intensity * density * shadow * diffuse;
         }
 
         if (ray_dist >= fragdist)
@@ -64,11 +86,16 @@ void main()
             break;
         }
 
-        step_size *= 1.001;
         ray_pos += step_size * ray_dir;
         ray_dist += step_size;
     }
 
-    fsout_frag_color = vec4(accum, 1.0);
+    vec3 dirlight_dir = normalize(ubo_dirlights[0].direction.xyz);
+    // float angle = dot(ray_dir, dirlight_dir);
+    // float rayleigh = ((3.0*3.14159) / 16.0) * (1.0 + angle * angle);
+    float mie = miePhase(-dot(ray_dir, dirlight_dir));
+
+    fsout_frag_color = vec4(mie*accum, 1.0);
+    // fsout_frag_color = vec4(0.0, 0.0, 0.0, 1.0);
 }
 

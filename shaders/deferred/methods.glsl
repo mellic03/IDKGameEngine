@@ -98,7 +98,7 @@ float dirlight_shadow(int idx, vec3 position)
     float closestDepth = texture(un_dirlight_depthmaps[0], projCoords.xy).r;   
     float currentDepth = projCoords.z;
 
-    float bias = 0.005;
+    float bias = 0.001;
     // float shadow = currentDepth - bias > closestDepth  ? 0.0 : 1.0;
 
     float shadow = 0.0;
@@ -129,17 +129,20 @@ vec3 dirlight_contribution( int idx, vec3 view_dir, vec3 position,
     vec3 light_diffuse = light.diffuse.xyz;
 
     vec3 frag_to_light = normalize(-light_direction);
-    float diffuse_f = max(dot(normal, frag_to_light), 0.0);
+    float diffuse_ff = max(dot(normal, frag_to_light), 0.0);
+    float diffuse_f = dot(normal, frag_to_light);
+    diffuse_f = (diffuse_f + 1.0) / 2.0;
 
-    vec3 halfway_dir = normalize(frag_to_light + view_dir);  
+    vec3 halfway_dir = normalize(frag_to_light + view_dir);
     float specular_f = pow(max(dot(normal, halfway_dir), 0.0), spec_exponent);
 
-    vec3 ambient  = albedo * light_ambient;
-    vec3 diffuse  = albedo * diffuse_f * light_diffuse;
-    vec3 specular = albedo * specular_f * 255*spec;
-
     float shadow = dirlight_shadow(idx, position);
-    vec3 result = ambient + shadow*(diffuse + specular);
+
+    vec3 ambient  = albedo * diffuse_f * light_ambient;
+    vec3 diffuse  = albedo * diffuse_ff * light_diffuse;
+    vec3 specular = diffuse * specular_f * 255*spec;
+
+    vec3 result = ambient + shadow*diffuse + shadow*specular;
 
     return result; 
 }

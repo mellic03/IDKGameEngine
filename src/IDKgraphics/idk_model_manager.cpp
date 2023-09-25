@@ -68,6 +68,13 @@ idk::ModelManager::_load_mtl( std::string raw_mtl )
             line = line.substr(root);
             _materials.get(material_id).specular_gl_id = _texture_IDs[line];
         }
+
+        else if (line.find("map_Pm") != std::string::npos)
+        {
+            size_t root = line.find("assets/");
+            line = line.substr(root);
+            _materials.get(material_id).reflection_gl_id = _texture_IDs[line];
+        }
     }
 }
 
@@ -169,7 +176,7 @@ idk::ModelManager::loadIDKtex( std::string filepath, bool srgb )
     __tex_file_t tex;
     filetools::tex_load(filepath, tex);
 
-    GLuint tex_id = glInterface::loadTexture(tex.w, tex.h, tex.data, srgb);
+    GLuint tex_id = gltools::loadTexture(tex.w, tex.h, tex.data, srgb);
     _texture_IDs[filepath] = tex_id;
 }
 
@@ -198,7 +205,7 @@ idk::ModelManager::loadIDKtexpak( std::string filepath, bool srgb )
 
     for (idk::__tex_file_t &tex: texpak.texfiles)
     {
-        GLuint tex_id = glInterface::loadTexture(tex.w, tex.h, tex.data, srgb);
+        GLuint tex_id = gltools::loadTexture(tex.w, tex.h, tex.data, srgb);
         _texture_IDs[tex.name] = tex_id;
     }
 }

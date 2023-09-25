@@ -3,9 +3,11 @@
 void
 idk::drawmethods::bind_material( Material &material )
 {
-    glInterface::setUniform_texture("un_albedo_texture", material.albedo_gl_id);
-    glInterface::setUniform_texture("un_specular_texture", material.specular_gl_id);
-    glInterface::setUniform_float("un_specular_exponent", material.specular_exponent);
+    gltools::setUniform_texture("un_albedo_texture", material.albedo_gl_id);
+    gltools::setUniform_texture("un_specular_texture", material.specular_gl_id);
+    gltools::setUniform_float("un_specular_exponent", material.specular_exponent);
+    gltools::setUniform_texture("un_reflection_texture", material.reflection_gl_id);
+
 }
 
 
@@ -13,7 +15,7 @@ void
 idk::drawmethods::draw_textured( Model &model, Transform &transform, Allocator<Material> &materials )
 {
     glm::mat4 model_mat = transform.modelMatrix();
-    glInterface::setUniform_mat4("un_model", model_mat);
+    gltools::setUniform_mat4("un_model", model_mat);
 
     gl::bindVertexArray(model.VAO);
     for (size_t i=0; i<model.meshes.size(); i++)
@@ -33,7 +35,7 @@ void
 idk::drawmethods::draw_untextured( Model &model, Transform &transform, Allocator<Material> &materials )
 {
     glm::mat4 model_mat = transform.modelMatrix();
-    glInterface::setUniform_mat4("un_model", model_mat);
+    gltools::setUniform_mat4("un_model", model_mat);
 
     gl::bindVertexArray(model.VAO);
     for (size_t i=0; i<model.meshes.size(); i++)

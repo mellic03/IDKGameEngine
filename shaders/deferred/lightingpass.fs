@@ -31,6 +31,8 @@ void main()
 
     vec3 position   = texture( un_texture_1, fsin_texcoords ).xyz;
     vec3 normal     = texture( un_texture_2, fsin_texcoords ).xyz;
+    float spec_exp  = texture( un_texture_2, fsin_texcoords).a;
+
     vec3 emission   = texture( un_texture_3, fsin_texcoords ).xyz;
     vec3 view_dir = normalize(un_viewpos - position);
 
@@ -51,7 +53,7 @@ void main()
         color += dirlight_contribution(
             i,       view_dir,   position,
             normal,  albedo,     specular,
-            32.0
+            spec_exp
         );
     }
 

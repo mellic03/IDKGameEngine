@@ -25,14 +25,14 @@ vec3 aces(vec3 x)
 }
 
 
+uniform float un_gamma;
+uniform float un_exposure;
+
 void main()
 {
-    const float gamma = 2.2;
-    const float exposure = 1.0;
-   
     vec3 hdrColor = texture(un_texture_0, fsin_texcoords).rgb;
-    vec3 mapped = vec3(1.0) - exp(-hdrColor * exposure);
-    mapped = pow(mapped, vec3(1.0 / gamma));
+    vec3 mapped = vec3(1.0) - exp(-hdrColor * un_exposure);
+    mapped = pow(mapped, vec3(1.0 / un_gamma));
   
     fsout_frag_color = vec4(mapped, 1.0);
     // fsout_frag_color = vec4(0.0, 1.0, 0.0, 1.0);

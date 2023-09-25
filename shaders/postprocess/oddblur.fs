@@ -8,9 +8,9 @@ uniform sampler2D un_texture_0;
 
 void main()
 {
-    vec2 tsize = textureSize(un_texture_0, 1);
-    float offset_x = 1.0 / tsize.x;
-    float offset_y = 1.0 / tsize.y;
+    vec2 tsize = textureSize(un_texture_0, 2);
+    float offset_x = 1.0 * (1.0 / tsize.x);
+    float offset_y = 1.0 * (1.0 / tsize.y);
 
     vec2 offsets[9] = vec2[](
         vec2(-offset_x,  offset_y), // top-left
@@ -37,13 +37,16 @@ void main()
         sampleTex[i] = vec3(texture(un_texture_0, fsin_texcoords.st + offsets[i]));
     }
 
-    vec3 col = vec3(0.0);
+    vec3 maxvalue = vec3(0.0);
     for(int i = 0; i < 9; i++)
     {
-        col += sampleTex[i] * kernel[i];
+        vec3 value = sampleTex[i] * kernel[i];
+        if (length(value) > length(maxvalue))
+        {
+            maxvalue = value;
+        }
     }
 
-
-    fsout_frag_color = vec4(col, 1.0);
+    fsout_frag_color = vec4(5*maxvalue, 1.0);
 }
 

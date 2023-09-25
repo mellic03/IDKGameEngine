@@ -47,7 +47,7 @@ public:
     void                roll(float f);
     void                yaw(float f);
 
-    glm::vec3           front() const { return _front; };
+    glm::vec3           front();
 
     void                aspect(float width, float height);
     void                ylock(bool lock)  { _ylock = lock;  };

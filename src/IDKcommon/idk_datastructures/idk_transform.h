@@ -20,7 +20,7 @@ public:
     void                position( glm::vec3 );
 
     glm::vec3           scale();
-    glm::vec3           rotation();
+    glm::vec3           front();
 
 
     void                translate( glm::vec3 );

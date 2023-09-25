@@ -72,8 +72,8 @@ void main()
     float g = texture( un_texture_0, fsin_texcoords + vec2(0.001,  0.001) ).g;
     float b = texture( un_texture_0, fsin_texcoords + vec2(0.000,  0.0014) ).b;
 
-    vec3 color = vec3(r, g, b);
+    // vec3 color = vec3(r, g, b);
+    vec3 color = fxaa(un_texture_0, textureSize(un_texture_0, 0), fsin_texcoords);
 
-    // vec3 color = fxaa(un_texture_0, textureSize(un_texture_0, 0), fsin_texcoords);
     fsout_frag_color = vec4(color, 1.0);
 }

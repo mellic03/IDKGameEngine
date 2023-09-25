@@ -32,6 +32,7 @@ struct idk::Material
     GLuint      albedo_gl_id        = 0;
     GLuint      specular_gl_id      = 0;
     GLuint      normal_gl_id        = 0;
+    GLuint      reflection_gl_id    = 0;
 
     idk::__tex_file_t albedo_tex;
     idk::__tex_file_t specular_tex;

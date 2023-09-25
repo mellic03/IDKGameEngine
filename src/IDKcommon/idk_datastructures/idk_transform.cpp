@@ -40,11 +40,9 @@ idk::Transform::scale()
 
 
 glm::vec3
-idk::Transform::rotation()
+idk::Transform::front()
 {
-    glm::vec4 dir = glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
-    dir = modelMatrix() * dir;
-    return dir;
+    return m_model_mat * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
 }
 
 

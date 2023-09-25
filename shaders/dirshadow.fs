@@ -8,5 +8,5 @@ void main()
     gl_FragDepth = gl_FragCoord.z;
     gl_FragDepth += gl_FrontFacing ? BIAS : 0.0;
 
-    color = vec4(gl_FragCoord.z);
+    color = vec4(gl_FragCoord.z, 2*gl_FragCoord.z, 2*gl_FragCoord.z, 1.0);
 }

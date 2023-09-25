@@ -9,7 +9,7 @@ static    idk::vector<GLuint>     m_unavailable_glTextureUnits;
 
 
 void
-idk::glInterface::init()
+idk::gltools::init()
 {
     for (GLint i = GL_TEXTURE0; i < IDK_GLINTERFACE_MAX_TEXTUREi; i++)
         m_available_glTextureUnits.push(i);
@@ -77,7 +77,7 @@ _parse_shader_source( std::string root, std::string glsl )
 
 
 GLuint
-idk::glInterface::compileProgram( std::string root, std::string vs, std::string fs )
+idk::gltools::compileProgram( std::string root, std::string vs, std::string fs )
 {
     std::ifstream instream;
     std::string line;
@@ -130,7 +130,7 @@ idk::glInterface::compileProgram( std::string root, std::string vs, std::string 
 
 
 GLuint
-idk::glInterface::loadTexture( int w, int h, uint32_t *data, bool srgb )
+idk::gltools::loadTexture( int w, int h, uint32_t *data, bool srgb )
 {
     GLuint texture_id;
 
@@ -158,7 +158,9 @@ idk::glInterface::loadTexture( int w, int h, uint32_t *data, bool srgb )
 
 
 void
-weewa_genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint &RBO, std::vector<GLuint> &textures )
+weewa_genIdkFramebuffer(
+    int width, int height, GLuint &FBO, GLuint &RBO,
+    std::vector<GLuint> &textures, GLenum minf = GL_LINEAR, GLenum magf = GL_LINEAR )
 {
     GLCALL( glDeleteFramebuffers(1, &FBO); )
     GLCALL( glDeleteRenderbuffers(1, &RBO); )
@@ -174,8 +176,9 @@ weewa_genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint &RBO, std::v
     {
         idk::gl::bindTexture(GL_TEXTURE_2D, textures[i]);
         GLCALL( glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, NULL); )
-        GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); )
-        GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); )
+        GLCALL( glGenerateMipmap(GL_TEXTURE_2D); )
+        GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minf); )
+        GLCALL( glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magf); )
         GLCALL( glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, textures[i], 0);   )
     }
 
@@ -195,7 +198,7 @@ weewa_genIdkFramebuffer( int width, int height, GLuint &FBO, GLuint &RBO, std::v
 
 
 idk::glFramebuffer
-idk::glInterface::genIdkFramebuffer(int width, int height, int num_render_targets)
+idk::gltools::genIdkFramebuffer(int width, int height, int num_render_targets, GLenum minf, GLenum magf)
 {
     idk::glFramebuffer fb;
     fb.width = width;
@@ -203,14 +206,14 @@ idk::glInterface::genIdkFramebuffer(int width, int height, int num_render_target
     for (int i=0; i<num_render_targets; i++)
         fb.output_textures.push_back(0);
 
-    weewa_genIdkFramebuffer(width, height, fb.FBO, fb.RBO, fb.output_textures);
+    weewa_genIdkFramebuffer(width, height, fb.FBO, fb.RBO, fb.output_textures, minf, magf);
 
     return fb;
 }
 
 
 GLuint
-idk::glInterface::popTextureUnitID()
+idk::gltools::popTextureUnitID()
 {
     #ifdef IDK_DEBUG
     if (m_available_glTextureUnits.size() == 0)
@@ -229,7 +232,7 @@ idk::glInterface::popTextureUnitID()
 
 
 void
-idk::glInterface::freeTextureUnitIDs()
+idk::gltools::freeTextureUnitIDs()
 {
     while (m_unavailable_glTextureUnits.empty() == false)
         m_available_glTextureUnits.push(m_unavailable_glTextureUnits.pop());
@@ -237,7 +240,7 @@ idk::glInterface::freeTextureUnitIDs()
 
 
 void
-idk::glInterface::useProgram(GLuint shader_id)
+idk::gltools::useProgram(GLuint shader_id)
 {
     freeTextureUnitIDs();
     m_active_shader_id = shader_id;
@@ -246,7 +249,7 @@ idk::glInterface::useProgram(GLuint shader_id)
 
 
 void
-idk::glInterface::bindIdkFramebuffer( glFramebuffer &framebuffer )
+idk::gltools::bindIdkFramebuffer( glFramebuffer &framebuffer )
 {
     gl::bindFramebuffer(GL_FRAMEBUFFER, framebuffer.FBO);
     gl::viewport(0, 0, framebuffer.width, framebuffer.height);
@@ -254,7 +257,7 @@ idk::glInterface::bindIdkFramebuffer( glFramebuffer &framebuffer )
 
 
 void
-idk::glInterface::unbindIdkFramebuffer( int width, int height )
+idk::gltools::unbindIdkFramebuffer( int width, int height )
 {
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
     gl::viewport(0, 0, width, height);
@@ -262,7 +265,7 @@ idk::glInterface::unbindIdkFramebuffer( int width, int height )
 
 
 void
-idk::glInterface::clearIdkFramebuffer( glFramebuffer &fb )
+idk::gltools::clearIdkFramebuffer( glFramebuffer &fb )
 {
     gl::bindFramebuffer(GL_FRAMEBUFFER, fb.FBO);
     gl::viewport(0, 0, fb.width, fb.height);
@@ -272,14 +275,14 @@ idk::glInterface::clearIdkFramebuffer( glFramebuffer &fb )
 
 
 void
-idk::glInterface::clearIdkFramebuffers( )
+idk::gltools::clearIdkFramebuffers( )
 {
 
 }
 
 
 void
-idk::glInterface::setUniform_int(std::string name, int i)
+idk::gltools::setUniform_int(std::string name, int i)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
@@ -288,7 +291,7 @@ idk::glInterface::setUniform_int(std::string name, int i)
 }
 
 void
-idk::glInterface::setUniform_float(std::string name, float f)
+idk::gltools::setUniform_float(std::string name, float f)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
@@ -297,7 +300,7 @@ idk::glInterface::setUniform_float(std::string name, float f)
 }
 
 void
-idk::glInterface::setUniform_vec2(std::string name, glm::vec2 v)
+idk::gltools::setUniform_vec2(std::string name, glm::vec2 v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
@@ -306,7 +309,7 @@ idk::glInterface::setUniform_vec2(std::string name, glm::vec2 v)
 }
 
 void
-idk::glInterface::setUniform_vec3(std::string name, glm::vec3 v)
+idk::gltools::setUniform_vec3(std::string name, glm::vec3 v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
@@ -315,7 +318,7 @@ idk::glInterface::setUniform_vec3(std::string name, glm::vec3 v)
 }
 
 void
-idk::glInterface::setUniform_vec4(std::string name, glm::vec4 v)
+idk::gltools::setUniform_vec4(std::string name, glm::vec4 v)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
@@ -324,7 +327,7 @@ idk::glInterface::setUniform_vec4(std::string name, glm::vec4 v)
 }
 
 void
-idk::glInterface::setUniform_mat3(std::string name, glm::mat3 m)
+idk::gltools::setUniform_mat3(std::string name, glm::mat3 m)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
@@ -333,7 +336,7 @@ idk::glInterface::setUniform_mat3(std::string name, glm::mat3 m)
 }
 
 void
-idk::glInterface::setUniform_mat4(std::string name, glm::mat4 m)
+idk::gltools::setUniform_mat4(std::string name, glm::mat4 m)
 {
     GLCALL(
         GLuint loc = glGetUniformLocation(m_active_shader_id, name.c_str());
@@ -342,7 +345,7 @@ idk::glInterface::setUniform_mat4(std::string name, glm::mat4 m)
 }
 
 void
-idk::glInterface::setUniform_texture(std::string name, GLuint texture_id)
+idk::gltools::setUniform_texture(std::string name, GLuint texture_id)
 {
     GLuint texture_unit = popTextureUnitID();
     gl::activeTexture(texture_unit);
@@ -352,7 +355,7 @@ idk::glInterface::setUniform_texture(std::string name, GLuint texture_id)
 
 
 void
-idk::glInterface::setUniform_texture3D(std::string name, GLuint texture_id)
+idk::gltools::setUniform_texture3D(std::string name, GLuint texture_id)
 {
     GLuint texture_unit = popTextureUnitID();
     gl::activeTexture(texture_unit);
@@ -362,50 +365,50 @@ idk::glInterface::setUniform_texture3D(std::string name, GLuint texture_id)
 
 
 void
-idk::glInterface::setUniform_int(GLint loc, int i)
+idk::gltools::setUniform_int(GLint loc, int i)
 {
     GLCALL( glUniform1i(loc, i); )
 }
 
 void
-idk::glInterface::setUniform_float(GLint loc, float f)
+idk::gltools::setUniform_float(GLint loc, float f)
 {
     GLCALL( glUniform1f(loc, f); )
 }
 
 void
-idk::glInterface::setUniform_vec2(GLint loc, glm::vec2 v)
+idk::gltools::setUniform_vec2(GLint loc, glm::vec2 v)
 {
     GLCALL( glUniform2fv(loc, 1, glm::value_ptr(v)); )
 }
 
 void
-idk::glInterface::setUniform_vec3(GLint loc, glm::vec3 v)
+idk::gltools::setUniform_vec3(GLint loc, glm::vec3 v)
 {
     GLCALL( glUniform3fv(loc, 1, glm::value_ptr(v)); )
 }
 
 void
-idk::glInterface::setUniform_vec4(GLint loc, glm::vec4 v)
+idk::gltools::setUniform_vec4(GLint loc, glm::vec4 v)
 {
     GLCALL( glUniform4fv(loc, 1, glm::value_ptr(v)); )
 }
 
 void
-idk::glInterface::setUniform_mat3(GLint loc, glm::mat3 m)
+idk::gltools::setUniform_mat3(GLint loc, glm::mat3 m)
 {
     GLCALL( glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(m)); )
 }
 
 void
-idk::glInterface::setUniform_mat4(GLint loc, glm::mat4 m)
+idk::gltools::setUniform_mat4(GLint loc, glm::mat4 m)
 {
     GLCALL( glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(m)); )
 }
 
 
 void
-idk::glInterface::setUniform_texture(GLint loc, GLuint texture_id)
+idk::gltools::setUniform_texture(GLint loc, GLuint texture_id)
 {
     GLuint texture_unit = popTextureUnitID();
     gl::activeTexture(texture_unit);

@@ -10,13 +10,15 @@
 #define IDK_GLINTERFACE_MAX_TEXTUREi (GL_TEXTURE0 + 32)
 
 
-namespace idk::glInterface
+namespace idk::gltools
 {
     void                    init();
 
     GLuint                  loadTexture( int w, int h, uint32_t *data, bool srgb = false );
 
-    glFramebuffer           genIdkFramebuffer(int width, int height, int num_render_targets);
+    glFramebuffer           genIdkFramebuffer( int width, int height, int num_render_targets,
+                                               GLenum minf=GL_LINEAR, GLenum magf = GL_LINEAR );
+
     void                    bindIdkFramebuffer( glFramebuffer & );
     void                    unbindIdkFramebuffer(int width, int height);
     
@@ -57,7 +59,7 @@ namespace idk::glInterface
 
 template <typename ...Args>
 void
-idk::glInterface::clearIdkFramebuffers( glFramebuffer &fb, Args... rest )
+idk::gltools::clearIdkFramebuffers( glFramebuffer &fb, Args... rest )
 {
     clearIdkFramebuffer(fb);
     clearIdkFramebuffers(rest...);

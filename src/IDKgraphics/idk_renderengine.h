@@ -29,14 +29,23 @@ private:
 
     // idk::glFramebuffers ------------------------------------
     /***/
+
+    glFramebuffer                       m_scratchbuf0;
+    glFramebuffer                       m_scratchbuf1;
+    glFramebuffer                       m_scratchbuf2;
+
+    glFramebuffer                       m_scratchbuf0_d2; // buf0 div 2 --> quater-resolution
+    glFramebuffer                       m_scratchbuf1_d2;
+
+    glFramebuffer                       m_scratchbuf0_d4; // buf0 div 4 --> 16th-resolution
+    glFramebuffer                       m_scratchbuf1_d4;
+
+    glFramebuffer                       m_scratchbuf0_d8;
+    glFramebuffer                       m_scratchbuf0_d16;
+    glFramebuffer                       m_scratchbuf0_d32;
+
     glFramebuffer                       m_deferred_geom_buffer;
     glFramebuffer                       m_volumetrics_buffer;
-    glFramebuffer                       m_colorgrade_buffer;
-    glFramebuffer                       m_fxaa_buffer;
-    glFramebuffer                       m_blurred_buffer;
-    glFramebuffer                       m_blurred_buffer2;
-    glFramebuffer                       m_final_buffer;
-
     // --------------------------------------------------------
 
     // Shaders ------------------------------------------------
@@ -48,6 +57,12 @@ private:
     GLuint                              m_lighting_background_shader;
 
     GLuint                              m_guassian_blur_shader;
+    GLuint                              m_odd_blur_shader;
+    GLuint                              m_cabber_shader;
+    GLuint                              m_upscale_shader;
+    GLuint                              m_downscale_shader;
+    GLuint                              m_SSR_shader;
+    GLuint                              m_blank_shader;
 
     GLuint                              m_dirshadow_shader;
     GLuint                              m_screenquad_shader;
@@ -62,7 +77,6 @@ private:
     glUBO                               m_UBO_pointlights;
     glUBO                               m_UBO_spotlights;
     glUBO                               m_UBO_dirlights;
-
     // --------------------------------------------------------
 
     GLuint                              m_quad_VAO, m_quad_VBO;
@@ -74,7 +88,6 @@ private:
     Allocator<Spotlight>                m_spotlight_allocator;
 
     Allocator<Dirlight>                 m_dirlight_allocator;
-    Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
     Allocator<glm::mat4>                m_dirlight_lightspacematrix_allocator;
 
 
@@ -100,20 +113,29 @@ private:
     void                                f_shadowpass_dirlights();
 
 
-    /** Run a shader on the output textures of "in" and render the result to "out" */
-    void                                f_fbfb( GLuint shader, glFramebuffer &in, glFramebuffer &out );
-    
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
     void                                f_fbfb( GLuint shader, glFramebuffer &in );
-
-    void                                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1, glFramebuffer &out );
-    void                                f_fbfb( GLuint shader, GLuint tex0, GLuint tex1 );
-
+    void tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, glFramebuffer &out );
+    void tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &out );
     // ------------------------------------------------------------------------------------
 
 
 public:
+    Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
     glFramebuffer                       m_dirlight_depthmap_buffer;
+    glFramebuffer                       m_scratchbuf3;
+    glFramebuffer                       m_scratchbuf4;
+    glFramebuffer                       m_scratchbuf3_d2;
+    glFramebuffer                       m_scratchbuf3_d4;
+
+    float                               m_bloom_intensity=0.0f, m_gamma=2.2f, m_exposure=1.0f;
+    void                                setBloomIntensity(float f) { m_bloom_intensity = f; };
+
+
+    glm::vec2 m_r_abbr = glm::vec2(0.0f);
+    glm::vec2 m_g_abbr = glm::vec2(0.0f);
+    glm::vec2 m_b_abbr = glm::vec2(0.0f);
+    float m_abbr_str = 0.0f;
 
     // Built-in shaders -------------------------------------------------------------------
     /***/
