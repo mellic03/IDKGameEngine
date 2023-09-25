@@ -35,10 +35,10 @@ textureID vts0ID vts1ID vts2ID ...
 
 | | | |
 |-|-|-|
-|<img src="scr1.png">|<img src="scr0.png">| |
-|<img src="scr3.png">|<img src="scr6.png">| |
+|<img src="scr1.png">|<img src="scr12.png">| |
+|<img src="scr0.png">|<img src="scr13.png">| |
 |<img src="scr9.png">|<img src="scr2.png">| |
-|<img src="scr8.png">|<img src="scr10.png">| |
+|<img src="scr3.png">|<img src="scr10.png">| |
 
 
 ##  Dependencies
