@@ -8,4 +8,5 @@
 #include "idk_keylog.h"
 #include "idk_graph.h"
 #include "idk_threadpool.hpp"
+#include "idk_svoctree.hpp"
 
