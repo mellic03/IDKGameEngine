@@ -7,17 +7,14 @@ idk_threadpool_worker( idk::ThreadPool &wq )
 {
     while (1)
     {
-        while (1)
+        int task_id = wq.pop();
+
+        if (task_id != idk::ThreadPool::nullid)
         {
-            int task_id = wq.pop();
+            auto function = wq.get(task_id);
+            function();
 
-            if (task_id != idk::ThreadPool::nullid)
-            {
-                auto function = wq.get(task_id);
-                function();
-
-                wq.done(task_id);
-            }
+            wq.done(task_id);
         }
 
 

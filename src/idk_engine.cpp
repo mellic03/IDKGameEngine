@@ -35,13 +35,13 @@ idk::Engine::f_idk_CS_stage_A()
     for (size_t i=0; i<m_idk_componentsystems.size(); i++)
     {
         idk::ComponentSystem *CS = m_idk_componentsystems[i];
-
-        m_threadpool.push(
-            [CS, engine]
-            {
-                CS->stage_A(*engine);
-            }
-        );
+        CS->stage_A(*this);
+        // m_threadpool.push(
+        //     [CS, engine]
+        //     {
+        //         CS->stage_A(*engine);
+        //     }
+        // );
     }
 
     for (size_t i=0; i<m_idk_modules.size(); i++)
@@ -56,7 +56,7 @@ idk::Engine::f_idk_CS_stage_A()
         // );
     }
 
-    m_threadpool.join();
+    // m_threadpool.join();
 }
 
 
@@ -68,13 +68,13 @@ idk::Engine::f_idk_CS_stage_B()
     for (size_t i=0; i<m_idk_componentsystems.size(); i++)
     {
         idk::ComponentSystem *CS = m_idk_componentsystems[i];
-
-        m_threadpool.push(
-            [CS, engine]
-            {
-                CS->stage_B(*engine);
-            }
-        );
+        CS->stage_B(*this);
+        // m_threadpool.push(
+        //     [CS, engine]
+        //     {
+        //         CS->stage_B(*engine);
+        //     }
+        // );
     }
 
     for (size_t i=0; i<m_idk_modules.size(); i++)
@@ -89,7 +89,7 @@ idk::Engine::f_idk_CS_stage_B()
         // );
     }
 
-    m_threadpool.join();
+    // m_threadpool.join();
 }
 
 
