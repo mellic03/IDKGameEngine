@@ -1,8 +1,11 @@
 #include "idk_engine.h"
 
 
+idk::ThreadPool idk::Engine::threadpool = idk::ThreadPool(8);
+
+
 idk::Engine::Engine( std::string name, int w, int h, int res_divisor ):
-m_render_engine(name, w, h, res_divisor )
+m_render_engine(name, w, h, res_divisor ), m_threadpool(4)
 {
     idk::Engine &engine = *this;
     idk::RenderEngine &ren = m_render_engine;
@@ -27,34 +30,66 @@ m_render_engine(name, w, h, res_divisor )
 void
 idk::Engine::f_idk_CS_stage_A()
 {
+    idk::Engine *engine = this;
+
     for (size_t i=0; i<m_idk_componentsystems.size(); i++)
     {
         idk::ComponentSystem *CS = m_idk_componentsystems[i];
-        CS->stage_A(*this);
+
+        m_threadpool.push(
+            [CS, engine]
+            {
+                CS->stage_A(*engine);
+            }
+        );
     }
 
     for (size_t i=0; i<m_idk_modules.size(); i++)
     {
         idk::Module *mod = m_idk_modules[i];
         mod->stage_A(*this);
+        // m_threadpool.push(
+        //     [mod, engine]
+        //     {
+        //         mod->stage_A(*engine);
+        //     }
+        // );
     }
+
+    m_threadpool.join();
 }
 
 
 void
 idk::Engine::f_idk_CS_stage_B()
 {
+    idk::Engine *engine = this;
+
     for (size_t i=0; i<m_idk_componentsystems.size(); i++)
     {
         idk::ComponentSystem *CS = m_idk_componentsystems[i];
-        CS->stage_B(*this);
+
+        m_threadpool.push(
+            [CS, engine]
+            {
+                CS->stage_B(*engine);
+            }
+        );
     }
 
     for (size_t i=0; i<m_idk_modules.size(); i++)
     {
         idk::Module *mod = m_idk_modules[i];
         mod->stage_B(*this);
+        // m_threadpool.push(
+        //     [mod, engine]
+        //     {
+        //         mod->stage_B(*engine);
+        //     }
+        // );
     }
+
+    m_threadpool.join();
 }
 
 

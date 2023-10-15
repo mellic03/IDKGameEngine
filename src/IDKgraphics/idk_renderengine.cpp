@@ -304,7 +304,6 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &ou
     gltools::bindIdkFramebuffer(out);
     gltools::useProgram(program);
 
-
     static float inc0 = 0.0f;
     static float inc1 = 0.0f;
     static float inc2 = 0.0f;
@@ -657,20 +656,15 @@ idk::RenderEngine::endFrame()
 
 
     // Deferred lighting pass --------------------------------------------
+    gl::bindVertexArray(m_quad_VAO);
+
     gltools::useProgram(m_background_shader);
     glm::mat4 modelmat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.5f * camera.farPlane()));
     modelmat = glm::scale(modelmat, glm::vec3(300.0f, 300.0f, 1.0f));
     gltools::setUniform_mat4("un_model", modelmat);
-
-    gl::bindVertexArray(m_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
-    gl::bindVertexArray(0);
-
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
 
-
-
-    gl::bindVertexArray(m_quad_VAO);
 
     // Blinn-Phong lighting
     // -----------------------------------------------------------------------------------------
@@ -680,83 +674,43 @@ idk::RenderEngine::endFrame()
 
     // Volumetric directional lights
     // -----------------------------------------------------------------------------------------
-    gltools::clearIdkFramebuffers(m_scratchbuf4, m_scratchbuf3, m_scratchbuf3_d2, m_scratchbuf3_d4);
-
-    tex2tex(m_dirlight_vol_shader, m_deferred_geom_buffer, m_scratchbuf3_d2);
-
-    tex2tex(m_upscale_shader,   m_scratchbuf3_d2, m_scratchbuf3);      // Upscale
-    tex2tex(m_downscale_shader, m_scratchbuf3,    m_scratchbuf3_d2);   // Downscale
-    tex2tex(m_upscale_shader,   m_scratchbuf3_d2, m_scratchbuf3);      // Upscale
+    tex2tex(m_dirlight_vol_shader, m_deferred_geom_buffer, m_scratchbuf0_d2);
+    tex2tex(m_upscale_shader,      m_scratchbuf0_d2,       m_scratchbuf1);
     // -----------------------------------------------------------------------------------------
 
 
     // Combine geometry and volumetrics
     // -----------------------------------------------------------------------------------------
+    gltools::clearIdkFramebuffer(m_scratchbuf2);
     gltools::useProgram(m_additive_shader);
     gltools::setUniform_float("intensity", 1.0f);
-    tex2tex(m_additive_shader, m_scratchbuf0, m_scratchbuf3, m_scratchbuf1);
+    tex2tex(m_additive_shader, m_scratchbuf0, m_scratchbuf1, m_scratchbuf2);
     // -----------------------------------------------------------------------------------------
 
     // SSR
     // -----------------------------------------------------------------------------------------
-    tex2tex(m_SSR_shader, m_deferred_geom_buffer, m_scratchbuf1, m_scratchbuf3_d2);
-    tex2tex(m_odd_blur_shader, m_scratchbuf3_d2, m_scratchbuf0_d2);
-    tex2tex(m_guassian_blur_shader, m_scratchbuf0_d2, m_scratchbuf3);
-    tex2tex(m_guassian_blur_shader, m_scratchbuf3, m_scratchbuf4);
-    tex2tex(m_guassian_blur_shader, m_scratchbuf4, m_scratchbuf3);
-
-
-    gltools::useProgram(m_additive_shader);
-    gltools::setUniform_float("intensity", 1.0f);
-    tex2tex(m_additive_shader, m_scratchbuf1, m_scratchbuf3, m_scratchbuf2);
+    // tex2tex(m_SSR_shader, m_deferred_geom_buffer, m_scratchbuf1, m_scratchbuf0_d2);
+    // gltools::useProgram(m_additive_shader);
+    // gltools::setUniform_float("intensity", 1.0f);
+    // tex2tex(m_additive_shader, m_scratchbuf1, m_scratchbuf3, m_scratchbuf2);
     // -----------------------------------------------------------------------------------------
 
 
-    // Bloom
-    // -----------------------------------------------------------------------------------------
-    tex2tex(m_downscale_shader, m_scratchbuf2,     m_scratchbuf3);
-    tex2tex(m_downscale_shader, m_scratchbuf3,     m_scratchbuf0_d2);
-    tex2tex(m_downscale_shader, m_scratchbuf0_d2,  m_scratchbuf0_d4);
-    tex2tex(m_downscale_shader, m_scratchbuf0_d4,  m_scratchbuf0_d8);
-    tex2tex(m_downscale_shader, m_scratchbuf0_d8,  m_scratchbuf0_d16);
-    tex2tex(m_downscale_shader, m_scratchbuf0_d16, m_scratchbuf0_d32);
-
-    tex2tex(m_upscale_shader, m_scratchbuf0_d32,  m_scratchbuf0_d16);
-    tex2tex(m_upscale_shader, m_scratchbuf0_d16,  m_scratchbuf0_d8);
-    tex2tex(m_upscale_shader, m_scratchbuf0_d8,   m_scratchbuf0_d4);
-    tex2tex(m_upscale_shader, m_scratchbuf0_d4,   m_scratchbuf0_d2);
-    tex2tex(m_upscale_shader, m_scratchbuf0_d2,   m_scratchbuf3);
-    gltools::clearIdkFramebuffers(
-        m_scratchbuf0_d2,
-        m_scratchbuf0_d4,
-        m_scratchbuf0_d8,
-        m_scratchbuf0_d16,
-        m_scratchbuf0_d32
-    );
-    // -----------------------------------------------------------------------------------------
-
-
-    // Add bloom to main framebuffer
-    // -----------------------------------------------------------------------------------------
-    gltools::useProgram(m_additive_shader);
-    gltools::setUniform_float("intensity", m_bloom_intensity);
-    tex2tex(m_additive_shader, m_scratchbuf2, m_scratchbuf3, m_scratchbuf1);
-    // -----------------------------------------------------------------------------------------
-
-    // Chromatic abberation
-    tex2tex(m_cabber_shader,  m_scratchbuf1, m_scratchbuf0);
+    // Chromatic aberration
+    gltools::clearIdkFramebuffers(m_scratchbuf0, m_scratchbuf1);
+    tex2tex(m_cabber_shader, m_scratchbuf2, m_scratchbuf1);
 
     // Color grading
     gltools::useProgram(m_colorgrade_shader);
     gltools::setUniform_float("un_gamma", m_gamma);
     gltools::setUniform_float("un_exposure", m_exposure);
-    tex2tex(m_colorgrade_shader, m_scratchbuf0, m_scratchbuf1);
+    tex2tex(m_colorgrade_shader, m_scratchbuf1, m_scratchbuf0);
 
     // FXAA
-    f_fbfb(m_fxaa_shader, m_scratchbuf1);
+    f_fbfb(m_fxaa_shader, m_scratchbuf0);
 
     gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
-    // -------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
 
     gltools::clearIdkFramebuffers(
         m_deferred_geom_buffer,

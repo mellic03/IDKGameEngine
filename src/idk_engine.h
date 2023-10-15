@@ -19,12 +19,13 @@ private:
     idk::RenderEngine                           m_render_engine;
     idk::AudioEngine                            m_audio_engine;
     idk::EventManager                           m_event_manager;
+    idk::ThreadPool                             m_threadpool;
 
     std::vector<idk::Module *>                  m_idk_modules;
     std::unordered_map<std::string, uint>       m_idk_module_ids;
 
     idk::Allocator<int>                         m_gameobjects;
-    std::vector<std::vector<int>>               m_component_matrix; // v[object_id][cs_id]
+    std::vector<std::vector<int>>               m_component_matrix;        // v[object_id][cs_id]
     std::vector<idk::ComponentSystem *>         m_idk_componentsystems;
     std::unordered_map<std::string, uint>       m_idk_componentsystem_ids; // map[cs_name] = cs_id;
 
@@ -38,6 +39,7 @@ private:
     void                                        f_idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id );
 
 public:
+                                                static idk::ThreadPool threadpool;
                                                 Engine( std::string name, int w, int h, int res_divisor );
 
     idk::RenderEngine &                         rengine()   { return m_render_engine; };
