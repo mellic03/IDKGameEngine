@@ -4,7 +4,7 @@
 
 idk::SVOctree::SVOctree()
 {
-    m_root_id = m_nodes.add();
+    m_root_id = m_nodes.create();
 }
 
 

@@ -397,7 +397,7 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, 
 int
 idk::RenderEngine::createCamera()
 {
-    int camera_id = m_camera_allocator.add();
+    int camera_id = m_camera_allocator.create();
     m_camera_allocator.get(camera_id).aspect(m_resolution.x, m_resolution.y);
     return camera_id;
 }
@@ -406,23 +406,23 @@ idk::RenderEngine::createCamera()
 int
 idk::RenderEngine::createPointlight()
 {
-    return m_pointlight_allocator.add();
+    return m_pointlight_allocator.create();
 }
 
 
 int
 idk::RenderEngine::createSpotlight()
 {
-    return m_spotlight_allocator.add();
+    return m_spotlight_allocator.create();
 }
 
 
 int
 idk::RenderEngine::createDirlight()
 {
-    m_dirlight_shadowmap_allocator.add();
-    m_dirlight_lightspacematrix_allocator.add();
-    return m_dirlight_allocator.add();
+    m_dirlight_shadowmap_allocator.create();
+    m_dirlight_lightspacematrix_allocator.create();
+    return m_dirlight_allocator.create();
 }
 
 

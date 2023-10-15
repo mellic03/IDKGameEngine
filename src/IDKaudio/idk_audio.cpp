@@ -36,14 +36,14 @@ idk::AudioEngine::loadWav( std::string filepath )
     }
     #endif
 
-    return m_mixchunk_allocator.add(mc);
+    return m_mixchunk_allocator.create(mc);
 }
 
 
 int
 idk::AudioEngine::createEmitter()
 {
-    return m_emitter_allocator.add();
+    return m_emitter_allocator.create();
 }
 
 
@@ -51,7 +51,7 @@ int
 idk::AudioEngine::createEmitter( int mix_chunk_id, idk::Transform &transform )
 {
     Mix_Chunk *mc = m_mixchunk_allocator.get(mix_chunk_id);
-    return m_emitter_allocator.add(  { -1, mc, &transform }  );
+    return m_emitter_allocator.create(  { -1, mc, &transform }  );
 }
 
 

@@ -175,7 +175,7 @@ idk::Engine::createGameObject()
     int num_components = m_idk_componentsystems.size();
     m_component_matrix.push_back(std::vector<int>(num_components, 0));
 
-    int obj_id = m_gameobjects.add();
+    int obj_id = m_gameobjects.create();
 
     f_idk_CS_onGameObjectCreation(obj_id);
 
@@ -189,7 +189,7 @@ idk::Engine::createGameObject( int prefab_id )
     int num_components = m_idk_componentsystems.size();
     m_component_matrix.push_back(m_component_matrix[prefab_id]);
 
-    int obj_id = m_gameobjects.add();
+    int obj_id = m_gameobjects.create();
 
     f_idk_CS_onGameObjectCreation(obj_id);
     f_idk_CS_onGameObjectCopy(prefab_id, obj_id);
@@ -217,7 +217,7 @@ idk::Engine::deleteGameObject( int obj_id )
     for (size_t i=0; i<m_idk_componentsystems.size(); i++)
         removeComponent(obj_id, i);
 
-    m_gameobjects.remove(obj_id);
+    m_gameobjects.destroy(obj_id);
     m_component_matrix[obj_id] = std::vector<int>(m_idk_componentsystems.size(), 0);
 
     f_idk_CS_onGameObjectDeletion(obj_id);

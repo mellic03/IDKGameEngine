@@ -75,7 +75,7 @@ idk::ThreadPool::done( int task_id )
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     m_finished_ids.emplace(task_id);
-    m_tasks.remove(task_id);
+    m_tasks.destroy(task_id);
 };
 
 

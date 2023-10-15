@@ -23,11 +23,11 @@ private:
 public:
                             Allocator();
 
-    int                     add();
-    int                     add( const T &data );
+    int                     create();
+    int                     create( const T &data );
 
     T &                     get( int id );
-    void                    remove( int id );
+    void                    destroy( int id );
     int                     size() const { return m_objects.size() - m_unnocupied_indices.size(); };
 
     void                    for_each(std::function<void(T&)>);
@@ -45,7 +45,7 @@ idk::Allocator<T>::Allocator(): m_is_occupied(0), m_unnocupied_indices(0), m_obj
 
 template <typename T>
 int
-idk::Allocator<T>::add()
+idk::Allocator<T>::create()
 {
     if (m_unnocupied_indices.empty())
     {
@@ -66,7 +66,7 @@ idk::Allocator<T>::add()
 
 template <typename T>
 int
-idk::Allocator<T>::add(const T &data)
+idk::Allocator<T>::create(const T &data)
 {
     if (m_unnocupied_indices.empty())
     {
@@ -107,7 +107,7 @@ idk::Allocator<T>::get(int id)
 
 template <typename T>
 void
-idk::Allocator<T>::remove(int id)
+idk::Allocator<T>::destroy(int id)
 {
     #ifdef IDK_DEBUG
     if (id >= (int)m_objects.size())

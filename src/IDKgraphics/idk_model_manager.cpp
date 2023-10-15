@@ -35,7 +35,7 @@ idk::ModelManager::_load_mtl( std::string raw_mtl )
 
         if (line.find("newmtl") != std::string::npos)
         {
-            material_id = _materials.add();
+            material_id = _materials.create();
             std::string material_name;
             iss >> dummy >> material_name;
             _material_IDs[material_name] = material_id;
@@ -215,7 +215,7 @@ int
 idk::ModelManager::loadOBJ( std::string raw_obj, std::string raw_mtl )
 {
     _load_mtl(raw_mtl);
-    int model_id = _models.add(_load_obj(raw_obj));
+    int model_id = _models.create(_load_obj(raw_obj));
     idk::Model &model = _models.get(model_id);
 
     gl::genVertexArrays(1, &model.VAO);

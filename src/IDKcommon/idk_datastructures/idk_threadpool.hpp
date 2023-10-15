@@ -51,7 +51,7 @@ idk::ThreadPool::push( function fn, Args&&... args )
 {
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    int task_id = m_tasks.add(std::bind(fn, args...));
+    int task_id = m_tasks.create(std::bind(fn, args...));
     m_task_ids.push(task_id);
 
     return task_id;

@@ -25,7 +25,7 @@ idk::EventManager::onWindowEvent( WindowEvent winevent, std::function<void()> re
         return winevents[idx] == true;
     };
 
-    m_events.add(  { trigger, response }  );
+    m_events.create(  { trigger, response }  );
 }
 
 
