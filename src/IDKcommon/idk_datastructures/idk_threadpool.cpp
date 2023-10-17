@@ -26,7 +26,6 @@ idk_threadpool_worker( idk::ThreadPool &wq )
 }
 
 
-
 idk::ThreadPool::ThreadPool( int num_threads )
 {
     m_running.store(true);
@@ -92,6 +91,23 @@ idk::ThreadPool::join()
 
         lock.unlock();
     }
-
 }
+
+
+
+bool
+idk::ThreadPool::running()
+{
+    return m_running.load();
+};
+
+
+
+void
+idk::ThreadPool::stop()
+{
+    this->join();
+    m_running.store(false);
+};
+
 

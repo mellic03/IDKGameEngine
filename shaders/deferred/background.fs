@@ -11,6 +11,6 @@ void main()
 {
     fsout_albedospec = vec4(0.0, 0.0, 0.0, 1.0);
     fsout_position   = vec4(fsin_fragpos, 1.0);
-    fsout_normal     = vec4(0.0);
+    fsout_normal     = vec4(1.0);
     fsout_emission   = vec4(0.0);
 }

@@ -31,8 +31,6 @@ public:
                         const static int nullid = -1;
                         ThreadPool( int num_threads );
 
-    void                stop()    { m_running.store(false);  };
-    bool                running() { return m_running.load(); };
 
     template <typename function, typename ...Args>
     int                 push    ( function fn, Args&&... args );
@@ -41,6 +39,9 @@ public:
     fun_t               get     ( int task_id );
     void                done    ( int task_id );
     void                join    (             );
+
+    bool                running();
+    void                stop();
 };
 
 

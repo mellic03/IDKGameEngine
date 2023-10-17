@@ -3,28 +3,28 @@
 
 idk::glUBO::glUBO( GLuint location, GLsizeiptr size )
 {
-    _offset = 0;
+    m_offset = 0;
 
-    gl::genBuffers(1, &_UBO);
-    gl::bindBuffer(GL_UNIFORM_BUFFER, _UBO);
+    gl::genBuffers(1, &m_UBO);
+    gl::bindBuffer(GL_UNIFORM_BUFFER, m_UBO);
     gl::bufferData(GL_UNIFORM_BUFFER, size, NULL, GL_STATIC_DRAW);
     gl::bindBuffer(GL_UNIFORM_BUFFER, 0);
-    gl::bindBufferBase(GL_UNIFORM_BUFFER, location, _UBO);
+    gl::bindBufferBase(GL_UNIFORM_BUFFER, location, m_UBO);
 }
 
 
 void
 idk::glUBO::bind()
 {
-    _offset = 0;
-    gl::bindBuffer(GL_UNIFORM_BUFFER, _UBO);
+    m_offset = 0;
+    gl::bindBuffer(GL_UNIFORM_BUFFER, m_UBO);
 };
 
 
 void
 idk::glUBO::unbind()
 {
-    _offset = 0;
+    m_offset = 0;
     gl::bindBuffer(GL_UNIFORM_BUFFER, 0);
 };
 
@@ -32,7 +32,7 @@ idk::glUBO::unbind()
 void
 idk::glUBO::add(GLintptr size, const void *data)
 {
-    gl::bufferSubData(GL_UNIFORM_BUFFER, _offset, size, data);
-    _offset += idk::roundup(size, 16);
+    gl::bufferSubData(GL_UNIFORM_BUFFER, m_offset, size, data);
+    m_offset += idk::roundup(size, 16);
 }
 

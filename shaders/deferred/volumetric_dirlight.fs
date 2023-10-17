@@ -21,8 +21,8 @@ layout (std140, binding = 2) uniform UBO_camera_data
     vec3 un_viewpos;
 };
 
-#include "UBO_lightsources.glsl"
-#include "methods.glsl"
+#include "deferred/UBO_lightsources.glsl"
+#include "deferred/methods.glsl"
 
 
 float PHG (float g, float cosTheta)

@@ -10,6 +10,7 @@
 #include "idk_camera.h"
 #include "IDKlightsource/IDKlightsource.h"
 #include "primitives/primitives.h"
+#include "idk_noisegen.hpp"
 
 #define IDK_MAX_POINTLIGHTS 10
 #define IDK_MAX_SPOTLIGHTS 10
@@ -54,7 +55,6 @@ private:
     GLuint                              m_deferred_lightingpass_shader;
     GLuint                              m_dirlight_vol_shader;
     GLuint                              m_background_shader;
-    GLuint                              m_lighting_background_shader;
 
     GLuint                              m_guassian_blur_shader;
     GLuint                              m_odd_blur_shader;
@@ -92,7 +92,7 @@ private:
 
 
     modelqueue_t                        m_model_draw_queue;
-    modelqueue_t                        m_untextured_model_queue;
+    modelqueue_t                        m_wireframe_draw_queue;
 
     // Initialization ---------------------------------------------------------------------
     /***/
@@ -114,9 +114,9 @@ private:
 
 
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
-    void                                f_fbfb( GLuint shader, glFramebuffer &in );
-    void tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, glFramebuffer &out );
-    void tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &out );
+    void    f_fbfb( GLuint shader, glFramebuffer &in );
+    void    tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, glFramebuffer &out );
+    void    tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &out );
     // ------------------------------------------------------------------------------------
 
 
@@ -146,6 +146,7 @@ public:
     /***/
     static GLuint                       SPHERE_PRIMITIVE;
     static GLuint                       CUBE_PRIMITIVE;
+    static GLuint                       CRATE_PRIMITIVE;
     // ------------------------------------------------------------------------------------
     void                                compileShaders();
 
@@ -166,7 +167,7 @@ public:
 
     ModelManager &                      modelManager()  { return m_model_manager; };
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
-    void                                drawUntextured( GLuint shader_id, int model_id, Transform &transform );
+    void                                drawWireframe( GLuint shader_id, int model_id, Transform &transform );
 
     void                                beginFrame();
     void                                endFrame();

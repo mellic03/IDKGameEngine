@@ -6,95 +6,10 @@
 GLuint worley_texture;
 
 
-float dist_to_closest(glm::vec3 point, std::vector<glm::vec3> points)
-{
-    float min_dist = INFINITY;
-
-    for (glm::vec3 p: points)
-    {
-        float dist = glm::distance(point, p);
-
-        if (dist < min_dist)
-            min_dist = dist;
-    }
-
-    return min_dist;
-}
-
-
-GLuint noisegen_3D_Worley()
-{
-    GLuint texture;
-
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_3D, texture);
-
-
-    constexpr int num_points = 50;
-    constexpr int width = 50;
-
-    std::vector<glm::vec3> points(num_points);
-    for (int i=0; i<num_points; i++)
-    {
-        float x = (float)(rand() % (width*1000)) / 1000.0f;
-        float y = (float)(rand() % (width*1000)) / 1000.0f;
-        float z = (float)(rand() % (width*1000)) / 1000.0f;
-
-        points[i] = glm::vec3(x, y, z);
-    }
-
-    float *texture_data = new float[width*width*width];
-
-    float max_value = 0.0f;
-
-    for (int z=0; z<width; z++)
-    {
-        for (int y=0; y<width; y++)
-        {
-            for (int x=0; x<width; x++)
-            {
-                float dist = dist_to_closest(glm::vec3(x, y, z), points);
-                if (dist > max_value)
-                    max_value = dist;
-                texture_data[z*width*width + y*width + x] = dist;
-            }
-        }
-    }
-
-    for (int z=0; z<width; z++)
-    {
-        for (int y=0; y<width; y++)
-        {
-            for (int x=0; x<width; x++)
-            {
-                texture_data[z*width*width + y*width + x] /= max_value;
-                texture_data[z*width*width + y*width + x] = 1.0f - texture_data[z*width*width + y*width + x];
-            }
-        }
-    }
-
-
-    glTexImage3D( GL_TEXTURE_3D, 0, GL_R32F, width, width, width,
-                         0, GL_RED, GL_FLOAT, texture_data );
-
-    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
-
-    glGenerateMipmap(GL_TEXTURE_3D);
-    glBindTexture(GL_TEXTURE_3D, 0);
-
-    delete[] texture_data;
-
-    return texture;
-}
-
-
 // Static members -----------------------------
 GLuint  idk::RenderEngine::SPHERE_PRIMITIVE;
 GLuint  idk::RenderEngine::CUBE_PRIMITIVE;
+GLuint  idk::RenderEngine::CRATE_PRIMITIVE;
 // --------------------------------------------
 
 void
@@ -176,30 +91,24 @@ idk::RenderEngine::compileShaders()
     m_background_shader = gltools::compileProgram(
         "shaders/deferred/", "background.vs", "background.fs"
     );
-    m_lighting_background_shader = gltools::compileProgram(
-        "shaders/deferred/", "lightingpass.vs", "lightingpass_background.fs"
-    );
     m_deferred_geometrypass_shader = gltools::compileProgram(
         "shaders/deferred/", "geometrypass.vs", "geometrypass.fs"
     );
     m_deferred_lightingpass_shader = gltools::compileProgram(
-        "shaders/deferred/", "lightingpass.vs", "lightingpass.fs"
+        "shaders/", "screenquad.vs", "deferred/lightingpass.fs"
     );
     m_dirlight_vol_shader = gltools::compileProgram(
-        "shaders/deferred/", "screenquad.vs", "volumetric_dirlight.fs"
+        "shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs"
     );
-
     m_guassian_blur_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/guassianblur.fs"
     );
     m_odd_blur_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/oddblur.fs"
     );
-
     m_cabber_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/c-abberation.fs"
     );
-
     m_upscale_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/upsample.fs"
     );
@@ -256,21 +165,13 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
     f_init_SDL_OpenGL(name, w, h);
     f_init_screenquad();
 
-    RenderEngine::CUBE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::cube, "");
     RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
+    RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
+    RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
    
     f_gen_idk_framebuffers(w, h);
     compileShaders();
 
-
-    /*
-        You don't need an actual image file for default texture, dum dum.
-        You can simply create a single-pixel texture from an array.
-
-        E.g:
-            default_specular = { 0.0f, 0.0f, 0.0f }
-            default_diffuse  = { 0.8f, 0.8f, 0.8f }
-    */
 
     m_active_camera_id = createCamera();
 
@@ -279,7 +180,7 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
     m_UBO_spotlights  = glUBO(4, 16 + IDK_MAX_SPOTLIGHTS*sizeof(Spotlight));
     m_UBO_dirlights   = glUBO(5, 16 + IDK_MAX_DIRLIGHTS*sizeof(Dirlight) + IDK_MAX_DIRLIGHTS*sizeof(glm::mat4));
 
-    worley_texture = noisegen_3D_Worley();
+    worley_texture = noisegen3D::worley();
 }
 
 
@@ -433,9 +334,9 @@ idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transfo
 }
 
 void
-idk::RenderEngine::drawUntextured( GLuint shader_id, int model_id, Transform &transform )
+idk::RenderEngine::drawWireframe( GLuint shader_id, int model_id, Transform &transform )
 {
-    // m_untextured_model_queue[shader_id].push({model_id, transform});
+    m_wireframe_draw_queue[shader_id].push({model_id, transform});
 }
 
 
@@ -501,8 +402,7 @@ idk::RenderEngine::f_shadowpass_dirlights()
             {
                 drawmethods::draw_untextured(
                     ren.modelManager().getModel(model_id),
-                    transform,
-                    ren.modelManager().getMaterials()
+                    transform
                 );
             }
         }
@@ -652,6 +552,27 @@ idk::RenderEngine::endFrame()
     }
     m_model_draw_queue.clear();
     gl::bindVertexArray(0);
+
+
+    gl::disable(GL_CULL_FACE);
+    gltools::useProgram(solid_shader);
+    gltools::setUniform_vec3("un_color", glm::vec3(1.0f));
+    for (auto &[shader_id, vec]: m_wireframe_draw_queue)
+    {
+        gltools::useProgram(shader_id);
+
+        for (auto &[model_id, transform]: vec)
+        {
+            drawmethods::draw_wireframe(
+                modelManager().getModel(model_id),
+                transform
+            );
+            gltools::freeTextureUnitIDs();
+        }
+        vec.clear();
+    }
+    m_wireframe_draw_queue.clear();
+    gl::enable(GL_CULL_FACE);
     // -------------------------------------------------------------------
 
 

@@ -2,11 +2,9 @@
 
 layout (location = 0) out vec4 fsout_frag_color;
 
-#include "UBO_lightsources.glsl"
+#include "deferred/UBO_lightsources.glsl"
 
 in vec2 fsin_texcoords;
-in vec4 fsin_fragpos_dirlightspace[10];
-
 
 uniform sampler2D un_texture_0;
 uniform sampler2D un_texture_1;
@@ -21,7 +19,7 @@ layout (std140, binding = 2) uniform UBO_camera_data
 };
 
 
-#include "methods.glsl"
+#include "deferred/methods.glsl"
 
 void main()
 {
@@ -38,15 +36,15 @@ void main()
 
     vec3 color = vec3(0.0);
 
-    for (int i = 0; i < ubo_num_pointlights; i++)
-    {
-        color += pointlight_contribution(i, view_dir, position, normal, albedo, specular, 32.0);
-    }
+    // for (int i = 0; i < ubo_num_pointlights; i++)
+    // {
+    //     color += pointlight_contribution(i, view_dir, position, normal, albedo, specular, 32.0);
+    // }
 
-    for (int i = 0; i < ubo_num_spotlights; i++)
-    {
-        color += spotlight_contribution(i, view_dir, position, normal, albedo, specular, 32.0);
-    }
+    // for (int i = 0; i < ubo_num_spotlights; i++)
+    // {
+    //     color += spotlight_contribution(i, view_dir, position, normal, albedo, specular, 32.0);
+    // }
 
     for (int i = 0; i < ubo_num_dirlights; i++)
     {

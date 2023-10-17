@@ -13,8 +13,8 @@ m_render_engine(name, w, h, res_divisor ), m_threadpool(4)
 
     auto resize_lambda = [&ren, &eman]()
     {
-        auto windata = eman.windowData();
-        ren.resize(windata.width, windata.height);
+        auto winsize = eman.windowSize();
+        ren.resize(winsize.x, winsize.y);
     };
 
     auto exit_lambda = [&engine]()
@@ -262,7 +262,6 @@ idk::Engine::beginFrame()
     m_event_manager.processMouseInput();
     m_event_manager.update();
 
-
     f_idk_CS_stage_A();
 
     m_render_engine.beginFrame();
@@ -279,6 +278,8 @@ idk::Engine::endFrame()
 
     m_frame_end = SDL_GetPerformanceCounter();
     m_frame_time = ((double)(m_frame_end - m_frame_start)) / (double)SDL_GetPerformanceFrequency();
+
+    idk::Engine::threadpool.join();
 }
 
 
@@ -286,5 +287,8 @@ void
 idk::Engine::shutdown()
 {
     m_running = false;
+
+    idk::Engine::threadpool.stop();
+    m_threadpool.stop();
 }
 

@@ -9,8 +9,8 @@ namespace idk { class glUBO; };
 class idk::glUBO
 {
 private:
-    GLuint      _UBO    = 0;
-    GLintptr    _offset = 0;
+    GLuint      m_UBO;
+    GLintptr    m_offset;
 
 public:
                 glUBO() {  };
@@ -29,7 +29,7 @@ template <typename T>
 void
 idk::glUBO::add(const void *data)
 {
-    gl::bufferSubData(GL_UNIFORM_BUFFER, _offset, sizeof(T), data);
-    _offset += idk::roundup(sizeof(T), 16);
+    gl::bufferSubData(GL_UNIFORM_BUFFER, m_offset, sizeof(T), data);
+    m_offset += idk::roundup(sizeof(T), 16);
 }
 

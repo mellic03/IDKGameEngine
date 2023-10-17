@@ -65,8 +65,8 @@ idk::EventManager::processMouseInput()
                 else if (m_SDL_Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
                     m_windowevents[(int)(WindowEvent::RESIZE)] = true;
-                    m_window_data.width  = m_SDL_Event.window.data1;
-                    m_window_data.height = m_SDL_Event.window.data2;
+                    m_size.x = m_SDL_Event.window.data1;
+                    m_size.y = m_SDL_Event.window.data2;
                 }
             break;
 

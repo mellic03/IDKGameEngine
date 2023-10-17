@@ -33,19 +33,19 @@ struct idk::Event
 
 class idk::EventManager
 {
+    using fun_t = std::function<void(SDL_Event *)>;
+
 private:
     
     // SDL backend ------------------------------------
     SDL_Event               m_SDL_Event;
-    idk::vector<std::function<void(SDL_Event *)>> m_SDL_pollevents;
+    idk::vector<fun_t>     m_SDL_pollevents;
     // ------------------------------------------------
 
     Allocator<idk::Event>   m_events;
     idk::vector<bool>       m_windowevents;
 
-    struct WindowData       { int width, height; };
-    WindowData              m_window_data;
-
+    glm::ivec2              m_size;
     idk::Keylog             m_keylog;
 
     bool                    m_mouse_captured = false;
@@ -63,13 +63,13 @@ public:
     void                    processMouseInput();
 
     idk::Keylog &           keylog() { return m_keylog; };
-    const WindowData &      windowData() const { return m_window_data; };
+    glm::ivec2              windowSize() const { return m_size; };
     
     void                    onWindowEvent( WindowEvent, std::function<void()> );
     void                    onSDLPollEvent( std::function<void(SDL_Event *)> fn) { m_SDL_pollevents.push(fn); };
 
     void                    mouseCapture( bool capture );
-    bool                    mouseCaptured() const       { return m_mouse_captured;    };
+    bool                    mouseCaptured() const            { return m_mouse_captured;    };
     bool                    mouseUp( idk::MouseButton mb )   { return m_mousebutton_up[(int)mb];   };
     bool                    mouseDown( idk::MouseButton mb ) { return m_mousebutton_down[(int)mb]; };
     glm::vec2               mousePosition() { return m_mouse_position; };
