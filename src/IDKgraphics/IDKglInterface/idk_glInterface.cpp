@@ -194,7 +194,6 @@ idk::gltools::useProgram(GLuint shader_id)
 }
 
 
-
 void
 idk::gltools::setUniform_int(std::string name, int i)
 {

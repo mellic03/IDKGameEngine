@@ -1,15 +1,14 @@
 #pragma once
 
-#include <SDL2/SDL.h>
-#include "idk_vector.h"
+#include "IDKcommon/IDKcommon.h"
 
-#ifdef SDL_h_
-    #include "../IDK_SDL2/idk_SDL_keybindings.h"
+// #ifdef SDL_h_
+//     #include "../IDK_SDL2/idk_SDL_keybindings.h"
 
-#elif defined(SFML_h_)
-    #include "../idk_SFML_keybindings.h"
+// #elif defined(SFML_h_)
+//     #include "../idk_SFML_keybindings.h"
 
-#endif
+// #endif
 
 
 namespace idk

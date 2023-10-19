@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IDKcommon/IDKcommon.h"
+#include "idk_keylog.hpp"
 
 
 namespace idk
