@@ -43,6 +43,8 @@ private:
     glFramebuffer                       m_mainbuffer_0;
     glFramebuffer                       m_mainbuffer_1;
 
+    glFramebuffer                       m_depthbuffer;
+
     glFramebuffer                       m_deferred_geom_buffer;
     glFramebuffer                       m_volumetrics_buffer;
     std::queue<glFramebuffer>           m_blit_queue;
@@ -70,6 +72,7 @@ private:
     GLuint                              m_additive_shader;
     GLuint                              m_fxaa_shader;
     GLuint                              m_blit_shader;
+    GLuint                              m_getdepth_shader;
     // --------------------------------------------------------
 
     // UBO ----------------------------------------------------

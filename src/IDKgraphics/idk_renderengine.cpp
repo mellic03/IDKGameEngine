@@ -124,6 +124,9 @@ idk::RenderEngine::compileShaders()
     m_blit_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/blit.fs"
     );
+    m_getdepth_shader = gltools::compileProgram(
+        "shaders/", "screenquad.vs", "postprocess/getdepth.fs"
+    );
 
     m_additive_shader   = gltools::compileProgram("shaders/", "screenquad.vs", "postprocess/additive.fs");
     m_colorgrade_shader = gltools::compileProgram("shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
@@ -185,13 +188,16 @@ idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
     m_dirlight_depthmap_buffer.reset(4096, 4096, 1);
     m_dirlight_depthmap_buffer.colorAttachment(0, config);
 
-    m_mainbuffer_0.reset(w, h, 1);
+    m_mainbuffer_0.reset(w, h, 2);
     m_mainbuffer_0.colorAttachment(0, config);
-    m_mainbuffer_0.depthAttachment(depth_config);
+    m_mainbuffer_0.colorAttachment(1, config);
 
     m_mainbuffer_1.reset(w, h, 1);
     m_mainbuffer_1.colorAttachment(0, config);
-    m_mainbuffer_1.depthAttachment(depth_config);
+
+    // m_depthbuffer.reset(w, h, 0);
+    // m_depthbuffer.depthAttachment(depth_config);
+
 }
 
 
@@ -233,6 +239,9 @@ idk::RenderEngine::f_fbfb( GLuint shader, glFramebuffer &in )
 
     for (size_t i=0; i < in.attachments.size(); i++)
         gltools::setUniform_texture("un_texture_" + std::to_string(i), in.attachments[0]);
+
+    gltools::setUniform_texture("un_depth", in.depth_attachment);
+
 
     gl::bindVertexArray(m_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
@@ -321,9 +330,6 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, 
 
         textureID += 1;
     }
-    if (a.has_depth)
-        gltools::setUniform_texture("un_depth_a", a.depth_attachment);
-
 
 
     textureID = 4;
@@ -336,14 +342,11 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, 
 
         textureID += 1;
     }
-    if (b.has_depth)
-        gltools::setUniform_texture("un_depth_b", b.depth_attachment);
 
-    gl::drawArrays(GL_TRIANGLES, 0, 6);
+    gl::drawArrays(GL_TRIANGLES, 0, 3);
 
     gltools::freeTextureUnitIDs();
 };
-
 
 
 
@@ -657,6 +660,10 @@ idk::RenderEngine::endFrame()
     // tex2tex(m_additive_shader, m_scratchbuf1, m_scratchbuf3, m_scratchbuf2);
     // -----------------------------------------------------------------------------------------
 
+    // Extract depth
+    // -----------------------------------------------------------------------------------------
+    tex2tex(m_getdepth_shader, m_deferred_geom_buffer, m_mainbuffer_0);
+    // -----------------------------------------------------------------------------------------
 
     // Blit user framebuffers
     // -----------------------------------------------------------------------------------------

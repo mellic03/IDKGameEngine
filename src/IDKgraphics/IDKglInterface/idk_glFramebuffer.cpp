@@ -85,6 +85,7 @@ idk::glFramebuffer::depthAttachment( const idk::DepthAttachmentConfig &config )
     glDrawBuffers(m_gl_attachments.size(), &(m_gl_attachments[0]));
 
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+    gl::bindTexture(GL_TEXTURE_2D, 0);
 }
 
 
