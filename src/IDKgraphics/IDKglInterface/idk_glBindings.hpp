@@ -67,6 +67,8 @@ namespace idk::gl
 
     // glTexXXX ------------------------------------------------------------------------------
     /**/
+    void texImage2D( GLenum target, GLint level, GLint internalformat, GLsizei w, GLsizei h,
+                     GLint border, GLenum format, GLenum type, const void *data );
     void texImage3D( GLenum target, GLint level, GLint internalformat, GLsizei w, GLsizei h,
                      GLsizei d, GLint border, GLenum format, GLenum type, const void *data );
     void texParameteri( GLenum target, GLenum pname, GLint param );

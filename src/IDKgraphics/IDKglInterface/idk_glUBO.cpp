@@ -1,4 +1,4 @@
-#include "idk_glUBO.h"
+#include "idk_glUBO.hpp"
 
 
 idk::glUBO::glUBO( GLuint location, GLsizeiptr size )

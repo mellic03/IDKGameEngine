@@ -4,7 +4,7 @@
 #include "IDKcommon/IDKcommon.h"
 
 #include "idk_model_manager.h"
-#include "IDKglInterface/IDKglInterface.h"
+#include "IDKglInterface/IDKglInterface.hpp"
 #include "idk_drawmethods.h"
 
 #include "idk_camera.h"

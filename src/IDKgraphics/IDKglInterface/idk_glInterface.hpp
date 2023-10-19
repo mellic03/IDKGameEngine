@@ -3,8 +3,8 @@
 #include <string>
 #include "IDKcommon/IDKcommon.h"
 
-#include "idk_glFramebuffer.h"
-#include "idk_glBindings.h"
+#include "idk_glFramebuffer.hpp"
+#include "idk_glBindings.hpp"
 
 
 #define IDK_GLINTERFACE_MAX_TEXTUREi (GL_TEXTURE0 + 32)

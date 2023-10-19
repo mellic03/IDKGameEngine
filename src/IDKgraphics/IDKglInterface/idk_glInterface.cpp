@@ -1,4 +1,4 @@
-#include "idk_glInterface.h"
+#include "idk_glInterface.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream>
