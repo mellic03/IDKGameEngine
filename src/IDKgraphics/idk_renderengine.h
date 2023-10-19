@@ -16,6 +16,7 @@
 #define IDK_MAX_SPOTLIGHTS 10
 #define IDK_MAX_DIRLIGHTS 3
 
+
 namespace idk { class RenderEngine; };
 
 #define modelqueue_t   std::unordered_map<GLuint, idk::vector<idk::pair<int, idk::Transform>>>
@@ -30,23 +31,20 @@ private:
 
     // idk::glFramebuffers ------------------------------------
     /***/
+    static const size_t                 NUM_SCRATCH_BUFFERS     = 4;
+    static const size_t                 ATTACHMENTS_PER_BUFFER  = 1;
+    static const size_t                 GBUFFER_NUM_ATTACHMETNS = 4;
 
-    glFramebuffer                       m_scratchbuf0;
-    glFramebuffer                       m_scratchbuf1;
-    glFramebuffer                       m_scratchbuf2;
+    std::vector<glFramebuffer>       m_scratchbufs0;
+    std::vector<glFramebuffer>       m_scratchbufs1;
+    std::vector<glFramebuffer>       m_scratchbufs2;
+    std::vector<glFramebuffer>       m_scratchbufs3;
 
-    glFramebuffer                       m_scratchbuf0_d2; // buf0 div 2 --> quater-resolution
-    glFramebuffer                       m_scratchbuf1_d2;
+    glFramebuffer                    m_mainbuffer_0;
+    glFramebuffer                    m_mainbuffer_1;
 
-    glFramebuffer                       m_scratchbuf0_d4; // buf0 div 4 --> 16th-resolution
-    glFramebuffer                       m_scratchbuf1_d4;
-
-    glFramebuffer                       m_scratchbuf0_d8;
-    glFramebuffer                       m_scratchbuf0_d16;
-    glFramebuffer                       m_scratchbuf0_d32;
-
-    glFramebuffer                       m_deferred_geom_buffer;
-    glFramebuffer                       m_volumetrics_buffer;
+    glFramebuffer                    m_deferred_geom_buffer;
+    glFramebuffer                    m_volumetrics_buffer;
     // --------------------------------------------------------
 
     // Shaders ------------------------------------------------
@@ -73,6 +71,7 @@ private:
     // --------------------------------------------------------
 
     // UBO ----------------------------------------------------
+    /***/
     glUBO                               m_UBO_camera;
     glUBO                               m_UBO_pointlights;
     glUBO                               m_UBO_spotlights;
@@ -114,19 +113,15 @@ private:
 
 
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
-    void    f_fbfb( GLuint shader, glFramebuffer &in );
-    void    tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, glFramebuffer &out );
-    void    tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &out );
+    void    f_fbfb  ( GLuint shader,  glFramebuffer &in );
+    void    tex2tex ( GLuint program, glFramebuffer &a, glFramebuffer &b, glFramebuffer &out );
+    void    tex2tex ( GLuint program, glFramebuffer &in, glFramebuffer &out );
     // ------------------------------------------------------------------------------------
 
 
 public:
     Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
-    glFramebuffer                       m_dirlight_depthmap_buffer;
-    glFramebuffer                       m_scratchbuf3;
-    glFramebuffer                       m_scratchbuf4;
-    glFramebuffer                       m_scratchbuf3_d2;
-    glFramebuffer                       m_scratchbuf3_d4;
+    glFramebuffer                    m_dirlight_depthmap_buffer;
 
     float                               m_bloom_intensity=0.0f, m_gamma=2.2f, m_exposure=1.0f;
     void                                setBloomIntensity(float f) { m_bloom_intensity = f; };

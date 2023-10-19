@@ -18,6 +18,16 @@ void idk::gl::genTextures( GLsizei n, GLuint *textures )
 {
     GLCALL( glGenTextures(n, textures); )
 }
+
+void idk::gl::genFramebuffers  ( GLsizei n, GLuint *framebuffers )
+{
+    GLCALL( glGenFramebuffers(n, framebuffers); )
+}
+
+void idk::gl::genRenderbuffers ( GLsizei n, GLuint *renderbuffers )
+{
+    GLCALL( glGenRenderbuffers(n, renderbuffers); )
+}
 // ---------------------------------------------------------------------------------------
 
 
@@ -37,6 +47,16 @@ void idk::gl::deleteTextures( GLsizei n, GLuint *textures )
 {
     GLCALL( glDeleteTextures(n, textures); )
 }
+
+void idk::gl::deleteFramebuffers( GLsizei n, GLuint *framebuffers )
+{
+    GLCALL( glDeleteFramebuffers(n, framebuffers); )
+}
+
+void idk::gl::deleteRenderbuffers( GLsizei n, GLuint *renderbuffers )
+{
+    GLCALL( glDeleteRenderbuffers(n, renderbuffers); )
+}
 // ---------------------------------------------------------------------------------------
 
 
@@ -52,14 +72,12 @@ void idk::gl::bindBuffer( GLenum type, GLuint buf )
     GLCALL( glBindBuffer(type, buf); )
 }
 
-void
-idk::gl::bindBufferBase( GLenum target, GLuint index, GLuint buffer )
+void idk::gl::bindBufferBase( GLenum target, GLuint index, GLuint buffer )
 {
     glBindBufferBase(target, index, buffer);
 }
 
-void
-idk::gl::bindBufferBase( GLenum target, UBOloc loc, GLuint buffer )
+void idk::gl::bindBufferBase( GLenum target, UBOloc loc, GLuint buffer )
 {
     glBindBufferBase(target, static_cast<GLuint>(loc), buffer);
 }
@@ -67,6 +85,11 @@ idk::gl::bindBufferBase( GLenum target, UBOloc loc, GLuint buffer )
 void idk::gl::bindFramebuffer( GLenum target, GLuint framebuffer )
 {
     GLCALL( glBindFramebuffer(target, framebuffer); )
+}
+
+void idk::gl::bindRenderbuffer( GLenum target, GLuint renderbuffer )
+{
+    GLCALL( glBindRenderbuffer(target, renderbuffer); )
 }
 
 void idk::gl::bindTexture( GLenum target, GLuint texture )
@@ -131,19 +154,27 @@ idk::gl::texImage3D( GLenum target, GLint level, GLint internalformat, GLsizei w
     GLCALL( glTexImage3D(target, level, internalformat, w, h, d, border, format, type, data); )
 }
 
-void
-idk::gl::texParameteri( GLenum target, GLenum pname, GLint param )
+void idk::gl::texParameteri( GLenum target, GLenum pname, GLint param )
 {
     GLCALL( glTexParameteri(target, pname, param); )
 }
 
-void
-idk::gl::generateMipmap( GLenum target )
+void idk::gl::generateMipmap( GLenum target )
 {
     GLCALL( glGenerateMipmap(target); )
 }
-
 // ---------------------------------------------------------------------------------------
+
+
+
+// Framebuffer stuff ---------------------------------------------------------------------
+void idk::gl::framebufferTexture2D( GLenum target, GLenum attachment, GLenum textarget,
+                                    GLuint texture, GLint level )
+{
+    GLCALL( glFramebufferTexture2D(target, attachment, textarget, texture, level); )
+}
+// ---------------------------------------------------------------------------------------
+
 
 
 // Uniforms ------------------------------------------------------------------------------
@@ -161,7 +192,12 @@ idk::gl::vertexAttribPointer( GLuint index, GLint size,
                               GLenum type, GLboolean normalized,
                               GLsizei stride, GLuint offset )
 {
-    GLCALL( glVertexAttribPointer(index, size, type, normalized, stride, reinterpret_cast<void *>(offset)); )
+    GLCALL(
+        glVertexAttribPointer(
+            index, size, type, normalized,
+            stride, reinterpret_cast<void *>(offset)
+        );
+    )
 }
 
 

@@ -24,41 +24,31 @@ namespace idk::gl
     template <typename... GLenums> inline void     enable( GLenum, GLenums... );
     template <typename... GLenums> inline void     disable( GLenum, GLenums... );
 
-    // glGenXXX ------------------------------------------------------------------------------
-    /**/
-    void genVertexArrays( GLsizei n, GLuint *arrays );
-    void genBuffers( GLsizei n, GLuint *buffers );
-    void genTextures( GLsizei n, GLuint *textures );
-    // ---------------------------------------------------------------------------------------
+    void genVertexArrays  ( GLsizei n, GLuint *arrays           );
+    void genBuffers       ( GLsizei n, GLuint *buffers          );
+    void genTextures      ( GLsizei n, GLuint *textures         );
+    void genFramebuffers  ( GLsizei n, GLuint *framebuffers     );
+    void genRenderbuffers ( GLsizei n, GLuint *renderbuffers    );
 
-    // glDeleteXXX ---------------------------------------------------------------------------
-    /**/
-    void deleteVertexArrays( GLsizei n, GLuint *arrays );
-    void deleteBuffers( GLsizei n, GLuint *buffers );
-    void deleteTextures( GLsizei n, GLuint *textures );
-    // ---------------------------------------------------------------------------------------
+    void deleteVertexArrays  ( GLsizei n, GLuint *arrays         );
+    void deleteBuffers       ( GLsizei n, GLuint *buffers        );
+    void deleteTextures      ( GLsizei n, GLuint *textures       );
+    void deleteFramebuffers  ( GLsizei n, GLuint *framebuffers   );
+    void deleteRenderbuffers ( GLsizei n, GLuint *renderbuffers  );
 
-    // glBindXXX -----------------------------------------------------------------------------
-    /**/
     void bindVertexArray( GLuint VAO );
     void bindBuffer( GLenum type, GLuint buf );
     void bindBufferBase( GLenum target, GLuint index, GLuint buffer );
     void bindBufferBase( GLenum target, UBOloc loc, GLuint buffer );
     void bindFramebuffer( GLenum target, GLuint framebuffer );
+    void bindRenderbuffer( GLenum target, GLuint renderbuffer );
     void bindTexture( GLenum target, GLuint texture );
-    // ---------------------------------------------------------------------------------------
 
-    // glDrawXXX -----------------------------------------------------------------------------
-    /**/
     void drawArrays( GLenum mode, GLint first, GLsizei count );
     void drawElements( GLenum mode, GLsizei count, GLenum type, const void *indices );
-    // ---------------------------------------------------------------------------------------
 
-    // glBufferXXX ---------------------------------------------------------------------------
-    /**/
     void bufferData( GLenum target, GLsizeiptr size, const void *data, GLenum usage );
     void bufferSubData( GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
-    // ---------------------------------------------------------------------------------------
 
     // glActiveXXX ---------------------------------------------------------------------------
     /**/
@@ -76,12 +66,19 @@ namespace idk::gl
     void generateMipmap( GLenum target );
 
 
+    // Framebuffer stuff  --------------------------------------------------------------------
+    void framebufferTexture2D( GLenum target, GLenum attachment, GLenum textarget,
+                               GLuint texture, GLint level );
+    // ---------------------------------------------------------------------------------------
+
+
     // Uniforms ------------------------------------------------------------------------------
     /**/
     GLint getUniformLocation( GLuint program, std::string name );
     // ---------------------------------------------------------------------------------------
 
-    void vertexAttribPointer( GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLuint offset );
+    void vertexAttribPointer( GLuint index, GLint size, GLenum type, GLboolean normalized,
+                              GLsizei stride, GLuint offset );
     void enableVertexAttribArray( GLuint index );
 
     void useProgram( GLuint program );

@@ -133,26 +133,55 @@ idk::RenderEngine::compileShaders()
 void
 idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
 {
-    m_scratchbuf0    = gltools::genIdkFramebuffer(    w,     h,   1);
-    m_scratchbuf1    = gltools::genIdkFramebuffer(    w,     h,   1);
-    m_scratchbuf2    = gltools::genIdkFramebuffer(    w,     h,   1);
-    m_scratchbuf3    = gltools::genIdkFramebuffer(    w,     h,   1);
-    m_scratchbuf4    = gltools::genIdkFramebuffer(    w,     h,   1);
+    idk::ColorAttachmentConfig config = {
+        .internalformat = GL_RGBA16F,
+        .minfilter      = GL_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .datatype       = GL_FLOAT
+    };
 
-    m_scratchbuf0_d2 = gltools::genIdkFramebuffer(  w/2,   h/2,   1);
-    m_scratchbuf1_d2 = gltools::genIdkFramebuffer(  w/2,   h/2,   1);
-    m_scratchbuf3_d2 = gltools::genIdkFramebuffer(  w/2,   h/2,   1);
-    m_scratchbuf0_d4 = gltools::genIdkFramebuffer(  w/4,   h/4,   1);
-    m_scratchbuf1_d4 = gltools::genIdkFramebuffer(  w/4,   h/4,   1);
-    m_scratchbuf3_d4 = gltools::genIdkFramebuffer(  w/4,   h/4,   1);
 
-    m_scratchbuf0_d8  = gltools::genIdkFramebuffer(  w/8,   h/8,   1);
-    m_scratchbuf0_d16 = gltools::genIdkFramebuffer(  w/16,  h/16,  1);
-    m_scratchbuf0_d32 = gltools::genIdkFramebuffer(  w/32,  h/32,  1);
+    m_scratchbufs0.resize(NUM_SCRATCH_BUFFERS);
+    m_scratchbufs1.resize(NUM_SCRATCH_BUFFERS);
+    m_scratchbufs2.resize(NUM_SCRATCH_BUFFERS);
+    m_scratchbufs3.resize(NUM_SCRATCH_BUFFERS);
 
-    m_deferred_geom_buffer      = gltools::genIdkFramebuffer(    w,     h,   4);
-    m_volumetrics_buffer        = gltools::genIdkFramebuffer(  w/4,   h/4,   1);
-    m_dirlight_depthmap_buffer  = gltools::genIdkFramebuffer( 4096,  4096,   1);
+    for (size_t i=0; i<NUM_SCRATCH_BUFFERS; i++)
+    {
+        int width  = w / pow(2, i);
+        int height = h / pow(2, i);
+
+        m_scratchbufs0[i].reset(width, height, ATTACHMENTS_PER_BUFFER);
+        m_scratchbufs1[i].reset(width, height, ATTACHMENTS_PER_BUFFER);
+        m_scratchbufs2[i].reset(width, height, ATTACHMENTS_PER_BUFFER);
+        m_scratchbufs3[i].reset(width, height, ATTACHMENTS_PER_BUFFER);
+
+        for (size_t j=0; j<ATTACHMENTS_PER_BUFFER; j++)
+        {
+            m_scratchbufs0[i].colorAttachment(j, config);
+            m_scratchbufs1[i].colorAttachment(j, config);
+            m_scratchbufs2[i].colorAttachment(j, config);
+            m_scratchbufs3[i].colorAttachment(j, config);
+        }
+    }
+
+    m_deferred_geom_buffer.reset(w, h, 4);
+    m_deferred_geom_buffer.colorAttachment(0, config);
+    m_deferred_geom_buffer.colorAttachment(1, config);
+    m_deferred_geom_buffer.colorAttachment(2, config);
+    m_deferred_geom_buffer.colorAttachment(3, config);
+
+    m_volumetrics_buffer.reset(w/4, h/4, 1);
+    m_volumetrics_buffer.colorAttachment(0, config);
+
+    m_dirlight_depthmap_buffer.reset(4096, 4096, 1);
+    m_dirlight_depthmap_buffer.colorAttachment(0, config);
+
+    m_mainbuffer_0.reset(w, h, 1);
+    m_mainbuffer_0.colorAttachment(0, config);
+
+    m_mainbuffer_1.reset(w, h, 1);
+    m_mainbuffer_1.colorAttachment(0, config);
 }
 
 
@@ -184,14 +213,17 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
 }
 
 
+
+
+
 void
 idk::RenderEngine::f_fbfb( GLuint shader, glFramebuffer &in )
 {
-    gltools::unbindIdkFramebuffer(m_resolution.x, m_resolution.y);
+    in.unbind();
     gltools::useProgram(shader);
 
-    for (size_t i=0; i < in.output_textures.size(); i++)
-        gltools::setUniform_texture("un_texture_" + std::to_string(i), in.output_textures[0]);
+    for (size_t i=0; i < in.attachments.size(); i++)
+        gltools::setUniform_texture("un_texture_" + std::to_string(i), in.attachments[0]);
 
     gl::bindVertexArray(m_quad_VAO);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
@@ -199,10 +231,11 @@ idk::RenderEngine::f_fbfb( GLuint shader, glFramebuffer &in )
     gltools::freeTextureUnitIDs();
 }
 
+
 void
 idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &out )
 {
-    gltools::bindIdkFramebuffer(out);
+    out.bind();
     gltools::useProgram(program);
 
     static float inc0 = 0.0f;
@@ -223,11 +256,11 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &ou
     inc2 += 0.00003f;
 
 
-    for (size_t i=0; i < in.output_textures.size(); i++)
+    for (size_t i=0; i < in.attachments.size(); i++)
     {
         gltools::setUniform_texture(
             "un_texture_" + std::to_string(i),
-            in.output_textures[i]
+            in.attachments[i]
         );
     }
 
@@ -246,7 +279,7 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &ou
 void
 idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, glFramebuffer &out )
 {
-    gltools::bindIdkFramebuffer(out);
+    out.bind();
     gltools::useProgram(program);
 
 
@@ -265,24 +298,23 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, 
     inc2 += 0.00003f;
 
 
-
     size_t textureID = 0;
-    for (size_t i=0; i < a.output_textures.size(); i++)
+    for (size_t i=0; i < a.attachments.size(); i++)
     {
         gltools::setUniform_texture(
             "un_texture_" + std::to_string(textureID),
-            a.output_textures[i]
+            a.attachments[i]
         );
 
         textureID += 1;
     }
 
     textureID = 4;
-    for (size_t i=0; i < b.output_textures.size(); i++)
+    for (size_t i=0; i < b.attachments.size(); i++)
     {
         gltools::setUniform_texture(
             "un_texture_" + std::to_string(textureID),
-            b.output_textures[i]
+            b.attachments[i]
         );
 
         textureID += 1;
@@ -292,6 +324,8 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, 
 
     gltools::freeTextureUnitIDs();
 };
+
+
 
 
 
@@ -340,18 +374,6 @@ idk::RenderEngine::drawWireframe( GLuint shader_id, int model_id, Transform &tra
 }
 
 
-void
-idk::RenderEngine::f_shadowpass_pointlights()
-{
-
-}
-
-
-void
-idk::RenderEngine::f_shadowpass_spotlights()
-{
-
-}
 
 
 #define ORTHO_N 0.01f
@@ -362,8 +384,7 @@ idk::RenderEngine::f_shadowpass_spotlights()
 void
 idk::RenderEngine::f_shadowpass_dirlights()
 {
-    gltools::clearIdkFramebuffer(m_dirlight_depthmap_buffer);
-    gltools::bindIdkFramebuffer(m_dirlight_depthmap_buffer);
+    m_dirlight_depthmap_buffer.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gltools::useProgram(m_dirshadow_shader);
 
 
@@ -407,7 +428,7 @@ idk::RenderEngine::f_shadowpass_dirlights()
             }
         }
 
-        depthmaps.get(light_id) = framebuffer.output_textures[0];
+        depthmaps.get(light_id) = framebuffer.attachments[0];
         i += 1;
     });
 }
@@ -520,8 +541,6 @@ void
 idk::RenderEngine::endFrame()
 {
     gl::disable(GL_CULL_FACE);
-    f_shadowpass_pointlights();
-    f_shadowpass_spotlights();
     f_shadowpass_dirlights();
     gl::enable(GL_CULL_FACE);
 
@@ -533,8 +552,8 @@ idk::RenderEngine::endFrame()
     idk::Camera &camera = getCamera();
 
     // Deferred geometry pass --------------------------------------------
-    gltools::bindIdkFramebuffer(m_deferred_geom_buffer);
-
+    m_deferred_geom_buffer.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    m_deferred_geom_buffer.bind();
     for (auto &[shader_id, vec]: m_model_draw_queue)
     {
         gltools::useProgram(shader_id);
@@ -552,60 +571,64 @@ idk::RenderEngine::endFrame()
     }
     m_model_draw_queue.clear();
     gl::bindVertexArray(0);
-
-
-    gl::disable(GL_CULL_FACE);
-    gltools::useProgram(solid_shader);
-    gltools::setUniform_vec3("un_color", glm::vec3(1.0f));
-    for (auto &[shader_id, vec]: m_wireframe_draw_queue)
-    {
-        gltools::useProgram(shader_id);
-
-        for (auto &[model_id, transform]: vec)
-        {
-            drawmethods::draw_wireframe(
-                modelManager().getModel(model_id),
-                transform
-            );
-            gltools::freeTextureUnitIDs();
-        }
-        vec.clear();
-    }
-    m_wireframe_draw_queue.clear();
-    gl::enable(GL_CULL_FACE);
     // -------------------------------------------------------------------
 
 
-    // Deferred lighting pass --------------------------------------------
-    gl::bindVertexArray(m_quad_VAO);
+    // Wireframe objects -------------------------------------------------
+    // gl::disable(GL_CULL_FACE);
+    // gltools::useProgram(solid_shader);
+    // gltools::setUniform_vec3("un_color", glm::vec3(1.0f));
+    // for (auto &[shader_id, vec]: m_wireframe_draw_queue)
+    // {
+    //     gltools::useProgram(shader_id);
 
+    //     for (auto &[model_id, transform]: vec)
+    //     {
+    //         drawmethods::draw_wireframe(
+    //             modelManager().getModel(model_id),
+    //             transform
+    //         );
+    //         gltools::freeTextureUnitIDs();
+    //     }
+    //     vec.clear();
+    // }
+    // m_wireframe_draw_queue.clear();
+    // gl::enable(GL_CULL_FACE);
+    // gl::bindVertexArray(0);
+    // -----------------------------------------------------------------------------------------
+
+
+    // Deferred shading
+    // -----------------------------------------------------------------------------------------
+    gl::bindVertexArray(m_quad_VAO);
     gltools::useProgram(m_background_shader);
     glm::mat4 modelmat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.5f * camera.farPlane()));
     modelmat = glm::scale(modelmat, glm::vec3(300.0f, 300.0f, 1.0f));
     gltools::setUniform_mat4("un_model", modelmat);
     gl::drawArrays(GL_TRIANGLES, 0, 6);
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
+    // -----------------------------------------------------------------------------------------
 
 
     // Blinn-Phong lighting
     // -----------------------------------------------------------------------------------------
-    tex2tex(m_deferred_lightingpass_shader, m_deferred_geom_buffer, m_scratchbuf0);
+    tex2tex(m_deferred_lightingpass_shader, m_deferred_geom_buffer, m_scratchbufs0[0]);
     // -----------------------------------------------------------------------------------------
 
 
     // Volumetric directional lights
     // -----------------------------------------------------------------------------------------
-    tex2tex(m_dirlight_vol_shader, m_deferred_geom_buffer, m_scratchbuf0_d2);
-    tex2tex(m_upscale_shader,      m_scratchbuf0_d2,       m_scratchbuf1);
+    tex2tex(m_dirlight_vol_shader, m_deferred_geom_buffer,   m_scratchbufs0[1]);
+    tex2tex(m_upscale_shader,      m_scratchbufs0[1],        m_scratchbufs1[0]);
     // -----------------------------------------------------------------------------------------
 
 
     // Combine geometry and volumetrics
     // -----------------------------------------------------------------------------------------
-    gltools::clearIdkFramebuffer(m_scratchbuf2);
+    m_scratchbufs1[2].clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gltools::useProgram(m_additive_shader);
     gltools::setUniform_float("intensity", 1.0f);
-    tex2tex(m_additive_shader, m_scratchbuf0, m_scratchbuf1, m_scratchbuf2);
+    tex2tex(m_additive_shader, m_scratchbufs0[0], m_scratchbufs1[0], m_mainbuffer_0);
     // -----------------------------------------------------------------------------------------
 
     // SSR
@@ -618,38 +641,23 @@ idk::RenderEngine::endFrame()
 
 
     // Chromatic aberration
-    gltools::clearIdkFramebuffers(m_scratchbuf0, m_scratchbuf1);
-    tex2tex(m_cabber_shader, m_scratchbuf2, m_scratchbuf1);
+    // -----------------------------------------------------------------------------------------
+    tex2tex(m_cabber_shader, m_mainbuffer_0, m_mainbuffer_1);
+    // -----------------------------------------------------------------------------------------
 
     // Color grading
     gltools::useProgram(m_colorgrade_shader);
     gltools::setUniform_float("un_gamma", m_gamma);
     gltools::setUniform_float("un_exposure", m_exposure);
-    tex2tex(m_colorgrade_shader, m_scratchbuf1, m_scratchbuf0);
+    tex2tex(m_colorgrade_shader, m_mainbuffer_1, m_mainbuffer_0);
 
     // FXAA
-    f_fbfb(m_fxaa_shader, m_scratchbuf0);
-
-    gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
+    f_fbfb(m_fxaa_shader, m_mainbuffer_0);
     // -----------------------------------------------------------------------------------------
 
-    gltools::clearIdkFramebuffers(
-        m_deferred_geom_buffer,
-        m_volumetrics_buffer,
-        m_scratchbuf0,
-        m_scratchbuf1,
-        m_scratchbuf2,
-        m_scratchbuf3,
-        m_scratchbuf0_d4,
-        m_scratchbuf1_d4,
-        m_scratchbuf0_d2,
-        m_scratchbuf1_d2
-    );
-
+    gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
     gl::bindVertexArray(0);
 
-
-    gltools::unbindIdkFramebuffer(m_resolution.x, m_resolution.y);
 }
 
 

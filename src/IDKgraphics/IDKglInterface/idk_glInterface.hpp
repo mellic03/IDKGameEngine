@@ -16,16 +16,6 @@ namespace idk::gltools
 
     GLuint                  loadTexture( int w, int h, uint32_t *data, bool srgb = false );
 
-    glFramebuffer           genIdkFramebuffer( int width, int height, int num_render_targets,
-                                               GLenum minf=GL_LINEAR, GLenum magf = GL_LINEAR );
-
-    void                    bindIdkFramebuffer( glFramebuffer & );
-    void                    unbindIdkFramebuffer(int width, int height);
-    
-    void                                clearIdkFramebuffer( glFramebuffer &fb );
-    void                                clearIdkFramebuffers();
-    template <typename... Args> void    clearIdkFramebuffers( glFramebuffer &fb, Args... );
-
     GLuint                  compileProgram(std::string root, std::string vs, std::string fs);
     void                    useProgram(GLuint shader_id);
 
@@ -52,16 +42,4 @@ namespace idk::gltools
     void                    setUniform_mat4(GLint loc, glm::mat4);
 
 };
-
-
-
-
-
-template <typename ...Args>
-void
-idk::gltools::clearIdkFramebuffers( glFramebuffer &fb, Args... rest )
-{
-    clearIdkFramebuffer(fb);
-    clearIdkFramebuffers(rest...);
-}
 

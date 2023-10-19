@@ -3,20 +3,9 @@
 #include "IDKcommon/IDKcommon.h"
 
 namespace idk {
-    struct glFramebuffer;
     struct ColorAttachmentConfig;
     struct DepthAttachmentConfig;
-    class glFramebufferNew;
-};
-
-
-struct idk::glFramebuffer
-{
-    int width  = 0;
-    int height = 0;
-    GLuint FBO = 0;
-    GLuint RBO = 0;
-    std::vector<GLuint> output_textures;
+    class glFramebuffer;
 };
 
 
@@ -26,7 +15,7 @@ struct idk::ColorAttachmentConfig
     GLint  internalformat;
     GLenum minfilter;
     GLenum magfilter;
-    GLenum type;
+    GLenum datatype;
 };
 
 
@@ -35,24 +24,25 @@ struct idk::DepthAttachmentConfig
     GLint  internalformat;
     GLenum minfilter;
     GLenum magfilter;
-    GLenum type;
+    GLenum datatype;
 };
 
 
-class idk::glFramebufferNew
+class idk::glFramebuffer
 {
 private:
-
+    glm::ivec2 m_size;
+    GLuint m_FBO, m_RBO;
 
 public:
-    glm::ivec2 size;
-    GLuint FBO, RBO;
     std::vector<GLuint> attachments;
 
-            glFramebufferNew( int w, int h );
-
-    void    colorAttachment( const idk::ColorAttachmentConfig &config );
+    void    reset( int w, int h, size_t num_attachments );
+    void    colorAttachment( int idx, const idk::ColorAttachmentConfig &config );
     void    depthAttachment();
+    void    bind();
+    void    unbind();
+    void    clear( GLbitfield mask );
 
 };
 
