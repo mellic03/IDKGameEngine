@@ -262,9 +262,8 @@ idk::Engine::beginFrame()
     m_event_manager.processMouseInput();
     m_event_manager.update();
 
-    f_idk_CS_stage_A();
-
     m_render_engine.beginFrame();
+    f_idk_CS_stage_A();
 }
 
 

@@ -35,16 +35,17 @@ private:
     static const size_t                 ATTACHMENTS_PER_BUFFER  = 1;
     static const size_t                 GBUFFER_NUM_ATTACHMETNS = 4;
 
-    std::vector<glFramebuffer>       m_scratchbufs0;
-    std::vector<glFramebuffer>       m_scratchbufs1;
-    std::vector<glFramebuffer>       m_scratchbufs2;
-    std::vector<glFramebuffer>       m_scratchbufs3;
+    std::vector<glFramebuffer>          m_scratchbufs0;
+    std::vector<glFramebuffer>          m_scratchbufs1;
+    std::vector<glFramebuffer>          m_scratchbufs2;
+    std::vector<glFramebuffer>          m_scratchbufs3;
 
-    glFramebuffer                    m_mainbuffer_0;
-    glFramebuffer                    m_mainbuffer_1;
+    glFramebuffer                       m_mainbuffer_0;
+    glFramebuffer                       m_mainbuffer_1;
 
-    glFramebuffer                    m_deferred_geom_buffer;
-    glFramebuffer                    m_volumetrics_buffer;
+    glFramebuffer                       m_deferred_geom_buffer;
+    glFramebuffer                       m_volumetrics_buffer;
+    std::queue<glFramebuffer>           m_blit_queue;
     // --------------------------------------------------------
 
     // Shaders ------------------------------------------------
@@ -56,7 +57,7 @@ private:
 
     GLuint                              m_guassian_blur_shader;
     GLuint                              m_odd_blur_shader;
-    GLuint                              m_cabber_shader;
+    GLuint                              m_caberr_shader;
     GLuint                              m_upscale_shader;
     GLuint                              m_downscale_shader;
     GLuint                              m_SSR_shader;
@@ -68,6 +69,7 @@ private:
     GLuint                              m_colorgrade_shader;
     GLuint                              m_additive_shader;
     GLuint                              m_fxaa_shader;
+    GLuint                              m_blit_shader;
     // --------------------------------------------------------
 
     // UBO ----------------------------------------------------
@@ -88,7 +90,6 @@ private:
 
     Allocator<Dirlight>                 m_dirlight_allocator;
     Allocator<glm::mat4>                m_dirlight_lightspacematrix_allocator;
-
 
     modelqueue_t                        m_model_draw_queue;
     modelqueue_t                        m_wireframe_draw_queue;
@@ -168,6 +169,7 @@ public:
     void                                endFrame();
     void                                swapWindow();
     void                                resize( int w, int h );
+    void                                blitFramebuffer( const idk::glFramebuffer &fb );
 
     glm::ivec2                          resolution() const { return m_resolution;   };
     int                                 width()      const { return m_resolution.x; };

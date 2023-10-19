@@ -39,7 +39,7 @@ private:
     
     // SDL backend ------------------------------------
     SDL_Event               m_SDL_Event;
-    idk::vector<fun_t>     m_SDL_pollevents;
+    idk::vector<fun_t>      m_SDL_pollevents;
     // ------------------------------------------------
 
     Allocator<idk::Event>   m_events;
@@ -67,6 +67,7 @@ public:
     
     void                    onWindowEvent( WindowEvent, std::function<void()> );
     void                    onSDLPollEvent( std::function<void(SDL_Event *)> fn) { m_SDL_pollevents.push(fn); };
+    void                    onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback );
 
     void                    mouseCapture( bool capture );
     bool                    mouseCaptured() const            { return m_mouse_captured;    };
@@ -78,3 +79,5 @@ public:
     void                    update();
 
 };
+
+

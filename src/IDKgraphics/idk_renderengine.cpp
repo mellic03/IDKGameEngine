@@ -106,7 +106,7 @@ idk::RenderEngine::compileShaders()
     m_odd_blur_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/oddblur.fs"
     );
-    m_cabber_shader = gltools::compileProgram(
+    m_caberr_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/c-abberation.fs"
     );
     m_upscale_shader = gltools::compileProgram(
@@ -120,6 +120,9 @@ idk::RenderEngine::compileShaders()
     );
     m_blank_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/blank.fs"
+    );
+    m_blit_shader = gltools::compileProgram(
+        "shaders/", "screenquad.vs", "postprocess/blit.fs"
     );
 
     m_additive_shader   = gltools::compileProgram("shaders/", "screenquad.vs", "postprocess/additive.fs");
@@ -137,6 +140,11 @@ idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
         .internalformat = GL_RGBA16F,
         .minfilter      = GL_LINEAR,
         .magfilter      = GL_LINEAR,
+        .datatype       = GL_FLOAT
+    };
+
+    idk::DepthAttachmentConfig depth_config = {
+        .internalformat = GL_DEPTH_COMPONENT16,
         .datatype       = GL_FLOAT
     };
 
@@ -179,9 +187,11 @@ idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
 
     m_mainbuffer_0.reset(w, h, 1);
     m_mainbuffer_0.colorAttachment(0, config);
+    m_mainbuffer_0.depthAttachment(depth_config);
 
     m_mainbuffer_1.reset(w, h, 1);
     m_mainbuffer_1.colorAttachment(0, config);
+    m_mainbuffer_1.depthAttachment(depth_config);
 }
 
 
@@ -211,7 +221,6 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
 
     worley_texture = noisegen3D::worley();
 }
-
 
 
 
@@ -263,11 +272,15 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &ou
             in.attachments[i]
         );
     }
+    if (in.has_depth)
+        gltools::setUniform_texture("un_depth", in.depth_attachment);
 
     gl::drawArrays(GL_TRIANGLES, 0, 6);
 
     gltools::freeTextureUnitIDs();
 };
+
+
 
 /** Run a shader with two input framebuffers, `a` and `b`.
  *  Render the result to `out`.
@@ -308,6 +321,10 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, 
 
         textureID += 1;
     }
+    if (a.has_depth)
+        gltools::setUniform_texture("un_depth_a", a.depth_attachment);
+
+
 
     textureID = 4;
     for (size_t i=0; i < b.attachments.size(); i++)
@@ -319,6 +336,8 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &a, glFramebuffer &b, 
 
         textureID += 1;
     }
+    if (b.has_depth)
+        gltools::setUniform_texture("un_depth_b", b.depth_attachment);
 
     gl::drawArrays(GL_TRIANGLES, 0, 6);
 
@@ -598,7 +617,7 @@ idk::RenderEngine::endFrame()
     // -----------------------------------------------------------------------------------------
 
 
-    // Deferred shading
+    // Background quad
     // -----------------------------------------------------------------------------------------
     gl::bindVertexArray(m_quad_VAO);
     gltools::useProgram(m_background_shader);
@@ -612,7 +631,7 @@ idk::RenderEngine::endFrame()
 
     // Blinn-Phong lighting
     // -----------------------------------------------------------------------------------------
-    tex2tex(m_deferred_lightingpass_shader, m_deferred_geom_buffer, m_scratchbufs0[0]);
+    tex2tex(m_deferred_lightingpass_shader, m_deferred_geom_buffer, m_mainbuffer_1);
     // -----------------------------------------------------------------------------------------
 
 
@@ -625,10 +644,9 @@ idk::RenderEngine::endFrame()
 
     // Combine geometry and volumetrics
     // -----------------------------------------------------------------------------------------
-    m_scratchbufs1[2].clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     gltools::useProgram(m_additive_shader);
     gltools::setUniform_float("intensity", 1.0f);
-    tex2tex(m_additive_shader, m_scratchbufs0[0], m_scratchbufs1[0], m_mainbuffer_0);
+    tex2tex(m_additive_shader, m_mainbuffer_1, m_scratchbufs1[0], m_mainbuffer_0);
     // -----------------------------------------------------------------------------------------
 
     // SSR
@@ -640,24 +658,39 @@ idk::RenderEngine::endFrame()
     // -----------------------------------------------------------------------------------------
 
 
-    // Chromatic aberration
+    // Blit user framebuffers
     // -----------------------------------------------------------------------------------------
-    tex2tex(m_cabber_shader, m_mainbuffer_0, m_mainbuffer_1);
+    while (m_blit_queue.empty() == false)
+    {
+        idk::glFramebuffer &framebuffer = m_blit_queue.front();
+        tex2tex(m_blit_shader, framebuffer, m_mainbuffer_0, m_mainbuffer_1);
+        m_blit_queue.pop();
+    }
     // -----------------------------------------------------------------------------------------
 
+
+    // Chromatic aberration
+    // -----------------------------------------------------------------------------------------
+    tex2tex(m_caberr_shader, m_mainbuffer_1, m_mainbuffer_0);
+    // -----------------------------------------------------------------------------------------
+
+
     // Color grading
+    // -----------------------------------------------------------------------------------------
     gltools::useProgram(m_colorgrade_shader);
     gltools::setUniform_float("un_gamma", m_gamma);
     gltools::setUniform_float("un_exposure", m_exposure);
-    tex2tex(m_colorgrade_shader, m_mainbuffer_1, m_mainbuffer_0);
+    tex2tex(m_colorgrade_shader, m_mainbuffer_0, m_mainbuffer_1);
+    // -----------------------------------------------------------------------------------------
+
 
     // FXAA
-    f_fbfb(m_fxaa_shader, m_mainbuffer_0);
+    // -----------------------------------------------------------------------------------------
+    f_fbfb(m_fxaa_shader, m_mainbuffer_1);
     // -----------------------------------------------------------------------------------------
 
     gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
     gl::bindVertexArray(0);
-
 }
 
 
@@ -671,8 +704,20 @@ idk::RenderEngine::swapWindow()
 void
 idk::RenderEngine::resize( int w, int h )
 {
-    m_resolution = { w, h };
+    m_resolution.x = w;  m_resolution.y = h;
     f_gen_idk_framebuffers(w, h);
     getCamera().aspect(w, h);
 }
+
+
+
+/** Blit an idk::glFramebuffer onto the renderer's main framebuffer including depth.
+ *  @note This is a mildly expensive operation, try to avoid.
+*/
+void
+idk::RenderEngine::blitFramebuffer( const idk::glFramebuffer &fb )
+{
+    m_blit_queue.push(fb);
+}
+
 

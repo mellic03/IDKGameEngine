@@ -6,7 +6,14 @@ void
 idk::glFramebuffer::reset( int w, int h, size_t num_attachments )
 {
     m_size.x = w;  m_size.y = h;
+    m_gl_attachments.resize(0);
     attachments.resize(num_attachments);
+
+    if (m_first == false)
+    {
+        gl::deleteFramebuffers(1, &m_FBO);
+        gl::deleteRenderbuffers(1, &m_RBO);
+    }
 
     gl::genFramebuffers(1, &m_FBO);
     gl::genRenderbuffers(1, &m_RBO);
@@ -19,6 +26,9 @@ idk::glFramebuffer::reset( int w, int h, size_t num_attachments )
 
     gl::bindRenderbuffer(GL_RENDERBUFFER, 0);
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    m_first = false;
 }
 
 
@@ -26,8 +36,6 @@ void
 idk::glFramebuffer::colorAttachment( int idx, const idk::ColorAttachmentConfig &config )
 {
     gl::bindFramebuffer(GL_FRAMEBUFFER, m_FBO);
-    gl::bindRenderbuffer(GL_RENDERBUFFER, m_RBO);
-
 
     gl::deleteTextures(1, &attachments[idx]);
     gl::genTextures(1, &attachments[idx]);
@@ -41,28 +49,42 @@ idk::glFramebuffer::colorAttachment( int idx, const idk::ColorAttachmentConfig &
     gl::generateMipmap(GL_TEXTURE_2D);
     gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, config.minfilter);
     gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, config.magfilter);
+    gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,     config.wrap_s);
+    gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,     config.wrap_t);
+
 
     gl::framebufferTexture2D(
         GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+idx, GL_TEXTURE_2D, attachments[idx], 0
     );
 
-
-    std::vector<GLuint> gl_attachments(attachments.size());
-    for (size_t i=0; i<attachments.size(); i++)
-        gl_attachments[i] = GL_COLOR_ATTACHMENT0 + i;
-    glDrawBuffers(attachments.size(), &(gl_attachments[0]));
-
+    m_gl_attachments.push_back(GL_COLOR_ATTACHMENT0 + idx);
+    glDrawBuffers(m_gl_attachments.size(), &(m_gl_attachments[0]));
 
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
-    gl::bindRenderbuffer(GL_RENDERBUFFER, m_RBO);
     gl::bindTexture(GL_TEXTURE_2D, 0);
 }
 
 
 void
-idk::glFramebuffer::depthAttachment()
+idk::glFramebuffer::depthAttachment( const idk::DepthAttachmentConfig &config )
 {
-    
+    has_depth = true;
+
+    gl::bindFramebuffer(GL_FRAMEBUFFER, m_FBO);
+
+    gl::deleteTextures(1, &depth_attachment);
+    gl::genTextures(1, &depth_attachment);
+    gl::bindTexture(GL_TEXTURE_2D, depth_attachment);
+
+    gl::texImage2D(
+        GL_TEXTURE_2D, 0, config.internalformat,
+        m_size.x, m_size.y, 0, GL_DEPTH_COMPONENT, config.datatype, NULL
+    );
+
+    m_gl_attachments.push_back(GL_DEPTH_ATTACHMENT);
+    glDrawBuffers(m_gl_attachments.size(), &(m_gl_attachments[0]));
+
+    gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 

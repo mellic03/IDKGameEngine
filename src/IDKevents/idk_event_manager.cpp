@@ -30,6 +30,21 @@ idk::EventManager::onWindowEvent( WindowEvent winevent, std::function<void()> re
 
 
 void
+idk::EventManager::onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback )
+{
+    idk::Keylog &keylog = m_keylog;
+
+    auto trigger = [keycode, keyevent, &keylog]()
+    {
+        return keylog.get(keycode, keyevent) == true;
+    };
+
+    m_events.create( {trigger, callback} );
+}
+
+
+
+void
 idk::EventManager::mouseCapture( bool capture )
 {
     m_mouse_captured = capture;

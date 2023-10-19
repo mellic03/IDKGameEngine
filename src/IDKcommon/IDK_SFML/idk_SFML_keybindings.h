@@ -2,7 +2,7 @@
 
 #include <SDL2/SDL.h>
 
-enum idk_keycode
+enum idk::Keycode
 {
     A               = SDL_SCANCODE_A,
     B               = SDL_SCANCODE_B,
