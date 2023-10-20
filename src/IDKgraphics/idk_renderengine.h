@@ -55,7 +55,6 @@ private:
     GLuint                              m_deferred_geometrypass_shader;
     GLuint                              m_deferred_lightingpass_shader;
     GLuint                              m_dirlight_vol_shader;
-    GLuint                              m_background_shader;
 
     GLuint                              m_guassian_blur_shader;
     GLuint                              m_odd_blur_shader;
@@ -83,7 +82,6 @@ private:
     glUBO                               m_UBO_dirlights;
     // --------------------------------------------------------
 
-    GLuint                              m_quad_VAO, m_quad_VBO;
 
     int                                 m_active_camera_id;
     Allocator<Camera>                   m_camera_allocator;
@@ -124,8 +122,10 @@ private:
 
 
 public:
+    GLuint                              m_quad_VAO, m_quad_VBO;
+    GLuint                              m_background_shader;
     Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
-    glFramebuffer                    m_dirlight_depthmap_buffer;
+    glFramebuffer                       m_dirlight_depthmap_buffer;
 
     float                               m_bloom_intensity=0.0f, m_gamma=2.2f, m_exposure=1.0f;
     void                                setBloomIntensity(float f) { m_bloom_intensity = f; };

@@ -27,6 +27,7 @@ public:
     int                     create( const T &data );
 
     T *                     data() { return m_objects.data(); };
+    size_t                  bytesize() { return m_objects.size() * sizeof(T); };
 
     T &                     get( int id );
     void                    destroy( int id );

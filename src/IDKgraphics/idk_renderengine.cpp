@@ -597,26 +597,26 @@ idk::RenderEngine::endFrame()
 
 
     // Wireframe objects -------------------------------------------------
-    // gl::disable(GL_CULL_FACE);
-    // gltools::useProgram(solid_shader);
-    // gltools::setUniform_vec3("un_color", glm::vec3(1.0f));
-    // for (auto &[shader_id, vec]: m_wireframe_draw_queue)
-    // {
-    //     gltools::useProgram(shader_id);
+    gl::disable(GL_CULL_FACE);
+    gltools::useProgram(solid_shader);
+    gltools::setUniform_vec3("un_color", glm::vec3(1.0f));
+    for (auto &[shader_id, vec]: m_wireframe_draw_queue)
+    {
+        gltools::useProgram(shader_id);
 
-    //     for (auto &[model_id, transform]: vec)
-    //     {
-    //         drawmethods::draw_wireframe(
-    //             modelManager().getModel(model_id),
-    //             transform
-    //         );
-    //         gltools::freeTextureUnitIDs();
-    //     }
-    //     vec.clear();
-    // }
-    // m_wireframe_draw_queue.clear();
-    // gl::enable(GL_CULL_FACE);
-    // gl::bindVertexArray(0);
+        for (auto &[model_id, transform]: vec)
+        {
+            drawmethods::draw_wireframe(
+                modelManager().getModel(model_id),
+                transform
+            );
+            gltools::freeTextureUnitIDs();
+        }
+        vec.clear();
+    }
+    m_wireframe_draw_queue.clear();
+    gl::enable(GL_CULL_FACE);
+    gl::bindVertexArray(0);
     // -----------------------------------------------------------------------------------------
 
 

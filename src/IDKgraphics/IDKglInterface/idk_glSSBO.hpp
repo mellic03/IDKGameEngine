@@ -13,7 +13,9 @@ private:
 
 public:
 
-
+    void    init();
+    void    bufferData( size_t nbytes, void *data );
+    void    bufferSubData( size_t offset, size_t nbytes, void *data );
 };
 
 
