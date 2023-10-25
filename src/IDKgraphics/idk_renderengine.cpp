@@ -4,6 +4,7 @@
 
 
 GLuint worley_texture;
+GLuint whitenoise;
 
 
 // Static members -----------------------------
@@ -88,21 +89,18 @@ idk::RenderEngine::compileShaders()
 {
     std::cout << "compiling shaders\n";
 
-    m_background_shader = gltools::compileProgram(
-        "shaders/deferred/", "background.vs", "background.fs"
-    );
-    m_deferred_geometrypass_shader = gltools::compileProgram(
-        "shaders/deferred/", "geometrypass.vs", "geometrypass.fs"
-    );
-    m_deferred_lightingpass_shader = gltools::compileProgram(
-        "shaders/", "screenquad.vs", "deferred/lightingpass.fs"
-    );
-    m_dirlight_vol_shader = gltools::compileProgram(
-        "shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs"
-    );
-    m_guassian_blur_shader = gltools::compileProgram(
-        "shaders/", "screenquad.vs", "postprocess/guassianblur.fs"
-    );
+    m_background_shader.load("shaders/deferred/", "background.vs", "background.fs");
+    m_background_shader.compile();
+
+    m_lightingpass_shader.load("shaders/", "screenquad.vs", "deferred/lightingpass.fs");
+    m_lightingpass_shader.compile();
+
+    m_dirlight_vol_shader.load("shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
+    m_dirlight_vol_shader.compile();
+
+    m_guassian_shader.load("shaders/", "screenquad.vs", "postprocess/guassianblur.fs");
+    m_guassian_shader.compile();
+
     m_odd_blur_shader = gltools::compileProgram(
         "shaders/", "screenquad.vs", "postprocess/oddblur.fs"
     );
@@ -226,6 +224,7 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
     m_UBO_dirlights   = glUBO(5, 16 + IDK_MAX_DIRLIGHTS*sizeof(Dirlight) + IDK_MAX_DIRLIGHTS*sizeof(glm::mat4));
 
     worley_texture = noisegen3D::worley();
+    whitenoise     = noisegen3D::white(1024, 1024, 64);
 }
 
 
@@ -261,6 +260,7 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &ou
     static float inc2 = 0.0f;
     gltools::setUniform_texture("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
     gltools::setUniform_texture3D("un_worley", worley_texture);
+    gltools::setUniform_texture3D("un_whitenoise", whitenoise);
     gltools::setUniform_float("un_increment_0", inc0);
     gltools::setUniform_float("un_increment_1", inc1);
     gltools::setUniform_float("un_increment_2", inc2);
@@ -271,7 +271,7 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &ou
 
     inc0 += 0.0001f;
     inc1 += 0.000015f;
-    inc2 += 0.00003f;
+    inc2 += 0.015f;
 
 
     for (size_t i=0; i < in.attachments.size(); i++)
@@ -287,6 +287,23 @@ idk::RenderEngine::tex2tex( GLuint program, glFramebuffer &in, glFramebuffer &ou
     gl::drawArrays(GL_TRIANGLES, 0, 6);
 
     gltools::freeTextureUnitIDs();
+};
+
+
+
+void
+idk::RenderEngine::tex2tex( glShader &program, glFramebuffer &in, glFramebuffer &out )
+{
+    out.bind();
+
+    program.set_sampler2D("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
+
+    for (size_t i=0; i < in.attachments.size(); i++)
+    {
+        program.set_sampler2D("un_texture_" + std::to_string(i), in.attachments[i]);
+    }
+
+    gl::drawArrays(GL_TRIANGLES, 0, 6);
 };
 
 
@@ -622,11 +639,13 @@ idk::RenderEngine::endFrame()
 
     // Background quad
     // -----------------------------------------------------------------------------------------
-    gl::bindVertexArray(m_quad_VAO);
-    gltools::useProgram(m_background_shader);
     glm::mat4 modelmat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.5f * camera.farPlane()));
     modelmat = glm::scale(modelmat, glm::vec3(300.0f, 300.0f, 1.0f));
-    gltools::setUniform_mat4("un_model", modelmat);
+
+    gl::bindVertexArray(m_quad_VAO);
+    m_background_shader.bind();
+    m_background_shader.set_mat4("un_model", modelmat);
+
     gl::drawArrays(GL_TRIANGLES, 0, 6);
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
     // -----------------------------------------------------------------------------------------
@@ -634,14 +653,34 @@ idk::RenderEngine::endFrame()
 
     // Blinn-Phong lighting
     // -----------------------------------------------------------------------------------------
-    tex2tex(m_deferred_lightingpass_shader, m_deferred_geom_buffer, m_mainbuffer_1);
+    m_lightingpass_shader.bind();
+    tex2tex(m_lightingpass_shader, m_deferred_geom_buffer, m_scratchbufs0[0]);
+    m_lightingpass_shader.unbind();
     // -----------------------------------------------------------------------------------------
 
 
     // Volumetric directional lights
     // -----------------------------------------------------------------------------------------
+    m_dirlight_vol_shader.bind();
+
+    static float inc0 = 0.0f;
+    static float inc1 = 0.0f;
+    static float inc2 = 0.0f;
+    m_dirlight_vol_shader.set_sampler2D("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
+    m_dirlight_vol_shader.set_sampler3D("un_worley", worley_texture);
+    m_dirlight_vol_shader.set_sampler3D("un_whitenoise", whitenoise);
+
+    m_dirlight_vol_shader.set_float("un_increment_0", inc0);
+    m_dirlight_vol_shader.set_float("un_increment_1", inc1);
+    m_dirlight_vol_shader.set_float("un_increment_2", inc2);
+
+    inc0 += 0.0001f;
+    inc1 += 0.000015f;
+    inc2 += 0.015f;
+
     tex2tex(m_dirlight_vol_shader, m_deferred_geom_buffer,   m_scratchbufs0[1]);
-    tex2tex(m_upscale_shader,      m_scratchbufs0[1],        m_scratchbufs1[0]);
+    // tex2tex(m_upscale_shader,      m_scratchbufs0[1],        m_scratchbufs1[0]);
+    m_dirlight_vol_shader.unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -649,7 +688,7 @@ idk::RenderEngine::endFrame()
     // -----------------------------------------------------------------------------------------
     gltools::useProgram(m_additive_shader);
     gltools::setUniform_float("intensity", 1.0f);
-    tex2tex(m_additive_shader, m_mainbuffer_1, m_scratchbufs1[0], m_mainbuffer_0);
+    tex2tex(m_additive_shader, m_scratchbufs0[0], m_scratchbufs0[1], m_mainbuffer_1);
     // -----------------------------------------------------------------------------------------
 
     // SSR
@@ -660,6 +699,7 @@ idk::RenderEngine::endFrame()
     // tex2tex(m_additive_shader, m_scratchbuf1, m_scratchbuf3, m_scratchbuf2);
     // -----------------------------------------------------------------------------------------
 
+
     // Extract depth
     // -----------------------------------------------------------------------------------------
     tex2tex(m_getdepth_shader, m_deferred_geom_buffer, m_mainbuffer_0);
@@ -667,12 +707,12 @@ idk::RenderEngine::endFrame()
 
     // Blit user framebuffers
     // -----------------------------------------------------------------------------------------
-    while (m_blit_queue.empty() == false)
-    {
-        idk::glFramebuffer &framebuffer = m_blit_queue.front();
-        tex2tex(m_blit_shader, framebuffer, m_mainbuffer_0, m_mainbuffer_1);
-        m_blit_queue.pop();
-    }
+    // while (m_blit_queue.empty() == false)
+    // {
+    //     idk::glFramebuffer &framebuffer = m_blit_queue.front();
+    //     tex2tex(m_blit_shader, framebuffer, m_mainbuffer_0, m_mainbuffer_1);
+    //     m_blit_queue.pop();
+    // }
     // -----------------------------------------------------------------------------------------
 
 

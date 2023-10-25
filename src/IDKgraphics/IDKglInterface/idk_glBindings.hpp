@@ -49,6 +49,8 @@ namespace idk::gl
 
     void bufferData( GLenum target, GLsizeiptr size, const void *data, GLenum usage );
     void bufferSubData( GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
+    void *mapBuffer( GLenum target, GLenum access );
+    void unmapBuffer( GLenum target );
 
     // glActiveXXX ---------------------------------------------------------------------------
     /**/
@@ -75,6 +77,13 @@ namespace idk::gl
     // Uniforms ------------------------------------------------------------------------------
     /**/
     GLint getUniformLocation( GLuint program, std::string name );
+    void  uniform1i( GLint loc, int i );
+    void  uniform1f( GLint loc, float f );
+    void  uniform2fv( GLint loc, GLsizei count, float *value );
+    void  uniform3fv( GLint loc, GLsizei count, float *value );
+    void  uniform4fv( GLint loc, GLsizei count, float *value );
+    void  uniformMatrix3fv( GLint loc, GLsizei count, GLboolean transpose, float *value );
+    void  uniformMatrix4fv( GLint loc, GLsizei count, GLboolean transpose, float *value );
     // ---------------------------------------------------------------------------------------
 
     void vertexAttribPointer( GLuint index, GLint size, GLenum type, GLboolean normalized,

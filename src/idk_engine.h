@@ -5,6 +5,8 @@
 #include "IDKevents/idk_event_manager.h"
 #include "idk_componentsystem.h"
 
+#include "idk_threadpool.hpp"
+
 namespace idk { class Engine; };
 
 
@@ -19,7 +21,6 @@ private:
     idk::RenderEngine                           m_render_engine;
     idk::AudioEngine                            m_audio_engine;
     idk::EventManager                           m_event_manager;
-    idk::ThreadPool                             m_threadpool;
 
     std::vector<idk::Module *>                  m_idk_modules;
     std::unordered_map<std::string, uint>       m_idk_module_ids;

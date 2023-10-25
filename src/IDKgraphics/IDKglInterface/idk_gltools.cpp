@@ -1,4 +1,4 @@
-#include "idk_glInterface.hpp"
+#include "idk_gltools.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream>

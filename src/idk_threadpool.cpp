@@ -71,26 +71,44 @@ idk::ThreadPool::done( int task_id )
 {
     std::unique_lock<std::mutex> lock(m_mutex);
     m_finished_ids.emplace(task_id);
-    m_tasks.destroy(task_id);
 };
 
 
 
-void
-idk::ThreadPool::join()
+// void
+// idk::ThreadPool::join()
+// {
+//     while (1)
+//     {
+//         std::unique_lock<std::mutex> lock(m_mutex);
+
+//         if (m_tasks.size() == 0)
+//         {
+//             m_finished_ids.erase(m_finished_ids.begin(), m_finished_ids.end());
+//             break;
+//         }
+
+//         lock.unlock();
+//     }
+// }
+
+
+bool
+idk::ThreadPool::isDone( int task_id )
 {
-    while (1)
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
+    std::unique_lock<std::mutex> lock(m_mutex);
+    return m_finished_ids.find(task_id) != m_finished_ids.end();
+}
 
-        if (m_tasks.size() == 0)
-        {
-            m_finished_ids.erase(m_finished_ids.begin(), m_finished_ids.end());
-            break;
-        }
 
-        lock.unlock();
-    }
+void
+idk::ThreadPool::destroy( int task_id )
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    
+    m_finished_ids.erase(task_id);
+    m_tasks.destroy(task_id);
+    
 }
 
 
@@ -106,7 +124,7 @@ idk::ThreadPool::running()
 void
 idk::ThreadPool::stop()
 {
-    this->join();
+    // this->join();s
     m_running.store(false);
 };
 

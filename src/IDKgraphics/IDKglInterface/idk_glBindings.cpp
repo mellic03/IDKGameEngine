@@ -120,10 +120,25 @@ idk::gl::bufferData( GLenum target, GLsizeiptr size, const void *data, GLenum us
 {
     GLCALL( glBufferData(target, size, data, usage); )
 }
+
 void
 idk::gl::bufferSubData( GLenum target, GLintptr offset, GLsizeiptr size, const void *data)
 {
     GLCALL( glBufferSubData(target, offset, size, data); )
+}
+
+void *
+idk::gl::mapBuffer( GLenum target, GLenum access )
+{
+    void *data;
+    GLCALL( data = glMapBuffer(target, access); )
+    return data;
+}
+
+void
+idk::gl::unmapBuffer( GLenum target )
+{
+    GLCALL( glUnmapBuffer(target); )
 }
 // ---------------------------------------------------------------------------------------
 
@@ -183,6 +198,48 @@ GLint
 idk::gl::getUniformLocation( GLuint program, std::string name )
 {
     return glGetUniformLocation(program, name.c_str());
+}
+
+
+void idk::gl::uniform1i( GLint loc, int i )
+{
+    GLCALL( glUniform1i(loc, i); )
+}
+
+
+void idk::gl::uniform1f( GLint loc, float f )
+{
+    GLCALL( glUniform1f(loc, f); )
+}
+
+
+void idk::gl::uniform2fv( GLint loc, GLsizei count, float *value )
+{
+    GLCALL( glUniform2fv(loc, count, value); )
+}
+
+
+void idk::gl::uniform3fv( GLint loc, GLsizei count, float *value )
+{
+    GLCALL( glUniform3fv(loc, count, value); )
+}
+
+
+void idk::gl::uniform4fv( GLint loc, GLsizei count, float *value )
+{
+    GLCALL( glUniform4fv(loc, count, value); )
+}
+
+
+void idk::gl::uniformMatrix3fv( GLint loc, GLsizei count, GLboolean transpose, float *value )
+{
+    GLCALL( glUniformMatrix3fv(loc, 1, transpose, value); )
+}
+
+
+void idk::gl::uniformMatrix4fv( GLint loc, GLsizei count, GLboolean transpose, float *value )
+{
+    GLCALL( glUniformMatrix4fv(loc, 1, transpose, value); )
 }
 // ---------------------------------------------------------------------------------------
 

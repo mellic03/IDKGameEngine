@@ -91,3 +91,119 @@ idk::noisegen3D::worley()
 }
 
 
+GLuint
+idk::noisegen3D::white( int w, int h, int d )
+{
+    srand(clock());
+
+    glm::vec4 *data = new glm::vec4[w*h*d];
+
+    float minf = 100000.0f;
+    float maxf = -100000.0f;
+
+    for (int z=0; z<d; z++)
+    {
+        for (int y=0; y<h; y++)
+        {
+            for (int x=0; x<w; x++)
+            {
+                int r = (rand() % 100000) - 50000;
+                int g = (rand() % 100000) - 50000;
+                int b = (rand() % 100000) - 50000;
+
+                data[z*h*w + y*w + x].r = r / 50000.0f;
+                data[z*h*w + y*w + x].g = g / 50000.0f;
+                data[z*h*w + y*w + x].b = b / 50000.0f;
+
+                minf = std::min(minf, data[z*h*w + y*w + x].r);
+                minf = std::min(minf, data[z*h*w + y*w + x].g);
+                minf = std::min(minf, data[z*h*w + y*w + x].b);
+
+                maxf = std::max(maxf, data[z*h*w + y*w + x].r);
+                maxf = std::max(maxf, data[z*h*w + y*w + x].g);
+                maxf = std::max(maxf, data[z*h*w + y*w + x].b);
+            }
+        }
+    }
+    std::cout << minf << ", " << maxf << "\n";
+
+    GLuint texture;
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_3D, texture);
+
+
+    glTexImage3D( GL_TEXTURE_3D, 0, GL_RGBA16F, w, h, d, 0, GL_RGBA, GL_FLOAT, data );
+
+    // idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    idk::gl::texParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+
+    glGenerateMipmap(GL_TEXTURE_3D);
+    glBindTexture(GL_TEXTURE_3D, 0);
+
+    delete[] data;
+
+    return texture;
+}
+
+
+
+
+GLuint
+idk::noisegen2D::white( int w, int h )
+{
+    glm::vec4 *data = new glm::vec4[w*h];
+
+    // float minf = 100000.0f;
+    // float maxf = -100000.0f;
+
+    for (int y=0; y<h; y++)
+    {
+        for (int x=0; x<w; x++)
+        {
+            int r = (rand() % 100000) - 50000;
+            int g = (rand() % 100000) - 50000;
+            int b = (rand() % 100000) - 50000;
+
+            data[y*w + x].r = r / 10000.0f;
+            data[y*w + x].g = g / 10000.0f;
+            data[y*w + x].b = b / 10000.0f;
+
+            // minf = std::min(minf, data[y*w + x].r);
+            // minf = std::min(minf, data[y*w + x].g);
+            // minf = std::min(minf, data[y*w + x].b);
+
+            // maxf = std::max(maxf, data[y*w + x].r);
+            // maxf = std::max(maxf, data[y*w + x].g);
+            // maxf = std::max(maxf, data[y*w + x].b);
+        }
+    }
+    // std::cout << minf << ", " << maxf << "\n";
+
+    GLuint texture;
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA16F, w, h, 0, GL_RGBA, GL_FLOAT, data );
+
+    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    delete[] data;
+
+    return texture;
+}
+
+
+

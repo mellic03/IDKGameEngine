@@ -5,7 +5,7 @@ idk::ThreadPool idk::Engine::threadpool = idk::ThreadPool(8);
 
 
 idk::Engine::Engine( std::string name, int w, int h, int res_divisor ):
-m_render_engine(name, w, h, res_divisor ), m_threadpool(4)
+m_render_engine(name, w, h, res_divisor )
 {
     idk::Engine &engine = *this;
     idk::RenderEngine &ren = m_render_engine;
@@ -36,27 +36,13 @@ idk::Engine::f_idk_CS_stage_A()
     {
         idk::ComponentSystem *CS = m_idk_componentsystems[i];
         CS->stage_A(*this);
-        // m_threadpool.push(
-        //     [CS, engine]
-        //     {
-        //         CS->stage_A(*engine);
-        //     }
-        // );
     }
 
     for (size_t i=0; i<m_idk_modules.size(); i++)
     {
         idk::Module *mod = m_idk_modules[i];
         mod->stage_A(*this);
-        // m_threadpool.push(
-        //     [mod, engine]
-        //     {
-        //         mod->stage_A(*engine);
-        //     }
-        // );
     }
-
-    // m_threadpool.join();
 }
 
 
@@ -69,27 +55,14 @@ idk::Engine::f_idk_CS_stage_B()
     {
         idk::ComponentSystem *CS = m_idk_componentsystems[i];
         CS->stage_B(*this);
-        // m_threadpool.push(
-        //     [CS, engine]
-        //     {
-        //         CS->stage_B(*engine);
-        //     }
-        // );
     }
 
     for (size_t i=0; i<m_idk_modules.size(); i++)
     {
         idk::Module *mod = m_idk_modules[i];
         mod->stage_B(*this);
-        // m_threadpool.push(
-        //     [mod, engine]
-        //     {
-        //         mod->stage_B(*engine);
-        //     }
-        // );
     }
 
-    // m_threadpool.join();
 }
 
 
@@ -277,8 +250,6 @@ idk::Engine::endFrame()
 
     m_frame_end = SDL_GetPerformanceCounter();
     m_frame_time = ((double)(m_frame_end - m_frame_start)) / (double)SDL_GetPerformanceFrequency();
-
-    idk::Engine::threadpool.join();
 }
 
 
@@ -288,6 +259,5 @@ idk::Engine::shutdown()
     m_running = false;
 
     idk::Engine::threadpool.stop();
-    m_threadpool.stop();
 }
 

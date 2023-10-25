@@ -1,6 +1,8 @@
 #pragma once
 
 #include <unordered_map>
+#include <queue>
+
 #include "IDKcommon/IDKcommon.h"
 
 #include "idk_model_manager.h"
@@ -52,11 +54,10 @@ private:
 
     // Shaders ------------------------------------------------
     /***/
-    GLuint                              m_deferred_geometrypass_shader;
-    GLuint                              m_deferred_lightingpass_shader;
-    GLuint                              m_dirlight_vol_shader;
+    glShader                            m_lightingpass_shader;
+    glShader                            m_dirlight_vol_shader;
 
-    GLuint                              m_guassian_blur_shader;
+    glShader                            m_guassian_shader;
     GLuint                              m_odd_blur_shader;
     GLuint                              m_caberr_shader;
     GLuint                              m_upscale_shader;
@@ -118,12 +119,13 @@ private:
     void    f_fbfb  ( GLuint shader,  glFramebuffer &in );
     void    tex2tex ( GLuint program, glFramebuffer &a, glFramebuffer &b, glFramebuffer &out );
     void    tex2tex ( GLuint program, glFramebuffer &in, glFramebuffer &out );
+    void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
     // ------------------------------------------------------------------------------------
 
 
 public:
     GLuint                              m_quad_VAO, m_quad_VBO;
-    GLuint                              m_background_shader;
+    glShader                            m_background_shader;
     Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
     glFramebuffer                       m_dirlight_depthmap_buffer;
 

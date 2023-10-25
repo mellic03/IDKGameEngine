@@ -1,6 +1,6 @@
 #pragma once
 
-#include "idk_allocator.h"
+#include "IDKcommon/IDKcommon.h"
 
 #include <functional>
 #include <queue>
@@ -31,15 +31,16 @@ public:
                         const static int nullid = -1;
                         ThreadPool( int num_threads );
 
-
-    template <typename function, typename ...Args>
-    int                 push    ( function fn, Args&&... args );
-
     int                 pop     (             );
     fun_t               get     ( int task_id );
     void                done    ( int task_id );
-    void                join    (             );
 
+    template <typename function, typename ...Args>
+    int                 create  ( function fn, Args&&... args );
+    bool                isDone  ( int task_id );
+    void                destroy ( int task_id );
+
+    // void                join( );
     bool                running();
     void                stop();
 };
@@ -48,7 +49,7 @@ public:
 
 template <typename function, typename ...Args>
 int
-idk::ThreadPool::push( function fn, Args&&... args )
+idk::ThreadPool::create( function fn, Args&&... args )
 {
     std::unique_lock<std::mutex> lock(m_mutex);
 
