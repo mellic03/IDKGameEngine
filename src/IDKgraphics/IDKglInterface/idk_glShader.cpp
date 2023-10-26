@@ -163,22 +163,16 @@ idk::glShader::load( std::string root, std::string vert, std::string frag )
 {
     m_vert_src = parse_shader_source(root, vert);
     m_frag_src = parse_shader_source(root, frag);
+}
 
 
-    // std::string vert_path = root + vert;
-    // std::string frag_path = frag + vert;
-
-    // std::ifstream instream(frag_path);
-    // std::string line;
-
-    // while (std::getline(instream, line))
-    // {
-    //     size_t define_pos = line.find("#define");
-    //     if (define_pos != std::string::npos)
-    //     {
-    //         m_definitions["DEFINITION_NAME"].value = "DEFINITION_VALUE";
-    //     }
-    // }
+/** Load and compile
+*/
+void
+idk::glShader::loadc( std::string root, std::string vert, std::string frag )
+{
+    load(root, vert, frag);
+    compile();
 }
 
 
@@ -210,7 +204,6 @@ idk::glShader::compile()
     for (auto &[name, value]: m_definitions)
     {
         defines += "#define " + name + " " + value.value + "\n";
-        std::cout << "#define " << name << " " << value.value << " \n";
     }
 
     std::string vert_src = m_version + defines + m_vert_src;
@@ -220,24 +213,8 @@ idk::glShader::compile()
 
     for (auto &name: m_uniforms)
     {
-        std::cout << "locations[" << name << "]\n";
         m_locations[name].value = gl::getUniformLocation(m_program_id, name);
     }
-
-
-
-
-    // std::string shader_version = "#version 440 core\n\n";
-    // std::string shader_definitions = "";
-    // std::string shader_source = "void main() { fsout_frag_color = vec4(vec3(0.0), 1.0); }\n";
-
-    // for (auto &[key, def]: m_definitions)
-    // {
-    //     shader_definitions += "#define " + key + " " + def.value + "\n";
-    // }
-
-    // shader_source = shader_version + shader_definitions + shader_source;
-    // // gl::compileProgram(shader_source);
 
     return 0;
 }

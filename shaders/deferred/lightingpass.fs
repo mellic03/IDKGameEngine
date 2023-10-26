@@ -46,14 +46,11 @@ void main()
     //     color += spotlight_contribution(i, view_dir, position, normal, albedo, specular, 32.0);
     // }
 
-    for (int i = 0; i < ubo_num_dirlights; i++)
-    {
-        color += dirlight_contribution(
-            i,       view_dir,   position,
-            normal,  albedo,     specular,
-            spec_exp
-        );
-    }
+    color += dirlight_contribution(
+        0,       view_dir,   position,
+        normal,  albedo,     specular,
+        spec_exp
+    );
 
     fsout_frag_color = vec4(color, 1.0);
 }

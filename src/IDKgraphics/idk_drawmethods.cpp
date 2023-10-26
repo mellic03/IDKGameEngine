@@ -1,28 +1,28 @@
 #include "idk_drawmethods.h"
 
 void
-idk::drawmethods::bind_material( Material &material )
+idk::drawmethods::bind_material( glShader &program, Material &material )
 {
-    gltools::setUniform_texture("un_albedo_texture", material.albedo_gl_id);
-    gltools::setUniform_texture("un_specular_texture", material.specular_gl_id);
-    gltools::setUniform_float("un_specular_exponent", material.specular_exponent);
-    gltools::setUniform_texture("un_reflection_texture", material.reflection_gl_id);
-
+    program.set_sampler2D("un_albedo_texture", material.albedo_gl_id);
+    program.set_sampler2D("un_specular_texture", material.specular_gl_id);
+    program.set_float("un_specular_exponent", material.specular_exponent);
+    program.set_sampler2D("un_reflection_texture", material.reflection_gl_id);
 }
 
 
 void
-idk::drawmethods::draw_textured( Model &model, Transform &transform, Allocator<Material> &materials )
+idk::drawmethods::draw_textured( glShader &program, Model &model, Transform &transform, Allocator<Material> &materials )
 {
     glm::mat4 model_mat = transform.modelMatrix();
-    gltools::setUniform_mat4("un_model", model_mat);
+    program.set_mat4("un_model", model_mat);
+
     gl::bindVertexArray(model.VAO);
     for (size_t i=0; i<model.meshes.size(); i++)
     {
         Mesh &mesh = model.meshes[i];
 
         if (mesh.material_id != -1)
-            bind_material(materials.get(mesh.material_id));
+            bind_material(program, materials.get(mesh.material_id));
 
         gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
         gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
@@ -31,10 +31,10 @@ idk::drawmethods::draw_textured( Model &model, Transform &transform, Allocator<M
 
 
 void
-idk::drawmethods::draw_untextured( Model &model, Transform &transform )
+idk::drawmethods::draw_untextured( glShader &program, Model &model, Transform &transform )
 {
     glm::mat4 model_mat = transform.modelMatrix();
-    gltools::setUniform_mat4("un_model", model_mat);
+    program.set_mat4("un_model", model_mat);
 
     gl::bindVertexArray(model.VAO);
     for (size_t i=0; i<model.meshes.size(); i++)
@@ -47,10 +47,10 @@ idk::drawmethods::draw_untextured( Model &model, Transform &transform )
 
 
 void
-idk::drawmethods::draw_wireframe( Model &model, Transform &transform )
+idk::drawmethods::draw_wireframe( glShader &program, Model &model, Transform &transform )
 {
     glm::mat4 model_mat = transform.modelMatrix();
-    gltools::setUniform_mat4("un_model", model_mat);
+    program.set_mat4("un_model", model_mat);
 
     // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     gl::bindVertexArray(model.VAO);

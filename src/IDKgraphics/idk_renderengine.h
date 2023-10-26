@@ -54,25 +54,7 @@ private:
 
     // Shaders ------------------------------------------------
     /***/
-    glShader                            m_lightingpass_shader;
-    glShader                            m_dirlight_vol_shader;
-
-    glShader                            m_guassian_shader;
-    GLuint                              m_odd_blur_shader;
-    GLuint                              m_caberr_shader;
-    GLuint                              m_upscale_shader;
-    GLuint                              m_downscale_shader;
-    GLuint                              m_SSR_shader;
-    GLuint                              m_blank_shader;
-
-    GLuint                              m_dirshadow_shader;
-    GLuint                              m_screenquad_shader;
-
-    GLuint                              m_colorgrade_shader;
-    GLuint                              m_additive_shader;
-    GLuint                              m_fxaa_shader;
-    GLuint                              m_blit_shader;
-    GLuint                              m_getdepth_shader;
+    std::map<std::string, glShader>     m_shaders;
     // --------------------------------------------------------
 
     // UBO ----------------------------------------------------
@@ -116,18 +98,17 @@ private:
 
 
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
-    void    f_fbfb  ( GLuint shader,  glFramebuffer &in );
-    void    tex2tex ( GLuint program, glFramebuffer &a, glFramebuffer &b, glFramebuffer &out );
-    void    tex2tex ( GLuint program, glFramebuffer &in, glFramebuffer &out );
+    void    f_fbfb  ( glShader &, glFramebuffer &in );
     void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
+    void    tex2tex ( glShader &, glFramebuffer &a,  glFramebuffer &b, glFramebuffer &out );
     // ------------------------------------------------------------------------------------
 
 
 public:
     GLuint                              m_quad_VAO, m_quad_VBO;
-    glShader                            m_background_shader;
     Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
     glFramebuffer                       m_dirlight_depthmap_buffer;
+    GLuint solid_shader;
 
     float                               m_bloom_intensity=0.0f, m_gamma=2.2f, m_exposure=1.0f;
     void                                setBloomIntensity(float f) { m_bloom_intensity = f; };
@@ -140,7 +121,6 @@ public:
 
     // Built-in shaders -------------------------------------------------------------------
     /***/
-    GLuint                              solid_shader;
     // ------------------------------------------------------------------------------------
 
     // Built-in primitives ----------------------------------------------------------------
@@ -156,7 +136,7 @@ public:
     SDL_GLContext                       SDLGLContext()  { return m_SDL_gl_context;  };
 
     int                                 createCamera();
-    idk::Camera &                       getCamera()         { return m_camera_allocator.get(m_active_camera_id); };
+    idk::Camera &                       getCamera()     { return m_camera_allocator.get(m_active_camera_id); };
 
     int                                 createPointlight();
     int                                 createSpotlight();
@@ -169,6 +149,9 @@ public:
     ModelManager &                      modelManager()  { return m_model_manager; };
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
     void                                drawWireframe( GLuint shader_id, int model_id, Transform &transform );
+
+    void                                createProgram( std::string name, std::string, std::string, std::string );
+    glShader &                          getProgram( const std::string &name ) { return m_shaders[name]; };
 
     void                                beginFrame();
     void                                endFrame();

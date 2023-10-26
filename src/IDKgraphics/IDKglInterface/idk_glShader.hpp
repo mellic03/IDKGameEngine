@@ -30,6 +30,7 @@ private:
 public:
 
     void        load( std::string root, std::string vert, std::string frag );
+    void        loadc( std::string root, std::string vert, std::string frag );
     bool        setDefinition( std::string name, std::string value );
     GLuint      compile();
     void        bind();
