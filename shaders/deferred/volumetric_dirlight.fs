@@ -40,57 +40,44 @@ float miePhase (float cosTheta)
     return mix (PHG (0.8, cosTheta), PHG (-0.5, cosTheta), 0.5);
 }
 
+
+
 #define MAX_STEPS 16
-
-const float c_goldenRatioConjugate = 0.61803398875f;
-
-float hash13(vec3 p3)
-{
-	p3  = fract(p3 * .1031);
-    p3 += dot(p3, p3.yzx + 33.33);
-    return fract((p3.x + p3.y) * p3.z);
-}
+#define INTENSITY 0.25
 
 void main()
 {
-    vec3  fragpos = texture(un_texture_1, fsin_texcoords).xyz;
-    float fragdist = length(fragpos - un_viewpos);    
-    vec3  ray_dir = normalize(fragpos - un_viewpos);
-    float step_size = fragdist / MAX_STEPS;
+    vec3  frag_pos = texture(un_texture_1, fsin_texcoords).xyz;
+    float frag_dist = distance(un_viewpos, frag_pos) - 0.01;
+    float step_size = frag_dist / MAX_STEPS;
+    const float intensity = INTENSITY*step_size;
 
+    float ray_offset = 4.0 * step_size * texture(un_whitenoise, vec3(fsin_texcoords, un_increment_2)).r;
 
-    float ray_offset = texture(un_whitenoise, vec3(fsin_texcoords, un_increment_2)).r;
-    ray_offset = (ray_offset + 1.0) / 2.0;
-    ray_offset *= 4.0*step_size;
-
+    vec3 ray_dir = normalize(frag_pos - un_viewpos);
     vec3 ray_pos = un_viewpos + ray_offset*ray_dir;
-    float ray_dist = 0.0;
-    vec3 accum = vec3(0.0);
 
-    vec3 offset = vec3(-50*un_increment_0, 0.0, 50*un_increment_0);
+    step_size = distance(ray_pos, frag_pos) / MAX_STEPS;
+
+    vec3  accum = vec3(0.0);
+    vec3 offset = vec3(-un_increment_0, 0.0, un_increment_0);
 
     for (float i=0; i<MAX_STEPS; i++)
     {
-        // float displacement = 0.2*(texture(un_worley, ray_pos + 0.01*offset).r - 0.5);
-        float density      = texture(un_worley, ray_pos + 0.01*offset).r;
-        float intensity    = 0.4;
-
+        float density = texture(un_worley, ray_pos+offset).r;
 
         // float shadow = dirlight_shadow(idx, ray_pos+displacement);
         float shadow = dirlight_shadow(0, ray_pos);
         vec3 diffuse = ubo_dirlights[0].diffuse.xyz;
-        accum += intensity * density * shadow * diffuse;
+        accum += density * shadow * diffuse;
 
         ray_pos += step_size * ray_dir;
-        ray_dist += step_size;
     }
 
     vec3 dirlight_dir = normalize(ubo_dirlights[0].direction.xyz);
-    // float angle = dot(ray_dir, dirlight_dir);
-    // float rayleigh = ((3.0*3.14159) / 16.0) * (1.0 + angle * angle);
     float mie = miePhase(-dot(ray_dir, dirlight_dir));
+    accum *= mie * INTENSITY * step_size;
 
-    fsout_frag_color = vec4(mie*accum, 1.0);
-    // fsout_frag_color = vec4(0.0, 0.0, 0.0, 1.0);
+    fsout_frag_color = vec4(accum, 1.0);
 }
 

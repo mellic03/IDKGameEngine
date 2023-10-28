@@ -55,6 +55,7 @@ private:
     // Shaders ------------------------------------------------
     /***/
     std::map<std::string, glShader>     m_shaders;
+    std::vector<std::string>            m_shader_names;
     // --------------------------------------------------------
 
     // UBO ----------------------------------------------------
@@ -98,9 +99,9 @@ private:
 
 
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
-    void    f_fbfb  ( glShader &, glFramebuffer &in );
-    void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
-    void    tex2tex ( glShader &, glFramebuffer &a,  glFramebuffer &b, glFramebuffer &out );
+    static void    f_fbfb  ( glShader &, glFramebuffer &in );
+    static void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
+    static void    tex2tex ( glShader &, glFramebuffer &a,  glFramebuffer &b, glFramebuffer &out );
     // ------------------------------------------------------------------------------------
 
 
@@ -150,8 +151,9 @@ public:
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
     void                                drawWireframe( GLuint shader_id, int model_id, Transform &transform );
 
-    void                                createProgram( std::string name, std::string, std::string, std::string );
+    GLuint                              createProgram( std::string name, std::string, std::string, std::string );
     glShader &                          getProgram( const std::string &name ) { return m_shaders[name]; };
+    std::vector<std::string>            programNames() { return m_shader_names; };
 
     void                                beginFrame();
     void                                endFrame();

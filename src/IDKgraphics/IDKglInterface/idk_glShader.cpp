@@ -168,11 +168,11 @@ idk::glShader::load( std::string root, std::string vert, std::string frag )
 
 /** Load and compile
 */
-void
+GLuint
 idk::glShader::loadc( std::string root, std::string vert, std::string frag )
 {
-    load(root, vert, frag);
-    compile();
+    this->load(root, vert, frag);
+    return this->compile();
 }
 
 
@@ -216,7 +216,7 @@ idk::glShader::compile()
         m_locations[name].value = gl::getUniformLocation(m_program_id, name);
     }
 
-    return 0;
+    return m_program_id;
 }
 
 
@@ -243,6 +243,14 @@ idk::glShader::uniformLoc( const std::string &name )
 void
 idk::glShader::bind()
 {
+    #ifdef IDK_DEBUG
+    if (m_program_id == 0)
+    {
+        std::cout << "[idk::glShader::bind] Program not initialized!\n";
+        exit(1);
+    }
+    #endif
+
     gl::useProgram(m_program_id);
     m_texture_unit = GL_TEXTURE0;
 }
@@ -315,6 +323,12 @@ idk::glShader::set_mat4( std::string name, glm::mat4 m )
 void
 idk::glShader::set_sampler2D( std::string name, GLuint texture_id )
 {
+    if (m_program_id == 0)
+    {
+        std::cout << "RUH ROH" << std::endl;
+        exit(1);
+    }
+
     #ifdef IDK_DEBUG
         if (m_texture_unit > GL_TEXTURE0 + 32)
         {

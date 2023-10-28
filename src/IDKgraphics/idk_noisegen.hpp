@@ -4,7 +4,8 @@
 
 namespace idk::noisegen3D
 {
-    GLuint worley();
+    GLuint worley( int w );
+    GLuint worleyvec( int w );
     GLuint white( int w, int h, int d );
 };
 

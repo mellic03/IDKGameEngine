@@ -9,10 +9,11 @@ namespace idk { class glShader; };
 
 class idk::glShader
 {
-private:
+public:
     struct Loc { GLint value = -1; };
     struct Def { std::string value = "NONE"; };
 
+private:
     std::string                 m_version;
     std::string                 m_vert_src;
     std::string                 m_frag_src;
@@ -21,7 +22,7 @@ private:
     std::map<std::string, Loc>  m_locations;
     std::map<std::string, Def>  m_definitions;
     GLuint                      m_texture_unit;
-    GLuint                      m_program_id;
+    GLuint                      m_program_id = 0;
 
     std::string parse_shader_include( std::string root, std::string includeline );
     std::string parse_shader_source( std::string root, std::string glsl );
@@ -30,8 +31,11 @@ private:
 public:
 
     void        load( std::string root, std::string vert, std::string frag );
-    void        loadc( std::string root, std::string vert, std::string frag );
+    GLuint      loadc( std::string root, std::string vert, std::string frag );
+
     bool        setDefinition( std::string name, std::string value );
+    auto &      getDefinitions() { return m_definitions; };
+
     GLuint      compile();
     void        bind();
     void        unbind();
