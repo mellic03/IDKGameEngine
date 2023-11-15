@@ -22,7 +22,7 @@ private:
     std::vector<std::thread>    m_threads;
     std::mutex                  m_mutex;
     idk::Allocator<fun_t>       m_tasks;
-    std::queue<int>             m_task_ids;
+    std::queue<int>             m_task_queue;
     std::set<int>               m_finished_ids;
     std::atomic_bool            m_running;
 
@@ -35,8 +35,8 @@ public:
     fun_t               get     ( int task_id );
     void                done    ( int task_id );
 
-    template <typename function, typename ...Args>
-    int                 create  ( function fn, Args&&... args );
+    template <typename function_t, typename ...Args>
+    int                 push  ( function_t fn, Args&&... args );
     bool                isDone  ( int task_id );
     void                destroy ( int task_id );
 
@@ -47,14 +47,14 @@ public:
 
 
 
-template <typename function, typename ...Args>
+template <typename function_t, typename ...Args>
 int
-idk::ThreadPool::create( function fn, Args&&... args )
+idk::ThreadPool::push( function_t fn, Args&&... args )
 {
     std::unique_lock<std::mutex> lock(m_mutex);
 
     int task_id = m_tasks.create(std::bind(fn, args...));
-    m_task_ids.push(task_id);
+    m_task_queue.push(task_id);
 
     return task_id;
 };

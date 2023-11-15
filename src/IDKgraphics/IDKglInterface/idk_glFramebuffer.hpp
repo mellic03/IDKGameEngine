@@ -2,21 +2,24 @@
 
 #include "IDKcommon/IDKcommon.h"
 
-namespace idk {
+namespace idk
+{
     struct ColorAttachmentConfig;
     struct DepthAttachmentConfig;
-    class glFramebuffer;
+    class  glFramebuffer;
 };
 
 
 
 struct idk::ColorAttachmentConfig
 {
-    GLint  internalformat;
-    GLenum minfilter, magfilter;
-    GLenum wrap_s = GL_CLAMP_TO_EDGE;
-    GLenum wrap_t = GL_CLAMP_TO_EDGE;
-    GLenum datatype;
+    GLint  internalformat = GL_RGBA16F;
+    GLenum format         = GL_RGBA;
+    GLenum minfilter      = GL_NEAREST;
+    GLenum magfilter      = GL_LINEAR;
+    GLenum wrap_s         = GL_CLAMP_TO_EDGE;
+    GLenum wrap_t         = GL_CLAMP_TO_EDGE;
+    GLenum datatype       = GL_FLOAT;
 };
 
 
@@ -37,7 +40,6 @@ private:
 
 public:
     std::vector<GLuint>     attachments;
-
     bool has_depth = false;
     GLuint                  depth_attachment;
 

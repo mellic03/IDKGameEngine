@@ -100,12 +100,13 @@ private:
 
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
     static void    f_fbfb  ( glShader &, glFramebuffer &in );
-    static void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
     static void    tex2tex ( glShader &, glFramebuffer &a,  glFramebuffer &b, glFramebuffer &out );
     // ------------------------------------------------------------------------------------
 
 
 public:
+    static void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
+
     GLuint                              m_quad_VAO, m_quad_VBO;
     Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
     glFramebuffer                       m_dirlight_depthmap_buffer;
@@ -149,7 +150,7 @@ public:
 
     ModelManager &                      modelManager()  { return m_model_manager; };
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
-    void                                drawWireframe( GLuint shader_id, int model_id, Transform &transform );
+    void                                drawModel_now( glShader &program, int model_id, Transform &transform );
 
     GLuint                              createProgram( std::string name, std::string, std::string, std::string );
     glShader &                          getProgram( const std::string &name ) { return m_shaders[name]; };

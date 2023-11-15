@@ -91,7 +91,7 @@ idk::RenderEngine::compileShaders()
     createProgram("geometry_pass",   "IDKGE/shaders/deferred/", "geometrypass.vs", "geometrypass.fs");
     createProgram("lighting_pass",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass.fs");
     createProgram("dirvolumetrics",  "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
-    createProgram("gaussian",        "IDKGE/shaders/", "screenquad.vs", "postprocess/guassianblur.fs");
+    createProgram("gaussian",        "IDKGE/shaders/", "screenquad.vs", "postprocess/gaussian.fs");
     createProgram("additive",        "IDKGE/shaders/", "screenquad.vs", "postprocess/additive.fs");
     createProgram("chromatic",       "IDKGE/shaders/", "screenquad.vs", "postprocess/c-abberation.fs");
     createProgram("blit",            "IDKGE/shaders/", "screenquad.vs", "postprocess/blit.fs");
@@ -322,10 +322,16 @@ idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transfo
     m_model_draw_queue[shader_id].push({model_id, transform});
 }
 
+
 void
-idk::RenderEngine::drawWireframe( GLuint shader_id, int model_id, Transform &transform )
+idk::RenderEngine::drawModel_now( glShader &program, int model_id, Transform &transform )
 {
-    // m_wireframe_draw_queue[shader_id].push({model_id, transform});
+    drawmethods::draw_textured(
+        program,
+        modelManager().getModel(model_id),
+        transform,
+        modelManager().getMaterials()
+    );
 }
 
 
@@ -516,8 +522,6 @@ idk::RenderEngine::endFrame()
     m_deferred_geom_buffer.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_deferred_geom_buffer.bind();
 
-    // gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
-
     glShader &geometrypass = getProgram("geometry_pass");
     geometrypass.bind();
 
@@ -538,39 +542,10 @@ idk::RenderEngine::endFrame()
     m_model_draw_queue.clear();
     gl::bindVertexArray(0);
     // -------------------------------------------------------------------
-    gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
-
-
-    // Wireframe objects -------------------------------------------------
-    // gl::disable(GL_CULL_FACE);
-
-    // glShader &solid = getProgram("solid");
-    // solid.bind();
-    // solid.set_vec3("un_color", glm::vec3(1.0f));
-
-    // for (auto &[shader_id, vec]: m_wireframe_draw_queue)
-    // {
-    //     for (auto &[model_id, transform]: vec)
-    //     {
-    //         drawmethods::draw_wireframe(
-    //             solid,
-    //             modelManager().getModel(model_id),
-    //             transform
-    //         );
-    //     }
-    //     vec.clear();
-    // }
-    // solid.unbind();
-    // m_wireframe_draw_queue.clear();
-    // gl::enable(GL_CULL_FACE);
-    // gl::bindVertexArray(0);
-    // -----------------------------------------------------------------------------------------
-
+    
 
     // Background quad
     // -----------------------------------------------------------------------------------------
-
-
     glm::mat4 modelmat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.5f * camera.farPlane()));
     modelmat = glm::scale(modelmat, glm::vec3(300.0f, 300.0f, 1.0f));
 
@@ -581,7 +556,7 @@ idk::RenderEngine::endFrame()
 
     gl::drawArrays(GL_TRIANGLES, 0, 6);
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
-    
+
     background.unbind();
     // -----------------------------------------------------------------------------------------
 
@@ -598,11 +573,11 @@ idk::RenderEngine::endFrame()
 
     // Volumetric directional lights
     // -----------------------------------------------------------------------------------------
-    // glShader &dvol = m_shaders["dirvolumetrics"];
-    // dvol.bind();
-    // dvol.set_sampler2D("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
-    // tex2tex(dvol, m_deferred_geom_buffer,   m_scratchbufs0[1]);
-    // dvol.unbind();
+    glShader &dvol = m_shaders["dirvolumetrics"];
+    dvol.bind();
+    dvol.set_sampler2D("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
+    tex2tex(dvol, m_deferred_geom_buffer,   m_scratchbufs0[1]);
+    dvol.unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -611,7 +586,7 @@ idk::RenderEngine::endFrame()
     glShader &additive = getProgram("additive");
     additive.bind();
     additive.set_float("intensity", 1.0f);
-    tex2tex(additive, m_scratchbufs0[0], m_scratchbufs0[0], m_mainbuffer_1);
+    tex2tex(additive, m_scratchbufs0[0], m_scratchbufs0[1], m_mainbuffer_0);
     additive.unbind();
     // -----------------------------------------------------------------------------------------
 
@@ -624,27 +599,32 @@ idk::RenderEngine::endFrame()
     // tex2tex(m_additive_shader, m_scratchbuf1, m_scratchbuf3, m_scratchbuf2);
     // -----------------------------------------------------------------------------------------
 
+    glFramebuffer *buffer_a = &m_mainbuffer_0;
+    glFramebuffer *buffer_b = &m_mainbuffer_1;
 
     // Extract depth
     // -----------------------------------------------------------------------------------------
     glShader &getdepth = getProgram("getdepth");
-    // getdepth.bind();
-    // tex2tex(getdepth, m_deferred_geom_buffer, m_mainbuffer_0);
-    // getdepth.unbind();
+    getdepth.bind();
+    tex2tex(getdepth, m_deferred_geom_buffer, m_mainbuffer_0);
+    getdepth.unbind();
     // -----------------------------------------------------------------------------------------
 
     // Blit user framebuffers
     // -----------------------------------------------------------------------------------------
-    // glShader &blit = getProgram("blit");
-    // blit.bind();
-    // while (m_blit_queue.empty() == false)
-    // {
-    //     idk::glFramebuffer &framebuffer = m_blit_queue.front();
-    //     tex2tex(blit, framebuffer, m_mainbuffer_0, m_mainbuffer_1);
-    //     m_blit_queue.pop();
-    // }
-    // blit.unbind();
+    glShader &blit = getProgram("blit");
+    blit.bind();
+    while (m_blit_queue.empty() == false)
+    {
+        idk::glFramebuffer &framebuffer = m_blit_queue.front();
+        tex2tex(blit, framebuffer, *buffer_a, *buffer_b);
+        m_blit_queue.pop();
+
+        idk::swap(buffer_a, buffer_b);
+    }
+    blit.unbind();
     // -----------------------------------------------------------------------------------------
+
 
 
     // Chromatic aberration
@@ -654,7 +634,7 @@ idk::RenderEngine::endFrame()
     chromatic.set_vec2("un_r_offset", m_abbr_str*m_r_abbr);
     chromatic.set_vec2("un_g_offset", m_abbr_str*m_g_abbr);
     chromatic.set_vec2("un_b_offset", m_abbr_str*m_b_abbr);
-    tex2tex(chromatic, m_mainbuffer_1, m_mainbuffer_0);
+    tex2tex(chromatic, *buffer_a, *buffer_b);
     chromatic.unbind();
     // -----------------------------------------------------------------------------------------
 
@@ -665,7 +645,7 @@ idk::RenderEngine::endFrame()
     colorgrade.bind();
     colorgrade.set_float("un_gamma", m_gamma);
     colorgrade.set_float("un_exposure", m_exposure);
-    tex2tex(colorgrade, m_mainbuffer_0, m_mainbuffer_1);
+    tex2tex(colorgrade, *buffer_b, *buffer_a);
     colorgrade.unbind();
     // -----------------------------------------------------------------------------------------
 
@@ -674,7 +654,7 @@ idk::RenderEngine::endFrame()
     // -----------------------------------------------------------------------------------------
     glShader &fxaa = getProgram("fxaa");
     fxaa.bind();
-    f_fbfb(fxaa, m_mainbuffer_1);
+    f_fbfb(fxaa, *buffer_a);
     fxaa.unbind();
     // -----------------------------------------------------------------------------------------
 
@@ -699,7 +679,6 @@ idk::RenderEngine::resize( int w, int h )
 }
 
 
-
 /** Blit an idk::glFramebuffer onto the renderer's main framebuffer including depth.
  *  @note This is a mildly expensive operation, try to avoid.
 */
@@ -708,5 +687,4 @@ idk::RenderEngine::blitFramebuffer( const idk::glFramebuffer &fb )
 {
     m_blit_queue.push(fb);
 }
-
 

@@ -45,12 +45,12 @@ idk::ThreadPool::pop()
 {
     std::unique_lock<std::mutex> lock(m_mutex);
 
-    if (m_task_ids.empty())
+    if (m_task_queue.empty())
     {
         return nullid;
     }
 
-    int task_id = m_task_ids.front();  m_task_ids.pop();
+    int task_id = m_task_queue.front();  m_task_queue.pop();
 
     return task_id;
 };

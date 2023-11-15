@@ -9,6 +9,11 @@ namespace idk
     struct  Event;
     class   EventManager;
 
+    enum class RenderEvent: int
+    {
+        LIGHTSOURCE_CHANGE
+    };
+
     enum class WindowEvent: int
     {
         RESIZE,

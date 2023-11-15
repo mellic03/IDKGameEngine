@@ -44,21 +44,3 @@ idk::drawmethods::draw_untextured( glShader &program, Model &model, Transform &t
         gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
     }
 }
-
-
-void
-idk::drawmethods::draw_wireframe( glShader &program, Model &model, Transform &transform )
-{
-    glm::mat4 model_mat = transform.modelMatrix();
-    program.set_mat4("un_model", model_mat);
-
-    // glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    gl::bindVertexArray(model.VAO);
-    for (size_t i=0; i<model.meshes.size(); i++)
-    {
-        Mesh &mesh = model.meshes[i];
-        gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
-        gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
-    }
-    // glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-}

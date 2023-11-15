@@ -67,6 +67,8 @@ namespace idk::gl
     // ---------------------------------------------------------------------------------------
     void generateMipmap( GLenum target );
 
+    void pixelStorei( GLenum pname, GLint param );
+
 
     // Framebuffer stuff  --------------------------------------------------------------------
     void framebufferTexture2D( GLenum target, GLenum attachment, GLenum textarget,

@@ -19,12 +19,12 @@ void idk::gl::genTextures( GLsizei n, GLuint *textures )
     GLCALL( glGenTextures(n, textures); )
 }
 
-void idk::gl::genFramebuffers  ( GLsizei n, GLuint *framebuffers )
+void idk::gl::genFramebuffers( GLsizei n, GLuint *framebuffers )
 {
     GLCALL( glGenFramebuffers(n, framebuffers); )
 }
 
-void idk::gl::genRenderbuffers ( GLsizei n, GLuint *renderbuffers )
+void idk::gl::genRenderbuffers( GLsizei n, GLuint *renderbuffers )
 {
     GLCALL( glGenRenderbuffers(n, renderbuffers); )
 }
@@ -178,6 +178,12 @@ void idk::gl::generateMipmap( GLenum target )
 {
     GLCALL( glGenerateMipmap(target); )
 }
+
+void idk::gl::pixelStorei( GLenum pname, GLint param )
+{
+    GLCALL( glPixelStorei(pname, param); )
+}
+
 // ---------------------------------------------------------------------------------------
 
 
