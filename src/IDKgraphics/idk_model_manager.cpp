@@ -170,43 +170,30 @@ idk::ModelManager::_load_obj( std::string raw_obj )
 }
 
 
-void
-idk::ModelManager::loadIDKtex( std::string filepath, bool srgb )
-{
-    __tex_file_t tex;
-    filetools::tex_load(filepath, tex);
 
-    GLuint tex_id = gltools::loadTexture(tex.w, tex.h, tex.data, srgb);
-    _texture_IDs[filepath] = tex_id;
+void
+idk::ModelManager::loadTexture( std::string filepath, bool srgb )
+{
+    GLuint tex_id = gltools::loadTexture(filepath, srgb);
+
+    // Textures are referenced using their relative path
+    std::string relpath = std::filesystem::path(filepath).relative_path();
+    _texture_IDs[relpath] = tex_id;
 }
 
 
 void
-idk::ModelManager::loadIDKtexs( std::string root, bool srgb )
+idk::ModelManager::loadTextures( std::string path, bool srgb )
 {
     using namespace std;
 
-    filesystem::path rootpath(root);
+    filesystem::path rootpath(path);
     for (auto const &dir_entry: filesystem::recursive_directory_iterator{rootpath})
     {
         if (dir_entry.is_directory())
             continue;
 
-        loadIDKtex( dir_entry.path().string(), srgb );
-    }
-}
-
-
-void
-idk::ModelManager::loadIDKtexpak( std::string filepath, bool srgb )
-{
-    idk::__texpak_file_t texpak;
-    idk::filetools::texpak_load(filepath, texpak);
-
-    for (idk::__tex_file_t &tex: texpak.texfiles)
-    {
-        GLuint tex_id = gltools::loadTexture(tex.w, tex.h, tex.data, srgb);
-        _texture_IDs[tex.name] = tex_id;
+        loadTexture( dir_entry.path().string(), srgb );
     }
 }
 
