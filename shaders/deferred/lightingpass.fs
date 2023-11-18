@@ -19,6 +19,7 @@ uniform sampler2D un_texture_1;
 uniform sampler2D un_texture_2;
 uniform sampler2D un_texture_3;
 
+
 layout (std140, binding = 2) uniform UBO_camera_data
 {
     mat4 un_view;
@@ -26,23 +27,31 @@ layout (std140, binding = 2) uniform UBO_camera_data
     vec3 un_viewpos;
 };
 
-
 struct DirLight
 {
     vec4 direction;
     vec4 ambient;
     vec4 diffuse;
 };
-
-
-
 layout (std140, binding = 5) uniform UBO_dirlights
 {
     DirLight    un_dirlights[MAX_DIRLIGHTS];
     mat4        un_dirlight_matrices[MAX_DIRLIGHTS];
 };
-
 uniform sampler2D   un_dirlight_depthmaps[MAX_DIRLIGHTS];
+
+
+struct PointLight
+{
+    vec4 position;
+    vec4 ambient;
+    vec4 diffuse;
+    vec4 attenuation;
+};
+layout (std140, binding = 3) uniform UBO_pointlights
+{
+    PointLight  ubo_pointlights[MAX_POINTLIGHTS];
+};
 
 
 
@@ -102,6 +111,46 @@ vec3 dirlight_contribution( int idx, vec3 view_dir, vec3 position,
 
 
 
+vec3 pointlight_contribution( int idx, vec3 view_dir, vec3 position,
+                              vec3 normal, vec3 albedo, float spec,
+                              float spec_exponent )
+{
+    vec3 light_position = ubo_pointlights[idx].position.xyz;
+
+    vec3 light_ambient = ubo_pointlights[idx].ambient.xyz;
+    vec3 light_diffuse = ubo_pointlights[idx].diffuse.xyz;
+
+    float attenuation_constant = ubo_pointlights[idx].attenuation.x;
+    float attentuation_linear = ubo_pointlights[idx].attenuation.y;
+    float attentuation_quadratic = ubo_pointlights[idx].attenuation.z;
+
+
+    float d = distance(position, light_position);
+
+    vec3 frag_to_light = normalize(light_position - position);
+    float diffuse_f = max(dot(normal, frag_to_light), 0.0);
+
+    vec3 halfway_dir = normalize(frag_to_light + view_dir);  
+    float specular_f = pow(max(dot(normal, halfway_dir), 0.0), spec_exponent);
+
+    float attenuation = 1.0 / (
+          attenuation_constant
+        + attentuation_linear * d
+        + attentuation_quadratic * d*d
+    );
+
+    vec3 ambient  = attenuation * albedo * light_ambient;
+    vec3 diffuse  = attenuation * albedo * diffuse_f * light_diffuse;
+    vec3 specular = attenuation * diffuse * specular_f * 255*spec;
+
+    vec3 result = ambient + diffuse + specular;
+
+    return result;
+}
+
+
+
+
 void main()
 {
     vec4  albedospec = texture( un_texture_0, fsin_texcoords );
@@ -116,6 +165,16 @@ void main()
     vec3  view_dir   = normalize(un_viewpos - position);
 
     vec3 color = vec3(0.0);
+
+
+    for (int i=0; i<NUM_POINTLIGHTS; i++)
+    {
+        color += pointlight_contribution(
+            i,       view_dir,   position,
+            normal,  albedo,     specular,
+            spec_exp
+        );
+    }
 
 
     for (int i=0; i<NUM_DIRLIGHTS; i++)

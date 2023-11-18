@@ -23,7 +23,7 @@ idk::LightSystem::createLightsource( idk::lightsource type )
     {
         case lightsource::POINT:
             m_pointlights.push(idk::Pointlight());
-            return m_pointlights.size() - 1;
+            return  m_pointlights.size() - 1;
 
         case lightsource::SPOT:
             m_spotlights.push(idk::Spotlight());
@@ -31,12 +31,10 @@ idk::LightSystem::createLightsource( idk::lightsource type )
 
         case lightsource::DIR:
             const int id = m_dirlights.size();
-
-            m_dirlights.push_back(idk::Dirlight());
-            m_dirlight_shadowmaps.push_back(glFramebuffer());
+            m_dirlights.push(idk::Dirlight());
+            m_dirlight_shadowmaps.push(glFramebuffer());
             m_dirlight_shadowmaps[id].reset(2048, 2048, 1);
             m_dirlight_shadowmaps[id].colorAttachment(0, m_dirlight_config);
-
             return id;
     }
 
@@ -52,6 +50,19 @@ idk::LightSystem::destroyLightsource( idk::lightsource type, int id )
     switch (type)
     {
         case lightsource::POINT:
+            while (m_pointlights.size() > 0)
+            {
+                if (m_pointlights.size() - 1 != id)
+                {
+                    m_pointlights_temp.push(m_pointlights.pop());
+                }
+                else
+                {
+                   m_pointlights.pop();
+                }
+            }
+
+            idk::swap(m_pointlights, m_pointlights_temp);
         break;
 
         case lightsource::SPOT:     break;
@@ -61,13 +72,11 @@ idk::LightSystem::destroyLightsource( idk::lightsource type, int id )
             {
                 if (m_dirlights.size() - 1 != id)
                 {
-                    m_dirlights_temp.push_back(m_dirlights.back());
-                    m_dirlights.pop_back();
+                    m_dirlights_temp.push(m_dirlights.pop());
                 }
-
                 else
                 {
-                   m_dirlights.pop_back();
+                   m_dirlights.pop();
                 }
             }
 

@@ -61,7 +61,7 @@ private:
     // UBO ----------------------------------------------------
     /***/
     glUBO                               m_UBO_camera;
-    // glUBO                               m_UBO_pointlights;
+    glUBO                               m_UBO_pointlights;
     // glUBO                               m_UBO_spotlights;
     glUBO                               m_UBO_dirlights;
     // --------------------------------------------------------
@@ -88,6 +88,7 @@ private:
     /***/
     void                                f_update_UBO_camera();
     void                                f_update_UBO_dirlights();
+    void                                f_update_UBO_pointlights();
     void                                f_shadowpass_dirlights();
 
 

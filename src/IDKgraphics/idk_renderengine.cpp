@@ -175,20 +175,19 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
     m_resolution = glm::ivec2(w, h);
     f_init_SDL_OpenGL(name, w, h);
     f_init_screenquad();
+    f_init_framebuffers(w, h);
     m_lightsystem.init();
 
     RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
     RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
     RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
    
-    f_init_framebuffers(w, h);
     compileShaders();
-
 
     m_active_camera_id = createCamera();
 
     m_UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
-    // m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
+    m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
     // m_UBO_spotlights  = glUBO(4, 16 + IDK_MAX_SPOTLIGHTS*sizeof(Spotlight));
     m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
 
@@ -340,8 +339,8 @@ idk::RenderEngine::f_shadowpass_dirlights()
 
     glm::mat4 projection = glm::ortho(-ORTHO_W, ORTHO_W, -ORTHO_W, ORTHO_W, ORTHO_N, ORTHO_F);
 
-    std::vector<idk::Dirlight> &dirlights       = m_lightsystem.dirlights();
-    std::vector<idk::glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
+    idk::vector<idk::Dirlight> &dirlights       = m_lightsystem.dirlights();
+    idk::vector<idk::glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
 
     for (int i=0; i<dirlights.size(); i++)
     {
@@ -406,7 +405,7 @@ idk::RenderEngine::f_update_UBO_dirlights()
     idk::vector<glm::mat4> matrices(IDK_MAX_DIRLIGHTS);
 
     glm::mat4 projection = glm::ortho(-ORTHO_W, ORTHO_W, -ORTHO_W, ORTHO_W, ORTHO_N, ORTHO_F);
-    std::vector<idk::Dirlight> &dirlights = m_lightsystem.dirlights();
+    idk::vector<idk::Dirlight> &dirlights = m_lightsystem.dirlights();
 
     for (int i=0; i<dirlights.size(); i++)
     {
@@ -433,6 +432,26 @@ idk::RenderEngine::f_update_UBO_dirlights()
 
 
 void
+idk::RenderEngine::f_update_UBO_pointlights()
+{
+    idk::Camera &cam = getCamera();
+
+    idk::vector<Pointlight> &pointlights = m_lightsystem.pointlights();
+    idk::vector<Pointlight>  lights(IDK_MAX_POINTLIGHTS);
+
+    for (int i=0; i<pointlights.size(); i++)
+    {
+        lights[i] = pointlights[i];
+    }
+
+    m_UBO_pointlights.bind();
+    m_UBO_pointlights.add(IDK_MAX_DIRLIGHTS * sizeof(Pointlight),  lights.data());
+    m_UBO_pointlights.unbind();
+}
+
+
+
+void
 idk::RenderEngine::beginFrame()
 {
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -449,6 +468,7 @@ idk::RenderEngine::endFrame()
     {
         glShader &lighting = getProgram("lighting_pass");
         lighting.setDefinition("NUM_DIRLIGHTS", std::to_string(m_lightsystem.dirlights().size()));
+        lighting.setDefinition("NUM_POINTLIGHTS", std::to_string(m_lightsystem.pointlights().size()));
         lighting.compile();
     }
 
@@ -460,6 +480,7 @@ idk::RenderEngine::endFrame()
 
     f_update_UBO_camera();
     f_update_UBO_dirlights();
+    f_update_UBO_pointlights();
 
 
     idk::Camera &camera = getCamera();
@@ -513,7 +534,7 @@ idk::RenderEngine::endFrame()
     glShader &lighting = m_shaders["lighting_pass"];
     lighting.bind();
 
-    std::vector<glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
+    idk::vector<glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
 
     for (int i=0; i<m_lightsystem.dirlights().size(); i++)
     {

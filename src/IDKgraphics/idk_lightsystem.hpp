@@ -13,14 +13,14 @@ private:
     idk::vector<Pointlight>  m_pointlights;
     idk::vector<Spotlight>   m_spotlights;
 
-    std::vector<Dirlight>           m_dirlights;
-    std::vector<glFramebuffer>      m_dirlight_shadowmaps;
+    idk::vector<Dirlight>           m_dirlights;
+    idk::vector<glFramebuffer>      m_dirlight_shadowmaps;
     ColorAttachmentConfig           m_dirlight_config;
 
 
-    std::vector<Pointlight>     m_pointlights_temp;
-    std::vector<Spotlight>      m_spotlights_temp;
-    std::vector<Dirlight>       m_dirlights_temp;
+    idk::vector<Pointlight>     m_pointlights_temp;
+    idk::vector<Spotlight>      m_spotlights_temp;
+    idk::vector<Dirlight>       m_dirlights_temp;
 
     bool m_changed = true;
 
@@ -38,10 +38,9 @@ public:
     void            destroyLightsource ( idk::lightsource type, int id );
 
 
-    // Allocator<Pointlight> & pointlights () { return m_pointlights; };
-    // Allocator<Spotlight>  & spotlights  () { return m_spotlights;  };
-    std::vector<Dirlight>  &        dirlights  () { return m_dirlights;           };
-    std::vector<glFramebuffer>  &   shadowmaps () { return m_dirlight_shadowmaps; };
+    idk::vector<Pointlight> &       pointlights () { return m_pointlights;         };
+    idk::vector<Dirlight>   &       dirlights   () { return m_dirlights;           };
+    idk::vector<glFramebuffer>  &   shadowmaps  () { return m_dirlight_shadowmaps; };
 
 
     /** True if the number of lightsources have changed since the last call to changed(). */
