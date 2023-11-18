@@ -2,6 +2,10 @@
 
 #include <glm/glm.hpp>
 
+#include <iostream>
+#include <string>
+
+
 namespace idk
 {
     template <typename T> T         min( T, T );
@@ -10,6 +14,12 @@ namespace idk
     template <typename T> void      swap( T&, T& );
                           int       roundup( int n, int multipleof );
                           float     distanceSq( glm::vec3 a, glm::vec3 b );
+
+
+    template <typename T, typename... Args>
+    void    print( std::string sep, T head, Args... );
+    void    print( std::string sep );
+
 };
 
 
@@ -44,3 +54,13 @@ idk::swap( T&a, T&b )
     a = b;
     b = temp;
 }
+
+
+
+template <typename T, typename... Args> void
+idk::print( std::string sep, T head, Args... rest )
+{
+    std::cout << head << sep;
+    idk::print(sep, rest...);
+}
+

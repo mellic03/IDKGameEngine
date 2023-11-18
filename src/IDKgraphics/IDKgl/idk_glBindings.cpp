@@ -277,6 +277,12 @@ idk::gl::useProgram( GLuint program )
     GLCALL( glUseProgram(program); )
 }
 
+void
+idk::gl::deleteProgram( GLuint program )
+{
+    GLCALL( glDeleteProgram(program); )
+}
+
 
 void
 idk::gl::clearColor( float r, float g, float b, float a )

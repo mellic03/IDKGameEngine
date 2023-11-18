@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IDKmodel/IDKmodel.h"
-#include "IDKglInterface/IDKglInterface.hpp"
+#include "IDKgl/IDKgl.hpp"
 
 
 namespace idk { class ModelManager; };

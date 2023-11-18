@@ -39,9 +39,8 @@ private:
     std::vector<GLuint> m_gl_attachments;
 
 public:
-    std::vector<GLuint>     attachments;
-    bool has_depth = false;
-    GLuint                  depth_attachment;
+    std::vector<GLuint> attachments;
+    GLuint              depth_attachment;
 
     void    reset( int w, int h, size_t num_attachments );
     void    colorAttachment( int idx, const idk::ColorAttachmentConfig &config );

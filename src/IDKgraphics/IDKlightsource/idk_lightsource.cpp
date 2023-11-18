@@ -1,4 +1,4 @@
-#include "idk_lightsource.h"
+#include "idk_lightsource.hpp"
 
 
 idk::Pointlight::Pointlight():
@@ -25,7 +25,8 @@ idk::Spotlight::Spotlight():
 
 idk::Dirlight::Dirlight():
     direction   ( 0.63f, -1.0f, -1.0f, 0.0f ),
-    ambient     ( 25.0f / 255.0f,  25.0f  / 255.0f,   12.0f / 255.0f,  0.0f ),
+    // ambient     ( 25.0f / 255.0f,  25.0f  / 255.0f,   12.0f / 255.0f,  0.0f ),
+    ambient     ( 0.0f ),
     diffuse     ( 255.0f / 255.0f,  225.0f / 255.0f,  125.0f / 255.0f,  0.0f )
 {
     direction = glm::normalize(direction);

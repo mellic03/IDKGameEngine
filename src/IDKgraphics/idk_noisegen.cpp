@@ -1,6 +1,6 @@
 #include "idk_noisegen.hpp"
 
-#include "IDKglInterface/IDKglInterface.hpp"
+#include "IDKgl/IDKgl.hpp"
 #include <vector>
 
 

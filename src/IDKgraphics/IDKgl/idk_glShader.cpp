@@ -6,7 +6,21 @@
 #include <iostream>
 
 
+std::vector<std::string> tokenize( std::string str, size_t num_tokens=~0 )
+{
+    std::vector<std::string> tokens;
 
+    std::stringstream ss(str);
+    std::string token;
+
+    while (ss >> token && num_tokens > 0)
+    {
+        tokens.push_back(token);
+        num_tokens -= 1;
+    }
+
+    return tokens;
+}
 
 static bool
 _line_has_include( std::string &line )
@@ -39,6 +53,29 @@ idk::glShader::parse_shader_include( std::string root, std::string includeline )
     std::ifstream instream(includepath);
     while (getline(instream, line))
     {
+        auto tokens = tokenize(line);
+
+        if (tokens.size() > 0 && tokens[0] == "#version")
+        {
+            m_version = line + "\n";
+            continue;
+        }
+
+        if (tokens.size() == 3 && tokens[0] == "uniform")
+        {
+            if (tokens[2].back() == ';')
+                tokens[2].pop_back();
+
+            m_uniforms.emplace(tokens[2]);
+        }
+
+        else if (tokens.size() > 0 && tokens[0] == "#define")
+        {
+            m_definitions[tokens[1]].value = line.substr(tokens[0].length() + tokens[1].length() + 1);
+            continue;
+        }
+
+
         if (_line_has_include(line))
             src += parse_shader_include(root, line);
         else
@@ -47,21 +84,6 @@ idk::glShader::parse_shader_include( std::string root, std::string includeline )
     return src;
 }
 
-std::vector<std::string> tokenize( std::string str, size_t num_tokens=~0 )
-{
-    std::vector<std::string> tokens;
-
-    std::stringstream ss(str);
-    std::string token;
-
-    while (ss >> token && num_tokens > 0)
-    {
-        tokens.push_back(token);
-        num_tokens -= 1;
-    }
-
-    return tokens;
-}
 
 
 std::string
@@ -209,6 +231,7 @@ idk::glShader::compile()
     std::string vert_src = m_version + defines + m_vert_src;
     std::string frag_src = m_version + defines + m_frag_src;
 
+    gl::deleteProgram(m_program_id);
     m_program_id = compileProgram(vert_src, frag_src);
 
     for (auto &name: m_uniforms)
@@ -224,6 +247,13 @@ GLint
 idk::glShader::uniformLoc( const std::string &name )
 {
     GLint location = m_locations[name].value;
+
+
+    // If -1, uniform may have been missed during parsing.
+    if (location == -1)
+    {
+        return gl::getUniformLocation(m_program_id, name);
+    }
 
     // #ifdef IDK_DEBUG
     //     if (location == -1)
@@ -259,7 +289,9 @@ idk::glShader::bind()
 void
 idk::glShader::unbind()
 {
+    #ifdef IDK_DEBUG
     gl::useProgram(0);
+    #endif
 }
 
 
@@ -330,12 +362,13 @@ idk::glShader::set_sampler2D( std::string name, GLuint texture_id )
     }
 
     #ifdef IDK_DEBUG
-        if (m_texture_unit > GL_TEXTURE0 + 32)
+        if (m_texture_unit - GL_TEXTURE0 > 32)
         {
             std::cout << "[idk::glShader::set_sampler2D] m_texture_unit > GL_TEXTURE0 + 32\n";
             exit(1);
         }
     #endif
+
     GLint loc = uniformLoc(name);
 
     gl::activeTexture(m_texture_unit);
@@ -350,7 +383,7 @@ void
 idk::glShader::set_sampler3D( std::string name, GLuint texture_id )
 {
     #ifdef IDK_DEBUG
-        if (m_texture_unit > GL_TEXTURE0 + 32)
+        if (m_texture_unit - GL_TEXTURE0 > GL_TEXTURE0 + 32)
         {
             std::cout << "[idk::glShader::set_sampler3D] m_texture_unit > GL_TEXTURE0 + 32\n";
             exit(1);

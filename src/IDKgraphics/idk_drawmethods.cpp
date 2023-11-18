@@ -26,6 +26,8 @@ idk::drawmethods::draw_textured( glShader &program, Model &model, Transform &tra
 
         gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
         gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
+
+        program.popTextureUnits();
     }
 }
 
@@ -42,5 +44,7 @@ idk::drawmethods::draw_untextured( glShader &program, Model &model, Transform &t
         Mesh &mesh = model.meshes[i];
         gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.IBO);
         gl::drawElements(GL_TRIANGLES, mesh.vertex_indices.size(), GL_UNSIGNED_INT, 0);
+
+        program.popTextureUnits();
     }
 }

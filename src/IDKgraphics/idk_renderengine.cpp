@@ -90,7 +90,14 @@ idk::RenderEngine::compileShaders()
     createProgram("background",      "IDKGE/shaders/deferred/", "background.vs", "background.fs");
     createProgram("geometry_pass",   "IDKGE/shaders/deferred/", "geometrypass.vs", "geometrypass.fs");
     createProgram("lighting_pass",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass.fs");
-    createProgram("dirvolumetrics",  "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
+
+    glShader &program = getProgram("lighting_pass");
+    program.setDefinition("MAX_POINTLIGHTS", std::to_string(IDK_MAX_POINTLIGHTS));
+    program.setDefinition("MAX_SPOTLIGHTS",  std::to_string(IDK_MAX_SPOTLIGHTS));
+    program.setDefinition("MAX_DIRLIGHTS",   std::to_string(IDK_MAX_DIRLIGHTS));
+    program.compile();
+
+    // createProgram("dirvolumetrics",  "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
     createProgram("gaussian",        "IDKGE/shaders/", "screenquad.vs", "postprocess/gaussian.fs");
     createProgram("additive",        "IDKGE/shaders/", "screenquad.vs", "postprocess/additive.fs");
     createProgram("chromatic",       "IDKGE/shaders/", "screenquad.vs", "postprocess/c-abberation.fs");
@@ -98,13 +105,13 @@ idk::RenderEngine::compileShaders()
     createProgram("fxaa",            "IDKGE/shaders/", "screenquad.vs", "postprocess/fxaa.fs");
     createProgram("getdepth",        "IDKGE/shaders/", "screenquad.vs", "postprocess/getdepth.fs");
     createProgram("colorgrade",      "IDKGE/shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
-    createProgram("dirshadow",       "IDKGE/shaders/", "dirshadow.vs",  "dirshadow.fs");
+    createProgram("dir_shadow",      "IDKGE/shaders/", "dirshadow.vs",  "dirshadow.fs");
     createProgram("solid",           "IDKGE/shaders/", "vsin_pos_only.vs", "solid.fs");
 }
 
 
 void
-idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
+idk::RenderEngine::f_init_framebuffers( int w, int h )
 {
     idk::ColorAttachmentConfig config = {
         .internalformat = GL_RGBA16F,
@@ -152,9 +159,6 @@ idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
     m_volumetrics_buffer.reset(w/4, h/4, 1);
     m_volumetrics_buffer.colorAttachment(0, config);
 
-    m_dirlight_depthmap_buffer.reset(4096, 4096, 1);
-    m_dirlight_depthmap_buffer.colorAttachment(0, config);
-
     m_mainbuffer_0.reset(w, h, 2);
     m_mainbuffer_0.colorAttachment(0, config);
     m_mainbuffer_0.colorAttachment(1, config);
@@ -162,8 +166,6 @@ idk::RenderEngine::f_gen_idk_framebuffers( int w, int h )
     m_mainbuffer_1.reset(w, h, 1);
     m_mainbuffer_1.colorAttachment(0, config);
 
-    // m_depthbuffer.reset(w, h, 0);
-    // m_depthbuffer.depthAttachment(depth_config);
 }
 
 
@@ -173,21 +175,22 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
     m_resolution = glm::ivec2(w, h);
     f_init_SDL_OpenGL(name, w, h);
     f_init_screenquad();
+    m_lightsystem.init();
 
     RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
     RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
     RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
    
-    f_gen_idk_framebuffers(w, h);
+    f_init_framebuffers(w, h);
     compileShaders();
 
 
     m_active_camera_id = createCamera();
 
     m_UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + sizeof(glm::vec4));
-    m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
-    m_UBO_spotlights  = glUBO(4, 16 + IDK_MAX_SPOTLIGHTS*sizeof(Spotlight));
-    m_UBO_dirlights   = glUBO(5, 16 + IDK_MAX_DIRLIGHTS*sizeof(Dirlight) + IDK_MAX_DIRLIGHTS*sizeof(glm::mat4));
+    // m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
+    // m_UBO_spotlights  = glUBO(4, 16 + IDK_MAX_SPOTLIGHTS*sizeof(Spotlight));
+    m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
 
     worley_texture = noisegen3D::worley(64);
     whitenoise     = noisegen3D::white(256, 256, 64);
@@ -205,13 +208,10 @@ idk::RenderEngine::createProgram( std::string name, std::string root, std::strin
 void
 idk::RenderEngine::f_fbfb( glShader &program, glFramebuffer &in )
 {
-    in.unbind();
+    gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
 
     for (size_t i=0; i < in.attachments.size(); i++)
         program.set_sampler2D("un_texture_" + std::to_string(i), in.attachments[i]);
-
-    program.set_sampler2D("un_depth", in.depth_attachment);
-
 
     gl::drawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -293,33 +293,18 @@ idk::RenderEngine::createCamera()
 }
 
 
-int
-idk::RenderEngine::createPointlight()
-{
-    return m_pointlight_allocator.create();
-}
-
-
-int
-idk::RenderEngine::createSpotlight()
-{
-    return m_spotlight_allocator.create();
-}
-
-
-int
-idk::RenderEngine::createDirlight()
-{
-    m_dirlight_shadowmap_allocator.create();
-    m_dirlight_lightspacematrix_allocator.create();
-    return m_dirlight_allocator.create();
-}
-
 
 void
 idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transform )
 {
     m_model_draw_queue[shader_id].push({model_id, transform});
+}
+
+
+void
+idk::RenderEngine::drawShadowCaster( int model_id, Transform &transform )
+{
+    m_shadowcast_queue.push({model_id, transform});
 }
 
 
@@ -345,31 +330,33 @@ idk::RenderEngine::drawModel_now( glShader &program, int model_id, Transform &tr
 void
 idk::RenderEngine::f_shadowpass_dirlights()
 {
-    m_dirlight_depthmap_buffer.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    idk::Camera &cam = getCamera();
 
-    idk::glShader &program = getProgram("dirshadow");
+    idk::glShader &program = getProgram("dir_shadow");
     program.bind();
 
-
-    RenderEngine &ren = *this;
-    auto &queue = m_model_draw_queue;
-    auto &depthmaps = m_dirlight_shadowmap_allocator;
-    auto &framebuffer = m_dirlight_depthmap_buffer;
+    auto &queue  = m_model_draw_queue;
     auto quadVAO = m_quad_VAO;
 
-    int i = 0;
-    dirlights().for_each(
-    [&i, &ren, &queue, &depthmaps, &framebuffer, quadVAO, &program](int light_id, Dirlight &light)
+    glm::mat4 projection = glm::ortho(-ORTHO_W, ORTHO_W, -ORTHO_W, ORTHO_W, ORTHO_N, ORTHO_F);
+
+    std::vector<idk::Dirlight> &dirlights       = m_lightsystem.dirlights();
+    std::vector<idk::glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
+
+    for (int i=0; i<dirlights.size(); i++)
     {
-        glm::mat4 projection = glm::ortho(-ORTHO_W, ORTHO_W, -ORTHO_W, ORTHO_W, ORTHO_N, ORTHO_F);
+        shadowmaps[i].clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        const glm::vec3 dir = glm::normalize(glm::vec3(dirlights[i].direction));
+        dirlights[i].direction = glm::vec4(dir, 0.0f);
+
         glm::mat4 view = glm::lookAt(
-            ren.getCamera().transform().position() - (ORTHO_R*ORTHO_F)*glm::normalize(glm::vec3(light.direction)),
-            glm::vec3(0.0f) + ren.getCamera().transform().position(),
+            cam.transform().position() - ORTHO_R*ORTHO_F*dir,
+            glm::vec3(0.0f) + cam.transform().position(),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
 
-        glm::mat4 lightspacematrix = projection * view;
-        program.set_mat4("un_lightspacematrix", lightspacematrix);
+        program.set_mat4("un_lightspacematrix", projection * view);
 
 
         glm::mat4 modelmat = glm::scale(glm::mat4(1.0f), glm::vec3(300.0f, 300.0f, 1.0f));
@@ -381,21 +368,18 @@ idk::RenderEngine::f_shadowpass_dirlights()
         gl::bindVertexArray(0);
 
 
-        for (auto &[shader_id, vec]: queue)
+        for (auto &[model_id, transform]: m_shadowcast_queue)
         {
-            for (auto &[model_id, transform]: vec)
-            {
-                drawmethods::draw_untextured(
-                    program,
-                    ren.modelManager().getModel(model_id),
-                    transform
-                );
-            }
+            drawmethods::draw_untextured(
+                program,
+                modelManager().getModel(model_id),
+                transform
+            );
         }
+    
+        shadowmaps[i].unbind();
+    }
 
-        depthmaps.get(light_id) = framebuffer.attachments[0];
-        i += 1;
-    });
 
     program.unbind();
 }
@@ -414,82 +398,36 @@ idk::RenderEngine::f_update_UBO_camera()
 
 
 void
-idk::RenderEngine::f_update_UBO_pointlights()
-{
-    int num_pointlights = pointlights().size();
-
-    std::vector<idk::Pointlight> lights;
-    pointlights().for_each(
-        [&lights](Pointlight &light)
-        {
-            lights.push_back(light);
-        }
-    );
-    lights.resize(IDK_MAX_POINTLIGHTS);
-
-    m_UBO_pointlights.bind();
-    m_UBO_pointlights.add<int>(&num_pointlights);
-    m_UBO_pointlights.add(sizeof(Pointlight)*IDK_MAX_SPOTLIGHTS, &(lights[0]));
-    m_UBO_pointlights.unbind();
-}
-
-
-void
-idk::RenderEngine::f_update_UBO_spotlights()
-{
-    int num_spotlights = spotlights().size();
-
-    idk::vector<idk::Spotlight> lights;
-    spotlights().for_each(
-        [&lights](Spotlight &light)
-        {
-            lights.push(light);
-        }
-    );
-    lights.resize(IDK_MAX_SPOTLIGHTS);
-
-    m_UBO_spotlights.bind();
-    m_UBO_spotlights.add<int>(&num_spotlights);
-    m_UBO_spotlights.add(sizeof(Spotlight)*IDK_MAX_SPOTLIGHTS, lights.data());
-    m_UBO_spotlights.unbind();
-}
-
-
-void
 idk::RenderEngine::f_update_UBO_dirlights()
 {
-    int num_dirlights = dirlights().size();
+    idk::Camera &cam = getCamera();
 
-    idk::vector<idk::Dirlight> lights;
-    idk::vector<glm::mat4> matrices;
+    idk::vector<Dirlight>  lights(IDK_MAX_DIRLIGHTS);
+    idk::vector<glm::mat4> matrices(IDK_MAX_DIRLIGHTS);
 
-    idk::Camera &camera = getCamera();
+    glm::mat4 projection = glm::ortho(-ORTHO_W, ORTHO_W, -ORTHO_W, ORTHO_W, ORTHO_N, ORTHO_F);
+    std::vector<idk::Dirlight> &dirlights = m_lightsystem.dirlights();
 
-    dirlights().for_each(
-        [&lights, &matrices, &camera](Dirlight &light)
-        {
-            lights.push(light);
+    for (int i=0; i<dirlights.size(); i++)
+    {
+        const glm::vec3 dir = glm::normalize(glm::vec3(dirlights[i].direction));
+        dirlights[i].direction = glm::vec4(dir, 0.0f);
 
-            glm::mat4 projection = glm::ortho(-ORTHO_W, ORTHO_W, -ORTHO_W, ORTHO_W, ORTHO_N, ORTHO_F);
-            glm::mat4 view = glm::lookAt(
-                camera.transform().position() - (ORTHO_R*ORTHO_F)*glm::normalize(glm::vec3(light.direction)),
-                glm::vec3(0.0f) + camera.transform().position(),
-                glm::vec3(0.0f, 1.0f, 0.0f)
-            );
-
-            glm::mat4 lightspacematrix = projection * view;
-            matrices.push(lightspacematrix);
-        }
-    );
+        glm::mat4 view = glm::lookAt(
+            cam.transform().position() - ORTHO_R*ORTHO_F*dir,
+            glm::vec3(0.0f) + cam.transform().position(),
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
 
 
-    lights.resize(IDK_MAX_DIRLIGHTS);
-    matrices.resize(IDK_MAX_DIRLIGHTS);
+        lights[i]   = dirlights[i];
+        matrices[i] = projection * view;
+    }
+
 
     m_UBO_dirlights.bind();
-    m_UBO_dirlights.add<int>(&num_dirlights);
-    m_UBO_dirlights.add(sizeof(Dirlight)*IDK_MAX_DIRLIGHTS, lights.data());
-    m_UBO_dirlights.add(sizeof(glm::mat4)*IDK_MAX_DIRLIGHTS, matrices.data());
+    m_UBO_dirlights.add(IDK_MAX_DIRLIGHTS * sizeof(Dirlight),  lights.data());
+    m_UBO_dirlights.add(IDK_MAX_DIRLIGHTS * sizeof(glm::mat4), matrices.data());
     m_UBO_dirlights.unbind();
 }
 
@@ -507,18 +445,27 @@ idk::RenderEngine::beginFrame()
 void
 idk::RenderEngine::endFrame()
 {
+    if (m_lightsystem.changed())
+    {
+        glShader &lighting = getProgram("lighting_pass");
+        lighting.setDefinition("NUM_DIRLIGHTS", std::to_string(m_lightsystem.dirlights().size()));
+        lighting.compile();
+    }
+
     gl::disable(GL_CULL_FACE);
     f_shadowpass_dirlights();
+    m_shadowcast_queue.clear();
     gl::enable(GL_CULL_FACE);
 
+
     f_update_UBO_camera();
-    f_update_UBO_pointlights();
-    f_update_UBO_spotlights();
     f_update_UBO_dirlights();
+
 
     idk::Camera &camera = getCamera();
 
-    // Deferred geometry pass --------------------------------------------
+    // Deferred geometry pass
+    // -----------------------------------------------------------------------------------------
     m_deferred_geom_buffer.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_deferred_geom_buffer.bind();
 
@@ -541,7 +488,7 @@ idk::RenderEngine::endFrame()
     geometrypass.unbind();
     m_model_draw_queue.clear();
     gl::bindVertexArray(0);
-    // -------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
     
 
     // Background quad
@@ -565,64 +512,67 @@ idk::RenderEngine::endFrame()
     // -----------------------------------------------------------------------------------------
     glShader &lighting = m_shaders["lighting_pass"];
     lighting.bind();
-    lighting.set_sampler2D("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
-    tex2tex(lighting, m_deferred_geom_buffer, m_scratchbufs0[0]);
+
+    std::vector<glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
+
+    for (int i=0; i<m_lightsystem.dirlights().size(); i++)
+    {
+        lighting.set_sampler2D(
+            "un_dirlight_depthmaps[" + std::to_string(i) + "]", shadowmaps[i].attachments[0]
+        );
+    }
+
+    tex2tex(lighting, m_deferred_geom_buffer, m_mainbuffer_0);
+
+    lighting.popTextureUnits();
     lighting.unbind();
     // -----------------------------------------------------------------------------------------
 
 
     // Volumetric directional lights
     // -----------------------------------------------------------------------------------------
-    glShader &dvol = m_shaders["dirvolumetrics"];
-    dvol.bind();
-    dvol.set_sampler2D("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
-    tex2tex(dvol, m_deferred_geom_buffer,   m_scratchbufs0[1]);
-    dvol.unbind();
+    // glShader &dvol = m_shaders["dirvolumetrics"];
+    // dvol.bind();
+    // dvol.set_sampler2D("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
+    // tex2tex(dvol, m_deferred_geom_buffer,   m_scratchbufs0[1]);
+    // dvol.unbind();
     // -----------------------------------------------------------------------------------------
 
 
     // Combine geometry and volumetrics
     // -----------------------------------------------------------------------------------------
-    glShader &additive = getProgram("additive");
-    additive.bind();
-    additive.set_float("intensity", 1.0f);
-    tex2tex(additive, m_scratchbufs0[0], m_scratchbufs0[1], m_mainbuffer_0);
-    additive.unbind();
+    // glShader &additive = getProgram("additive");
+    // additive.bind();
+    // additive.set_float("intensity", 1.0f);
+    // tex2tex(additive, m_scratchbufs0[0], m_scratchbufs0[1], m_mainbuffer_0);
+    // additive.unbind();
     // -----------------------------------------------------------------------------------------
 
-
-    // SSR
-    // -----------------------------------------------------------------------------------------
-    // tex2tex(m_SSR_shader, m_deferred_geom_buffer, m_scratchbuf1, m_scratchbuf0_d2);
-    // gltools::useProgram(m_additive_shader);
-    // gltools::setUniform_float("intensity", 1.0f);
-    // tex2tex(m_additive_shader, m_scratchbuf1, m_scratchbuf3, m_scratchbuf2);
-    // -----------------------------------------------------------------------------------------
 
     glFramebuffer *buffer_a = &m_mainbuffer_0;
     glFramebuffer *buffer_b = &m_mainbuffer_1;
 
     // Extract depth
     // -----------------------------------------------------------------------------------------
-    glShader &getdepth = getProgram("getdepth");
-    getdepth.bind();
-    tex2tex(getdepth, m_deferred_geom_buffer, m_mainbuffer_0);
-    getdepth.unbind();
+    // glShader &getdepth = getProgram("getdepth");
+    // getdepth.bind();
+    // tex2tex(getdepth, m_deferred_geom_buffer, m_mainbuffer_0);
+    // getdepth.unbind();
     // -----------------------------------------------------------------------------------------
 
     // Blit user framebuffers
     // -----------------------------------------------------------------------------------------
-    glShader &blit = getProgram("blit");
-    blit.bind();
-    while (m_blit_queue.empty() == false)
-    {
-        idk::glFramebuffer &framebuffer = m_blit_queue.front();
-        tex2tex(blit, framebuffer, *buffer_a, *buffer_b);
-        m_blit_queue.pop();
-
-        idk::swap(buffer_a, buffer_b);
-    }
-    blit.unbind();
+    // glShader &blit = getProgram("blit");
+    // blit.bind();
+    // while (m_blit_queue.empty() == false)
+    // {
+    //     idk::glFramebuffer &framebuffer = m_blit_queue.front();
+    //     tex2tex(blit, framebuffer, *buffer_a, *buffer_b);
+    //     m_blit_queue.pop();
+    //
+    //     idk::swap(buffer_a, buffer_b);
+    // }
+    // blit.unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -655,7 +605,6 @@ idk::RenderEngine::endFrame()
     glShader &fxaa = getProgram("fxaa");
     fxaa.bind();
     f_fbfb(fxaa, *buffer_a);
-    fxaa.unbind();
     // -----------------------------------------------------------------------------------------
 
     gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
@@ -674,7 +623,7 @@ void
 idk::RenderEngine::resize( int w, int h )
 {
     m_resolution.x = w;  m_resolution.y = h;
-    f_gen_idk_framebuffers(w, h);
+    f_init_framebuffers(w, h);
     getCamera().aspect(w, h);
 }
 
@@ -685,6 +634,7 @@ idk::RenderEngine::resize( int w, int h )
 void
 idk::RenderEngine::blitFramebuffer( const idk::glFramebuffer &fb )
 {
+
     m_blit_queue.push(fb);
 }
 

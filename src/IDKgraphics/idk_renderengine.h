@@ -6,17 +6,18 @@
 #include "IDKcommon/IDKcommon.h"
 
 #include "idk_model_manager.h"
-#include "IDKglInterface/IDKglInterface.hpp"
+#include "IDKgl/IDKgl.hpp"
 #include "idk_drawmethods.h"
 
 #include "idk_camera.h"
-#include "IDKlightsource/IDKlightsource.h"
+#include "IDKlightsource/IDKlightsource.hpp"
+#include "idk_lightsystem.hpp"
 #include "primitives/primitives.h"
 #include "idk_noisegen.hpp"
 
 #define IDK_MAX_POINTLIGHTS 10
 #define IDK_MAX_SPOTLIGHTS 10
-#define IDK_MAX_DIRLIGHTS 3
+#define IDK_MAX_DIRLIGHTS 10
 
 
 namespace idk { class RenderEngine; };
@@ -35,7 +36,6 @@ private:
     /***/
     static const size_t                 NUM_SCRATCH_BUFFERS     = 4;
     static const size_t                 ATTACHMENTS_PER_BUFFER  = 1;
-    static const size_t                 GBUFFER_NUM_ATTACHMETNS = 4;
 
     std::vector<glFramebuffer>          m_scratchbufs0;
     std::vector<glFramebuffer>          m_scratchbufs1;
@@ -61,8 +61,8 @@ private:
     // UBO ----------------------------------------------------
     /***/
     glUBO                               m_UBO_camera;
-    glUBO                               m_UBO_pointlights;
-    glUBO                               m_UBO_spotlights;
+    // glUBO                               m_UBO_pointlights;
+    // glUBO                               m_UBO_spotlights;
     glUBO                               m_UBO_dirlights;
     // --------------------------------------------------------
 
@@ -70,31 +70,24 @@ private:
     int                                 m_active_camera_id;
     Allocator<Camera>                   m_camera_allocator;
     ModelManager                        m_model_manager;
-    Allocator<Pointlight>               m_pointlight_allocator;
-    Allocator<Spotlight>                m_spotlight_allocator;
+    idk::LightSystem                    m_lightsystem;
 
-    Allocator<Dirlight>                 m_dirlight_allocator;
-    Allocator<glm::mat4>                m_dirlight_lightspacematrix_allocator;
 
     modelqueue_t                        m_model_draw_queue;
     modelqueue_t                        m_wireframe_draw_queue;
+    idk::vector<pair<int, Transform>>   m_shadowcast_queue;
 
     // Initialization ---------------------------------------------------------------------
     /***/
     void                                f_init_SDL_OpenGL( std::string windowname, size_t w, size_t h );
     void                                f_init_screenquad();
-    void                                f_gen_idk_framebuffers( int width, int height );
+    void                                f_init_framebuffers( int width, int height );
     // ------------------------------------------------------------------------------------
 
     // Draw-related methods ---------------------------------------------------------------
     /***/
     void                                f_update_UBO_camera();
-    void                                f_update_UBO_pointlights();
-    void                                f_update_UBO_spotlights();
     void                                f_update_UBO_dirlights();
-    
-    void                                f_shadowpass_pointlights();
-    void                                f_shadowpass_spotlights();
     void                                f_shadowpass_dirlights();
 
 
@@ -108,9 +101,7 @@ public:
     static void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
 
     GLuint                              m_quad_VAO, m_quad_VBO;
-    Allocator<GLuint>                   m_dirlight_shadowmap_allocator;
-    glFramebuffer                       m_dirlight_depthmap_buffer;
-    GLuint solid_shader;
+    GLuint                              solid_shader;
 
     float                               m_bloom_intensity=0.0f, m_gamma=2.2f, m_exposure=1.0f;
     void                                setBloomIntensity(float f) { m_bloom_intensity = f; };
@@ -121,9 +112,6 @@ public:
     glm::vec2 m_b_abbr = glm::vec2(0.0f);
     float m_abbr_str = 0.0f;
 
-    // Built-in shaders -------------------------------------------------------------------
-    /***/
-    // ------------------------------------------------------------------------------------
 
     // Built-in primitives ----------------------------------------------------------------
     /***/
@@ -140,16 +128,11 @@ public:
     int                                 createCamera();
     idk::Camera &                       getCamera()     { return m_camera_allocator.get(m_active_camera_id); };
 
-    int                                 createPointlight();
-    int                                 createSpotlight();
-    int                                 createDirlight();
-
-    Allocator<Pointlight> &             pointlights()   { return m_pointlight_allocator; };
-    Allocator<Spotlight> &              spotlights()    { return m_spotlight_allocator; };
-    Allocator<Dirlight> &               dirlights()     { return m_dirlight_allocator; };
-
+    idk::LightSystem &                  lightSystem()   { return m_lightsystem; };
     ModelManager &                      modelManager()  { return m_model_manager; };
+
     void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
+    void                                drawShadowCaster( int model_id, Transform &transform );
     void                                drawModel_now( glShader &program, int model_id, Transform &transform );
 
     GLuint                              createProgram( std::string name, std::string, std::string, std::string );

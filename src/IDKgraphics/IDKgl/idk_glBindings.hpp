@@ -93,6 +93,7 @@ namespace idk::gl
     void enableVertexAttribArray( GLuint index );
 
     void useProgram( GLuint program );
+    void deleteProgram( GLuint program );
     void clearColor( float r, float g, float b, float a );
     void clear( GLbitfield mask );
     void viewport( GLint x, GLint y, GLsizei w, GLsizei h );

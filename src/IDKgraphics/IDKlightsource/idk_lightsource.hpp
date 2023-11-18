@@ -7,6 +7,9 @@ namespace idk
     struct Pointlight;
     struct Spotlight;
     struct Dirlight;
+
+    enum class lightsource { POINT, SPOT, DIR };
+
 };
 
 

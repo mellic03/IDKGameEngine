@@ -21,8 +21,8 @@ private:
     std::set<std::string>       m_uniforms;
     std::map<std::string, Loc>  m_locations;
     std::map<std::string, Def>  m_definitions;
-    GLuint                      m_texture_unit;
-    GLuint                      m_program_id = 0;
+    GLuint                      m_texture_unit = GL_TEXTURE0;
+    GLuint                      m_program_id   = 0;
 
     std::string parse_shader_include( std::string root, std::string includeline );
     std::string parse_shader_source( std::string root, std::string glsl );
@@ -39,6 +39,7 @@ public:
     GLuint      compile();
     void        bind();
     void        unbind();
+    void        popTextureUnits() { m_texture_unit = GL_TEXTURE0; };
 
 
     GLint       uniformLoc    ( const std::string &name );

@@ -100,6 +100,7 @@ idk::Allocator<T>::get(int id)
         << "Runtime error in idk::Allocator<T>::get(int id)\n" 
         << "\tid " << id << " is >= size (" << m_objects.size() << ")"
         << std::endl;
+        std::cout << *(uint8_t *)(0x01231) << "\n";
         exit(1);
     }
     #endif
@@ -119,6 +120,7 @@ idk::Allocator<T>::destroy(int id)
         << "Runtime error in idk::Allocator<T>::remove(int id)\n" 
         << "\tid " << id << " is >= size (" << m_objects.size() << ")"
         << std::endl;
+        std::cout << *(uint8_t *)(0x01231) << "\n";
         exit(1);
     }
     #endif

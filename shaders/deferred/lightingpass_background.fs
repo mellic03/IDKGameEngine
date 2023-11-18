@@ -5,7 +5,6 @@ layout (location = 0) out vec4 fsout_frag_color;
 #include "UBO_lightsources.glsl"
 
 in vec2 fsin_texcoords;
-in vec4 fsin_fragpos_dirlightspace[10];
 
 
 uniform sampler2D un_texture_0;
