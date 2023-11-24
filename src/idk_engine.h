@@ -34,10 +34,10 @@ private:
     void                                        f_idk_CS_stage_B();
     void                                        f_idk_CS_stage_C();
     void                                        f_idk_CS_checkDependencies( int obj_id, int component_id );
-    void                                        f_idk_CS_onAssignment( int component_id, int obj_id );
-    void                                        f_idk_CS_onGameObjectCreation( int obj_id );
-    void                                        f_idk_CS_onGameObjectDeletion( int obj_id );
-    void                                        f_idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id );
+    void                                        f_idk_CS_onObjectAssignment( int component_id, int obj_id );
+    void                                        f_idk_CS_onObjectCreation( int obj_id );
+    void                                        f_idk_CS_onObjectDeletion( int obj_id );
+    void                                        f_idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id );
 
 public:
                                                 static idk::ThreadPool threadpool;

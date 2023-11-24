@@ -23,7 +23,7 @@ layout (std140, binding = 2) uniform UBO_camera_data
 void main()
 {
     fsin_fragpos = (un_model * vec4(vsin_pos, 1.0)).xyz;
-    fsin_normal = normalize(mat3(un_model) * vsin_normal);
+    fsin_normal = mat3(un_model) * vsin_normal;
     fsin_texcoords = vsin_texcoords;
 
     for (int i=0; i<10; i++)

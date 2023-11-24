@@ -181,19 +181,19 @@ Each callback is run whenever a game object is created, deleted or copied.
 
 - Game object creation
     ```C++
-    idk::ComponentSystem::onGameObjectCreation( int obj_id, idk::Engine & )
+    idk::ComponentSystem::onObjectCreation( int obj_id, idk::Engine & )
     ```
 
 
 - Game object deletion
     ```C++
-    idk::ComponentSystem::onGameObjectDeletion( int obj_id, idk::Engine & )
+    idk::ComponentSystem::onObjectDeletion( int obj_id, idk::Engine & )
     ```
 
 
 - Game object copy. This is called when one gameobject is created by using another as a prefab: `idk::engine::createGameObject( prefab_id )`
     ```C++
-    idk::ComponentSystem::onGameObjectCopy( int obj_id, idk::Engine & )
+    idk::ComponentSystem::onObjectCopy( int obj_id, idk::Engine & )
     ```
 
 

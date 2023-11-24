@@ -89,7 +89,7 @@ idk::RenderEngine::compileShaders()
 {
     createProgram("background",      "IDKGE/shaders/deferred/", "background.vs", "background.fs");
     createProgram("geometry_pass",   "IDKGE/shaders/deferred/", "geometrypass.vs", "geometrypass.fs");
-    createProgram("lighting_pass",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass.fs");
+    createProgram("lighting_pass",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass_pbr.fs");
 
     glShader &program = getProgram("lighting_pass");
     program.setDefinition("MAX_POINTLIGHTS", std::to_string(IDK_MAX_POINTLIGHTS));
@@ -97,7 +97,7 @@ idk::RenderEngine::compileShaders()
     program.setDefinition("MAX_DIRLIGHTS",   std::to_string(IDK_MAX_DIRLIGHTS));
     program.compile();
 
-    // createProgram("dirvolumetrics",  "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
+    createProgram("dirvolumetrics",  "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
     createProgram("gaussian",        "IDKGE/shaders/", "screenquad.vs", "postprocess/gaussian.fs");
     createProgram("additive",        "IDKGE/shaders/", "screenquad.vs", "postprocess/additive.fs");
     createProgram("chromatic",       "IDKGE/shaders/", "screenquad.vs", "postprocess/c-abberation.fs");
@@ -192,7 +192,7 @@ idk::RenderEngine::RenderEngine( std::string name, int w, int h, int res_divisor
     m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
 
     worley_texture = noisegen3D::worley(64);
-    whitenoise     = noisegen3D::white(256, 256, 64);
+    whitenoise     = noisegen3D::white(512, 512, 32);
 }
 
 
@@ -294,26 +294,26 @@ idk::RenderEngine::createCamera()
 
 
 void
-idk::RenderEngine::drawModel( GLuint shader_id, int model_id, Transform &transform )
+idk::RenderEngine::drawModel( GLuint shader_id, int model_id, glm::mat4 &model_mat )
 {
-    m_model_draw_queue[shader_id].push({model_id, transform});
+    m_model_draw_queue[shader_id].push({model_id, model_mat});
 }
 
 
 void
-idk::RenderEngine::drawShadowCaster( int model_id, Transform &transform )
+idk::RenderEngine::drawShadowCaster( int model_id, glm::mat4 &model_mat )
 {
-    m_shadowcast_queue.push({model_id, transform});
+    m_shadowcast_queue.push({model_id, model_mat});
 }
 
 
 void
-idk::RenderEngine::drawModel_now( glShader &program, int model_id, Transform &transform )
+idk::RenderEngine::drawModel_now( glShader &program, int model_id, glm::mat4 &model_mat )
 {
     drawmethods::draw_textured(
         program,
         modelManager().getModel(model_id),
-        transform,
+        model_mat,
         modelManager().getMaterials()
     );
 }
@@ -367,12 +367,12 @@ idk::RenderEngine::f_shadowpass_dirlights()
         gl::bindVertexArray(0);
 
 
-        for (auto &[model_id, transform]: m_shadowcast_queue)
+        for (auto &[model_id, model_mat]: m_shadowcast_queue)
         {
             drawmethods::draw_untextured(
                 program,
                 modelManager().getModel(model_id),
-                transform
+                model_mat
             );
         }
     
@@ -495,12 +495,12 @@ idk::RenderEngine::endFrame()
 
     for (auto &[shader_id, vec]: m_model_draw_queue)
     {
-        for (auto &[model_id, transform]: vec)
+        for (auto &[model_id, model_mat]: vec)
         {
             drawmethods::draw_textured(
                 geometrypass,
                 modelManager().getModel(model_id),
-                transform,
+                model_mat,
                 modelManager().getMaterials()
             );
         }
@@ -534,6 +534,20 @@ idk::RenderEngine::endFrame()
     glShader &lighting = m_shaders["lighting_pass"];
     lighting.bind();
 
+    static float increment = 0.0f;
+    static float direction = 1.0f;
+    increment += 0.0005f * direction;
+    if (increment > 1.0f)
+    {
+        direction = -1.0f;
+    }
+    else if (increment < 0.0f)
+    {
+        direction = 1.0f;
+    }
+
+    lighting.set_float("un_increment", increment);
+
     idk::vector<glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
 
     for (int i=0; i<m_lightsystem.dirlights().size(); i++)
@@ -543,7 +557,7 @@ idk::RenderEngine::endFrame()
         );
     }
 
-    tex2tex(lighting, m_deferred_geom_buffer, m_mainbuffer_0);
+    tex2tex(lighting, m_deferred_geom_buffer, m_scratchbufs0[0]);
 
     lighting.popTextureUnits();
     lighting.unbind();
@@ -552,21 +566,27 @@ idk::RenderEngine::endFrame()
 
     // Volumetric directional lights
     // -----------------------------------------------------------------------------------------
-    // glShader &dvol = m_shaders["dirvolumetrics"];
-    // dvol.bind();
-    // dvol.set_sampler2D("un_dirlight_depthmaps[0]", m_dirlight_shadowmap_allocator.get(0));
-    // tex2tex(dvol, m_deferred_geom_buffer,   m_scratchbufs0[1]);
-    // dvol.unbind();
+    glShader &dvol = m_shaders["dirvolumetrics"];
+    dvol.bind();
+    for (int i=0; i<m_lightsystem.dirlights().size(); i++)
+    {
+        dvol.set_sampler2D(
+            "un_dirlight_depthmaps[" + std::to_string(i) + "]", shadowmaps[i].attachments[0]
+        );
+    }
+
+    tex2tex(dvol, m_deferred_geom_buffer,   m_scratchbufs0[2]);
+    dvol.unbind();
     // -----------------------------------------------------------------------------------------
 
 
     // Combine geometry and volumetrics
     // -----------------------------------------------------------------------------------------
-    // glShader &additive = getProgram("additive");
-    // additive.bind();
-    // additive.set_float("intensity", 1.0f);
-    // tex2tex(additive, m_scratchbufs0[0], m_scratchbufs0[1], m_mainbuffer_0);
-    // additive.unbind();
+    glShader &additive = getProgram("additive");
+    additive.bind();
+    additive.set_float("intensity", 1.0f);
+    tex2tex(additive, m_scratchbufs0[0], m_scratchbufs0[2], m_mainbuffer_0);
+    additive.unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -590,12 +610,11 @@ idk::RenderEngine::endFrame()
     //     idk::glFramebuffer &framebuffer = m_blit_queue.front();
     //     tex2tex(blit, framebuffer, *buffer_a, *buffer_b);
     //     m_blit_queue.pop();
-    //
+    
     //     idk::swap(buffer_a, buffer_b);
     // }
     // blit.unbind();
     // -----------------------------------------------------------------------------------------
-
 
 
     // Chromatic aberration

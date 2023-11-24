@@ -11,9 +11,8 @@ idk::drawmethods::bind_material( glShader &program, Material &material )
 
 
 void
-idk::drawmethods::draw_textured( glShader &program, Model &model, Transform &transform, Allocator<Material> &materials )
+idk::drawmethods::draw_textured( glShader &program, Model &model, glm::mat4 &model_mat, Allocator<Material> &materials )
 {
-    glm::mat4 model_mat = transform.modelMatrix();
     program.set_mat4("un_model", model_mat);
 
     gl::bindVertexArray(model.VAO);
@@ -33,9 +32,8 @@ idk::drawmethods::draw_textured( glShader &program, Model &model, Transform &tra
 
 
 void
-idk::drawmethods::draw_untextured( glShader &program, Model &model, Transform &transform )
+idk::drawmethods::draw_untextured( glShader &program, Model &model, glm::mat4 &model_mat )
 {
-    glm::mat4 model_mat = transform.modelMatrix();
     program.set_mat4("un_model", model_mat);
 
     gl::bindVertexArray(model.VAO);

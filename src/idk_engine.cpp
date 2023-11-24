@@ -108,37 +108,37 @@ idk::Engine::f_idk_CS_checkDependencies( int obj_id, int component_id )
 
 
 void
-idk::Engine::f_idk_CS_onAssignment( int component_id, int obj_id )
+idk::Engine::f_idk_CS_onObjectAssignment( int component_id, int obj_id )
 {
     #ifdef IDK_DEBUG
         f_idk_CS_checkDependencies(obj_id, component_id);
     #endif
 
-    m_idk_componentsystems[component_id]->onAssignment(obj_id, *this);
+    m_idk_componentsystems[component_id]->onObjectAssignment(obj_id, *this);
 }
 
 
 void
-idk::Engine::f_idk_CS_onGameObjectCreation( int obj_id )
+idk::Engine::f_idk_CS_onObjectCreation( int obj_id )
 {
     for (idk::ComponentSystem *component: m_idk_componentsystems)
-        component->onGameObjectCreation(obj_id, *this);
+        component->onObjectCreation(obj_id, *this);
 }
 
 
 void
-idk::Engine::f_idk_CS_onGameObjectDeletion( int obj_id )
+idk::Engine::f_idk_CS_onObjectDeletion( int obj_id )
 {
     for (idk::ComponentSystem *component: m_idk_componentsystems)
-        component->onGameObjectDeletion(obj_id, *this);
+        component->onObjectDeletion(obj_id, *this);
 }
 
 
 void
-idk::Engine::f_idk_CS_onGameObjectCopy( int src_obj_id, int dest_obj_id )
+idk::Engine::f_idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id )
 {
     for (idk::ComponentSystem *component: m_idk_componentsystems)
-        component->onGameObjectCopy(src_obj_id, dest_obj_id, *this);
+        component->onObjectCopy(src_obj_id, dest_obj_id, *this);
 }
 
 
@@ -150,7 +150,7 @@ idk::Engine::createGameObject()
 
     int obj_id = m_gameobjects.create();
 
-    f_idk_CS_onGameObjectCreation(obj_id);
+    f_idk_CS_onObjectCreation(obj_id);
 
     return obj_id;
 }
@@ -164,8 +164,8 @@ idk::Engine::createGameObject( int prefab_id )
 
     int obj_id = m_gameobjects.create();
 
-    f_idk_CS_onGameObjectCreation(obj_id);
-    f_idk_CS_onGameObjectCopy(prefab_id, obj_id);
+    f_idk_CS_onObjectCreation(obj_id);
+    f_idk_CS_onObjectCopy(prefab_id, obj_id);
 
     return obj_id;
 }
@@ -193,7 +193,7 @@ idk::Engine::deleteGameObject( int obj_id )
     m_gameobjects.destroy(obj_id);
     m_component_matrix[obj_id] = std::vector<int>(m_idk_componentsystems.size(), 0);
 
-    f_idk_CS_onGameObjectDeletion(obj_id);
+    f_idk_CS_onObjectDeletion(obj_id);
 }
 
 
@@ -201,7 +201,7 @@ void
 idk::Engine::giveComponent( int obj_id, int component_id )
 {
     m_component_matrix[obj_id][component_id] = 1;
-    f_idk_CS_onAssignment(component_id, obj_id);
+    f_idk_CS_onObjectAssignment(component_id, obj_id);
 }
 
 

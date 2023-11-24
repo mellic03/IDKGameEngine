@@ -19,16 +19,16 @@ public:
     virtual         ~ComponentSystem() = default;
 
     /*              Called when the component is assigned. */
-    virtual void    onAssignment( int obj_id, idk::Engine & ) = 0;
+    virtual void    onObjectAssignment( int obj_id, idk::Engine & ) = 0;
 
     /*              Called when a new idk::GameObject is created. */
-    virtual void    onGameObjectCreation( int obj_id, idk::Engine & ) = 0;
+    virtual void    onObjectCreation( int obj_id, idk::Engine & ) = 0;
 
     /*              Called when an idk::GameObject is deleted. */
-    virtual void    onGameObjectDeletion( int obj_id, idk::Engine & ) = 0;
+    virtual void    onObjectDeletion( int obj_id, idk::Engine & ) = 0;
 
     /*              Called when an idk::GameObject is created by copy. */
-    virtual void    onGameObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine & ) = 0;
+    virtual void    onObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine & ) = 0;
 
 };
 

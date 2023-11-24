@@ -87,3 +87,29 @@ vec3 spotlight_contribution( int idx, vec3 view_dir, vec3 position,
 }
 
 
+
+
+
+float dirlight_shadow(int idx, vec3 position)
+{
+    vec4 fragpos_lightspace = ubo_dirlight_matrices[idx] * vec4(position, 1.0);
+
+    vec3 projCoords = fragpos_lightspace.xyz / fragpos_lightspace.w;
+    projCoords = projCoords * 0.5 + 0.5; 
+
+    float bias = 0.001;
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(un_dirlight_depthmaps[idx], 0);
+
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(un_dirlight_depthmaps[idx], projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += projCoords.z - bias > pcfDepth ? 1.0 : 0.0;        
+        }    
+    }
+    shadow /= 9.0;
+
+    return 1.0 - shadow;
+}

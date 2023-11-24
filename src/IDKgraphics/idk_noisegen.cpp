@@ -86,6 +86,8 @@ idk::noisegen3D::worley( int w )
             {
                 texture_data[z*w*w + y*w + x] /= max_value;
                 texture_data[z*w*w + y*w + x] = 1.0f - texture_data[z*w*w + y*w + x];
+
+                texture_data[z*w*w + y*w + x] *= texture_data[z*w*w + y*w + x] * texture_data[z*w*w + y*w + x];
             }
         }
     }

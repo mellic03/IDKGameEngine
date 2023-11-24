@@ -6,9 +6,9 @@
 namespace idk::drawmethods
 {
     void    bind_material( glShader &, Material & );
-    void    draw_textured( glShader &, Model &, Transform &, Allocator<Material> & );
-    void    draw_untextured( glShader &, Model &, Transform & );
-    void    draw_wireframe( glShader &, Model &, Transform & );
+    void    draw_textured( glShader &, Model &, glm::mat4 &, Allocator<Material> & );
+    void    draw_untextured( glShader &, Model &, glm::mat4 & );
+    void    draw_wireframe( glShader &, Model &, glm::mat4 & );
 
 };
 

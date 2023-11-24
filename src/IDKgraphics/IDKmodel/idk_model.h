@@ -28,6 +28,7 @@ struct idk::Material
     glm::vec3   diffuse_color       = glm::vec3(0.0f);
     glm::vec3   specular_color      = glm::vec3(0.0f);
     float       specular_exponent   = 16.0f;
+    float       roughness           = 0.5f;
 
     GLuint      albedo_gl_id        = 0;
     GLuint      specular_gl_id      = 0;

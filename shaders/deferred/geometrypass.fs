@@ -36,6 +36,6 @@ void main()
 
     fsout_albedospec = vec4(albedo_map, specular_map);
     fsout_position   = vec4(fsin_fragpos, 1.0);
-    fsout_normal     = vec4(fsin_normal, un_specular_exponent);
+    fsout_normal     = vec4(normalize(fsin_normal), un_specular_exponent);
     fsout_reflection = vec4(vec3(reflection_map), 1.0);
 }

@@ -116,7 +116,7 @@ idk::Transform::yaw( float f )
 void
 idk::Transform::scale(glm::vec3 s)
 {
-    m_scale = glm::vec3(m_scale.x*s.x, m_scale.y*s.y, m_scale.z*s.z );
+    m_scale = glm::vec3(m_scale.x*s.x, m_scale.y*s.y, m_scale.z*s.z);
 }
 
 

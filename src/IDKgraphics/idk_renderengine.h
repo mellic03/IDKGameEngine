@@ -22,7 +22,7 @@
 
 namespace idk { class RenderEngine; };
 
-#define modelqueue_t   std::unordered_map<GLuint, idk::vector<idk::pair<int, idk::Transform>>>
+#define modelqueue_t   std::unordered_map<GLuint, idk::vector<idk::pair<int, glm::mat4>>>
 
 class idk::RenderEngine
 {
@@ -75,7 +75,7 @@ private:
 
     modelqueue_t                        m_model_draw_queue;
     modelqueue_t                        m_wireframe_draw_queue;
-    idk::vector<pair<int, Transform>>   m_shadowcast_queue;
+    idk::vector<pair<int, glm::mat4>>   m_shadowcast_queue;
 
     // Initialization ---------------------------------------------------------------------
     /***/
@@ -127,14 +127,17 @@ public:
     SDL_GLContext                       SDLGLContext()  { return m_SDL_gl_context;  };
 
     int                                 createCamera();
-    idk::Camera &                       getCamera()     { return m_camera_allocator.get(m_active_camera_id); };
+    void                                useCamera( int cam_id ) { m_active_camera_id = cam_id; };
+    idk::Camera &                       getCamera( int cam_id ) { return m_camera_allocator.get(cam_id); };
+    idk::Camera &                       getCamera(            ) { return getCamera(m_active_camera_id);  };
+
 
     idk::LightSystem &                  lightSystem()   { return m_lightsystem; };
     ModelManager &                      modelManager()  { return m_model_manager; };
 
-    void                                drawModel( GLuint shader_id, int model_id, Transform &transform );
-    void                                drawShadowCaster( int model_id, Transform &transform );
-    void                                drawModel_now( glShader &program, int model_id, Transform &transform );
+    void                                drawModel( GLuint shader_id, int model_id, glm::mat4 & );
+    void                                drawShadowCaster( int model_id, glm::mat4 & );
+    void                                drawModel_now( glShader &program, int model_id, glm::mat4 & );
 
     GLuint                              createProgram( std::string name, std::string, std::string, std::string );
     glShader &                          getProgram( const std::string &name ) { return m_shaders[name]; };

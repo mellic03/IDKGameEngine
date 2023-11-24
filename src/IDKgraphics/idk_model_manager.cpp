@@ -69,7 +69,7 @@ idk::ModelManager::_load_mtl( std::string raw_mtl )
             _materials.get(material_id).specular_gl_id = _texture_IDs[line];
         }
 
-        else if (line.find("map_Pm") != std::string::npos)
+        else if (line.find("map_Pr") != std::string::npos)
         {
             size_t root = line.find("assets/");
             line = line.substr(root);
