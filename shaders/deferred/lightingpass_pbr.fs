@@ -14,10 +14,10 @@ layout (location = 0) out vec4 fsout_frag_color;
 
 in vec2 fsin_texcoords;
 
-uniform sampler2D un_texture_0;
-uniform sampler2D un_texture_1;
-uniform sampler2D un_texture_2;
-uniform sampler2D un_texture_3;
+uniform sampler2D un_texture_0; // albedo_metallic
+uniform sampler2D un_texture_1; // position
+uniform sampler2D un_texture_2; // normal
+uniform sampler2D un_texture_3; // roughness
 
 
 layout (std140, binding = 2) uniform UBO_camera_data
@@ -91,8 +91,6 @@ vec3 fresnel( vec3 halfnormal, vec3 viewdir, vec3 reflectivity )
 }
 
 
-uniform float un_increment;
-
 vec3 specular_BDRF( vec3 normal, vec3 halfnormal, vec3 lightdir, vec3 viewdir, float roughness )
 {
     const vec3 reflectivity = vec3(1.0, 0.86, 0.57);
@@ -131,9 +129,8 @@ float dirlight_shadow(int idx, vec3 position)
 }
 
 
-vec3 dirlight_contribution( int idx, vec3 view_dir, vec3 position,
-                            vec3 normal, vec3 albedo, float spec,
-                            float spec_exponent )
+vec3 dirlight_contribution( int idx, vec3 view_dir, vec3 position, vec3 normal,
+                            vec3 albedo, float metallic, float roughness, float ao )
 {
     DirLight light = un_dirlights[idx];
 
@@ -147,13 +144,13 @@ vec3 dirlight_contribution( int idx, vec3 view_dir, vec3 position,
     diffuse_f = (diffuse_f + 1.0) / 2.0;
 
     vec3 halfway_dir = normalize(frag_to_light + view_dir);
-    float specular_f = pow(max(dot(normal, halfway_dir), 0.0), spec_exponent);
+    float specular_f = 0.0; // pow(max(dot(normal, halfway_dir), 0.0), spec_exponent);
 
     float shadow = dirlight_shadow(idx, position);
 
     vec3 ambient  = albedo * diffuse_f * light_ambient;
     vec3 diffuse  = albedo * diffuse_ff * light_diffuse;
-    vec3 specular = diffuse * specular_f * 15*spec;
+    vec3 specular = vec3(0.0); // diffuse * specular_f * 15*spec;
 
     vec3 result = ambient + shadow*diffuse + shadow*specular;
 
@@ -163,9 +160,8 @@ vec3 dirlight_contribution( int idx, vec3 view_dir, vec3 position,
 
 
 
-vec3 pointlight_contribution( int idx, vec3 view_dir, vec3 position,
-                              vec3 normal, vec3 albedo, float spec,
-                              float spec_exponent, float roughness )
+vec3 pointlight_contribution( int idx, vec3 view_dir, vec3 position, vec3 normal,
+                              vec3 albedo, float metallic, float roughness, float ao )
 {
     vec3 light_position = ubo_pointlights[idx].position.xyz;
 
@@ -178,15 +174,11 @@ vec3 pointlight_contribution( int idx, vec3 view_dir, vec3 position,
 
 
     float d = distance(position, light_position);
+    float attenuation = max(1.0 / (d*d), 0.00001);
 
     vec3 frag_to_light = normalize(light_position - position);
     float diffuse_f = max(dot(normal, frag_to_light), 0.0);
-
     vec3 halfway_dir = normalize(frag_to_light + view_dir);  
-    float specular_f = pow(max(dot(normal, halfway_dir), 0.0), spec_exponent);
-
-    float attenuation = max(1.0 / (d*d), 0.00001);
-
 
     const vec3 reflectivity = vec3(1.0, 0.86, 0.57);
     vec3 kS = fresnel(halfway_dir, view_dir, reflectivity);
@@ -201,20 +193,19 @@ vec3 pointlight_contribution( int idx, vec3 view_dir, vec3 position,
     return result;
 }
 
-
-
-
 void main()
 {
-    vec4  albedospec = texture( un_texture_0, fsin_texcoords );
-    vec3  albedo     = albedospec.rgb;
-    float specular   = 0.0; // albedospec.a;
+    vec4  albedo_metallic = texture( un_texture_0, fsin_texcoords );
+    vec3  albedo      = albedo_metallic.rgb;
+    float metallic    = albedo_metallic.a;
 
-    vec3  position   = texture( un_texture_1, fsin_texcoords ).xyz;
-    vec3  normal     = texture( un_texture_2, fsin_texcoords ).xyz;
-    float spec_exp   = texture( un_texture_2, fsin_texcoords).a;
+    vec3  position    = texture( un_texture_1, fsin_texcoords ).xyz;
+    vec3  normal      = texture( un_texture_2, fsin_texcoords ).xyz;
 
-    float roughness  = albedospec.a;
+    vec2 roughness_ao = texture( un_texture_3, fsin_texcoords).rg;
+    float roughness   = roughness_ao.r;
+    float ao          = roughness_ao.g;
+
     vec3  view_dir   = normalize(un_viewpos - position);
 
     vec3 color = vec3(0.0);
@@ -223,9 +214,8 @@ void main()
     for (int i=0; i<NUM_POINTLIGHTS; i++)
     {
         color += pointlight_contribution(
-            i,       view_dir,   position,
-            normal,  albedo,     specular,
-            spec_exp, roughness
+            i,      view_dir, position,  normal,
+            albedo, metallic, roughness, ao
         );
     }
 
@@ -233,13 +223,10 @@ void main()
     for (int i=0; i<NUM_DIRLIGHTS; i++)
     {
         color += dirlight_contribution(
-            i,       view_dir,   position,
-            normal,  albedo,     specular,
-            spec_exp
+            i,      view_dir, position,  normal,
+            albedo, metallic, roughness, ao
         );
     }
 
-
-    // fsout_frag_color.rgb = texture(un_dirlight_depthmaps[2], fsin_texcoords).rgb;
     fsout_frag_color = vec4(color, 1.0);
 }

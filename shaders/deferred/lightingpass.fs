@@ -149,8 +149,6 @@ vec3 pointlight_contribution( int idx, vec3 view_dir, vec3 position,
 }
 
 
-
-
 void main()
 {
     vec4  albedospec = texture( un_texture_0, fsin_texcoords );
@@ -176,7 +174,6 @@ void main()
         );
     }
 
-
     for (int i=0; i<NUM_DIRLIGHTS; i++)
     {
         color += dirlight_contribution(
@@ -186,7 +183,5 @@ void main()
         );
     }
 
-
-    // fsout_frag_color.rgb = texture(un_dirlight_depthmaps[2], fsin_texcoords).rgb;
     fsout_frag_color = vec4(color, 1.0);
 }

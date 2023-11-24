@@ -26,12 +26,14 @@ public:
     int                     create();
     int                     create( const T &data );
 
-    T *                     data() { return m_objects.data(); };
+    T *                     data()     { return m_objects.data();             };
     size_t                  bytesize() { return m_objects.size() * sizeof(T); };
 
     T &                     get( int id );
     void                    destroy( int id );
     int                     size() const { return m_objects.size() - m_unnocupied_indices.size(); };
+
+    void                    make_contiguous( idk::vector<T> &output );
 
     void                    for_each(std::function<void(T&)>);
     void                    for_each(std::function<void(int, T&)>);
@@ -64,7 +66,7 @@ idk::Allocator<T>::create()
         m_is_occupied[id] = true;
         return id;
     }
-};
+}
 
 
 template <typename T>
@@ -85,7 +87,7 @@ idk::Allocator<T>::create(const T &data)
         m_is_occupied[id] = true;
         return id;
     }
-};
+}
 
 
 
@@ -106,7 +108,7 @@ idk::Allocator<T>::get(int id)
     #endif
 
     return m_objects[id];
-};
+}
 
 
 template <typename T>
@@ -127,7 +129,24 @@ idk::Allocator<T>::destroy(int id)
 
     m_is_occupied[id] = false;
     m_unnocupied_indices.push_back(id);
-};
+}
+
+
+
+template <typename T>
+void
+idk::Allocator<T>::make_contiguous( idk::vector<T> &output )
+{
+    output.clear();
+
+    this->for_each(
+        [&output](T &obj)
+        {
+            output.push(obj);
+        }
+    );
+}
+
 
 
 template <typename T>

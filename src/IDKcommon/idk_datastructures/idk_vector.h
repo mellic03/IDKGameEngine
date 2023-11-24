@@ -41,6 +41,7 @@ public:
     vector &            operator = (const vector &other);
     vector &            operator = (vector &&other) noexcept;
     T &                 operator [] (size_t i) { return m_data[i]; };
+    const T &           operator [] (size_t i) const { return m_data[i]; };
 };
 
 

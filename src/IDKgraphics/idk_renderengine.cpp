@@ -200,7 +200,7 @@ GLuint
 idk::RenderEngine::createProgram( std::string name, std::string root, std::string vs, std::string fs )
 {
     m_shader_names.push_back(name);
-    return m_shaders[name].loadc(root, vs, fs);
+    return m_shaders[name].loadFileC(root, vs, fs);
 }
 
 
@@ -380,7 +380,7 @@ idk::RenderEngine::f_shadowpass_dirlights()
     }
 
 
-    program.unbind();
+    glShader::unbind();
 }
 
 
@@ -417,7 +417,6 @@ idk::RenderEngine::f_update_UBO_dirlights()
             glm::vec3(0.0f) + cam.transform().position(),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
-
 
         lights[i]   = dirlights[i];
         matrices[i] = projection * view;
@@ -466,10 +465,12 @@ idk::RenderEngine::endFrame()
 {
     if (m_lightsystem.changed())
     {
+        static std::string vert_source = "";
+        static std::string frag_source = "";
+        m_lightsystem.genShaderString(vert_source, frag_source);
+
         glShader &lighting = getProgram("lighting_pass");
-        lighting.setDefinition("NUM_DIRLIGHTS", std::to_string(m_lightsystem.dirlights().size()));
-        lighting.setDefinition("NUM_POINTLIGHTS", std::to_string(m_lightsystem.pointlights().size()));
-        lighting.compile();
+        lighting.loadStringC(vert_source, frag_source);
     }
 
     gl::disable(GL_CULL_FACE);
@@ -506,7 +507,7 @@ idk::RenderEngine::endFrame()
         }
         vec.clear();
     }
-    geometrypass.unbind();
+    glShader::unbind();
     m_model_draw_queue.clear();
     gl::bindVertexArray(0);
     // -----------------------------------------------------------------------------------------
@@ -525,7 +526,7 @@ idk::RenderEngine::endFrame()
     gl::drawArrays(GL_TRIANGLES, 0, 6);
     gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
 
-    background.unbind();
+    glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -533,20 +534,6 @@ idk::RenderEngine::endFrame()
     // -----------------------------------------------------------------------------------------
     glShader &lighting = m_shaders["lighting_pass"];
     lighting.bind();
-
-    static float increment = 0.0f;
-    static float direction = 1.0f;
-    increment += 0.0005f * direction;
-    if (increment > 1.0f)
-    {
-        direction = -1.0f;
-    }
-    else if (increment < 0.0f)
-    {
-        direction = 1.0f;
-    }
-
-    lighting.set_float("un_increment", increment);
 
     idk::vector<glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
 
@@ -560,7 +547,7 @@ idk::RenderEngine::endFrame()
     tex2tex(lighting, m_deferred_geom_buffer, m_scratchbufs0[0]);
 
     lighting.popTextureUnits();
-    lighting.unbind();
+    glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -576,7 +563,7 @@ idk::RenderEngine::endFrame()
     }
 
     tex2tex(dvol, m_deferred_geom_buffer,   m_scratchbufs0[2]);
-    dvol.unbind();
+    glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -586,7 +573,7 @@ idk::RenderEngine::endFrame()
     additive.bind();
     additive.set_float("intensity", 1.0f);
     tex2tex(additive, m_scratchbufs0[0], m_scratchbufs0[2], m_mainbuffer_0);
-    additive.unbind();
+    glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -598,7 +585,7 @@ idk::RenderEngine::endFrame()
     // glShader &getdepth = getProgram("getdepth");
     // getdepth.bind();
     // tex2tex(getdepth, m_deferred_geom_buffer, m_mainbuffer_0);
-    // getdepth.unbind();
+    // glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
     // Blit user framebuffers
@@ -613,7 +600,7 @@ idk::RenderEngine::endFrame()
     
     //     idk::swap(buffer_a, buffer_b);
     // }
-    // blit.unbind();
+    // glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -625,7 +612,7 @@ idk::RenderEngine::endFrame()
     chromatic.set_vec2("un_g_offset", m_abbr_str*m_g_abbr);
     chromatic.set_vec2("un_b_offset", m_abbr_str*m_b_abbr);
     tex2tex(chromatic, *buffer_a, *buffer_b);
-    chromatic.unbind();
+    glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -636,7 +623,7 @@ idk::RenderEngine::endFrame()
     colorgrade.set_float("un_gamma", m_gamma);
     colorgrade.set_float("un_exposure", m_exposure);
     tex2tex(colorgrade, *buffer_b, *buffer_a);
-    colorgrade.unbind();
+    glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
 

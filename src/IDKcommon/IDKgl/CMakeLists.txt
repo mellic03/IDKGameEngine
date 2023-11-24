@@ -11,7 +11,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/${idkengin
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
-    IDKcommon
 )
 
 

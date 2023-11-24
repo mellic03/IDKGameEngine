@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcommon/IDKcommon.h"
+#include "../idk_utility.h"
 #include "idk_glBindings.hpp"
 
 namespace idk { class glUBO; };

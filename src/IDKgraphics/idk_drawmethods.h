@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IDKmodel/IDKmodel.h"
-#include "IDKgl/IDKgl.hpp"
+#include "IDKcommon/IDKgl.hpp"
 
 namespace idk::drawmethods
 {

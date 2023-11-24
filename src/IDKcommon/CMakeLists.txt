@@ -24,6 +24,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_image_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_mixer_INCLUDE_DIRS})
 
+add_subdirectory(IDKgl)
+
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
@@ -33,5 +35,6 @@ target_link_libraries(
     SDL2_mixer
     ${OPENGL_LIBRARIES}
     ${EXTRA_LIBS}
+    IDKgl
 )
 

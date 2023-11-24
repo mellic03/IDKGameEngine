@@ -60,7 +60,7 @@ idk::glFramebuffer::colorAttachment( int idx, const idk::ColorAttachmentConfig &
         GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+idx, GL_TEXTURE_2D, attachments[idx], 0
     );
 
-    m_gl_attachments.push_back(GL_COLOR_ATTACHMENT0 + idx);
+    m_gl_attachments.push(GL_COLOR_ATTACHMENT0 + idx);
     glDrawBuffers(m_gl_attachments.size(), &(m_gl_attachments[0]));
 
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -82,7 +82,7 @@ idk::glFramebuffer::depthAttachment( const idk::DepthAttachmentConfig &config )
         m_size.x, m_size.y, 0, GL_DEPTH_COMPONENT, config.datatype, NULL
     );
 
-    m_gl_attachments.push_back(GL_DEPTH_ATTACHMENT);
+    m_gl_attachments.push(GL_DEPTH_ATTACHMENT);
     glDrawBuffers(m_gl_attachments.size(), &(m_gl_attachments[0]));
 
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);

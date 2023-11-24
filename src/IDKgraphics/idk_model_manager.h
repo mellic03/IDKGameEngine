@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IDKmodel/IDKmodel.h"
-#include "IDKgl/IDKgl.hpp"
+#include "IDKcommon/IDKgl.hpp"
 
 
 namespace idk { class ModelManager; };
@@ -15,13 +15,21 @@ private:
     Allocator<Model>        _models;
 
     std::unordered_map<std::string, idk::Texture>   _textures;
-    std::unordered_map<std::string, GLuint>         _texture_IDs;
+
+    struct DefaultID { bool set=false; GLuint texture_ID; };
+    GLuint m_default_texture_ID = 0;
+
+    std::unordered_map<std::string, DefaultID>      _texture_IDs;
     std::unordered_map<std::string, int>            _material_IDs;
 
     void                _load_mtl( std::string );
     idk::Model          _load_obj( std::string );
 
+    GLuint              get_texture_id( const std::string &key );
+
 public:
+
+                        ModelManager();
 
     int                 loadOBJ( std::string raw_obj, std::string raw_mtl );
     int                 loadOBJ( std::string rootpath, std::string obj, std::string mtl );

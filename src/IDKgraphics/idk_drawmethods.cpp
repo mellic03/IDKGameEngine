@@ -3,10 +3,12 @@
 void
 idk::drawmethods::bind_material( glShader &program, Material &material )
 {
-    program.set_sampler2D("un_albedo_texture", material.albedo_gl_id);
-    program.set_sampler2D("un_specular_texture", material.specular_gl_id);
-    program.set_float("un_specular_exponent", material.specular_exponent);
-    program.set_sampler2D("un_reflection_texture", material.reflection_gl_id);
+    program.set_sampler2D ( "un_albedo_texture",     material.albedo_id    );
+    program.set_sampler2D ( "un_metallic_texture",   material.metallic_id  );
+    program.set_sampler2D ( "un_roughness_texture",  material.roughness_id );
+    program.set_sampler2D ( "un_ao_texture",         material.ao_id        );
+
+    // program.set_float     ( "un_specular_exponent",  material.specular_exponent );
 }
 
 

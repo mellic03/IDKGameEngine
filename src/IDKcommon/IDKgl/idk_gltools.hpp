@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "IDKcommon/IDKcommon.h"
+#include "../idk_utility.h"
 
 #include "idk_glFramebuffer.hpp"
 #include "idk_glBindings.hpp"

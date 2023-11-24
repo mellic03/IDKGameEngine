@@ -10,6 +10,15 @@ namespace idk
 
     enum class lightsource { POINT, SPOT, DIR };
 
+    namespace LightFlag
+    {
+        enum lightflag_t: uint32_t
+        {
+            NONE       = 0,
+            SHADOWMAP  = 1 << 0,
+            VOLUMETRIC = 1 << 1,
+        };
+    }
 };
 
 

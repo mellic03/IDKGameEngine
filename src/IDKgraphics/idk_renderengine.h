@@ -6,14 +6,14 @@
 #include "IDKcommon/IDKcommon.h"
 
 #include "idk_model_manager.h"
-#include "IDKgl/IDKgl.hpp"
+#include "IDKcommon/IDKgl.hpp"
 #include "idk_drawmethods.h"
 
 #include "idk_camera.h"
-#include "IDKlightsource/IDKlightsource.hpp"
-#include "idk_lightsystem.hpp"
+#include "IDKlighting/IDKlighting.hpp"
 #include "primitives/primitives.h"
 #include "idk_noisegen.hpp"
+#include "IDKlighting/IDKlighting.hpp"
 
 #define IDK_MAX_POINTLIGHTS 10
 #define IDK_MAX_SPOTLIGHTS 10

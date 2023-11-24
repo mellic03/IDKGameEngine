@@ -6,6 +6,18 @@
 #include <filesystem>
 
 
+
+idk::ModelManager::ModelManager()
+{
+    uint32_t *data = new uint32_t[1];
+    data[0] = ~(uint32_t)0;
+    m_default_texture_ID = idk::gltools::loadTexture(1, 1, (uint32_t *)data, false);
+
+    delete[] data;
+}
+
+
+
 static void charreplace(std::string &str, char from, char to)
 {
     for (char &c: str)
@@ -41,39 +53,25 @@ idk::ModelManager::_load_mtl( std::string raw_mtl )
             _material_IDs[material_name] = material_id;
         }
 
-        else if (line[0] == 'N' && line[1] == 's')
-        {
-            float Ns;
-            iss >> dummy >> Ns;
-            _materials.get(material_id).specular_exponent = Ns;
-        }
-
-        else if (line[0] == 'K' && line[1] == 's')
-        {
-            float x, y, z;
-            iss >> x >> y >> z;
-            _materials.get(material_id).specular_color = glm::vec3(x, y, z);
-        }
-
-        else if (line.find("map_Kd") != std::string::npos)
+        else if (line.find("map_Kd") != std::string::npos) // albedo
         {
             size_t root = line.find("assets/");
             line = line.substr(root);
-            _materials.get(material_id).albedo_gl_id = _texture_IDs[line];
+            _materials.get(material_id).albedo_id = get_texture_id(line);
         }
 
-        else if (line.find("map_Ks") != std::string::npos)
+        else if (line.find("map_Pm") != std::string::npos) // metallic
         {
             size_t root = line.find("assets/");
             line = line.substr(root);
-            _materials.get(material_id).specular_gl_id = _texture_IDs[line];
+            _materials.get(material_id).roughness_id = get_texture_id(line);
         }
 
-        else if (line.find("map_Pr") != std::string::npos)
+        else if (line.find("map_Pr") != std::string::npos) // roughness
         {
             size_t root = line.find("assets/");
             line = line.substr(root);
-            _materials.get(material_id).reflection_gl_id = _texture_IDs[line];
+            _materials.get(material_id).roughness_id = get_texture_id(line);
         }
     }
 }
@@ -178,7 +176,7 @@ idk::ModelManager::loadTexture( std::string filepath, bool srgb )
 
     // Textures are referenced using their relative path
     std::string relpath = std::filesystem::path(filepath).relative_path();
-    _texture_IDs[relpath] = tex_id;
+    _texture_IDs[relpath] = {true, tex_id};
 }
 
 
@@ -328,3 +326,17 @@ idk::ModelManager::loadVertices( std::string filepath, std::vector<idk::Vertex> 
         }
     }
 }
+
+
+GLuint
+idk::ModelManager::get_texture_id( const std::string &key )
+{
+    if (_texture_IDs[key].set == false)
+    {
+        
+    }
+
+    return _texture_IDs[key].texture_ID;
+}
+
+

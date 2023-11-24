@@ -2,10 +2,11 @@
 
 #define MAX_POINTLIGHTS 10
 
-layout (location = 0) out vec4 fsout_albedospec;
+
+layout (location = 0) out vec4 fsout_albedo_metallic;
 layout (location = 1) out vec4 fsout_position;
 layout (location = 2) out vec4 fsout_normal;
-layout (location = 3) out vec4 fsout_reflection;
+layout (location = 3) out vec4 fsout_roughness_ao;
 
 in vec3 fsin_fragpos;
 in vec3 fsin_normal;
@@ -13,11 +14,9 @@ in vec2 fsin_texcoords;
 in vec4 fsin_fragpos_dirlightspace[10];
 
 uniform sampler2D un_albedo_texture;
-uniform sampler2D un_specular_texture;
-uniform sampler2D un_normal_texture;
-uniform sampler2D un_reflection_texture;
-
-uniform float un_specular_exponent;
+uniform sampler2D un_metallic_texture;
+uniform sampler2D un_roughness_texture;
+uniform sampler2D un_ao_texture;
 
 
 layout (std140, binding = 2) uniform UBO_camera_data
@@ -30,12 +29,13 @@ layout (std140, binding = 2) uniform UBO_camera_data
 
 void main()
 {
-    vec3  albedo_map     = texture(un_albedo_texture, fsin_texcoords).rgb;
-    float specular_map   = texture(un_specular_texture, fsin_texcoords).r;
-    float reflection_map = texture(un_reflection_texture, fsin_texcoords).r;
+    vec3  albedo    = texture(un_albedo_texture, fsin_texcoords).rgb;
+    float metallic  = texture(un_metallic_texture, fsin_texcoords).r;
+    float roughness = texture(un_roughness_texture, fsin_texcoords).r;
+    float ao        = texture(un_ao_texture, fsin_texcoords).r;
 
-    fsout_albedospec = vec4(albedo_map, specular_map);
-    fsout_position   = vec4(fsin_fragpos, 1.0);
-    fsout_normal     = vec4(normalize(fsin_normal), un_specular_exponent);
-    fsout_reflection = vec4(vec3(reflection_map), 1.0);
+    fsout_albedo_metallic = vec4(albedo, metallic);
+    fsout_position        = vec4(fsin_fragpos, 1.0);
+    fsout_normal          = vec4(normalize(fsin_normal), 1.0);
+    fsout_roughness_ao    = vec4(roughness, ao, 0.0, 1.0);
 }

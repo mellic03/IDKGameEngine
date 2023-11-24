@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcommon/IDKcommon.h"
+#include "../idk_utility.h"
 #include "idk_glBindings.hpp"
 
 namespace idk { class glShader; };
@@ -24,21 +24,25 @@ private:
     GLuint                      m_texture_unit = GL_TEXTURE0;
     GLuint                      m_program_id   = 0;
 
-    std::string parse_shader_include( std::string root, std::string includeline );
-    std::string parse_shader_source( std::string root, std::string glsl );
+    std::string parse_shader_include ( std::string root, std::string includeline  );
+    std::string parse_shader_source  ( std::string root, std::stringstream source );
 
+    void        reset();
 
 public:
 
-    void        load( std::string root, std::string vert, std::string frag );
-    GLuint      loadc( std::string root, std::string vert, std::string frag );
+    void        loadFile  ( std::string root, std::string vert, std::string frag );
+    GLuint      loadFileC ( std::string root, std::string vert, std::string frag );
+    void        loadString  ( const std::string &vert, const std::string &frag );
+    GLuint      loadStringC ( const std::string &vert, const std::string &frag );
+
 
     bool        setDefinition( std::string name, std::string value );
     auto &      getDefinitions() { return m_definitions; };
 
     GLuint      compile();
     void        bind();
-    void        unbind();
+    static void unbind() { idk::gl::useProgram(0); };
     void        popTextureUnits() { m_texture_unit = GL_TEXTURE0; };
 
 

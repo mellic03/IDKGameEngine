@@ -22,6 +22,7 @@ std::vector<std::string> tokenize( std::string str, size_t num_tokens=~0 )
     return tokens;
 }
 
+
 static bool
 _line_has_include( std::string &line )
 {
@@ -85,16 +86,13 @@ idk::glShader::parse_shader_include( std::string root, std::string includeline )
 }
 
 
-
 std::string
-idk::glShader::parse_shader_source( std::string root, std::string glsl )
+idk::glShader::parse_shader_source( std::string root, std::stringstream source )
 {
     std::string src;
-
-    std::ifstream instream(root + glsl);
     std::string line;
 
-    while (getline(instream, line))
+    while (getline(source, line))
     {
         auto tokens = tokenize(line);
 
@@ -145,6 +143,8 @@ compileProgram( std::string vert_src, std::string frag_src )
         GLCALL( glGetShaderiv(shader_id, GL_COMPILE_STATUS, &result); )
         if (result == GL_FALSE)
         {
+            std::cout << src << "\n";
+
             int length;
             GLCALL( glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length); )
             char *message = (char *)alloca(length * sizeof(char));
@@ -169,6 +169,12 @@ compileProgram( std::string vert_src, std::string frag_src )
     GLCALL( glAttachShader(program_id, vert_id); )
     GLCALL( glAttachShader(program_id, frag_id); )
     GLCALL( glLinkProgram(program_id); )
+
+    GLchar *str = new GLchar[1024];
+    glGetProgramInfoLog(program_id, 1024, nullptr, str);
+    std::cout << str << "\n";
+    delete[] str;
+
     GLCALL( glValidateProgram(program_id); )
 
     GLCALL( glDeleteShader(vert_id); )
@@ -179,21 +185,51 @@ compileProgram( std::string vert_src, std::string frag_src )
 
 
 
-
 void
-idk::glShader::load( std::string root, std::string vert, std::string frag )
+idk::glShader::reset()
 {
-    m_vert_src = parse_shader_source(root, vert);
-    m_frag_src = parse_shader_source(root, frag);
+    m_definitions.clear();
+    m_locations.clear();
+    m_uniforms.clear();
 }
 
 
-/** Load and compile
-*/
-GLuint
-idk::glShader::loadc( std::string root, std::string vert, std::string frag )
+void
+idk::glShader::loadFile( std::string root, std::string vert, std::string frag )
 {
-    this->load(root, vert, frag);
+    reset();
+
+    std::stringstream vert_buf, frag_buf;
+    vert_buf << std::ifstream(root + vert).rdbuf();
+    frag_buf << std::ifstream(root + frag).rdbuf();
+
+    m_vert_src = parse_shader_source(root, std::stringstream(vert_buf.str()));
+    m_frag_src = parse_shader_source(root, std::stringstream(frag_buf.str()));
+}
+
+
+GLuint
+idk::glShader::loadFileC( std::string root, std::string vert, std::string frag )
+{
+    loadFile(root, vert, frag);
+    return this->compile();
+}
+
+
+void
+idk::glShader::loadString( const std::string &vert, const std::string &frag )
+{
+    reset();
+
+    m_vert_src = parse_shader_source("", std::stringstream(vert));
+    m_frag_src = parse_shader_source("", std::stringstream(frag));
+}
+
+
+GLuint
+idk::glShader::loadStringC( const std::string &vert, const std::string &frag )
+{
+    loadString(vert, frag);
     return this->compile();
 }
 
@@ -248,7 +284,6 @@ idk::glShader::uniformLoc( const std::string &name )
 {
     GLint location = m_locations[name].value;
 
-
     // If -1, uniform may have been missed during parsing.
     if (location == -1)
     {
@@ -283,15 +318,6 @@ idk::glShader::bind()
 
     gl::useProgram(m_program_id);
     m_texture_unit = GL_TEXTURE0;
-}
-
-
-void
-idk::glShader::unbind()
-{
-    #ifdef IDK_DEBUG
-    gl::useProgram(0);
-    #endif
 }
 
 

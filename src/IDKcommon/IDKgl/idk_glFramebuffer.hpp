@@ -1,6 +1,8 @@
 #pragma once
 
-#include "IDKcommon/IDKcommon.h"
+#include "../idk_utility.h"
+#include "../idk_glcall.h"
+#include "../idk_datastructures/idk_vector.h"
 
 namespace idk
 {
@@ -36,10 +38,10 @@ private:
     bool m_first = true;
     glm::ivec2 m_size;
     GLuint m_FBO, m_RBO;
-    std::vector<GLuint> m_gl_attachments;
+    idk::vector<GLuint> m_gl_attachments;
 
 public:
-    std::vector<GLuint> attachments;
+    idk::vector<GLuint> attachments;
     GLuint              depth_attachment;
 
     void    reset( int w, int h, size_t num_attachments );
