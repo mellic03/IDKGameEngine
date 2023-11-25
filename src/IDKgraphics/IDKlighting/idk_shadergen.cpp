@@ -72,13 +72,13 @@ genFragShader( const idk::shadergen::Config &config, std::string &frag )
     frag += beginHeader();
     {
         frag += idk_shadergen::pointlight_definition;
-        frag += idk_shadergen::dirlight_definition;
+        // frag += idk_shadergen::dirlight_definition;
     }
     frag += endHeader();
     
     frag += idk_shadergen::pointlight_contribution;
-    frag += idk_shadergen::dirlight_contribution;
-    frag += idk_shadergen::dirlight_contribution_shadowmapped;
+    // frag += idk_shadergen::dirlight_contribution;
+    // frag += idk_shadergen::dirlight_contribution_shadowmapped;
 
     frag += beginMain();
     {
@@ -88,11 +88,11 @@ genFragShader( const idk::shadergen::Config &config, std::string &frag )
             idk_shadergen::pointlight_shadowmapped_call_begin
         );
 
-        frag += genLightCall(
-            config.dir_flags,
-            idk_shadergen::dirlight_call_begin,
-            idk_shadergen::dirlight_shadowmapped_call_begin
-        );
+        // frag += genLightCall(
+        //     config.dir_flags,
+        //     idk_shadergen::dirlight_call_begin,
+        //     idk_shadergen::dirlight_shadowmapped_call_begin
+        // );
     }
     frag += endMain();
 }

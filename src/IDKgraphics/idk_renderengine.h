@@ -76,6 +76,7 @@ private:
     modelqueue_t                        m_model_draw_queue;
     modelqueue_t                        m_wireframe_draw_queue;
     idk::vector<pair<int, glm::mat4>>   m_shadowcast_queue;
+    idk::vector<Pointlight>             m_pointlight_queue;
 
     // Initialization ---------------------------------------------------------------------
     /***/
@@ -136,6 +137,7 @@ public:
     ModelManager &                      modelManager()  { return m_model_manager; };
 
     void                                drawModel( GLuint shader_id, int model_id, glm::mat4 & );
+    void                                drawPointlight( Pointlight light );
     void                                drawShadowCaster( int model_id, glm::mat4 & );
     void                                drawModel_now( glShader &program, int model_id, glm::mat4 & );
 

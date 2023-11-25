@@ -7,8 +7,6 @@ idk::drawmethods::bind_material( glShader &program, Material &material )
     program.set_sampler2D ( "un_metallic_texture",   material.metallic_id  );
     program.set_sampler2D ( "un_roughness_texture",  material.roughness_id );
     program.set_sampler2D ( "un_ao_texture",         material.ao_id        );
-
-    // program.set_float     ( "un_specular_exponent",  material.specular_exponent );
 }
 
 

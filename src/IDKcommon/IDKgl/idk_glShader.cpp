@@ -170,10 +170,10 @@ compileProgram( std::string vert_src, std::string frag_src )
     GLCALL( glAttachShader(program_id, frag_id); )
     GLCALL( glLinkProgram(program_id); )
 
-    GLchar *str = new GLchar[1024];
-    glGetProgramInfoLog(program_id, 1024, nullptr, str);
-    std::cout << str << "\n";
-    delete[] str;
+    // GLchar *str = new GLchar[1024];
+    // glGetProgramInfoLog(program_id, 1024, nullptr, str);
+    // std::cout << str << "\n";
+    // delete[] str;
 
     GLCALL( glValidateProgram(program_id); )
 

@@ -89,24 +89,25 @@ idk::RenderEngine::compileShaders()
 {
     createProgram("background",      "IDKGE/shaders/deferred/", "background.vs", "background.fs");
     createProgram("geometry_pass",   "IDKGE/shaders/deferred/", "geometrypass.vs", "geometrypass.fs");
-    createProgram("lighting_pass",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass_pbr.fs");
+    createProgram("geometry_light",  "IDKGE/shaders/deferred/", "geometrypass.vs", "lightsource.fs");
+    // createProgram("lighting_pass",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass_pbr.fs");
 
-    glShader &program = getProgram("lighting_pass");
-    program.setDefinition("MAX_POINTLIGHTS", std::to_string(IDK_MAX_POINTLIGHTS));
-    program.setDefinition("MAX_SPOTLIGHTS",  std::to_string(IDK_MAX_SPOTLIGHTS));
-    program.setDefinition("MAX_DIRLIGHTS",   std::to_string(IDK_MAX_DIRLIGHTS));
-    program.compile();
+    // glShader &program = getProgram("lighting_pass");
+    // program.setDefinition("MAX_POINTLIGHTS", std::to_string(IDK_MAX_POINTLIGHTS));
+    // program.setDefinition("MAX_SPOTLIGHTS",  std::to_string(IDK_MAX_SPOTLIGHTS));
+    // program.setDefinition("MAX_DIRLIGHTS",   std::to_string(IDK_MAX_DIRLIGHTS));
+    // program.compile();
 
-    createProgram("dirvolumetrics",  "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
-    createProgram("gaussian",        "IDKGE/shaders/", "screenquad.vs", "postprocess/gaussian.fs");
-    createProgram("additive",        "IDKGE/shaders/", "screenquad.vs", "postprocess/additive.fs");
-    createProgram("chromatic",       "IDKGE/shaders/", "screenquad.vs", "postprocess/c-abberation.fs");
-    createProgram("blit",            "IDKGE/shaders/", "screenquad.vs", "postprocess/blit.fs");
-    createProgram("fxaa",            "IDKGE/shaders/", "screenquad.vs", "postprocess/fxaa.fs");
-    createProgram("getdepth",        "IDKGE/shaders/", "screenquad.vs", "postprocess/getdepth.fs");
-    createProgram("colorgrade",      "IDKGE/shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
-    createProgram("dir_shadow",      "IDKGE/shaders/", "dirshadow.vs",  "dirshadow.fs");
-    createProgram("solid",           "IDKGE/shaders/", "vsin_pos_only.vs", "solid.fs");
+    createProgram("dirvolumetrics", "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
+    createProgram("gaussian",       "IDKGE/shaders/", "screenquad.vs", "postprocess/gaussian.fs");
+    createProgram("additive",       "IDKGE/shaders/", "screenquad.vs", "postprocess/additive.fs");
+    createProgram("chromatic",      "IDKGE/shaders/", "screenquad.vs", "postprocess/c-abberation.fs");
+    createProgram("blit",           "IDKGE/shaders/", "screenquad.vs", "postprocess/blit.fs");
+    createProgram("fxaa",           "IDKGE/shaders/", "screenquad.vs", "postprocess/fxaa.fs");
+    createProgram("getdepth",       "IDKGE/shaders/", "screenquad.vs", "postprocess/getdepth.fs");
+    createProgram("colorgrade",     "IDKGE/shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
+    createProgram("dir_shadow",     "IDKGE/shaders/", "dirshadow.vs",  "dirshadow.fs");
+    createProgram("solid",          "IDKGE/shaders/", "vsin_pos_only.vs", "solid.fs");
 }
 
 
@@ -319,6 +320,12 @@ idk::RenderEngine::drawModel_now( glShader &program, int model_id, glm::mat4 &mo
 }
 
 
+void
+idk::RenderEngine::drawPointlight( Pointlight light )
+{
+    m_pointlight_queue.push(light);
+}
+
 
 
 #define ORTHO_N 0.01f
@@ -468,6 +475,7 @@ idk::RenderEngine::endFrame()
         static std::string vert_source = "";
         static std::string frag_source = "";
         m_lightsystem.genShaderString(vert_source, frag_source);
+        // std::cout << "\n\n" << frag_source << "\n\n";
 
         glShader &lighting = getProgram("lighting_pass");
         lighting.loadStringC(vert_source, frag_source);
@@ -509,6 +517,24 @@ idk::RenderEngine::endFrame()
     }
     glShader::unbind();
     m_model_draw_queue.clear();
+
+    getProgram("geometry_light").bind();
+    for (Pointlight &light: m_pointlight_queue)
+    {
+        glm::mat4 mat = glm::translate(glm::mat4(1.0f), glm::vec3(light.position));
+        mat = glm::scale(mat, glm::vec3(0.1f));
+    
+        getProgram("geometry_light").set_vec4("un_color", light.diffuse);
+
+        drawmethods::draw_untextured(
+            geometrypass,
+            modelManager().getModel(SPHERE_PRIMITIVE),
+            mat
+        );
+    }
+    m_pointlight_queue.clear();
+    glShader::unbind();
+
     gl::bindVertexArray(0);
     // -----------------------------------------------------------------------------------------
     

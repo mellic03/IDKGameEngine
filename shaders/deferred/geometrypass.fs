@@ -11,7 +11,6 @@ layout (location = 3) out vec4 fsout_roughness_ao;
 in vec3 fsin_fragpos;
 in vec3 fsin_normal;
 in vec2 fsin_texcoords;
-in vec4 fsin_fragpos_dirlightspace[10];
 
 uniform sampler2D un_albedo_texture;
 uniform sampler2D un_metallic_texture;

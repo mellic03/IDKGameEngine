@@ -11,6 +11,8 @@ layout (location = 0) out vec4 fsout_frag_color;
 #define NUM_SPOTLIGHTS  0
 #define NUM_DIRLIGHTS   0
 
+#define PI 3.14159265359
+
 
 in vec2 fsin_texcoords;
 
@@ -60,8 +62,6 @@ vec3 lambert_diffuse( vec3 albedo, vec3 normal, vec3 incoming )
 }
 
 
-#define PI 3.14159265359
-
 float NDF_GGX( vec3 normal, vec3 halfnormal, float roughness )
 {
     const float alpha = roughness*roughness;
@@ -77,7 +77,7 @@ float schlick_GGX( vec3 normal, vec3 halfnormal, vec3 viewdir, float roughness )
 {
     const float a   = roughness*roughness + 1.0;
     const float K   = (a*a) / 8.0;
-    const float dnv = dot(normal, viewdir);
+    const float dnv = max(dot(normal, viewdir), 0.0);
 
     return dnv / (dnv * (1.0 - K) + K);
 }
@@ -85,7 +85,7 @@ float schlick_GGX( vec3 normal, vec3 halfnormal, vec3 viewdir, float roughness )
 
 vec3 fresnel( vec3 halfnormal, vec3 viewdir, vec3 reflectivity )
 {
-    float dvh = 1.0 - dot(viewdir, halfnormal);
+    float dvh = 1.0 - max(dot(viewdir, halfnormal), 0.0);
     dvh = dvh * dvh * dvh * dvh * dvh;
     return reflectivity + (1.0 - reflectivity) * dvh;
 }
@@ -146,15 +146,15 @@ vec3 dirlight_contribution( int idx, vec3 view_dir, vec3 position, vec3 normal,
     vec3 halfway_dir = normalize(frag_to_light + view_dir);
     float specular_f = 0.0; // pow(max(dot(normal, halfway_dir), 0.0), spec_exponent);
 
-    float shadow = dirlight_shadow(idx, position);
+    const vec3 reflectivity = vec3(1.0, 0.86, 0.57);
+    vec3 kS = fresnel(halfway_dir, view_dir, reflectivity);
+    vec3 kD = 1.0 - kS;
 
-    vec3 ambient  = albedo * diffuse_f * light_ambient;
-    vec3 diffuse  = albedo * diffuse_ff * light_diffuse;
-    vec3 specular = vec3(0.0); // diffuse * specular_f * 15*spec;
+    vec3 ambient  = albedo * light_ambient;
+    vec3 diffuse  = albedo * kD * kS / PI;
+    vec3 specular = specular_BDRF(normal, halfway_dir, frag_to_light, view_dir, roughness);
 
-    vec3 result = ambient + shadow*diffuse + shadow*specular;
-
-    return result; 
+    return ambient + light_diffuse * (diffuse + specular) * dot(normal, frag_to_light);
 }
 
 
@@ -164,7 +164,6 @@ vec3 pointlight_contribution( int idx, vec3 view_dir, vec3 position, vec3 normal
                               vec3 albedo, float metallic, float roughness, float ao )
 {
     vec3 light_position = ubo_pointlights[idx].position.xyz;
-
     vec3 light_ambient = ubo_pointlights[idx].ambient.xyz;
     vec3 light_diffuse = ubo_pointlights[idx].diffuse.xyz;
 
@@ -178,7 +177,7 @@ vec3 pointlight_contribution( int idx, vec3 view_dir, vec3 position, vec3 normal
 
     vec3 frag_to_light = normalize(light_position - position);
     float diffuse_f = max(dot(normal, frag_to_light), 0.0);
-    vec3 halfway_dir = normalize(frag_to_light + view_dir);  
+    vec3 halfway_dir = normalize(frag_to_light + view_dir);
 
     const vec3 reflectivity = vec3(1.0, 0.86, 0.57);
     vec3 kS = fresnel(halfway_dir, view_dir, reflectivity);

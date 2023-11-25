@@ -10,7 +10,7 @@
 idk::ModelManager::ModelManager()
 {
     uint32_t *data = new uint32_t[1];
-    data[0] = ~(uint32_t)0;
+    data[0] = (~(uint32_t)0) / 2;
     m_default_texture_ID = idk::gltools::loadTexture(1, 1, (uint32_t *)data, false);
 
     delete[] data;
@@ -64,7 +64,7 @@ idk::ModelManager::_load_mtl( std::string raw_mtl )
         {
             size_t root = line.find("assets/");
             line = line.substr(root);
-            _materials.get(material_id).roughness_id = get_texture_id(line);
+            _materials.get(material_id).metallic_id = get_texture_id(line);
         }
 
         else if (line.find("map_Pr") != std::string::npos) // roughness
