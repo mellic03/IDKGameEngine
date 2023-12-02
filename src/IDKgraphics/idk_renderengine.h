@@ -28,7 +28,7 @@ class idk::RenderEngine
 {
 public:
 
-    enum InitFlag
+    enum InitFlag: uint32_t
     {
         NONE              = 0,
         INIT_PROGRAMS     = 1 << 0,
