@@ -10,7 +10,7 @@ GLuint  idk::RenderEngine::CRATE_PRIMITIVE;
 // --------------------------------------------
 
 void
-idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h)
+idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, InitFlag flags )
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -22,13 +22,17 @@ idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h)
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
+
+    Uint32 sdl_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+    if (flags & InitFlag::INIT_HEADLESS) sdl_flags |= SDL_WINDOW_HIDDEN;
+
     m_SDL_window = SDL_CreateWindow(
         windowname.c_str(),
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         w,
         h,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+        sdl_flags
     );
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
@@ -203,7 +207,7 @@ idk::RenderEngine::init( std::string name, int w, int h, InitFlag flags )
 {
     m_resolution = glm::ivec2(w, h);
 
-    init_SDL_OpenGL(name, w, h);
+    init_SDL_OpenGL(name, w, h, flags);
     current_skybox = 0;
 
     if (flags == InitFlag::NONE)

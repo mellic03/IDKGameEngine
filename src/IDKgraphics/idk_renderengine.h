@@ -26,6 +26,20 @@ namespace idk { class RenderEngine; };
 
 class idk::RenderEngine
 {
+public:
+
+    enum InitFlag
+    {
+        NONE              = 0,
+        INIT_PROGRAMS     = 1 << 0,
+        INIT_FRAMEBUFFERS = 1 << 1,
+        INIT_LIGHTING     = 1 << 2,
+        INIT_MODELS       = 1 << 3,
+        INIT_CAMERA       = 1 << 4,
+        INIT_NOISE        = 1 << 5,
+        INIT_HEADLESS     = 1 << 6
+    };
+
 private:
     glm::ivec2                          m_resolution;
 
@@ -80,7 +94,7 @@ private:
 
     // Initialization ---------------------------------------------------------------------
     /***/
-    void                                init_SDL_OpenGL( std::string windowname, size_t w, size_t h );
+    void                                init_SDL_OpenGL( std::string windowname, size_t w, size_t h, InitFlag flags );
     void                                init_screenquad();
     void                                init_framebuffers( int width, int height );
     void                                init_all( std::string name, int w, int h );
@@ -101,17 +115,6 @@ private:
 
 
 public:
-
-    enum InitFlag
-    {
-        NONE              = 0,
-        INIT_PROGRAMS     = 1 << 0,
-        INIT_FRAMEBUFFERS = 1 << 1,
-        INIT_LIGHTING     = 1 << 2,
-        INIT_MODELS       = 1 << 3,
-        INIT_CAMERA       = 1 << 4,
-        INIT_NOISE        = 1 << 5
-    };
 
     static void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
 
