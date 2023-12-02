@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcommon/IDKcommon.h"
+#include "libidk/libidk.h"
 
 namespace idk { class AudioEngine; };
 

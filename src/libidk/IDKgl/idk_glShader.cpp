@@ -126,63 +126,102 @@ idk::glShader::parse_shader_source( std::string root, std::stringstream source )
 }
 
 
-static GLuint
-compileProgram( std::string vert_src, std::string frag_src )
+GLuint
+idk::glShader::compileShader( std::string name, std::string &src, GLenum type )
 {
-    std::ifstream instream;
-    std::string line;
+    const char *str = src.c_str();
+    GLuint shader_id = glCreateShader(type);
 
-    auto compile_shader = [](std::string &src, GLenum type, std::string root, std::string stem)
+    GLCALL( glShaderSource(shader_id, 1, &str, nullptr); )
+    GLCALL( glCompileShader(shader_id); )
+
+    int result;
+    GLCALL( glGetShaderiv(shader_id, GL_COMPILE_STATUS, &result); )
+
+    if (result == GL_FALSE)
     {
-        const char *str = src.c_str();
-        GLuint shader_id = glCreateShader(type);
-        GLCALL( glShaderSource(shader_id, 1, &str, nullptr); )
-        GLCALL( glCompileShader(shader_id); )
+        std::cout << src << "\n";
 
-        int result;
-        GLCALL( glGetShaderiv(shader_id, GL_COMPILE_STATUS, &result); )
-        if (result == GL_FALSE)
-        {
-            std::cout << src << "\n";
+        int length;
+        GLCALL( glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length); )
+        char *message = new char[length * sizeof(char)];
+        GLCALL( glGetShaderInfoLog(shader_id, length, &length, message); )
 
-            int length;
-            GLCALL( glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &length); )
-            char *message = (char *)alloca(length * sizeof(char));
-            GLCALL( glGetShaderInfoLog(shader_id, length, &length, message); )
+        std::cout << "Name: " << name << std::endl;
 
-            std::cout << "File " << root + stem << std::endl;
+        std::cout << "Failed to compile ";
+        if      (type == GL_VERTEX_SHADER)   std::cout << "vertex shader\n";
+        else if (type == GL_GEOMETRY_SHADER) std::cout << "geometry shader\n";
+        else if (type == GL_FRAGMENT_SHADER) std::cout << "fragment shader\n";
+        std::cout << message << std::endl;
+        delete[] message;
 
-            std::cout << "Failed to compile "
-                      << (type == GL_VERTEX_SHADER ? "vertex" : "fragment")
-                      << " shader\n" << std::endl; 
-            std::cout << message << std::endl;
-            exit(1);
-        }
+        exit(1);
+    }
 
-        return shader_id;
-    };
+    return shader_id;
+}
 
-    GLuint vert_id = compile_shader(vert_src, GL_VERTEX_SHADER, "ree", "ree");
-    GLuint frag_id = compile_shader(frag_src, GL_FRAGMENT_SHADER, "ree", "ree");
 
-    GLuint program_id = glCreateProgram();
-    GLCALL( glAttachShader(program_id, vert_id); )
-    GLCALL( glAttachShader(program_id, frag_id); )
-    GLCALL( glLinkProgram(program_id); )
+GLuint
+idk::glShader::compile_vf( const std::string &defines )
+{
+    static std::string v = "";
+    static std::string f = "";
+
+    v = m_version + defines + m_vert_src;
+    f = m_version + defines + m_frag_src;
+
+    GLuint vert_id = compileShader("Ree", v, GL_VERTEX_SHADER);
+    GLuint frag_id = compileShader("Ree", f, GL_FRAGMENT_SHADER);
+
+    GLuint program = glCreateProgram();
+    GLCALL( glAttachShader(program, vert_id); )
+    GLCALL( glAttachShader(program, frag_id); )
+    GLCALL( glLinkProgram(program); )
 
     // GLchar *str = new GLchar[1024];
-    // glGetProgramInfoLog(program_id, 1024, nullptr, str);
-    // std::cout << str << "\n";
+    // glGetProgramInfoLog(program, 1024, nullptr, str);
+    // std::cout << str << "";
     // delete[] str;
 
-    GLCALL( glValidateProgram(program_id); )
+    GLCALL( glValidateProgram(program); )
 
     GLCALL( glDeleteShader(vert_id); )
     GLCALL( glDeleteShader(frag_id); )
 
-    return program_id;
+    return program;
 }
 
+
+GLuint
+idk::glShader::compile_vgf( const std::string &defines )
+{
+    static std::string v = "";
+    static std::string g = "";
+    static std::string f = "";
+    v = m_version + defines + m_vert_src;
+    g = m_version + defines + m_geom_src;
+    f = m_version + defines + m_frag_src;
+
+    GLuint vert_id = compileShader("Ree", v, GL_VERTEX_SHADER);
+    GLuint geom_id = compileShader("Ree", g, GL_GEOMETRY_SHADER);
+    GLuint frag_id = compileShader("Ree", f, GL_FRAGMENT_SHADER);
+
+    GLuint program = glCreateProgram();
+    GLCALL( glAttachShader(program, vert_id); )
+    GLCALL( glAttachShader(program, geom_id); )
+    GLCALL( glAttachShader(program, frag_id); )
+    GLCALL( glLinkProgram(program); )
+
+    GLCALL( glValidateProgram(program); )
+
+    GLCALL( glDeleteShader(vert_id); )
+    GLCALL( glDeleteShader(geom_id); )
+    GLCALL( glDeleteShader(frag_id); )
+
+    return program;
+}
 
 
 void
@@ -191,6 +230,10 @@ idk::glShader::reset()
     m_definitions.clear();
     m_locations.clear();
     m_uniforms.clear();
+
+    m_vert_src.clear();
+    m_geom_src.clear();
+    m_frag_src.clear();
 }
 
 
@@ -214,6 +257,31 @@ idk::glShader::loadFileC( std::string root, std::string vert, std::string frag )
     loadFile(root, vert, frag);
     return this->compile();
 }
+
+
+void
+idk::glShader::loadFile_vgf( std::string root, std::string v, std::string g, std::string f )
+{
+    reset();
+
+    std::stringstream vert_buf, geom_buf, frag_buf;
+    vert_buf << std::ifstream(root + v).rdbuf();
+    geom_buf << std::ifstream(root + g).rdbuf();
+    frag_buf << std::ifstream(root + f).rdbuf();
+
+    m_vert_src = parse_shader_source(root, std::stringstream(vert_buf.str()));
+    m_geom_src = parse_shader_source(root, std::stringstream(geom_buf.str()));
+    m_frag_src = parse_shader_source(root, std::stringstream(frag_buf.str()));
+}
+
+
+GLuint
+idk::glShader::loadFileC_vgf( std::string root, std::string v, std::string g, std::string f )
+{
+    loadFile_vgf(root, v, g, f);
+    return this->compile();
+}
+
 
 
 void
@@ -264,11 +332,8 @@ idk::glShader::compile()
         defines += "#define " + name + " " + value.value + "\n";
     }
 
-    std::string vert_src = m_version + defines + m_vert_src;
-    std::string frag_src = m_version + defines + m_frag_src;
-
     gl::deleteProgram(m_program_id);
-    m_program_id = compileProgram(vert_src, frag_src);
+    m_program_id = compile_vf(defines);
 
     for (auto &name: m_uniforms)
     {
@@ -320,6 +385,14 @@ idk::glShader::bind()
     m_texture_unit = GL_TEXTURE0;
 }
 
+
+void
+idk::glShader::unbind()
+{
+    #ifdef IDK_DEBUG
+        idk::gl::useProgram(0);
+    #endif
+};
 
 
 void
@@ -397,8 +470,7 @@ idk::glShader::set_sampler2D( std::string name, GLuint texture_id )
 
     GLint loc = uniformLoc(name);
 
-    gl::activeTexture(m_texture_unit);
-    gl::bindTexture(GL_TEXTURE_2D, texture_id);
+    gl::bindTextureUnit(m_texture_unit - GL_TEXTURE0, texture_id);
     gl::uniform1i(loc, m_texture_unit - GL_TEXTURE0);
 
     m_texture_unit += 1;
@@ -427,4 +499,28 @@ idk::glShader::set_sampler3D( std::string name, GLuint texture_id )
 
 
 
+void
+idk::glShader::set_samplerCube( std::string name, GLuint texture_id )
+{
+    if (m_program_id == 0)
+    {
+        std::cout << "RUH ROH" << std::endl;
+        exit(1);
+    }
 
+    #ifdef IDK_DEBUG
+        if (m_texture_unit - GL_TEXTURE0 > 32)
+        {
+            std::cout << "[idk::glShader::set_sampler2D] m_texture_unit > GL_TEXTURE0 + 32\n";
+            exit(1);
+        }
+    #endif
+
+    GLint loc = uniformLoc(name);
+
+    gl::activeTexture(m_texture_unit);
+    gl::bindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+    gl::uniform1i(loc, m_texture_unit - GL_TEXTURE0);
+
+    m_texture_unit += 1;
+}

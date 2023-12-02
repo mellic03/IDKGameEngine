@@ -3,6 +3,8 @@
 #include "../idk_glm.h"
 #include "../idk_utility.h"
 
+#include <vector>
+
 namespace idk
 {
     template <typename T> class Allocator;
@@ -11,7 +13,6 @@ namespace idk
     template <typename T, typename U, typename V> struct triple;
 
     template <typename T> class stack;
-    template <typename T> class vector;
     template <typename T> class Graph;
 
     class Transform;

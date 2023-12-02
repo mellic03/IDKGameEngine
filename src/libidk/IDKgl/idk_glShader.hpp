@@ -16,6 +16,7 @@ public:
 private:
     std::string                 m_version;
     std::string                 m_vert_src;
+    std::string                 m_geom_src;
     std::string                 m_frag_src;
 
     std::set<std::string>       m_uniforms;
@@ -27,12 +28,20 @@ private:
     std::string parse_shader_include ( std::string root, std::string includeline  );
     std::string parse_shader_source  ( std::string root, std::stringstream source );
 
+    static GLuint compileShader ( std::string name, std::string &src, GLenum type );
+    GLuint        compile_vf    ( const std::string &defines );
+    GLuint        compile_vgf   ( const std::string &defines );
+
     void        reset();
 
 public:
 
     void        loadFile  ( std::string root, std::string vert, std::string frag );
     GLuint      loadFileC ( std::string root, std::string vert, std::string frag );
+
+    void        loadFile_vgf  ( std::string root, std::string vert, std::string geom, std::string frag );
+    GLuint      loadFileC_vgf ( std::string root, std::string vert, std::string geom, std::string frag );
+
     void        loadString  ( const std::string &vert, const std::string &frag );
     GLuint      loadStringC ( const std::string &vert, const std::string &frag );
 
@@ -42,7 +51,7 @@ public:
 
     GLuint      compile();
     void        bind();
-    static void unbind() { idk::gl::useProgram(0); };
+    static void unbind();
     void        popTextureUnits() { m_texture_unit = GL_TEXTURE0; };
 
 
@@ -57,5 +66,6 @@ public:
     void        set_mat4      ( std::string, glm::mat4 );
     void        set_sampler2D ( std::string, GLuint    );
     void        set_sampler3D ( std::string, GLuint    );
+    void        set_samplerCube ( std::string, GLuint  );
 };
 

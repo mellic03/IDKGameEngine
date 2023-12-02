@@ -13,6 +13,7 @@ void main()
 {
     vec3 color_0 = texture(un_texture_0, fsin_texcoords).rgb;
     vec3 color_1 = intensity * texture(un_texture_4, fsin_texcoords).rgb;
+    vec3 color = color_0 + color_1;
 
-    fsout_frag_color = vec4(color_0 + color_1, 1.0);
+    fsout_frag_color = vec4(color, 1.0);
 }

@@ -100,20 +100,18 @@ idk::AudioEngine::update()
     glm::vec3 listener_pos = m_listener_transform->position();
     glm::vec3 listener_dir = glm::normalize(this->m_listener_transform->front());
 
-    this->m_emitter_allocator.for_each(
-        [listener_pos, listener_dir](AudioEngine::Emitter &emitter)
-        {
-            if (emitter.transform == nullptr)
-                return;
+    for (Emitter &emitter: m_emitter_allocator)
+    {
+        if (emitter.transform == nullptr)
+            continue;
 
-            glm::vec3 emitter_pos  = emitter.transform->position();
-            glm::vec3 dir = glm::normalize(emitter_pos - listener_pos);
-            
-            float dot = glm::dot(dir, listener_dir);
-            dot = (dot + 1.0f) / 2.0f;
+        glm::vec3 emitter_pos  = emitter.transform->position();
+        glm::vec3 dir = glm::normalize(emitter_pos - listener_pos);
+        
+        float dot = glm::dot(dir, listener_dir);
+        dot = (dot + 1.0f) / 2.0f;
 
-            Mix_Volume(emitter.channel, dot*SDL_MIX_MAXVOLUME);
-        }
-    );
+        Mix_Volume(emitter.channel, dot*SDL_MIX_MAXVOLUME);
+    }
 }
 

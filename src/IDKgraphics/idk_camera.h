@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcommon/IDKcommon.h"
+#include "libidk/libidk.h"
 
 namespace idk { class Camera; };
 
@@ -21,7 +21,6 @@ private:
     glm::vec4           _default_front;
     glm::vec4           _default_up;
 
-
     float               _fov;
     float               _near;
     float               _far;
@@ -31,6 +30,18 @@ private:
 
 
 public:
+
+    glm::vec4           m_bloom_gamma = glm::vec4(0.02f, 2.2f, 165.0f, 1.0f);
+    glm::vec4           m_exposure    = glm::vec4(1.0f,  0.0f, 10.0f, 1.0f);
+    glm::vec4           m_kmhs        = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+
+    glm::vec2           aberration[3];
+
+    glm::vec2           m_r_abr = glm::vec2(0.0f);
+    glm::vec2           m_g_abr = glm::vec2(0.0f);
+    glm::vec2           m_b_abr = glm::vec2(0.0f);
+    float               m_abr_str = 0.0f;
+
                         Camera(float fov, float near, float far);
                         Camera();
 

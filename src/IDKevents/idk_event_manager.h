@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcommon/IDKcommon.h"
+#include "libidk/libidk.h"
 #include "idk_keylog.hpp"
 
 
@@ -44,19 +44,18 @@ class idk::EventManager
 private:
     
     // SDL backend ------------------------------------
-    SDL_Event               m_SDL_Event;
-    idk::vector<fun_t>      m_SDL_pollevents;
+    std::vector<fun_t>      m_SDL_pollevents;
     // ------------------------------------------------
 
     Allocator<idk::Event>   m_events;
-    idk::vector<bool>       m_windowevents;
+    bool                    m_windowevents[2];
 
     glm::ivec2              m_size;
     idk::Keylog             m_keylog;
 
     bool                    m_mouse_captured = false;
-    idk::vector<bool>       m_mousebutton_up;
-    idk::vector<bool>       m_mousebutton_down;
+    std::vector<bool>       m_mousebutton_up;
+    std::vector<bool>       m_mousebutton_down;
     glm::vec2               m_mouse_position;
     glm::vec2               m_mouse_delta;
 
@@ -72,7 +71,7 @@ public:
     glm::ivec2              windowSize() const { return m_size; };
     
     void                    onWindowEvent( WindowEvent, std::function<void()> );
-    void                    onSDLPollEvent( std::function<void(SDL_Event *)> fn) { m_SDL_pollevents.push(fn); };
+    void                    onSDLPollEvent( std::function<void(SDL_Event *)> fn) { m_SDL_pollevents.push_back(fn); };
     void                    onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback );
 
     void                    mouseCapture( bool capture );

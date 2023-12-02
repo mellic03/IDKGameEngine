@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 
         // std::cout << dir_entry.path().string() << std::endl;
         auto texfile = idk::filetools::texFromIMG(dir_entry.path().string());
-        texpak.texfiles.push(texfile);
+        texpak.texfiles.push_back(texfile);
     }
 
 

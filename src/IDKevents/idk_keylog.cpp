@@ -7,7 +7,7 @@ idk::Keylog::Keylog(): m_keys(3)
     m_keys.resize(3);
 
     for (int i=0; i<3; i++)
-        m_keys[i] = idk::vector<bool>(idk::Keycode::NUM_KEYCODES, false);
+        m_keys[i] = std::vector<bool>(idk::Keycode::NUM_KEYCODES, false);
 }
 
 

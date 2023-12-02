@@ -6,7 +6,7 @@ layout (location = 0) out vec4 fsout_frag_color;
 
 in vec2 fsin_texcoords;
 uniform sampler2D un_texture_0;
-
+uniform sampler2D un_texture_4; // previous (half) resolution.
 
 void main()
 {
@@ -43,7 +43,7 @@ void main()
     {
         sampleTex[i] = 
         texture(un_texture_0, fsin_texcoords.st + offsets[i]).rgb
-        + texture(un_texture_0, fsin_texcoords + offsets[i]/2.0).rgb;
+        + texture(un_texture_4, fsin_texcoords + offsets[i]/2.0).rgb;
     }
 
     vec3 RenderWithKernel = vec3(0.0);
@@ -53,5 +53,5 @@ void main()
         RenderWithKernel += sampleTex[i] * ImageKernel[i];
     }
 
-    fsout_frag_color = vec4(RenderWithKernel, 1.0);
+    fsout_frag_color += vec4(RenderWithKernel, 1.0);
 }

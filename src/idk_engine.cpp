@@ -1,12 +1,13 @@
 #include "idk_engine.h"
 
 
-idk::ThreadPool idk::Engine::threadpool = idk::ThreadPool(8);
+// idk::ThreadPool idk::Engine::threadpool = idk::ThreadPool(8);
 
 
-idk::Engine::Engine( std::string name, int w, int h, int res_divisor ):
-m_render_engine(name, w, h, res_divisor )
+idk::Engine::Engine( std::string name, int w, int h, int res_divisor )
 {
+    m_render_engine.init(name, w, h);
+
     idk::Engine &engine = *this;
     idk::RenderEngine &ren = m_render_engine;
     idk::EventManager &eman = m_event_manager;
@@ -28,13 +29,13 @@ m_render_engine(name, w, h, res_divisor )
 
 
 void
-idk::Engine::f_idk_CS_stage_A()
+idk::Engine::idk_CS_stage_A()
 {
     idk::Engine *engine = this;
 
-    for (size_t i=0; i<m_idk_componentsystems.size(); i++)
+    for (size_t i=0; i<m_componentsystems.size(); i++)
     {
-        idk::ComponentSystem *CS = m_idk_componentsystems[i];
+        idk::ComponentSystem *CS = m_componentsystems[i];
         CS->stage_A(*this);
     }
 
@@ -47,13 +48,13 @@ idk::Engine::f_idk_CS_stage_A()
 
 
 void
-idk::Engine::f_idk_CS_stage_B()
+idk::Engine::idk_CS_stage_B()
 {
     idk::Engine *engine = this;
 
-    for (size_t i=0; i<m_idk_componentsystems.size(); i++)
+    for (size_t i=0; i<m_componentsystems.size(); i++)
     {
-        idk::ComponentSystem *CS = m_idk_componentsystems[i];
+        idk::ComponentSystem *CS = m_componentsystems[i];
         CS->stage_B(*this);
     }
 
@@ -67,11 +68,11 @@ idk::Engine::f_idk_CS_stage_B()
 
 
 void
-idk::Engine::f_idk_CS_stage_C()
+idk::Engine::idk_CS_stage_C()
 {
-    for (size_t i=0; i<m_idk_componentsystems.size(); i++)
+    for (size_t i=0; i<m_componentsystems.size(); i++)
     {
-        idk::ComponentSystem *CS = m_idk_componentsystems[i];
+        idk::ComponentSystem *CS = m_componentsystems[i];
         CS->stage_C(*this);
     }
 
@@ -84,9 +85,9 @@ idk::Engine::f_idk_CS_stage_C()
 
 
 void
-idk::Engine::f_idk_CS_checkDependencies( int obj_id, int component_id )
+idk::Engine::idk_CS_checkDependencies( int obj_id, int component_id )
 {
-    auto cs = m_idk_componentsystems[component_id];
+    auto cs = m_componentsystems[component_id];
     auto deps = cs->getDependencies();
 
     for (auto &name: deps)
@@ -108,36 +109,36 @@ idk::Engine::f_idk_CS_checkDependencies( int obj_id, int component_id )
 
 
 void
-idk::Engine::f_idk_CS_onObjectAssignment( int component_id, int obj_id )
+idk::Engine::idk_CS_onObjectAssignment( int component_id, int obj_id )
 {
     #ifdef IDK_DEBUG
-        f_idk_CS_checkDependencies(obj_id, component_id);
+        idk_CS_checkDependencies(obj_id, component_id);
     #endif
 
-    m_idk_componentsystems[component_id]->onObjectAssignment(obj_id, *this);
+    m_componentsystems[component_id]->onObjectAssignment(obj_id, *this);
 }
 
 
 void
-idk::Engine::f_idk_CS_onObjectCreation( int obj_id )
+idk::Engine::idk_CS_onObjectCreation( int obj_id )
 {
-    for (idk::ComponentSystem *component: m_idk_componentsystems)
+    for (idk::ComponentSystem *component: m_componentsystems)
         component->onObjectCreation(obj_id, *this);
 }
 
 
 void
-idk::Engine::f_idk_CS_onObjectDeletion( int obj_id )
+idk::Engine::idk_CS_onObjectDeletion( int obj_id )
 {
-    for (idk::ComponentSystem *component: m_idk_componentsystems)
+    for (idk::ComponentSystem *component: m_componentsystems)
         component->onObjectDeletion(obj_id, *this);
 }
 
 
 void
-idk::Engine::f_idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id )
+idk::Engine::idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id )
 {
-    for (idk::ComponentSystem *component: m_idk_componentsystems)
+    for (idk::ComponentSystem *component: m_componentsystems)
         component->onObjectCopy(src_obj_id, dest_obj_id, *this);
 }
 
@@ -145,12 +146,10 @@ idk::Engine::f_idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id )
 int
 idk::Engine::createGameObject()
 {
-    int num_components = m_idk_componentsystems.size();
-    m_component_matrix.push_back(std::vector<int>(num_components, 0));
-
     int obj_id = m_gameobjects.create();
 
-    f_idk_CS_onObjectCreation(obj_id);
+    m_object_ids.insert(obj_id);
+    idk_CS_onObjectCreation(obj_id);
 
     return obj_id;
 }
@@ -159,70 +158,73 @@ idk::Engine::createGameObject()
 int
 idk::Engine::createGameObject( int prefab_id )
 {
-    int num_components = m_idk_componentsystems.size();
-    m_component_matrix.push_back(m_component_matrix[prefab_id]);
+    int obj_id = createGameObject();
 
-    int obj_id = m_gameobjects.create();
-
-    f_idk_CS_onObjectCreation(obj_id);
-    f_idk_CS_onObjectCopy(prefab_id, obj_id);
+    idk_CS_onObjectCopy(prefab_id, obj_id);
 
     return obj_id;
 }
 
 
-std::vector<int>
+const std::set<int> &
+idk::Engine::gameObjects()
+{
+    return m_object_ids;
+}
+
+
+const std::set<int> &
 idk::Engine::gameObjects_byComponent( int component_id )
 {
-    std::vector<int> obj_ids;
-
-    for (size_t i=0; i<m_component_matrix.size(); i++)
-        if (m_component_matrix[i][component_id] == 1)
-            obj_ids.push_back(i);
-
-    return obj_ids;
+    return m_components_objects[component_id];
 }
 
 
 void
 idk::Engine::deleteGameObject( int obj_id )
 {
-    for (size_t i=0; i<m_idk_componentsystems.size(); i++)
-        removeComponent(obj_id, i);
+    m_objects_components[obj_id].clear();
 
+    for (auto &[cs_id, object_ids]: m_components_objects)
+    {
+        object_ids.erase(obj_id);
+    }
+
+    m_object_ids.erase(obj_id);
     m_gameobjects.destroy(obj_id);
-    m_component_matrix[obj_id] = std::vector<int>(m_idk_componentsystems.size(), 0);
 
-    f_idk_CS_onObjectDeletion(obj_id);
+    idk_CS_onObjectDeletion(obj_id);
 }
 
 
 void
 idk::Engine::giveComponent( int obj_id, int component_id )
 {
-    m_component_matrix[obj_id][component_id] = 1;
-    f_idk_CS_onObjectAssignment(component_id, obj_id);
+    m_objects_components[obj_id].insert(component_id);
+    m_components_objects[component_id].insert(obj_id);
+    idk_CS_onObjectAssignment(component_id, obj_id);
 }
 
 
 void
 idk::Engine::removeComponent( int obj_id, int component_id )
 {
-    m_component_matrix[obj_id][component_id] = 0;
+    m_objects_components[obj_id].erase(component_id);
+    m_components_objects[component_id].erase(obj_id);
 }
 
 
 bool
 idk::Engine::hasComponent( int obj_id, int component_id )
 {
-    return m_component_matrix[obj_id][component_id] == 1;
+    return m_objects_components[obj_id].find(component_id) != m_objects_components[obj_id].end();
 }
 
 
 bool 
 idk::Engine::hasComponent( int obj_id, std::string component_name )
 {
-    return m_component_matrix[obj_id][m_idk_componentsystem_ids[component_name]] == 1;
+    return hasComponent(obj_id, m_componentsystem_ids[component_name]);
 }
 
 
@@ -236,7 +238,7 @@ idk::Engine::beginFrame()
     m_event_manager.update();
 
     m_render_engine.beginFrame();
-    f_idk_CS_stage_A();
+    idk_CS_stage_A();
 }
 
 
@@ -244,9 +246,9 @@ void
 idk::Engine::endFrame()
 {
     m_render_engine.endFrame();
-    f_idk_CS_stage_B();
+    idk_CS_stage_B();
     m_render_engine.swapWindow();
-    f_idk_CS_stage_C();
+    idk_CS_stage_C();
 
     m_frame_end = SDL_GetPerformanceCounter();
     m_frame_time = ((double)(m_frame_end - m_frame_start)) / (double)SDL_GetPerformanceFrequency();
@@ -258,6 +260,6 @@ idk::Engine::shutdown()
 {
     m_running = false;
 
-    idk::Engine::threadpool.stop();
+    // idk::Engine::threadpool.stop();
 }
 

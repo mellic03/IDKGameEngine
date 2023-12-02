@@ -3,17 +3,18 @@
 #include "../idk_utility.h"
 #include "../idk_glcall.h"
 #include "../idk_datastructures/idk_vector.h"
+#include <vector>
 
 namespace idk
 {
-    struct ColorAttachmentConfig;
+    struct glColorConfig;
     struct DepthAttachmentConfig;
     class  glFramebuffer;
 };
 
 
 
-struct idk::ColorAttachmentConfig
+struct idk::glColorConfig
 {
     GLint  internalformat = GL_RGBA16F;
     GLenum format         = GL_RGBA;
@@ -21,7 +22,12 @@ struct idk::ColorAttachmentConfig
     GLenum magfilter      = GL_LINEAR;
     GLenum wrap_s         = GL_CLAMP_TO_EDGE;
     GLenum wrap_t         = GL_CLAMP_TO_EDGE;
+    GLenum wrap_r         = GL_CLAMP_TO_EDGE;
     GLenum datatype       = GL_FLOAT;
+    bool   genmipmap      = true;
+    bool   setmipmap      = false;
+    GLint  texbaselevel   = 0;
+    GLint  texmaxlevel    = 0;
 };
 
 
@@ -37,16 +43,21 @@ class idk::glFramebuffer
 private:
     bool m_first = true;
     glm::ivec2 m_size;
-    GLuint m_FBO, m_RBO;
-    idk::vector<GLuint> m_gl_attachments;
+    std::vector<GLuint> m_gl_attachments;
 
 public:
-    idk::vector<GLuint> attachments;
+    GLuint m_FBO, m_RBO;
+    std::vector<GLuint> attachments;
+    GLuint              cubemap_attachment;
     GLuint              depth_attachment;
 
     void    reset( int w, int h, size_t num_attachments );
-    void    colorAttachment( int idx, const idk::ColorAttachmentConfig &config );
+    void    cubemapColorAttachment( const idk::glColorConfig &config );
+    void    colorAttachment( int idx, const idk::glColorConfig &config );
     void    depthAttachment( const idk::DepthAttachmentConfig &config );
+    void    generateMipmap( int idx );
+    void    generateMipmapCube();
+    void    viewport(int x, int y, int w, int h);
     void    bind();
     void    unbind();
     void    clear( GLbitfield mask );

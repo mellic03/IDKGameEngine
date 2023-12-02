@@ -26,7 +26,7 @@ public:
     void                addEdge( int v0, int v1, float weight );
     void                removeEdge( int v0, int v1 );
 
-    void                shortestPath(int start, int end, idk::vector<T> &path);
+    void                shortestPath(int start, int end, std::vector<T> &path);
 };
 
 #undef adjlist_t
@@ -68,11 +68,11 @@ idk::Graph<T>::removeEdge( int v0, int v1 )
 
 template <typename T>
 void
-idk::Graph<T>::shortestPath( int start, int end, idk::vector<T> &path )
+idk::Graph<T>::shortestPath( int start, int end, std::vector<T> &path )
 {
     std::set<std::pair<float, int>> pq;
-    idk::vector<float> dist(m_vertices.size(), std::numeric_limits<float>::infinity());
-    idk::vector<int> prev(m_vertices.size(), -1);
+    std::vector<float> dist(m_vertices.size(), std::numeric_limits<float>::infinity());
+    std::vector<int> prev(m_vertices.size(), -1);
 
     dist[start] = 0.0f;
     pq.insert({0.0f, start});
@@ -102,7 +102,7 @@ idk::Graph<T>::shortestPath( int start, int end, idk::vector<T> &path )
     int idx = end;
     while (idx != -1)
     {
-        path.push(m_vertices[idx]);
+        path.push_back(m_vertices[idx]);
         idx = prev[idx];
     }
 }

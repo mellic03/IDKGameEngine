@@ -96,6 +96,12 @@ void idk::gl::bindTexture( GLenum target, GLuint texture )
 {
     GLCALL( glBindTexture(target, texture); )
 }
+
+void idk::gl::bindTextureUnit( GLuint unit, GLuint texture )
+{
+    GLCALL( glBindTextureUnit(unit, texture); )
+}
+
 // ---------------------------------------------------------------------------------------
 
 
@@ -110,6 +116,14 @@ void idk::gl::drawElements( GLenum mode, GLsizei count, GLenum type, const void 
 {
     GLCALL( glDrawElements(mode, count, type, indices); )
 }
+
+void idk::gl::drawElementsInstanced( GLenum mode, GLsizei count, GLenum type,
+                                     const void *indices, GLsizei instancecount )
+{
+    GLCALL( glDrawElementsInstanced(mode, count, type, indices, instancecount); )
+}
+
+
 // ---------------------------------------------------------------------------------------
 
 
@@ -160,6 +174,13 @@ idk::gl::texImage2D( GLenum target, GLint level, GLint internalformat, GLsizei w
                      GLint border, GLenum format, GLenum type, const void *data )
 {
     GLCALL( glTexImage2D(target, level, internalformat, w, h, border, format, type, data); )
+}
+
+void
+idk::gl::texSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                        GLsizei height, GLenum format, GLenum type, const void *pixels )
+{
+    glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
 }
 
 void

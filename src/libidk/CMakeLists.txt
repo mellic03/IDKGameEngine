@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(IDKcommon)
+project(libidk)
 
 set(OpenGL_GL_PREFERENCE GLVND)
 

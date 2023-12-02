@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcommon/IDKcommon.h"
+#include "libidk/libidk.h"
 
 // #ifdef SDL_h_
 //     #include "../IDK_SDL2/idk_SDL_keybindings.h"
@@ -21,7 +21,7 @@ namespace idk
 class idk::Keylog
 {
 private:
-    idk::vector<idk::vector<bool>>   m_keys;
+    std::vector<std::vector<bool>>   m_keys;
 
 public:
 

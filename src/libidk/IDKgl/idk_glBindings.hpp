@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "IDKcommon/IDKcommon.h"
+#include "libidk/libidk.h"
 
 namespace idk
 {
@@ -43,9 +43,11 @@ namespace idk::gl
     void bindFramebuffer( GLenum target, GLuint framebuffer );
     void bindRenderbuffer( GLenum target, GLuint renderbuffer );
     void bindTexture( GLenum target, GLuint texture );
+    void bindTextureUnit( GLuint unit, GLuint texture );
 
     void drawArrays( GLenum mode, GLint first, GLsizei count );
     void drawElements( GLenum mode, GLsizei count, GLenum type, const void *indices );
+    void drawElementsInstanced( GLenum mode, GLsizei count, GLenum type, const void *indices, GLsizei instancecount );
 
     void bufferData( GLenum target, GLsizeiptr size, const void *data, GLenum usage );
     void bufferSubData( GLenum target, GLintptr offset, GLsizeiptr size, const void *data);
@@ -61,6 +63,10 @@ namespace idk::gl
     /**/
     void texImage2D( GLenum target, GLint level, GLint internalformat, GLsizei w, GLsizei h,
                      GLint border, GLenum format, GLenum type, const void *data );
+
+    void texSubImage2D( GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                        GLsizei height, GLenum format, GLenum type, const void *pixels );
+
     void texImage3D( GLenum target, GLint level, GLint internalformat, GLsizei w, GLsizei h,
                      GLsizei d, GLint border, GLenum format, GLenum type, const void *data );
     void texParameteri( GLenum target, GLenum pname, GLint param );

@@ -9,7 +9,7 @@ _fov(fov), _near(near), _far(far)
 
 
 idk::Camera::Camera():
-Camera(85.0f, 0.1f, 200.0f)
+Camera(95.0f, 0.1f, 200.0f)
 {
     glm::vec3 pos = m_transform.position();
 
@@ -18,10 +18,10 @@ Camera(85.0f, 0.1f, 200.0f)
     _right = glm::vec3( 1.0f,  0.0f,  0.0f );
     _up    = glm::vec3( 0.0f,  1.0f,  0.0f );
 
-    m_default_pos = pos;
+    m_default_pos  = pos;
     _default_front = glm::vec4(_front, 0.0f);
     _default_right = glm::vec4(_right, 0.0f);
-    _default_up    = glm::vec4(_up, 0.0f);
+    _default_up    = glm::vec4(_up,    0.0f);
 
     m_view = glm::lookAt(
         pos,

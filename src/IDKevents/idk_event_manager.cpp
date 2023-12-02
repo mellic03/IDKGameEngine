@@ -4,13 +4,11 @@
 
 idk::EventManager::EventManager()
 {
-    m_windowevents = idk::vector<bool>(
-        static_cast<int>(WindowEvent::NUM_EVENTS),
-        false
-    );
+    m_windowevents[0] = false;
+    m_windowevents[1] = false;
 
-    m_mousebutton_down = idk::vector<bool>(3, false);
-    m_mousebutton_up   = idk::vector<bool>(3, false);
+    m_mousebutton_down = std::vector<bool>(3, false);
+    m_mousebutton_up   = std::vector<bool>(3, false);
 }
 
 
@@ -63,9 +61,11 @@ idk::EventManager::processMouseInput()
         b = false;
     }
 
-    while (SDL_PollEvent(&m_SDL_Event))
+    SDL_Event e;
+
+    while (SDL_PollEvent(&e))
     {
-        switch (m_SDL_Event.type)
+        switch (e.type)
         {
             case (SDL_QUIT):
                 m_windowevents[(int)(WindowEvent::EXIT)] = true;
@@ -73,35 +73,34 @@ idk::EventManager::processMouseInput()
 
 
             case SDL_WINDOWEVENT:
-                if (m_SDL_Event.window.event == SDL_WINDOWEVENT_CLOSE)
+                if (e.window.event == SDL_WINDOWEVENT_CLOSE)
                 {
                     m_windowevents[(int)(WindowEvent::EXIT)] = true;
                 }
-                else if (m_SDL_Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+                else if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
                 {
                     m_windowevents[(int)(WindowEvent::RESIZE)] = true;
-                    m_size.x = m_SDL_Event.window.data1;
-                    m_size.y = m_SDL_Event.window.data2;
+                    m_size.x = e.window.data1;
+                    m_size.y = e.window.data2;
                 }
             break;
 
 
             case (SDL_MOUSEBUTTONDOWN):
-                m_mousebutton_down[m_SDL_Event.button.button - 1] = true;
-                m_mousebutton_up[m_SDL_Event.button.button - 1] = false;
+                m_mousebutton_down[e.button.button - 1] = true;
+                m_mousebutton_up[e.button.button - 1] = false;
             break;
 
 
             case (SDL_MOUSEBUTTONUP):
-                m_mousebutton_down[m_SDL_Event.button.button - 1] = false;
-                m_mousebutton_up[m_SDL_Event.button.button - 1] = true;
+                m_mousebutton_down[e.button.button - 1] = false;
+                m_mousebutton_up[e.button.button - 1] = true;
             break;
-
         }
     
         for (auto &fn: m_SDL_pollevents)
         {
-            fn(&m_SDL_Event);
+            fn(&e);
         }
     }
 
@@ -146,13 +145,12 @@ idk::EventManager::processKeyInput()
 void
 idk::EventManager::update()
 {
-    m_events.for_each([](idk::Event &event)
+    for (idk::Event &event: m_events)
     {
         if (event.trigger())
         {
             event.response();
         }
-    });
-
+    }
 };
 

@@ -91,4 +91,3 @@ idk::LightSystem::genShaderString( std::string &vert, std::string &frag )
     shadergen::genShaderString(m_shadergen_config, vert, frag);
 }
 
-

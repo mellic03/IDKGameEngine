@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKcommon/IDKcommon.h"
+#include "libidk/libidk.h"
 
 
 
@@ -13,9 +13,9 @@ namespace idk::shadergen
 {
     struct Config
     {
-        idk::vector<uint32_t> point_flags;
-        idk::vector<uint32_t> spot_flags;
-        idk::vector<uint32_t> dir_flags;
+        std::vector<uint32_t> point_flags;
+        std::vector<uint32_t> spot_flags;
+        std::vector<uint32_t> dir_flags;
     };
 
     void genShaderString( const Config &, std::string &vert, std::string &frag );

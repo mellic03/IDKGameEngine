@@ -6,7 +6,7 @@
 #include <fstream>
 
 #include "idk_vertex.h"
-#include "IDKcommon/IDKcommon.h"
+#include "libidk/libidk.h"
 
 namespace idk
 {
@@ -30,7 +30,7 @@ struct idk::__tex_file_t
 
 struct idk::__texpak_file_t
 {
-    idk::vector<idk::__tex_file_t>  texfiles;
+    std::vector<idk::__tex_file_t>  texfiles;
 };
 
 
@@ -57,4 +57,10 @@ struct idk::__mdl_file_t
 {
     std::vector<std::string> tex_filepaths;
     std::vector<std::string> vts_filepaths;
+};
+
+
+struct idk_model_file_t
+{
+    void *vertices;
 };

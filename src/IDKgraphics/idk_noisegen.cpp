@@ -1,6 +1,6 @@
 #include "idk_noisegen.hpp"
 
-#include "IDKcommon/IDKgl.hpp"
+#include "libidk/IDKgl.hpp"
 #include <vector>
 
 
@@ -217,7 +217,7 @@ idk::noisegen3D::white( int w, int h, int d )
             }
         }
     }
-    std::cout << minf << ", " << maxf << "\n";
+    // std::cout << minf << ", " << maxf << "\n";
 
     GLuint texture;
 
@@ -285,7 +285,6 @@ idk::noisegen2D::white( int w, int h )
     idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
 
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0);
