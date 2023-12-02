@@ -10,7 +10,7 @@ GLuint  idk::RenderEngine::CRATE_PRIMITIVE;
 // --------------------------------------------
 
 void
-idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, InitFlag flags )
+idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags )
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -203,7 +203,7 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
 
 
 void
-idk::RenderEngine::init( std::string name, int w, int h, InitFlag flags )
+idk::RenderEngine::init( std::string name, int w, int h, uint32_t flags )
 {
     m_resolution = glm::ivec2(w, h);
 

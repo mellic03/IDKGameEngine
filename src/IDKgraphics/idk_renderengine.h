@@ -94,7 +94,7 @@ private:
 
     // Initialization ---------------------------------------------------------------------
     /***/
-    void                                init_SDL_OpenGL( std::string windowname, size_t w, size_t h, InitFlag flags );
+    void                                init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags );
     void                                init_screenquad();
     void                                init_framebuffers( int width, int height );
     void                                init_all( std::string name, int w, int h );
@@ -136,7 +136,7 @@ public:
     // ------------------------------------------------------------------------------------
     void                                compileShaders();
 
-    void                                init( std::string name, int w, int h, InitFlag flags=InitFlag::NONE );
+    void                                init( std::string name, int w, int h, uint32_t flags=InitFlag::NONE );
 
     SDL_Window *                        SDLWindow()     { return m_SDL_window;      };
     SDL_GLContext                       SDLGLContext()  { return m_SDL_gl_context;  };
