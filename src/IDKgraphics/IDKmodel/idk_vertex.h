@@ -6,6 +6,7 @@
 namespace idk
 {
     struct Vertex;
+    struct PODvertex;
 };
 
 

@@ -39,9 +39,15 @@ void main()
 {
     mat4 model = un_model;
 
-    fsin_fragpos = (model * vec4(vsin_pos, 1.0)).xyz;
+    vec4 worldpos = model * vec4(vsin_pos, 1.0);
+    vec3 camspace = worldpos.xyz - un_viewpos;
+         camspace = vec3(0.0, camspace.z*camspace.z *-0.2, 0.0);
+    worldpos.xyz = camspace.xyz + un_viewpos;
+
+    fsin_fragpos = worldpos.xyz;
     fsin_normal  = (model * vec4(vsin_normal, 0.0)).xyz;
     fsin_texcoords = vsin_texcoords;
+
 
     vec3 N = normalize(mat3(model) * normalize(vsin_normal));
     vec3 T = normalize(mat3(model) * normalize(vsin_tangent));
@@ -54,5 +60,5 @@ void main()
     TBN_fragpos = TBNT * fsin_fragpos;
     TBN_viewpos = TBNT * un_viewpos;
 
-    gl_Position = un_projection * un_view * model * vec4(vsin_pos, 1.0);
+    gl_Position = un_projection * un_view * worldpos;
 }

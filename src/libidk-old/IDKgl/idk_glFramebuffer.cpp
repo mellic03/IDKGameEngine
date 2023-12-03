@@ -170,7 +170,6 @@ void
 idk::glFramebuffer::unbind()
 {
     gl::bindFramebuffer(GL_FRAMEBUFFER, 0);
-    gl::viewport(0, 0, m_size.x, m_size.y);
 }
 
 

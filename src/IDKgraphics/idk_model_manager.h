@@ -15,8 +15,6 @@ private:
     Allocator<Model>        m_models;
     Allocator<glInstancedTransforms> m_instancedata;
 
-    std::unordered_map<std::string, idk::Texture>   _textures;
-
     struct DefaultID { bool set=false; GLuint texture_ID; };
     GLuint m_default_metallic  = 0;
     GLuint m_default_roughness = 0;
@@ -53,7 +51,6 @@ public:
     glInstancedTransforms &getInstanceData( int model_id ) { return m_instancedata.get(model_id); };
     
     Allocator<Material> &getMaterials() { return m_materials; };
-    auto                &getTextures()  { return _textures;  };
 
 };
 

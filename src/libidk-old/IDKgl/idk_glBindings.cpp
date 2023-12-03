@@ -31,6 +31,13 @@ void idk::gl::genRenderbuffers( GLsizei n, GLuint *renderbuffers )
 // ---------------------------------------------------------------------------------------
 
 
+void idk::gl::createTextures ( GLenum target, GLsizei n, GLuint *textures )
+{
+    GLCALL( glCreateTextures(target, n, textures); )
+}
+
+
+
 // glDeleteXXX ---------------------------------------------------------------------------
 /**/
 void idk::gl::deleteVertexArrays( GLsizei n, GLuint *arrays )
@@ -167,6 +174,7 @@ idk::gl::activeTexture( GLenum texture )
 }
 // ---------------------------------------------------------------------------------------
 
+
 // glTexXXX ------------------------------------------------------------------------------
 /**/
 void
@@ -204,8 +212,35 @@ void idk::gl::pixelStorei( GLenum pname, GLint param )
 {
     GLCALL( glPixelStorei(pname, param); )
 }
+// ---------------------------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------------------
+
+
+// glTextureXXX
+// ---------------------------------------------------------------------------------------------
+void idk::gl::textureStorage2D( GLuint texture, GLsizei levels, GLenum internalformat,
+                                GLsizei width, GLsizei height )
+{
+    GLCALL( glTextureStorage2D(texture, levels, internalformat, width, height); )
+}
+
+
+void idk::gl::textureSubImage2D( GLenum texture, GLint level, GLint xoffset, GLint yoffset,
+                                 GLsizei width, GLsizei height, GLenum format, GLenum type,
+                                 const void *pixels )
+{
+    GLCALL(
+        glTextureSubImage2D(texture, level, xoffset, yoffset, width, height, format, type, pixels);
+    )
+}
+
+
+void idk::gl::textureParameteri( GLuint texture, GLenum pname, GLint param )
+{
+    GLCALL( glTextureParameteri(texture, pname, param); )
+}
+
+// ---------------------------------------------------------------------------------------------
 
 
 

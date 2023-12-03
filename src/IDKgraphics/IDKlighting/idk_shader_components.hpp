@@ -116,7 +116,7 @@ const std::string shader_end_header =
 
 
 const std::string shader_begin_main =
-"#define DIRSHADOW_AMBIENT 1\n"
+"#define DIRSHADOW_AMBIENT 0\n"
 "\n"
 "void main()\n"
 "{\n"
@@ -229,7 +229,7 @@ const std::string light_call_end =
 
 
 const std::string dirlight_contribution_shadowmapped =
-"#define DIRLIGHT_BIAS 0.01\n"
+"#define DIRLIGHT_BIAS 0.5\n"
 "\n"
 "float dirlight_shadow( int idx, vec3 position )\n"
 "{\n"

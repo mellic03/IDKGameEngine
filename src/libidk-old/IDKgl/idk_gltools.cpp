@@ -10,20 +10,22 @@ idk::gltools::loadTexture( size_t w, size_t h, void *data, bool srgb, GLint minf
 {
     GLuint texture_id;
 
-    gl::genTextures(1, &texture_id);
-    gl::bindTexture(GL_TEXTURE_2D, texture_id);
-    // gl::pixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    gl::createTextures(GL_TEXTURE_2D, 1, &texture_id);
 
-    gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minfilter);
-    gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, magfilter);
-    gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gl::textureParameteri(texture_id, GL_TEXTURE_MIN_FILTER, minfilter);
+    gl::textureParameteri(texture_id, GL_TEXTURE_MIN_FILTER, magfilter);
+    gl::textureParameteri(texture_id, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    gl::textureParameteri(texture_id, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     GLint internalformat = (srgb) ? GL_SRGB8 : GL_RGB8;
-    gl::texImage2D(GL_TEXTURE_2D, 0, internalformat, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    gl::generateMipmap(GL_TEXTURE_2D);
 
-    gl::bindTexture(GL_TEXTURE_2D, 0);
+    gl::textureStorage2D(texture_id, 1, internalformat, w, h);
+    gl::textureSubImage2D(texture_id, 0, 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+    // gl::texImage2D(GL_TEXTURE_2D, 0, internalformat, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    // gl::generateMipmap(GL_TEXTURE_2D);
+
+    // gl::bindTexture(GL_TEXTURE_2D, 0);
 
     return texture_id;
 }

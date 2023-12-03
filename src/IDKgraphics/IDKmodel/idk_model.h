@@ -9,17 +9,9 @@
 
 namespace idk
 {
-    struct Texture;
     struct Material;
     struct Mesh;
     struct Model;
-};
-
-
-struct idk::Texture
-{
-    GLuint gl_id = 0;
-    idk::__tex_file_t tex_file;
 };
 
 

@@ -30,6 +30,8 @@ namespace idk::gl
     void genFramebuffers  ( GLsizei n, GLuint *framebuffers     );
     void genRenderbuffers ( GLsizei n, GLuint *renderbuffers    );
 
+    void createTextures ( GLenum target, GLsizei n, GLuint *textures );
+
     void deleteVertexArrays  ( GLsizei n, GLuint *arrays         );
     void deleteBuffers       ( GLsizei n, GLuint *buffers        );
     void deleteTextures      ( GLsizei n, GLuint *textures       );
@@ -69,8 +71,24 @@ namespace idk::gl
 
     void texImage3D( GLenum target, GLint level, GLint internalformat, GLsizei w, GLsizei h,
                      GLsizei d, GLint border, GLenum format, GLenum type, const void *data );
+
     void texParameteri( GLenum target, GLenum pname, GLint param );
-    // ---------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
+
+
+    // glTextureXXX ----------------------------------------------------------------------------
+    void textureStorage2D( GLuint texture, GLsizei levels, GLenum internalformat,
+                           GLsizei width, GLsizei height );
+
+    void textureSubImage2D( GLenum texture, GLint level, GLint xoffset, GLint yoffset,
+                            GLsizei width, GLsizei height, GLenum format, GLenum type,
+                            const void *pixels );
+
+    void textureParameteri( GLuint texture, GLenum pname, GLint param );
+
+    // -----------------------------------------------------------------------------------------
+
+
     void generateMipmap( GLenum target );
 
     void pixelStorei( GLenum pname, GLint param );

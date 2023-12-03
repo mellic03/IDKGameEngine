@@ -8,59 +8,58 @@
 #include "idk_vertex.h"
 #include "libidk/libidk.h"
 
+
+
 namespace idk
 {
-    struct __tex_file_t;    // texture
-    struct __texpak_file_t; // package of textures
-
-    struct __mat_file_t; // material
-    struct __idx_file_t; // indices
-    struct __vts_file_t; // vertices
-    struct __mdl_file_t; // model
+    struct PODvertex;
+    struct internal_mesh_t;
+    struct model_file_t;
 };
 
 
-struct idk::__tex_file_t
+
+struct idk::PODvertex
 {
-    char *name;
-    size_t w, h;
-    uint32_t *data;
+    float position[3];
+    float normal[3];
+    float tangent[3];
+    float texcoords[2];
 };
 
 
-struct idk::__texpak_file_t
-{
-    std::vector<idk::__tex_file_t>  texfiles;
-};
+
+// struct idk::internal_mesh_t
+// {
+//     int albedo, metallic, roughness;
+//     int normal, ambient,  displacement;
+
+//     idk::PODvertex *vertices;
+// };
 
 
-struct idk::__mat_file_t
-{
-    float       diff[3];
-    float       spec[3];
-    float       spec_exp;
 
-    idk::__tex_file_t diffuse_tex;
-    idk::__tex_file_t specular_tex;
-    idk::__tex_file_t normal_tex;
-};
+// idk::internal_mesh_t new_mesh_t()
+// {
+//     idk::internal_mesh_t mesh = {
+//         -1, -1, -1,
+//         -1, -1, -1,
+//         nullptr
+//     };
 
-
-struct idk::__vts_file_t
-{
-    size_t size; // number of Vertices
-    idk::Vertex *data;
-};
+//     return mesh;
+// }
 
 
-struct idk::__mdl_file_t
-{
-    std::vector<std::string> tex_filepaths;
-    std::vector<std::string> vts_filepaths;
-};
+
+// num_textures   num_meshes   sizeof(mesh_1)   sizeof(mesh_2)   verts_1   verts_2
+// 1              2            32               64               xyzxyzuv  xyzxyzuv
 
 
-struct idk_model_file_t
-{
-    void *vertices;
-};
+// struct idk::model_file_t
+// {
+//     std::vector<std::string>     texture_paths;
+//     std::vector<internal_mesh_t> meshes;
+// };
+
+
