@@ -1,6 +1,7 @@
 #pragma once
 
-#include "libidk/libidk.h"
+#include "libidk/libidk.hpp"
+#include "libidk/IDKgl.hpp"
 
 namespace idk { class Camera; };
 

@@ -5,8 +5,8 @@
 #include <vector>
 #include <fstream>
 
-#include "idk_vertex.h"
-#include "libidk/libidk.h"
+#include "idk_vertex.hpp"
+#include "libidk/libidk.hpp"
 
 
 

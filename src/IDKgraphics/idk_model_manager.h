@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IDKmodel/IDKmodel.h"
+#include "model/IDKmodel.hpp"
 #include "libidk/IDKgl.hpp"
 
 

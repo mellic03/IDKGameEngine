@@ -3,17 +3,16 @@
 #include <unordered_map>
 #include <queue>
 
-#include "libidk/libidk.h"
+#include "libidk/libidk.hpp"
 
 #include "idk_model_manager.h"
 #include "libidk/IDKgl.hpp"
 #include "idk_drawmethods.h"
 
 #include "idk_camera.h"
-#include "IDKlighting/IDKlighting.hpp"
 #include "primitives/primitives.h"
 #include "idk_noisegen.hpp"
-#include "IDKlighting/IDKlighting.hpp"
+#include "lighting/IDKlighting.hpp"
 
 #define IDK_MAX_POINTLIGHTS 10
 #define IDK_MAX_SPOTLIGHTS 10

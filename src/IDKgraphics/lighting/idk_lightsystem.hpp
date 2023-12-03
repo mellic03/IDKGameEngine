@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libidk/libidk.h"
+#include "libidk/libidk.hpp"
 #include "libidk/IDKgl.hpp"
 #include "idk_lightsource.hpp"
 #include "idk_shadergen.hpp"

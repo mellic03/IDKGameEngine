@@ -1,7 +1,8 @@
 #pragma once
 
-#include "libidk/libidk.h"
-#include "idk_vertex.h"
+#include "libidk/IDKgl.hpp"
+#include "libidk/libidk.hpp"
+#include "idk_vertex.hpp"
 #include "idk_filetypes.h"
 
 #include <vector>

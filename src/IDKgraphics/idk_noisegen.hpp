@@ -1,6 +1,7 @@
 #pragma once
 
-#include "libidk/libidk.h"
+#include "libidk/IDKgl.hpp"
+#include "libidk/libidk.hpp"
 
 namespace idk::noisegen3D
 {
