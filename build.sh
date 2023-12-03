@@ -2,11 +2,13 @@
 
 # First make sure libidk has been built
 # ----------------------------------------------------------------------------------------------
-libidk/build.sh
+cd libidk
+./build.sh
+cd ../
 
 mkdir -p IDKGameEngine/external
-cp -R libidk/build/include external/.
-cp -R libidk/build/lib     external/.
+cp -R libidk/build/include IDKGameEngine/external/.
+cp -R libidk/build/lib     IDKGameEngine/external/.
 # ----------------------------------------------------------------------------------------------
 
 
