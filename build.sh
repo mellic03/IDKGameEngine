@@ -2,36 +2,37 @@
 
 # First make sure libidk has been built
 # ----------------------------------------------------------------------------------------------
-cd submodules/libidk/
+cd IDKGameEngine/submodules/libidk/
 ./build.sh
 cd ../../
 
 mkdir -p external
-cp -R submodules/libidk/output/* external/.
+cp -R submodules/libidk/build/include external/.
+cp -R submodules/libidk/build/lib     external/.
 # ----------------------------------------------------------------------------------------------
 
 
 # Build IDK Engine
 # ----------------------------------------------------------------------------------------------
-mkdir -p build
+cd ../
+mkdir -p build/CMake
 
-cd build
-cmake -G Ninja ..
+cd build/CMake
+cmake -G Ninja ../../IDKGameEngine
 ninja -j 6
-cd ..
 # ----------------------------------------------------------------------------------------------
 
+cd ../
+mkdir -p {include,lib}/
+mkdir -p include/IDKengine
 
-# Create output directory structure
-mkdir -p output/{include,lib}/IDKengine/
-
-# Copy source code to output directory
-cp -R src/. output/include/IDKengine/.
+cp CMake/libIDKengine.so lib/.
+cp -R ../IDKGameEngine/src/* include/IDKengine/.
 
 # Delete everything but header files
-find ./output/include/IDKengine/ -name "*.cpp" -type f -delete
-find ./output/include/IDKengine/ -name "*.txt" -type f -delete
+find ./include/IDKengine/ -name "*.cpp" -type f -delete
+find ./include/IDKengine/ -name "*.txt" -type f -delete
 
-# Copy library file to output directory
-cp build/libIDKengine.a  output/lib/IDKengine/libIDKengine.a
-
+cd ../
+cp -R IDKGameEngine/submodules/libidk/build/include/* build/include/.
+cp -R IDKGameEngine/submodules/libidk/build/lib/* build/lib/.
