@@ -23,15 +23,15 @@ cd ..
 
 
 # Create output directory structure
-mkdir -p output/{include,lib}/IDKEngine/
+mkdir -p output/{include,lib}/IDKengine/
 
 # Copy source code to output directory
-cp -R src/. output/include/IDKEngine/.
+cp -R src/. output/include/IDKengine/.
 
 # Delete everything but header files
-find ./output/include/IDKEngine/ -name "*.cpp" -type f -delete
-find ./output/include/IDKEngine/ -name "*.txt" -type f -delete
+find ./output/include/IDKengine/ -name "*.cpp" -type f -delete
+find ./output/include/IDKengine/ -name "*.txt" -type f -delete
 
 # Copy library file to output directory
-cp build/libIDKengine.a  output/lib/IDKEngine/libIDKengine.a
+cp build/libIDKengine.a  output/lib/IDKengine/libIDKengine.a
 

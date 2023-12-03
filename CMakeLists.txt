@@ -6,7 +6,6 @@ file(GLOB SOURCES
     "./src/*.cpp"
 )
 
-
 include_directories(${CMAKE_SOURCE_DIR}/external/include/)
 include_directories(${CMAKE_SOURCE_DIR}/src/)
 
@@ -16,9 +15,9 @@ add_subdirectory(src/IDKgraphics)
 
 add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
-
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
+    ${CMAKE_SOURCE_DIR}/external/lib/libidk/libidk.a
     IDKaudio
     IDKevents
     IDKgraphics
