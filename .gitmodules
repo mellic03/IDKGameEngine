@@ -1,0 +1,3 @@
+[submodule "libidk"]
+	path = libidk
+	url = https://github.com/mellic03/libidk.git
