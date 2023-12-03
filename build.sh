@@ -2,19 +2,16 @@
 
 # First make sure libidk has been built
 # ----------------------------------------------------------------------------------------------
-cd IDKGameEngine/submodules/libidk/
-./build.sh
-cd ../../
+libidk/build.sh
 
-mkdir -p external
-cp -R submodules/libidk/build/include external/.
-cp -R submodules/libidk/build/lib     external/.
+mkdir -p IDKGameEngine/external
+cp -R libidk/build/include external/.
+cp -R libidk/build/lib     external/.
 # ----------------------------------------------------------------------------------------------
 
 
 # Build IDK Engine
 # ----------------------------------------------------------------------------------------------
-cd ../
 mkdir -p build/CMake
 
 cd build/CMake
@@ -23,7 +20,7 @@ ninja -j 6
 # ----------------------------------------------------------------------------------------------
 
 cd ../
-mkdir -p {include,lib}/
+mkdir -p {include,lib}
 mkdir -p include/IDKengine
 
 cp CMake/libIDKengine.so lib/.
@@ -34,5 +31,5 @@ find ./include/IDKengine/ -name "*.cpp" -type f -delete
 find ./include/IDKengine/ -name "*.txt" -type f -delete
 
 cd ../
-cp -R IDKGameEngine/submodules/libidk/build/include/* build/include/.
-cp -R IDKGameEngine/submodules/libidk/build/lib/* build/lib/.
+cp -R libidk/build/include/* build/include/.
+cp -R libidk/build/lib/* build/lib/.
