@@ -22,23 +22,19 @@ ninja -j 6
 # ----------------------------------------------------------------------------------------------
 
 cd ../
-mkdir -p {include,lib,IDKGE}
+mkdir -p {include,lib,IDKGE/shipping}
 mkdir -p include/{libidk,IDKengine}
 
 cp CMake/libIDKengine.so* lib/
+cp CMake/libIDKengine.so* IDKGE/shipping/
 cp -R ../IDKGameEngine/src/* include/IDKengine/.
 cp -R ../libidk/src/libidk   include/.
 
 cp -R ../IDKGameEngine/shaders   ./IDKGE/.
 cp -R ../IDKGameEngine/resources ./IDKGE/.
 
-
 # Delete everything but header files
 find ./include/IDKengine/ -name "*.cpp" -type f -delete
 find ./include/IDKengine/ -name "*.txt" -type f -delete
 find ./include/libidk/ -name "*.cpp" -type f -delete
 find ./include/libidk/ -name "*.txt" -type f -delete
-
-# cd ../
-# cp -R libidk/build/include/* build/include/.
-# cp -R libidk/build/lib/* build/lib/.
