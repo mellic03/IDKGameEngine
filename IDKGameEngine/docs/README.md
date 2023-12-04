@@ -21,19 +21,17 @@
 ## Building
 Running `build.bat` or `build.sh` will generate a folder called `build` in the root directory of the project. 
 ```
-IDKGameEngine
-│
-├── build
-│   └── CMake
-│   └── IDKGE
-│   └── include
-│   └── lib
-│
-├── IDKGameEngine
-│   └── file12.ext
-│
-└── libidk
-    └── file12.ext
+└──IDKGameEngine
+    │
+    ├── build
+    │   └── CMake
+    │   └── IDKGE
+    │   └── include
+    │   └── lib
+    │
+    ├── IDKGameEngine
+    │
+    └── libidk
 ```
 
 - `CMake` contains CMake build files
