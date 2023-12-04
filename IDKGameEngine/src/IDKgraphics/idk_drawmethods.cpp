@@ -1,4 +1,4 @@
-#include "idk_drawmethods.h"
+#include "idk_drawmethods.hpp"
 
 void
 idk::drawmethods::bind_material( glShader &program, Material &material )

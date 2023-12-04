@@ -2,13 +2,13 @@
 
 # First make sure libidk has been built
 # ----------------------------------------------------------------------------------------------
-cd libidk
-./build.sh
-cd ../
+# cd libidk
+# ./build.sh
+# cd ../
 
-mkdir -p IDKGameEngine/external
-cp -R libidk/build/include IDKGameEngine/external/.
-cp -R libidk/build/lib     IDKGameEngine/external/.
+# mkdir -p IDKGameEngine/external
+# cp -R libidk/build/include IDKGameEngine/external/.
+# cp -R libidk/build/lib     IDKGameEngine/external/.
 # ----------------------------------------------------------------------------------------------
 
 
@@ -17,21 +17,24 @@ cp -R libidk/build/lib     IDKGameEngine/external/.
 mkdir -p build/CMake
 
 cd build/CMake
-cmake -G Ninja ../../IDKGameEngine
+cmake -G Ninja ../../
 ninja -j 6
 # ----------------------------------------------------------------------------------------------
 
 cd ../
 mkdir -p {include,lib}
-mkdir -p include/IDKengine
+mkdir -p include/{libidk,IDKengine}
 
-cp CMake/libIDKengine.so lib/.
+cp CMake/libIDKengine.so* lib/
 cp -R ../IDKGameEngine/src/* include/IDKengine/.
+cp -R ../libidk/src/libidk   include/.
 
 # Delete everything but header files
 find ./include/IDKengine/ -name "*.cpp" -type f -delete
 find ./include/IDKengine/ -name "*.txt" -type f -delete
+find ./include/libidk/ -name "*.cpp" -type f -delete
+find ./include/libidk/ -name "*.txt" -type f -delete
 
 cd ../
 cp -R libidk/build/include/* build/include/.
-cp -R libidk/build/lib/* build/lib/.
+# cp -R libidk/build/lib/* build/lib/.

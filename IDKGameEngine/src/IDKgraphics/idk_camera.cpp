@@ -1,4 +1,4 @@
-#include "idk_camera.h"
+#include "idk_camera.hpp"
 
 idk::Camera::Camera(float fov, float near, float far):
 m_projection(1.0f), m_view(1.0f),
