@@ -189,7 +189,7 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
     m_lightsystem.init();
     m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
     m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
-    BRDF_LUT = gltools::loadTexture("assets/IBL_BRDF_LUT.png", false, GL_LINEAR, GL_LINEAR);
+    BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", false, GL_LINEAR, GL_LINEAR);
 
     m_model_manager.init();
     RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
@@ -199,6 +199,8 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
     m_active_camera_id = createCamera();
     m_UBO_camera = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
 
+
+    loadSkybox("IDKGE/resources/skybox/");
 }
 
 
@@ -216,42 +218,11 @@ idk::RenderEngine::init( std::string name, int w, int h, uint32_t flags )
         return;
     }
 
-    if (flags & InitFlag::INIT_PROGRAMS)
+    if (flags & InitFlag::INIT_HEADLESS)
     {
-        compileShaders();
+        return;
     }
 
-    if (flags & InitFlag::INIT_FRAMEBUFFERS)
-    {
-        init_screenquad();
-        init_framebuffers(w, h);
-    }
-
-    if (flags & InitFlag::INIT_LIGHTING)
-    {
-        m_lightsystem.init();
-        m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
-        m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
-        BRDF_LUT = gltools::loadTexture("assets/IBL_BRDF_LUT.png", false, GL_LINEAR, GL_LINEAR);
-    }
-
-    if (flags & InitFlag::INIT_MODELS)
-    {
-        m_model_manager.init();
-        RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
-        RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
-        RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
-    }
-
-    if (flags & InitFlag::INIT_CAMERA)
-    {
-        m_active_camera_id = createCamera();
-        m_UBO_camera = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
-    }
-
-    if (flags & InitFlag::INIT_NOISE)
-    {
-    }
 }
 
 

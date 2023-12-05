@@ -40,9 +40,6 @@ void main()
     mat4 model = un_model;
 
     vec4 worldpos = model * vec4(vsin_pos, 1.0);
-    vec3 camspace = worldpos.xyz - un_viewpos;
-         camspace = vec3(0.0, camspace.z*camspace.z *-0.2, 0.0);
-    worldpos.xyz = camspace.xyz + un_viewpos;
 
     fsin_fragpos = worldpos.xyz;
     fsin_normal  = (model * vec4(vsin_normal, 0.0)).xyz;

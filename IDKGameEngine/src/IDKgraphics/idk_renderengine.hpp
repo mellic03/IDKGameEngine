@@ -30,13 +30,7 @@ public:
     enum InitFlag: uint32_t
     {
         NONE              = 0,
-        INIT_PROGRAMS     = 1 << 0,
-        INIT_FRAMEBUFFERS = 1 << 1,
-        INIT_LIGHTING     = 1 << 2,
-        INIT_MODELS       = 1 << 3,
-        INIT_CAMERA       = 1 << 4,
-        INIT_NOISE        = 1 << 5,
-        INIT_HEADLESS     = 1 << 6
+        INIT_HEADLESS     = 1 << 0
     };
 
 private:
