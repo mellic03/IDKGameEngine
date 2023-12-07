@@ -94,15 +94,15 @@ idk::Camera::pitch(float f)
 void
 idk::Camera::roll(float f)
 {
-    m_transform.roll(f);
+    // m_transform.roll(f);
 
-    // m_view = glm::rotate(m_view, f, _front);
+    m_view = glm::rotate(m_view, f, _front);
 
-    // if (_noroll == false)
-    // {
-    //     _right = glm::inverse(m_view) * _default_right;
-    //     _up = glm::inverse(m_view) * _default_up;
-    // }
+    if (_noroll == false)
+    {
+        _right = glm::inverse(m_view) * _default_right;
+        _up = glm::inverse(m_view) * _default_up;
+    }
 
 }
 
@@ -125,6 +125,14 @@ glm::vec3
 idk::Camera::front()
 {
     return m_transform.front();
+}
+
+
+
+glm::vec3
+idk::Camera::right()
+{
+    return m_transform.right();
 }
 
 

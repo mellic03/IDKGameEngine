@@ -6,7 +6,7 @@
 namespace idk
 {
     struct Vertex;
-    struct PODvertex;
+    struct AnimatedVertex;
 };
 
 
@@ -14,7 +14,20 @@ struct idk::Vertex
 {
     glm::vec3 position;
     glm::vec3 normal;
-    glm::vec3 tangent = glm::vec3(0.0f);
+    glm::vec3 tangent;
     glm::vec2 texcoords;
 };
+
+
+struct idk::AnimatedVertex
+{
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec3 tangent;
+    glm::vec2 texcoords;
+
+    glm::ivec4 bone_ids;
+    glm::vec4  bone_weights;
+};
+
 

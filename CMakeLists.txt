@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.9)
-add_compile_options("-Ofast" "-fPIC")
+
+set(CMAKE_BUILD_PARALLEL_LEVEL 8)
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wuninitialized -Winit-self -Wmaybe-uninitialized -Werror -fsanitize=undefined -fdiagnostics-color=always -lstdc++fs")
+add_compile_options("-g" "-fPIC" "-fno-ident" "-fno-asynchronous-unwind-tables")
+add_definitions(-DIDK_DEBUG)
+
+
 
 project(IDKengine)
-
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)
 

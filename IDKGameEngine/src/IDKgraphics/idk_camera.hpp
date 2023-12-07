@@ -60,6 +60,7 @@ public:
     void                yaw(float f);
 
     glm::vec3           front();
+    glm::vec3           right();
 
     void                aspect(float width, float height);
     void                ylock(bool lock)  { _ylock = lock;  };

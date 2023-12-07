@@ -38,3 +38,7 @@ find ./include/IDKengine/ -name "*.cpp" -type f -delete
 find ./include/IDKengine/ -name "*.txt" -type f -delete
 find ./include/libidk/ -name "*.cpp" -type f -delete
 find ./include/libidk/ -name "*.txt" -type f -delete
+
+cd ..
+cp -R ./build/include ../IDKGame/external/.
+cp -R ./build/IDKGE ../IDKGame/output/.

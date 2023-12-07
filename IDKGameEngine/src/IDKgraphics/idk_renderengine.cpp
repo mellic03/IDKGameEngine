@@ -177,9 +177,9 @@ idk::RenderEngine::init_framebuffers( int w, int h )
 void
 idk::RenderEngine::init_all( std::string name, int w, int h )
 {
-    RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
-    RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
-    RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
+    // RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
+    // RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
+    // RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
 
     compileShaders();
 
@@ -192,9 +192,9 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
     BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", false, GL_LINEAR, GL_LINEAR);
 
     m_model_manager.init();
-    RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
-    RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
-    RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
+    // RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
+    // RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
+    // RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
 
     m_active_camera_id = createCamera();
     m_UBO_camera = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
@@ -762,7 +762,7 @@ idk::RenderEngine::endFrame()
     size_t idx2 = 4 * (mipw*(center_y  ) + center_x-1);
     size_t idx3 = 4 * (mipw*(center_y  ) + center_x  );
 
-    printf("%.0f  %.0f  %.0f  %.0f  %u  %u\n", texw, texh, mipw, miph, center_x, center_y);
+    // printf("%.0f  %.0f  %.0f  %.0f  %u  %u\n", texw, texh, mipw, miph, center_x, center_y);
     
     glm::vec3   avg_color  = glm::vec3(data2[idx0+0], data2[idx0+1], data2[idx0+2]);
                 avg_color += glm::vec3(data2[idx1+0], data2[idx1+1], data2[idx1+2]);
@@ -816,9 +816,9 @@ idk::RenderEngine::endFrame()
 
     // camera.m_exposure.x = a*camera.m_exposure.x + b*new_exposure;
 
-    printf("avg: %.2f  %.2f  %.2f\n", avg_color.x, avg_color.y, avg_color.z);
-    printf("luminance:  %.2f\n",   avg_luminance);
-    printf("exposure:   %.2f\n\n", camera.m_exposure.x);
+    // printf("avg: %.2f  %.2f  %.2f\n", avg_color.x, avg_color.y, avg_color.z);
+    // printf("luminance:  %.2f\n",   avg_luminance);
+    // printf("exposure:   %.2f\n\n", camera.m_exposure.x);
 
 
     tex2tex(colorgrade, *buffer_b, *buffer_a);
