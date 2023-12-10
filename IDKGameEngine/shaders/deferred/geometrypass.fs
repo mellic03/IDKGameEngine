@@ -13,24 +13,6 @@ in vec3 fsin_normal;
 in vec2 fsin_texcoords;
 
 
-#define NONMETAL  0
-#define IRON      1
-#define COPPER    2
-#define GOLD      3
-#define ALUMINIUM 4
-
-// vec3 get_reflectance( int reflectance )
-// {
-//     switch (reflectance)
-//     {
-//         case NONMETAL:  return vec3(0.04);
-//         case IRON:      return vec3(0.56, 0.57, 0.58);
-//         case COPPER:    return vec3(0.95, 0.64, 0.54);
-//         case GOLD:      return vec3(1.0,  0.71, 0.29);
-//         case ALUMINIUM: return vec3(0.91, 0.92, 0.92);
-//     }
-// }
-
 struct Material
 {
     sampler2D albedo;
@@ -43,10 +25,7 @@ struct Material
     float roughness_strength;
     float displacement_strength;
     float normal_strength;
-
-    vec3 reflectance;
 };
-
 uniform Material un_material;
 
 
@@ -150,25 +129,27 @@ void main()
         vec2 texcoords = fsin_texcoords;
     #endif
 
-    vec3  albedo      = texture( un_material.albedo, texcoords ).rgb;
+    vec4  albedo      = texture( un_material.albedo, texcoords ).rgba;
+    if (albedo.a < 0.9)
+        discard;
 
-    vec2  rough_metal = texture(un_material.rough_metal, texcoords).yz;
+    vec3  rough_metal = texture(un_material.rough_metal, texcoords).rgb;
 
-    float roughness   = un_material.roughness_strength * rough_metal.x;
+    float roughness   = un_material.roughness_strength * rough_metal.g;
           roughness   = clamp(roughness, 0.0, 1.0);
 
-    float metallic    = un_material.metallic_strength  * rough_metal.y;
+    float metallic    = un_material.metallic_strength  * rough_metal.b;
           metallic    = clamp(metallic, 0.0, 1.0);
 
-    // float ao          = texture( un_material.ao, texcoords ).r;
+    float ao          = texture( un_material.ao, texcoords ).r;
 
-    float a      = un_material.normal_strength;
+    float a      = 0.35; // un_material.normal_strength;
     vec3  normal = normalize(TBN * (texture(un_material.normal, texcoords).xyz * 2.0 - 1.0));
           normal = normalize(a*normal + (1.0 - a)*normalize(fsin_normal));
 
 
-    fsout_albedo_metallic = vec4(albedo, metallic);
+    fsout_albedo_metallic = vec4(albedo.rgb, metallic);
     fsout_position        = vec4(fsin_fragpos, 1.0);
-    fsout_normal_ao       = vec4(normal, 1.0);
-    fsout_roughness_ref   = vec4(roughness, un_material.reflectance);
+    fsout_normal_ao       = vec4(normal, ao);
+    fsout_roughness_ref   = vec4(roughness, 0.0, 0.0, 0.0);
 }

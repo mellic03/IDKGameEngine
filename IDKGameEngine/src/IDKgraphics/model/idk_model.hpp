@@ -4,6 +4,7 @@
 #include "libidk/libidk.hpp"
 #include "idk_vertex.hpp"
 #include "idk_filetypes.h"
+#include "idk_animation.hpp"
 
 #include <vector>
 
@@ -13,30 +14,13 @@ namespace idk
     struct Material;
     struct Mesh;
 
-    struct BaseModel;
     struct Model;
-    struct AnimatedModel;
 };
 
 
 
 struct idk::Material
 {
-    // enum Reflectance: int { NONMETAL, IRON, COPPER, GOLD, ALUMINIUM };
-
-    // static std::string reflectance_str( int reflectance )
-    // {
-    //     switch (reflectance)
-    //     {
-    //         default:        return "???";
-    //         case NONMETAL:  return "NONMETAL";
-    //         case IRON:      return "IRON";
-    //         case COPPER:    return "COPPER";
-    //         case GOLD:      return "GOLD";
-    //         case ALUMINIUM: return "ALIMINIUM";
-    //     }
-    // }
-
     std::string name = "";
 
     GLuint      albedo_id        = 0;
@@ -49,8 +33,6 @@ struct idk::Material
     float       roughness_strength    = 1.0f;
     float       displacement_strength = 0.1f;
     float       normal_strength       = 1.0f;
-
-    glm::vec3   reflectance = glm::vec3(0.04f);
 };
 
 
@@ -61,33 +43,17 @@ struct idk::Mesh
 };
 
 
-struct idk::BaseModel
+struct idk::Model
 {
-    std::vector<idk::Mesh>   meshes;
-    idk::Buffer<uint32_t>    m_indices;
+    bool animated = false;
+    std::vector<idk::Animation> m_animations;
+
+    std::vector<idk::Mesh>    meshes;
+    std::vector<uint32_t>     m_indices;
+    std::vector<idk::Vertex>  m_vertices;
+    std::vector<idk::AnimatedVertex> m_anim_vertices;
 
     GLuint VAO, VBO, IBO;
 
-    virtual idk::iBuffer *vertices() = 0;
-    virtual idk::iBuffer *indices() { return &m_indices; };
-};
-
-
-
-struct idk::Model: public BaseModel
-{
-    idk::Buffer<idk::Vertex>  m_vertices;
-
-    virtual idk::iBuffer *vertices() final { return &m_vertices; };
-};
-
-
-constexpr int IDK_ANIMATED_BIT = (int)(1 << (8*sizeof(int) - 2));
-
-struct idk::AnimatedModel
-{
-    idk::Buffer<idk::AnimatedVertex>  m_vertices;
-
-    virtual idk::iBuffer *vertices() final { return &m_vertices; };
 };
 

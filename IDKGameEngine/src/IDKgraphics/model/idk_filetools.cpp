@@ -1,6 +1,7 @@
 #include "idk_filetools.h"
 
 #include <sstream>
+#include <libidk/libidk.hpp>
 
 
 std::vector<std::string> tokenize( std::string str )
@@ -31,7 +32,12 @@ idk::filetools::readheader( const std::string &filepath )
 
     while (std::getline(stream, line))
     {
-        if (line != "")
+        if (line == "animated")
+        {
+            header.animated = true;
+        }
+
+        else if (line != "")
         {
             tokens.push_back(line);
         }
@@ -70,26 +76,93 @@ idk::filetools::readheader( const std::string &filepath )
 }
 
 
-void
-idk::filetools::readidkvi( const idk::idkvi_header_t &header, const std::string &filepath,
-                           std::vector<idkvi_material_t> &materials,
-                           idk::iBuffer *vertices, idk::iBuffer *indices )
+
+void read_animbone( std::ifstream &stream, idk::AnimBone &animbone )
+{
+    stream.read(reinterpret_cast<char *>(&animbone.parent_id), sizeof(int));
+    stream.read(reinterpret_cast<char *>(&animbone.world_transform), sizeof(glm::mat4));
+    stream.read(reinterpret_cast<char *>(&animbone.local_transform), sizeof(glm::mat4));
+    stream.read(reinterpret_cast<char *>(&animbone.inverse_bind),    sizeof(glm::mat4));
+
+
+    size_t num_pos=0, num_rot=0, num_scale=0;
+    stream.read(reinterpret_cast<char *>(&num_pos),   sizeof(size_t));
+    stream.read(reinterpret_cast<char *>(&num_rot),   sizeof(size_t));
+    stream.read(reinterpret_cast<char *>(&num_scale), sizeof(size_t));
+
+    // std::cout << "p/r/s: " << num_pos << ", " << num_rot << ", " << num_scale << "\n";
+
+
+    animbone.position.resize(num_pos);
+    animbone.rotation.resize(num_rot);
+    animbone.scale.resize(num_scale);
+
+    animbone.position_time.resize(num_pos);
+    animbone.rotation_time.resize(num_rot);
+    animbone.scale_time.resize(num_scale);
+
+    if (num_pos > 0)
+    {
+        stream.read(reinterpret_cast<char *>(&animbone.position[0]),      num_pos*sizeof(glm::vec3));
+        stream.read(reinterpret_cast<char *>(&animbone.position_time[0]), num_pos*sizeof(float));
+    }
+
+    if (num_rot > 0)
+    {
+        stream.read(reinterpret_cast<char *>(&animbone.rotation[0]),      num_rot*sizeof(glm::quat));
+        stream.read(reinterpret_cast<char *>(&animbone.rotation_time[0]), num_rot*sizeof(float));
+    }
+
+    if (num_scale > 0)
+    {
+        stream.read(reinterpret_cast<char *>(&animbone.scale[0]),         num_scale*sizeof(glm::vec3));
+        stream.read(reinterpret_cast<char *>(&animbone.scale_time[0]),    num_scale*sizeof(float));
+    }
+
+}
+
+
+void read_animation( std::ifstream &stream, idk::Animation &animation )
+{
+    size_t num_animbones;
+    float  duration;
+
+    stream.read(reinterpret_cast<char *>(&num_animbones), sizeof(size_t));
+    stream.read(reinterpret_cast<char *>(&duration),      sizeof(float));
+
+    animation.m_bones.resize(num_animbones);
+    animation.m_duration = duration;
+
+    std::cout << "bones: " << num_animbones << ", duration: " << duration << "\n";
+
+    for (size_t i=0; i<num_animbones; i++)
+    {
+        read_animbone(stream, animation.m_bones[i]);
+    }
+}
+
+
+
+void idk::filetools::readidka( const idkvi_header_t &header, const std::string &filepath,
+                               std::vector<idk::Animation> &animations )
 {
     std::ifstream stream(filepath, std::ios::binary);
 
-    size_t num_materials, num_vertices, num_indices;
-    stream.read(reinterpret_cast<char *>(&num_materials), sizeof(size_t));
-    stream.read(reinterpret_cast<char *>(&num_vertices), sizeof(size_t));
-    stream.read(reinterpret_cast<char *>(&num_indices),  sizeof(size_t));
+    size_t num_animations;
+    stream.read(reinterpret_cast<char *>(&num_animations), sizeof(size_t));
+    std::cout << "Num animations: " << num_animations << "\n";
 
-    materials.resize(num_materials);
-    vertices->resize(num_vertices);
-    indices->resize(num_indices);
 
-    stream.read(reinterpret_cast<char *>(materials.data()), materials.size() * sizeof(idkvi_material_t));
-    stream.read(reinterpret_cast<char *>(vertices->data()), vertices->nbytes());
-    stream.read(reinterpret_cast<char *>(indices->data()),  indices->nbytes());
+    animations.resize(num_animations);
+
+    for (int i=0; i<num_animations; i++)
+    {
+        read_animation(stream, animations[i]);
+        animations[i].init();
+    }
+
 
     stream.close();
+
 }
 

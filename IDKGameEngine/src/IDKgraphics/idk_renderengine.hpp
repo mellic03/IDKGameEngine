@@ -81,6 +81,7 @@ private:
 
 
     modelqueue_t                        m_model_draw_queue;
+    modelqueue_t                        m_anim_draw_queue;
     modelqueue_t                        m_wireframe_draw_queue;
     std::vector<pair<int, glm::mat4>>   m_shadowcast_queue;
     std::vector<Pointlight>             m_pointlight_queue;

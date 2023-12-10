@@ -11,6 +11,14 @@ idk::LightSystem::init()
         .datatype       = GL_FLOAT
     };
 
+    // m_depthbuffer_config = {
+    //     .internalformat = GL_RGBA16F,
+    //     .minfilter      = GL_NEAREST,
+    //     .magfilter      = GL_NEAREST,
+    //     .datatype       = GL_FLOAT
+    // };
+
+
     constexpr int size = 10;
 
     m_shadergen_config.point_flags.reserve(size);
@@ -46,8 +54,8 @@ idk::LightSystem::createDirlight( uint32_t flags )
         flags
     );
 
-    m_dirlight_shadowmaps[id].reset(2048, 2048, 1);
-    m_dirlight_shadowmaps[id].colorAttachment(0, m_framebuffer_config);
+    m_dirlight_shadowmaps[id].reset(1024, 1024, 0);
+    m_dirlight_shadowmaps[id].depthAttachment(m_depthbuffer_config);
 
     return id;
 }

@@ -22,6 +22,7 @@ namespace idk
 
 struct idk::idkvi_header_t
 {
+    bool   animated = false;
     size_t num_meshes;
 
     std::vector<uint32_t> m_index_counts;

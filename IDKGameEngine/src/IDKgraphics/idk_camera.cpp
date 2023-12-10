@@ -42,41 +42,48 @@ idk::Camera::aspect(float w, float h)
 
 
 void
-idk::Camera::offset(const glm::vec3 &v)
+idk::Camera::setOffset(const glm::vec3 &v)
 {
+    m_offset = v;
+
     m_default_pos = v;
+    m_default_pos.y = 0.0f;
 
     m_view = glm::lookAt(
         m_default_pos,
         m_default_pos + _front,
         _up
-    ); 
+    );
 }
 
 
+
+void
+idk::Camera::addOffset(const glm::vec3 &v)
+{
+    m_offset += v;
+
+    m_default_pos += v;
+    m_default_pos.y = 0.0f;
+
+    m_view = glm::lookAt(
+        m_default_pos,
+        m_default_pos + _front,
+        _up
+    );
+}
 
 
 void
 idk::Camera::translate(glm::vec3 v)
 {
-    v = glm::inverse(glm::mat3(m_view)) * v;
-
-    // if (_ylock)
-    // {
-        // float length = glm::length(v);
-        // v.y = 0.000000001f; // Ensure length != 0
-        // v = length * glm::normalize(v);
-    // }
-
-    m_transform.localTranslate(v);
+    m_transform.translate(v);
 }
 
 
 void
 idk::Camera::elevation(float f)
 {
-    // _transform.translate(glm::vec3(0.0f, f, 0.0f));
-    // _transform.position().y += f;
     m_transform.translate(glm::vec3(0.0f, f, 0.0f));
 }
 
@@ -85,9 +92,6 @@ void
 idk::Camera::pitch(float f)
 {
     m_transform.pitch(f);
-    // m_view = glm::rotate(m_view, f, _right);
-    // _front = glm::inverse(m_view) * _default_front;
-    // _up = glm::inverse(m_view) * _default_up;
 }
 
 
@@ -111,13 +115,6 @@ void
 idk::Camera::yaw(float f)
 {
     m_transform.yaw(f);
-    // if (_ylock)
-    //     m_view = glm::rotate(m_view, f, glm::vec3(0.0f, 1.0f, 0.0f));
-    // else
-    //     m_view = glm::rotate(m_view, f, _up);
-
-    // _right = glm::inverse(m_view) * _default_right;
-    // _front = glm::inverse(m_view) * _default_front;
 }
 
 
@@ -142,6 +139,6 @@ idk::Camera::view()
 {
     // inverse model matrix needed because world needs
     // to be transformed the opposite way the camera has moved.
-    return m_view * glm::inverse(m_transform.modelMatrix());
+    return m_view * glm::inverse(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, m_offset.y, 0.0f)) * m_transform.modelMatrix());
 }
 

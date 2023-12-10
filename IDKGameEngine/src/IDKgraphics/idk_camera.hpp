@@ -12,6 +12,7 @@ private:
     idk::Transform      m_transform;
     glm::mat4           m_projection;
     glm::mat4           m_view;
+    glm::mat4           m_rotation = glm::mat4(1.0f);
 
     glm::vec3           _right;
     glm::vec3           _front;
@@ -42,15 +43,20 @@ public:
     glm::vec2           m_g_abr = glm::vec2(0.0f);
     glm::vec2           m_b_abr = glm::vec2(0.0f);
     float               m_abr_str = 0.0f;
+    glm::vec3           m_offset = glm::vec3(0.0f);
 
                         Camera(float fov, float near, float far);
                         Camera();
 
-    idk::Transform &    transform()     { return m_transform;  };
+    const glm::vec3     position()       { return m_transform.position(); };
+    const glm::vec3     renderPosition() { return glm::inverse(view())[3]; };
+
     glm::mat4 &         projection()    { return m_projection; };
     glm::mat4           view();
 
-    void                offset(const glm::vec3 &v);
+    void                setOffset(const glm::vec3 &v);
+    void                addOffset(const glm::vec3 &v);
+    const glm::vec3 &   getOffset() { return m_offset; };
 
     void                translate(glm::vec3 v);
     void                elevation(float f);

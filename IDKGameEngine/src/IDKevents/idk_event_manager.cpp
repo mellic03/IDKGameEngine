@@ -49,6 +49,13 @@ idk::EventManager::mouseCapture( bool capture )
     SDL_SetRelativeMouseMode( (capture) ? SDL_TRUE : SDL_FALSE );
 }
 
+void
+idk::EventManager::onMouseWheel( std::function<void(float f)> callback )
+{
+    m_scroll_events.push_back(callback);
+}
+
+
 
 
 #ifdef IDK_SDL2
@@ -60,6 +67,8 @@ idk::EventManager::processMouseInput()
     {
         b = false;
     }
+
+    m_mousewheel_delta = 0.0f;
 
     SDL_Event e;
 
@@ -95,6 +104,11 @@ idk::EventManager::processMouseInput()
             case (SDL_MOUSEBUTTONUP):
                 m_mousebutton_down[e.button.button - 1] = false;
                 m_mousebutton_up[e.button.button - 1] = true;
+            break;
+
+
+            case (SDL_MOUSEWHEEL):
+                m_mousewheel_delta = e.wheel.y;
             break;
         }
     
@@ -152,5 +166,14 @@ idk::EventManager::update()
             event.response();
         }
     }
+
+    if (m_mousewheel_delta != 0.0f && mouseCaptured())
+    {
+        for (mousefun_t callback: m_scroll_events)
+        {
+            callback(m_mousewheel_delta);
+        }
+    }
+
 };
 

@@ -40,6 +40,7 @@ struct idk::Event
 class idk::EventManager
 {
     using fun_t = std::function<void(SDL_Event *)>;
+    using mousefun_t = std::function<void(float f)>;
 
 private:
     
@@ -48,6 +49,7 @@ private:
     // ------------------------------------------------
 
     Allocator<idk::Event>   m_events;
+    std::vector<mousefun_t> m_scroll_events;
     bool                    m_windowevents[2];
 
     glm::ivec2              m_size;
@@ -56,6 +58,7 @@ private:
     bool                    m_mouse_captured = false;
     std::vector<bool>       m_mousebutton_up;
     std::vector<bool>       m_mousebutton_down;
+    float                   m_mousewheel_delta = 0.0f;
     glm::vec2               m_mouse_position;
     glm::vec2               m_mouse_delta;
 
@@ -73,6 +76,7 @@ public:
     void                    onWindowEvent( WindowEvent, std::function<void()> );
     void                    onSDLPollEvent( std::function<void(SDL_Event *)> fn) { m_SDL_pollevents.push_back(fn); };
     void                    onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback );
+    void                    onMouseWheel( std::function<void(float f)> callback );
 
     void                    mouseCapture( bool capture );
     bool                    mouseCaptured() const            { return m_mouse_captured;    };

@@ -89,6 +89,7 @@ idk::RenderEngine::compileShaders()
 {
     createProgram("background",     "IDKGE/shaders/deferred/", "background.vs", "background.fs");
     createProgram("geometry_pass",  "IDKGE/shaders/deferred/", "geometrypass.vs", "geometrypass.fs");
+    createProgram("geometry_pass_anim",  "IDKGE/shaders/deferred/", "geometrypass-anim.vs", "geometrypass.fs");
     createProgram("geometry_light", "IDKGE/shaders/deferred/", "geometrypass.vs", "lightsource.fs");
     createProgram("lighting_ibl",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass_pbr.fs");
     createProgram("dirvolumetrics", "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
@@ -359,7 +360,15 @@ idk::RenderEngine::createCamera()
 void
 idk::RenderEngine::drawModel( GLuint shader_id, int model_id, glm::mat4 &model_mat )
 {
-    m_model_draw_queue[shader_id].push_back({model_id, model_mat});
+    if (modelManager().getModel(model_id).animated)
+    {
+        m_anim_draw_queue[shader_id].push_back({model_id, model_mat});
+    }
+
+    else
+    {
+        m_model_draw_queue[shader_id].push_back({model_id, model_mat});
+    }
 }
 
 
@@ -390,10 +399,9 @@ idk::RenderEngine::drawPointlight( Pointlight light )
 
 
 
-#define ORTHO_N 1.0f
+#define ORTHO_N 0.1f
 #define ORTHO_F 50.0f
-#define ORTHO_W 30.0f
-#define ORTHO_R 0.1f
+#define ORTHO_W 5.0f
 
 void
 idk::RenderEngine::shadowpass_dirlights()
@@ -413,13 +421,13 @@ idk::RenderEngine::shadowpass_dirlights()
 
     for (int i=0; i<dirlights.size(); i++)
     {
-        shadowmaps[i].clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        shadowmaps[i].clear(GL_DEPTH_BUFFER_BIT);
 
         const glm::vec3 dir = glm::normalize(glm::vec3(dirlights[i].direction));
 
         glm::mat4 view = glm::lookAt(
-            cam.transform().position() - (ORTHO_N*ORTHO_F / 4.0f) * dir,
-            glm::vec3(0.0f) + cam.transform().position(),
+            cam.position() - ((ORTHO_N + ORTHO_F) / 4.0f) * dir,
+            glm::vec3(0.0f) + cam.position(),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
 
@@ -447,7 +455,6 @@ idk::RenderEngine::shadowpass_dirlights()
         shadowmaps[i].unbind();
     }
 
-
     glShader::unbind();
 }
 
@@ -459,12 +466,13 @@ idk::RenderEngine::update_UBO_camera()
     m_UBO_camera.bind();
     m_UBO_camera.add<glm::mat4>(glm::value_ptr(camera.view()));
     m_UBO_camera.add<glm::mat4>(glm::value_ptr(camera.projection()));
-    m_UBO_camera.add<glm::vec3>(glm::value_ptr(camera.transform().position()));
 
+    glm::vec3 pos = camera.renderPosition();
     glm::vec4 b(camera.m_r_abr, camera.m_g_abr);
     glm::vec4 c(camera.m_b_abr, camera.m_abr_str, 0.0f);
 
-    m_UBO_camera.add<glm::vec3>(glm::value_ptr(camera.transform().position()));
+    m_UBO_camera.add<glm::vec3>(glm::value_ptr(pos));
+    m_UBO_camera.add<glm::vec3>(glm::value_ptr(pos));
     m_UBO_camera.add<glm::vec4>(glm::value_ptr(camera.m_bloom_gamma));
     m_UBO_camera.add<glm::vec4>(glm::value_ptr(b));
     m_UBO_camera.add<glm::vec4>(glm::value_ptr(c));
@@ -490,8 +498,8 @@ idk::RenderEngine::update_UBO_dirlights()
         const glm::vec3 dir = glm::normalize(glm::vec3(dirlights[i].direction));
 
         glm::mat4 view = glm::lookAt(
-            cam.transform().position() - (ORTHO_N*ORTHO_F / 4.0f) * dir,
-            glm::vec3(0.0f) + cam.transform().position(),
+            cam.position() - ((ORTHO_N+ORTHO_F) / 4.0f) * dir,
+            glm::vec3(0.0f) + cam.position(),
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
 
@@ -552,8 +560,9 @@ idk::RenderEngine::endFrame()
 
     gl::disable(GL_CULL_FACE);
     shadowpass_dirlights();
+    // gl::enable(GL_CULL_FACE);
+
     m_shadowcast_queue.clear();
-    gl::enable(GL_CULL_FACE);
 
 
     update_UBO_camera();
@@ -570,6 +579,9 @@ idk::RenderEngine::endFrame()
     m_deferred_geom_buffer.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_deferred_geom_buffer.bind();
 
+
+    // Non animated models
+    // ------------------------------------------------
     glShader &geometrypass = getProgram("geometry_pass");
     geometrypass.bind();
 
@@ -586,8 +598,29 @@ idk::RenderEngine::endFrame()
         }
         vec.clear();
     }
-
     m_model_draw_queue.clear();
+    // ------------------------------------------------
+
+    // Animated models
+    // ------------------------------------------------
+    glShader &geometrypass_anim = getProgram("geometry_pass_anim");
+    geometrypass_anim.bind();
+
+    for (auto &[shader_id, vec]: m_anim_draw_queue)
+    {
+        for (auto &[model_id, model_mat]: vec)
+        {
+            drawmethods::draw_animated(
+                geometrypass_anim,
+                modelManager().getModel(model_id),
+                model_mat,
+                modelManager().getMaterials()
+            );
+        }
+        vec.clear();
+    }
+    m_anim_draw_queue.clear();
+    // ------------------------------------------------
 
     getProgram("geometry_light").bind();
     for (Pointlight &light: m_pointlight_queue)
@@ -641,7 +674,7 @@ idk::RenderEngine::endFrame()
     for (int i=0; i<m_lightsystem.dirlights().size(); i++)
     {
         lighting.set_sampler2D(
-            "un_dirlight_depthmaps[" + std::to_string(i) + "]", shadowmaps[i].attachments[0]
+            "un_dirlight_depthmaps[" + std::to_string(i) + "]", shadowmaps[i].depth_attachment
         );
     }
 
@@ -663,7 +696,7 @@ idk::RenderEngine::endFrame()
     // for (int i=0; i<m_lightsystem.dirlights().size(); i++)
     // {
     //     dvol.set_sampler2D(
-    //         "un_dirlight_depthmaps[" + std::to_string(i) + "]", shadowmaps[i].attachments[0]
+    //         "un_dirlight_depthmaps[" + std::to_string(i) + "]", shadowmaps[i].depth_attachment
     //     );
     // }
 

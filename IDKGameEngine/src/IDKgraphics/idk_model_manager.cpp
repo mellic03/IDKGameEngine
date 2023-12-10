@@ -128,53 +128,86 @@ idk::ModelManager::loadTextures( std::string path, bool srgb, GLint minfilter, G
 
 
 void
-idk::ModelManager::model_to_gpu( idk::BaseModel *model )
+idk::ModelManager::model_to_gpu( idk::Model &model )
 {
-    gl::genVertexArrays(1, &model->VAO);
-    gl::genBuffers(1, &model->VBO);
-    gl::genBuffers(1, &model->IBO);
+    gl::genVertexArrays(1, &model.VAO);
+    gl::genBuffers(1, &model.VBO);
+    gl::genBuffers(1, &model.IBO);
 
-    gl::bindVertexArray(model->VAO);
+    gl::bindVertexArray(model.VAO);
 
-    gl::bindBuffer(GL_ARRAY_BUFFER, model->VBO);
-    gl::bufferData(
-        GL_ARRAY_BUFFER,
-        model->vertices()->nbytes(),
-        model->vertices()->data(),
-        GL_STATIC_DRAW
-    );
+    gl::bindBuffer(GL_ARRAY_BUFFER, model.VBO);
 
-    gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->IBO);
+
+    size_t vertex_size = sizeof(idk::Vertex);
+
+    if (model.animated)
+    {
+        vertex_size = sizeof(idk::AnimatedVertex);
+
+        gl::bufferData(
+            GL_ARRAY_BUFFER,
+            model.m_anim_vertices.size() * sizeof(idk::AnimatedVertex),
+            model.m_anim_vertices.data(),
+            GL_STATIC_DRAW
+        );
+    }
+
+    else
+    {
+        gl::bufferData(
+            GL_ARRAY_BUFFER,
+            model.m_vertices.size() * sizeof(idk::Vertex),
+            model.m_vertices.data(),
+            GL_STATIC_DRAW
+        );
+    }
+
+
+    gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.IBO);
     gl::bufferData(
         GL_ELEMENT_ARRAY_BUFFER,
-        model->indices()->nbytes(),
-        model->indices()->data(),
+        model.m_indices.size() * sizeof(GLuint),
+        model.m_indices.data(),
         GL_STATIC_DRAW
     );
+
 
 
     GLuint offset = 0;
 
     // Position
-    gl::vertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(idk::Vertex), offset);
+    gl::vertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, vertex_size, offset);
     gl::enableVertexAttribArray(0);
     offset += 3 * sizeof(float);
 
     // Normal
-    gl::vertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(idk::Vertex), offset);
+    gl::vertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, vertex_size, offset);
     gl::enableVertexAttribArray(1);
     offset += 3 * sizeof(float);
 
     // Tangent
-    gl::vertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(idk::Vertex), offset);
+    gl::vertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, vertex_size, offset);
     gl::enableVertexAttribArray(2);
     offset += 3 * sizeof(float);
 
     // UV
-    gl::vertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(idk::Vertex), offset);
+    gl::vertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertex_size, offset);
     gl::enableVertexAttribArray(3);
     offset += 2 * sizeof(float);
 
+    if (model.animated)
+    {
+        // Bone IDs
+        gl::vertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, vertex_size, offset);
+        gl::enableVertexAttribArray(4);
+        offset += 4 * sizeof(int);
+
+        // Bone weights
+        gl::vertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, vertex_size, offset);
+        gl::enableVertexAttribArray(5);
+        offset += 4 * sizeof(float);
+    }
 
     gl::bindVertexArray(0);
     gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -188,25 +221,39 @@ idk::ModelManager::loadModel( const std::string &root, const std::string &name )
     idkvi_header_t header = filetools::readheader(root+name+".txt");
 
     int model_id = m_models.create();
-    idk::Model *model = &getModel(model_id);
+    idk::Model &model = getModel(model_id);
 
-    std::vector<idkvi_material_t> materials;
+    if (header.animated)
+    {
+        model.animated = true;
 
-    filetools::readidkvi(
-        header, root+name+".idkvi",
-        materials, model->vertices(), model->indices()
-    );
+        filetools::readidkvi(
+            header, root+name+".idkvi",
+            model.m_anim_vertices, model.m_indices
+        );
+    
+        filetools::readidka(header, root+name+".idka", model.m_animations);
+    }
+
+    else
+    {
+        model.animated = false;
+
+        filetools::readidkvi(
+            header, root+name+".idkvi",
+            model.m_vertices, model.m_indices
+        );
+    }
 
     for (size_t i=0; i<header.num_meshes; i++)
     {
-        model->meshes.push_back(idk::Mesh());
-        idk::Mesh &mesh   = model->meshes.back();
+        model.meshes.push_back(idk::Mesh());
+        idk::Mesh &mesh   = model.meshes.back();
         mesh.num_indices  = header.m_index_counts[i];
 
         int material_id  = new_material();
         mesh.material_id = material_id;
         idk::Material &material = m_materials.get(material_id);
-        material.reflectance = materials[i].reflectance;
 
         auto &bitmask  = header.m_bitmasks[i];
         auto &textures = header.m_texture_paths[i];

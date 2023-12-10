@@ -13,8 +13,6 @@ idk::drawmethods::bind_material( glShader &program, Material &material )
     program.set_float ( "un_material.roughness_strength",    material.roughness_strength    );
     program.set_float ( "un_material.displacement_strength", material.displacement_strength );
     program.set_float ( "un_material.normal_strength",       material.normal_strength       );
-
-    program.set_vec3( "un_material.reflectance", material.reflectance );
 }
 
 
@@ -41,6 +39,28 @@ idk::drawmethods::draw_textured( glShader &program, Model &model, glm::mat4 &mod
         start_idx += mesh.num_indices * sizeof(GLuint);
     }
 }
+
+
+
+void
+idk::drawmethods::draw_animated( glShader &program, Model &model, glm::mat4 &model_mat, Allocator<Material> &materials )
+{
+    idk::Animation &anim = model.m_animations[0];
+    auto &bones = anim.m_bones;
+
+    anim.tick(1.0f);
+
+    for (size_t i=0; i<bones.size(); i++)
+    {
+        program.set_mat4(
+            "un_bonetransforms[" + std::to_string(i) + "]",
+            anim.m_transforms[i]
+        );
+    }
+
+    draw_textured(program, model, model_mat, materials);
+}
+
 
 
 void

@@ -21,7 +21,8 @@ private:
     std::vector<Dirlight>       m_dir_vec;
 
     std::vector<glFramebuffer>  m_dirlight_shadowmaps;
-    glColorConfig       m_framebuffer_config;
+    glColorConfig               m_framebuffer_config;
+    DepthAttachmentConfig       m_depthbuffer_config;
 
     idk::shadergen::Config      m_shadergen_config;
     std::vector<uint32_t>       m_temp_flags;

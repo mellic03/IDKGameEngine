@@ -13,7 +13,6 @@ private:
 
     Allocator<Material>         m_materials;
     Allocator<Model>            m_models;
-    Allocator<AnimatedModel>    m_animated_models;
 
     struct DefaultID { bool set=false; GLuint texture_ID; };
     GLuint m_default_albedo    = 0;
@@ -29,7 +28,7 @@ private:
 
     GLuint              get_texture_id( const std::string &key, bool srgb );
 
-    void                model_to_gpu( idk::BaseModel *model );
+    void                model_to_gpu( idk::Model &model );
     int                 new_material();
 
 public:
