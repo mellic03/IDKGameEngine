@@ -1,13 +1,7 @@
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <array>
-#include <vector>
+#include "idk_animation.hpp"
 #include <fstream>
-
-#include "idk_vertex.hpp"
-#include "libidk/libidk.hpp"
 
 
 namespace idk
@@ -32,7 +26,15 @@ struct idk::idkvi_header_t
 };
 
 
-struct idk::idkvi_material_t
+namespace idk::filetools
 {
-    glm::vec3 reflectance;
+    idk::idkvi_header_t readheader( const std::string & );
+
+    void readidka( std::ifstream &stream, const idkvi_header_t &header,
+                   idk::AnimationController & );
+
+    void readidkvi( std::ifstream &stream, const idkvi_header_t &header,
+                    idk::iBuffer *vertices, std::vector<uint32_t> &indices );
+
 };
+

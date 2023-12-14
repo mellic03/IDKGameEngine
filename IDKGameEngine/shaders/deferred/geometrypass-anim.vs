@@ -7,7 +7,6 @@ layout (location = 3) in vec2 vsin_texcoords;
 layout (location = 4) in ivec4 vsin_bone_ids;
 layout (location = 5) in vec4  vsin_bone_weights;
 
-uniform mat4 un_bonetransforms[35];
 
 out vec3 fsin_fragpos;
 out vec3 fsin_normal;
@@ -38,45 +37,57 @@ layout (std140, binding = 2) uniform UBO_camera_data
 };
 
 
+// uniform mat4 un_bonetransforms[50];
+layout (std140, binding = 6) uniform UBO_armature
+{
+    mat4 un_bonetransforms[50];
+};
+
+
+
 void main()
 {
-    vec4 fragpos = vec4(0.0);
+    vec4 anim_fragpos = vec4(0.0);
+    vec4 anim_normal  = vec4(0.0);
+    vec4 anim_tangent = vec4(0.0);
 
     for (int i=0; i<4; i++)
     {
         if (vsin_bone_ids[i] == -1) 
         {
-            continue;
-        }
+            if (i == 0)
+            {
+                anim_fragpos = vec4(vsin_pos, 1.0);
+            }
 
-        if (vsin_bone_ids[i] >= 30) 
-        {
-            fragpos = vec4(vsin_pos, 1.0);
             break;
         }
 
-        vec4 localPosition = un_bonetransforms[vsin_bone_ids[i]] * vec4(vsin_pos, 1.0);
-        fragpos += localPosition * vsin_bone_weights[i];
+        float weight    = vsin_bone_weights[i];
+        mat4  transform = un_bonetransforms[vsin_bone_ids[i]];
+
+        anim_fragpos += weight * transform * vec4(vsin_pos, 1.0);
+        anim_normal  += weight * transform * vec4(vsin_normal, 0.0);
+        anim_tangent += weight * transform * vec4(vsin_tangent, 0.0);
     }
+    anim_fragpos.w = 1.0;
+    anim_normal.w  = 0.0;
+    anim_tangent.w = 0.0;
 
-    mat4 model = un_model;
-    fragpos = model * fragpos;
-
-    fsin_fragpos = fragpos.xyz;
-    fsin_normal  = (model * vec4(vsin_normal, 0.0)).xyz;
-    fsin_texcoords = vsin_texcoords;
-
-
-    vec3 N = normalize(mat3(model) * normalize(vsin_normal));
-    vec3 T = normalize(mat3(model) * normalize(vsin_tangent));
+    vec3 N = normalize((un_model * anim_normal)).xyz;
+    vec3 T = normalize((un_model * anim_tangent)).xyz;
     T = normalize(T - dot(T, N) * N);
     vec3 B = cross(N, T);
-    B = normalize(B - dot(B, N) * N);
+
+
+    fsin_fragpos = (un_model * anim_fragpos).xyz;
+    fsin_normal  = N;
+    fsin_texcoords = vsin_texcoords;
 
     TBN  = mat3(T, B, N);
     TBNT = transpose(TBN);
     TBN_fragpos = TBNT * fsin_fragpos;
-    TBN_viewpos = TBNT * un_viewpos;
+    TBN_viewpos = TBNT * un_camera.position.xyz;
 
-    gl_Position = un_projection * un_view * fragpos;
+    gl_Position = un_projection * un_view * vec4(fsin_fragpos, 1.0);
 }

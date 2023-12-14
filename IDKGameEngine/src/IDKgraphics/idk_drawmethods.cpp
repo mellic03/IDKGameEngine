@@ -4,8 +4,7 @@ void
 idk::drawmethods::bind_material( glShader &program, Material &material )
 {
     program.set_sampler2D ( "un_material.albedo",       material.albedo_id       );
-    program.set_sampler2D ( "un_material.rough_metal",  material.rm_id           );
-    program.set_sampler2D ( "un_material.ao",           material.ao_id           );
+    program.set_sampler2D ( "un_material.rough_metal",  material.arm_id           );
     program.set_sampler2D ( "un_material.displacement", material.displacement_id );
     program.set_sampler2D ( "un_material.normal",       material.normal_id       );
 
@@ -43,20 +42,25 @@ idk::drawmethods::draw_textured( glShader &program, Model &model, glm::mat4 &mod
 
 
 void
-idk::drawmethods::draw_animated( glShader &program, Model &model, glm::mat4 &model_mat, Allocator<Material> &materials )
+idk::drawmethods::draw_animated( float dt, glUBO &UBO, glShader &program, Model &model,
+                                 glm::mat4 &model_mat, Allocator<Material> &materials )
 {
-    idk::Animation &anim = model.m_animations[0];
-    auto &bones = anim.m_bones;
+    static std::vector<glm::mat4> transforms;
 
-    anim.tick(1.0f);
+    model.m_anim_controller.tick(dt);
+    model.m_anim_controller.computeTransforms(transforms);
 
-    for (size_t i=0; i<bones.size(); i++)
-    {
-        program.set_mat4(
-            "un_bonetransforms[" + std::to_string(i) + "]",
-            anim.m_transforms[i]
-        );
-    }
+    UBO.bind();
+    UBO.add(transforms.size()*sizeof(glm::mat4), transforms.data());
+    UBO.unbind();
+
+    // for (size_t i=0; i<transforms.size(); i++)
+    // {
+    //     program.set_mat4(
+    //         "un_bonetransforms[" + std::to_string(i) + "]",
+    //         transforms[i]
+    //     );
+    // }
 
     draw_textured(program, model, model_mat, materials);
 }

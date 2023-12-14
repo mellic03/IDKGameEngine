@@ -129,21 +129,22 @@ void main()
         vec2 texcoords = fsin_texcoords;
     #endif
 
-    vec4  albedo      = texture( un_material.albedo, texcoords ).rgba;
-    if (albedo.a < 0.9)
+    vec4  albedo = texture( un_material.albedo, texcoords ).rgba;
+    if (albedo.a < 0.7)
         discard;
 
-    vec3  rough_metal = texture(un_material.rough_metal, texcoords).rgb;
+    vec3  ao_rough_metal = texture(un_material.rough_metal, texcoords).rgb;
 
-    float roughness   = un_material.roughness_strength * rough_metal.g;
-          roughness   = clamp(roughness, 0.0, 1.0);
+    float ao = ao_rough_metal.r;
+          ao = clamp(ao, 0.0, 1.0);
 
-    float metallic    = un_material.metallic_strength  * rough_metal.b;
-          metallic    = clamp(metallic, 0.0, 1.0);
+    float roughness = un_material.roughness_strength * ao_rough_metal.g;
+          roughness = clamp(roughness, 0.0, 1.0);
 
-    float ao          = texture( un_material.ao, texcoords ).r;
+    float metallic = un_material.metallic_strength  * ao_rough_metal.b;
+          metallic = clamp(metallic, 0.0, 1.0);
 
-    float a      = 0.35; // un_material.normal_strength;
+    float a      = un_material.normal_strength;
     vec3  normal = normalize(TBN * (texture(un_material.normal, texcoords).xyz * 2.0 - 1.0));
           normal = normalize(a*normal + (1.0 - a)*normalize(fsin_normal));
 

@@ -245,7 +245,7 @@ idk::Engine::beginFrame()
 void
 idk::Engine::endFrame()
 {
-    m_render_engine.endFrame();
+    m_render_engine.endFrame(deltaTime());
     idk_CS_stage_B();
     m_render_engine.swapWindow();
     idk_CS_stage_C();

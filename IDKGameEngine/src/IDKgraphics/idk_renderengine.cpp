@@ -3,12 +3,6 @@
 #include <filesystem>
 
 
-// Static members -----------------------------
-GLuint  idk::RenderEngine::SPHERE_PRIMITIVE;
-GLuint  idk::RenderEngine::CUBE_PRIMITIVE;
-GLuint  idk::RenderEngine::CRATE_PRIMITIVE;
-// --------------------------------------------
-
 void
 idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags )
 {
@@ -19,7 +13,7 @@ idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, 
     }
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  24);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
 
@@ -104,6 +98,7 @@ idk::RenderEngine::compileShaders()
     createProgram("getdepth",       "IDKGE/shaders/", "screenquad.vs", "postprocess/getdepth.fs");
     createProgram("colorgrade",     "IDKGE/shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
     createProgram("dir_shadow",     "IDKGE/shaders/", "dirshadow.vs",  "dirshadow.fs");
+    createProgram("dir_shadow-anim", "IDKGE/shaders/", "dirshadow-anim.vs",  "dirshadow.fs");
     createProgram("solid",          "IDKGE/shaders/", "vsin_pos_only.vs", "solid.fs");
 
 }
@@ -178,24 +173,19 @@ idk::RenderEngine::init_framebuffers( int w, int h )
 void
 idk::RenderEngine::init_all( std::string name, int w, int h )
 {
-    // RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
-    // RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
-    // RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
-
     compileShaders();
 
     init_screenquad();
     init_framebuffers(w, h);
 
+    m_modelsystem.init();
     m_lightsystem.init();
+
     m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
     m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
-    BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", false, GL_LINEAR, GL_LINEAR);
+    m_UBO_armature    = glUBO(6, ARMATURE_MAX_BONES * sizeof(glm::mat4));
 
-    m_model_manager.init();
-    // RenderEngine::SPHERE_PRIMITIVE = modelManager().loadOBJ(idk::objprimitives::icosphere, "");
-    // RenderEngine::CUBE_PRIMITIVE   = modelManager().loadOBJ(idk::objprimitives::cube, "");
-    // RenderEngine::CRATE_PRIMITIVE  = modelManager().loadOBJ(idk::objprimitives::crate, "");
+    BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", false, GL_LINEAR, GL_LINEAR);
 
     m_active_camera_id = createCamera();
     m_UBO_camera = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
@@ -223,7 +213,6 @@ idk::RenderEngine::init( std::string name, int w, int h, uint32_t flags )
     {
         return;
     }
-
 }
 
 
@@ -249,7 +238,6 @@ idk::RenderEngine::loadSkybox( const std::string &filepath )
     {
         "0px.png", "0nx.png", "0py.png", "0ny.png", "0pz.png", "0nz.png"
     };
-
 
     glColorConfig skybox_config = {
         .internalformat = GL_SRGB8_ALPHA8,
@@ -358,16 +346,16 @@ idk::RenderEngine::createCamera()
 
 
 void
-idk::RenderEngine::drawModel( GLuint shader_id, int model_id, glm::mat4 &model_mat )
+idk::RenderEngine::drawModel( int model_id, glm::mat4 &model_mat )
 {
-    if (modelManager().getModel(model_id).animated)
+    if (modelSystem().getModel(model_id).animated)
     {
-        m_anim_draw_queue[shader_id].push_back({model_id, model_mat});
+        m_anim_draw_queue.push_back({model_id, model_mat});
     }
 
     else
     {
-        m_model_draw_queue[shader_id].push_back({model_id, model_mat});
+        m_model_draw_queue.push_back({model_id, model_mat});
     }
 }
 
@@ -379,29 +367,9 @@ idk::RenderEngine::drawShadowCaster( int model_id, glm::mat4 &model_mat )
 }
 
 
-void
-idk::RenderEngine::drawModel_now( glShader &program, int model_id, glm::mat4 &model_mat )
-{
-    drawmethods::draw_textured(
-        program,
-        modelManager().getModel(model_id),
-        model_mat,
-        modelManager().getMaterials()
-    );
-}
-
-
-void
-idk::RenderEngine::drawPointlight( Pointlight light )
-{
-    m_pointlight_queue.push_back(light);
-}
-
-
-
-#define ORTHO_N 0.1f
-#define ORTHO_F 50.0f
-#define ORTHO_W 5.0f
+#define ORTHO_N 0.0f
+#define ORTHO_F 1.0f
+#define ORTHO_W 20.0f
 
 void
 idk::RenderEngine::shadowpass_dirlights()
@@ -433,7 +401,6 @@ idk::RenderEngine::shadowpass_dirlights()
 
         program.set_mat4("un_lightspacematrix", projection * view);
 
-
         glm::mat4 modelmat = glm::scale(glm::mat4(1.0f), glm::vec3(300.0f, 300.0f, 1.0f));
         modelmat = glm::translate(modelmat, glm::vec3(0.0f, 0.0f, -0.9*ORTHO_F));
         program.set_mat4("un_model", glm::inverse(view) * modelmat);
@@ -447,13 +414,64 @@ idk::RenderEngine::shadowpass_dirlights()
         {
             drawmethods::draw_untextured(
                 program,
-                modelManager().getModel(model_id),
+                modelSystem().getModel(model_id),
                 model_mat
             );
         }
     
         shadowmaps[i].unbind();
     }
+
+    static bool first = true;
+
+    if (first != true)
+    {
+        idk::glShader &anim_program = getProgram("dir_shadow-anim");
+        anim_program.bind();
+
+        auto &anim_queue  = m_anim_draw_queue;
+
+        for (int i=0; i<dirlights.size(); i++)
+        {
+            shadowmaps[i].clear(GL_DEPTH_BUFFER_BIT);
+
+            const glm::vec3 dir = glm::normalize(glm::vec3(dirlights[i].direction));
+
+            glm::mat4 view = glm::lookAt(
+                cam.position() - ((ORTHO_N + ORTHO_F) / 4.0f) * dir,
+                glm::vec3(0.0f) + cam.position(),
+                glm::vec3(0.0f, 1.0f, 0.0f)
+            );
+
+            anim_program.set_mat4("un_lightspacematrix", projection * view);
+
+            glm::mat4 modelmat = glm::scale(glm::mat4(1.0f), glm::vec3(300.0f, 300.0f, 1.0f));
+            modelmat = glm::translate(modelmat, glm::vec3(0.0f, 0.0f, -0.9*ORTHO_F));
+            anim_program.set_mat4("un_model", glm::inverse(view) * modelmat);
+
+            gl::bindVertexArray(quadVAO);
+            gl::drawArrays(GL_TRIANGLES, 0, 6);
+            gl::bindVertexArray(0);
+
+            for (auto &[model_id, model_mat]: anim_queue)
+            {
+                drawmethods::draw_animated(
+                    0.0f,
+                    m_UBO_armature,
+                    anim_program,
+                    modelSystem().getModel(model_id),
+                    model_mat,
+                    modelSystem().getMaterials()
+                );
+            }
+        
+            shadowmaps[i].unbind();
+        }
+    }
+
+    first = false;
+
+
 
     glShader::unbind();
 }
@@ -546,7 +564,7 @@ idk::RenderEngine::beginFrame()
 
 
 void
-idk::RenderEngine::endFrame()
+idk::RenderEngine::endFrame( float dt )
 {
     if (m_lightsystem.changed())
     {
@@ -558,9 +576,10 @@ idk::RenderEngine::endFrame()
         lighting_ibl.loadStringC(vert_source, frag_source);
     }
 
-    gl::disable(GL_CULL_FACE);
+    gl::enable(GL_CULL_FACE);
+    gl::cullFace(GL_FRONT);
     shadowpass_dirlights();
-    // gl::enable(GL_CULL_FACE);
+    gl::cullFace(GL_BACK);
 
     m_shadowcast_queue.clear();
 
@@ -584,19 +603,14 @@ idk::RenderEngine::endFrame()
     // ------------------------------------------------
     glShader &geometrypass = getProgram("geometry_pass");
     geometrypass.bind();
-
-    for (auto &[shader_id, vec]: m_model_draw_queue)
+    for (auto &[model_id, model_mat]: m_model_draw_queue)
     {
-        for (auto &[model_id, model_mat]: vec)
-        {
-            drawmethods::draw_textured(
-                geometrypass,
-                modelManager().getModel(model_id),
-                model_mat,
-                modelManager().getMaterials()
-            );
-        }
-        vec.clear();
+        drawmethods::draw_textured(
+            geometrypass,
+            modelSystem().getModel(model_id),
+            model_mat,
+            modelSystem().getMaterials()
+        );
     }
     m_model_draw_queue.clear();
     // ------------------------------------------------
@@ -605,40 +619,19 @@ idk::RenderEngine::endFrame()
     // ------------------------------------------------
     glShader &geometrypass_anim = getProgram("geometry_pass_anim");
     geometrypass_anim.bind();
-
-    for (auto &[shader_id, vec]: m_anim_draw_queue)
+    for (auto &[model_id, model_mat]: m_anim_draw_queue)
     {
-        for (auto &[model_id, model_mat]: vec)
-        {
-            drawmethods::draw_animated(
-                geometrypass_anim,
-                modelManager().getModel(model_id),
-                model_mat,
-                modelManager().getMaterials()
-            );
-        }
-        vec.clear();
+        drawmethods::draw_animated(
+            dt,
+            m_UBO_armature,
+            geometrypass_anim,
+            modelSystem().getModel(model_id),
+            model_mat,
+            modelSystem().getMaterials()
+        );
     }
     m_anim_draw_queue.clear();
     // ------------------------------------------------
-
-    getProgram("geometry_light").bind();
-    for (Pointlight &light: m_pointlight_queue)
-    {
-        glm::mat4 mat = glm::translate(glm::mat4(1.0f), glm::vec3(light.position));
-        mat = glm::scale(mat, glm::vec3(0.1f));
-    
-        getProgram("geometry_light").set_vec4("un_color", light.diffuse);
-
-        drawmethods::draw_untextured(
-            geometrypass,
-            modelManager().getModel(SPHERE_PRIMITIVE),
-            mat
-        );
-    }
-
-    m_pointlight_queue.clear();
-    glShader::unbind();
 
     gl::bindVertexArray(0);
     // -----------------------------------------------------------------------------------------

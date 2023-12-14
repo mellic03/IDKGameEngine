@@ -137,8 +137,6 @@ idk::Camera::right()
 glm::mat4
 idk::Camera::view()
 {
-    // inverse model matrix needed because world needs
-    // to be transformed the opposite way the camera has moved.
     return m_view * glm::inverse(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, m_offset.y, 0.0f)) * m_transform.modelMatrix());
 }
 

@@ -9,7 +9,9 @@
 #include "libidk/IDKgl.hpp"
 #include "idk_drawmethods.hpp"
 
-#include "idk_camera.hpp"
+#include "camera/idk_camera.hpp"
+#include "camera/idk_frustum.hpp"
+
 #include "primitives/primitives.hpp"
 #include "idk_noisegen.hpp"
 #include "lighting/IDKlighting.hpp"
@@ -21,19 +23,20 @@
 
 namespace idk { class RenderEngine; };
 
-#define modelqueue_t   std::unordered_map<GLuint, std::vector<idk::pair<int, glm::mat4>>>
 
 class idk::RenderEngine
 {
 public:
-
     enum InitFlag: uint32_t
     {
-        NONE              = 0,
-        INIT_HEADLESS     = 1 << 0
+        NONE          = 0,
+        INIT_HEADLESS = 1 << 0
     };
 
+
 private:
+    using modelqueue_t = std::vector<idk::pair<int, glm::mat4>>;
+
     glm::ivec2                          m_resolution;
 
     SDL_Window *                        m_SDL_window;
@@ -41,8 +44,8 @@ private:
 
     // idk::glFramebuffers ------------------------------------
     /***/
-    static const size_t                 NUM_SCRATCH_BUFFERS     = 8;
-    static const size_t                 ATTACHMENTS_PER_BUFFER  = 1;
+    static const size_t                 NUM_SCRATCH_BUFFERS    = 8;
+    static const size_t                 ATTACHMENTS_PER_BUFFER = 1;
 
     std::vector<glFramebuffer>          m_scratchbufs0;
     std::vector<glFramebuffer>          m_scratchbufs1;
@@ -51,8 +54,6 @@ private:
 
     glFramebuffer                       m_mainbuffer_0;
     glFramebuffer                       m_mainbuffer_1;
-
-    glFramebuffer                       m_depthbuffer;
 
     glFramebuffer                       m_deferred_geom_buffer;
     glFramebuffer                       m_volumetrics_buffer;
@@ -67,24 +68,21 @@ private:
 
     // UBO ----------------------------------------------------
     /***/
-    glUBO                               m_UBO_camera;
     glUBO                               m_UBO_pointlights;
-    // glUBO                               m_UBO_spotlights;
     glUBO                               m_UBO_dirlights;
+    glUBO                               m_UBO_camera;
+    glUBO                               m_UBO_armature;
     // --------------------------------------------------------
-
 
     int                                 m_active_camera_id;
     Allocator<Camera>                   m_camera_allocator;
-    ModelManager                        m_model_manager;
+    ModelManager                        m_modelsystem;
     idk::LightSystem                    m_lightsystem;
 
 
     modelqueue_t                        m_model_draw_queue;
     modelqueue_t                        m_anim_draw_queue;
-    modelqueue_t                        m_wireframe_draw_queue;
     std::vector<pair<int, glm::mat4>>   m_shadowcast_queue;
-    std::vector<Pointlight>             m_pointlight_queue;
 
     // Initialization ---------------------------------------------------------------------
     /***/
@@ -109,28 +107,23 @@ private:
 
 
 public:
-
     static void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
+
+    const static uint32_t               ARMATURE_MAX_BONES = 50;
 
     GLuint                              m_quad_VAO, m_quad_VBO;
     GLuint                              solid_shader;
 
-    std::vector<GLuint> skyboxes;
-    std::vector<std::pair<GLuint, GLuint>> skyboxes_IBL;
-    int current_skybox;
-    GLuint BRDF_LUT;
+    std::vector<GLuint>                     skyboxes;
+    std::vector<std::pair<GLuint, GLuint>>  skyboxes_IBL;
+    int                                     current_skybox;
+    GLuint                                  BRDF_LUT;
 
 
 
-    // Built-in primitives ----------------------------------------------------------------
-    /***/
-    static GLuint                       SPHERE_PRIMITIVE;
-    static GLuint                       CUBE_PRIMITIVE;
-    static GLuint                       CRATE_PRIMITIVE;
-    // ------------------------------------------------------------------------------------
     void                                compileShaders();
 
-    void                                init( std::string name, int w, int h, uint32_t flags=InitFlag::NONE );
+    void                                init( std::string name, int w, int h, uint32_t flags=0 );
 
     SDL_Window *                        SDLWindow()     { return m_SDL_window;      };
     SDL_GLContext                       SDLGLContext()  { return m_SDL_gl_context;  };
@@ -141,30 +134,20 @@ public:
     idk::Camera &                       getCamera(            ) { return getCamera(m_active_camera_id);  };
 
 
-    idk::LightSystem &                  lightSystem()   { return m_lightsystem; };
-    ModelManager &                      modelManager()  { return m_model_manager; };
+    idk::LightSystem &                  lightSystem() { return m_lightsystem; };
+    ModelManager &                      modelSystem() { return m_modelsystem; };
 
     int                                 loadSkybox( const std::string &filepath );
 
-    void                                drawModel ( GLuint      shader_id,
-                                                    int         model_id,
-                                                    glm::mat4 & model_mat );
-
-    void                                drawModel_now( glShader &   program,
-                                                       int          model_id,
-                                                       glm::mat4 &  model_mat );
-
+    void                                drawModel ( int model_id, glm::mat4 & );
     void                                drawShadowCaster( int model_id, glm::mat4 & );
 
-    void                                drawPointlight( Pointlight light );
-
-
     GLuint                              createProgram( std::string name, std::string, std::string, std::string );
-    glShader &                          getProgram( const std::string &name ) { return m_shaders[name]; };
-    std::vector<std::string>            programNames() { return m_shader_names; };
+    glShader &                          getProgram ( const std::string &name ) { return m_shaders[name]; };
+    std::map<std::string, glShader> &   getPrograms() { return m_shaders; };
 
     void                                beginFrame();
-    void                                endFrame();
+    void                                endFrame( float dt );
     void                                swapWindow();
     void                                resize( int w, int h );
     void                                blitFramebuffer( const idk::glFramebuffer &fb );
@@ -175,5 +158,4 @@ public:
 
 };
 
-#undef modelqueue_t
 

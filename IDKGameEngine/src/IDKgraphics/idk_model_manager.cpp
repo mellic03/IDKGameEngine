@@ -58,7 +58,7 @@ GLuint do_thing_rgb( glm::vec3 v )
     idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    idk::gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, size, size, 0, GL_RGB, GL_FLOAT, data);
+    idk::gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB8, size, size, 0, GL_RGB, GL_FLOAT, data);
     idk::gl::generateMipmap(GL_TEXTURE_2D);
 
     idk::gl::bindTexture(GL_TEXTURE_2D, 0);
@@ -72,8 +72,7 @@ void
 idk::ModelManager::init()
 {
     m_default_albedo = do_thing_rgb(glm::vec3(0.5f));
-    m_default_rm     = do_thing_rgb(glm::vec3(0.0f, 0.7f, 0.0f));
-    m_default_ao     = do_thing_r(1.0f);
+    m_default_ao_r_m = do_thing_rgb(glm::vec3(1.0f, 0.75f, 0.0f));
     m_default_height = do_thing_r(0.0f);
     m_default_normal = do_thing_rgb(glm::vec3(0.5f, 0.5f, 1.0f));
 }
@@ -87,9 +86,8 @@ idk::ModelManager::new_material()
 
     material.name            = "No idea lmao";
     material.albedo_id       = m_default_albedo;
-    material.rm_id           = m_default_rm;
+    material.arm_id          = m_default_ao_r_m;
     material.displacement_id = m_default_height;
-    material.ao_id           = m_default_ao;
     material.normal_id       = m_default_normal;
 
     return material_id;
@@ -139,30 +137,15 @@ idk::ModelManager::model_to_gpu( idk::Model &model )
     gl::bindBuffer(GL_ARRAY_BUFFER, model.VBO);
 
 
-    size_t vertex_size = sizeof(idk::Vertex);
+    size_t vertex_size = model.m_buffer->nbytes() / model.m_buffer->size();
 
-    if (model.animated)
-    {
-        vertex_size = sizeof(idk::AnimatedVertex);
 
-        gl::bufferData(
-            GL_ARRAY_BUFFER,
-            model.m_anim_vertices.size() * sizeof(idk::AnimatedVertex),
-            model.m_anim_vertices.data(),
-            GL_STATIC_DRAW
-        );
-    }
-
-    else
-    {
-        gl::bufferData(
-            GL_ARRAY_BUFFER,
-            model.m_vertices.size() * sizeof(idk::Vertex),
-            model.m_vertices.data(),
-            GL_STATIC_DRAW
-        );
-    }
-
+    gl::bufferData(
+        GL_ARRAY_BUFFER,
+        model.m_buffer->nbytes(),
+        model.m_buffer->data(),
+        GL_STATIC_DRAW
+    );
 
     gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.IBO);
     gl::bufferData(
@@ -223,27 +206,24 @@ idk::ModelManager::loadModel( const std::string &root, const std::string &name )
     int model_id = m_models.create();
     idk::Model &model = getModel(model_id);
 
+    std::ifstream stream(root+name+".idkvi", std::ios::binary);
+
     if (header.animated)
     {
         model.animated = true;
+        model.m_buffer = new idk::Buffer<idk::AnimatedVertex>();
 
-        filetools::readidkvi(
-            header, root+name+".idkvi",
-            model.m_anim_vertices, model.m_indices
-        );
-    
-        filetools::readidka(header, root+name+".idka", model.m_animations);
+        filetools::readidkvi(stream, header, model.m_buffer, model.m_indices);
+        filetools::readidka(stream, header, model.m_anim_controller);
     }
-
     else
     {
         model.animated = false;
-
-        filetools::readidkvi(
-            header, root+name+".idkvi",
-            model.m_vertices, model.m_indices
-        );
+        model.m_buffer = new idk::Buffer<idk::Vertex>();
+    
+        filetools::readidkvi(stream, header, model.m_buffer, model.m_indices);
     }
+    stream.close();
 
     for (size_t i=0; i<header.num_meshes; i++)
     {
@@ -265,7 +245,7 @@ idk::ModelManager::loadModel( const std::string &root, const std::string &name )
             material.normal_id = get_texture_id(textures[NORMAL_IDX], false);
 
         if (bitmask & RM_BIT)
-            material.rm_id = get_texture_id(textures[RM_IDX], false);
+            material.arm_id = get_texture_id(textures[RM_IDX], false);
     }
 
     model_to_gpu(model);

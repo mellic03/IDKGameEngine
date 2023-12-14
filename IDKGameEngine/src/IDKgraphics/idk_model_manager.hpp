@@ -16,12 +16,9 @@ private:
 
     struct DefaultID { bool set=false; GLuint texture_ID; };
     GLuint m_default_albedo    = 0;
-    GLuint m_default_metallic  = 0;
-    GLuint m_default_roughness = 0;
-    GLuint m_default_ao        = 0;
+    GLuint m_default_ao_r_m    = 0;
     GLuint m_default_normal    = 0;
     GLuint m_default_height    = 0;
-    GLuint m_default_rm        = 0;
 
     std::unordered_map<std::string, DefaultID>      _texture_IDs;
     std::unordered_map<std::string, int>            _material_IDs;
