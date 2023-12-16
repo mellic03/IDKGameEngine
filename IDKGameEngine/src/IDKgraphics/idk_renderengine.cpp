@@ -2,6 +2,8 @@
 
 #include <filesystem>
 
+idk::Frustum frustum;
+
 
 void
 idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags )
@@ -13,7 +15,7 @@ idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, 
     }
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  16);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
 
@@ -107,18 +109,14 @@ idk::RenderEngine::compileShaders()
 void
 idk::RenderEngine::init_framebuffers( int w, int h )
 {
+    // gl::enable(GL_FRAMEBUFFER_SRGB);
+
     idk::glColorConfig config = {
         .internalformat = GL_RGBA16F,
         .minfilter      = GL_NEAREST,
         .magfilter      = GL_LINEAR,
         .datatype       = GL_FLOAT
     };
-
-    idk::DepthAttachmentConfig depth_config = {
-        .internalformat = GL_DEPTH_COMPONENT16,
-        .datatype       = GL_FLOAT
-    };
-
 
     m_scratchbufs0.resize(NUM_SCRATCH_BUFFERS);
     m_scratchbufs1.resize(NUM_SCRATCH_BUFFERS);
@@ -181,15 +179,15 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
     m_modelsystem.init();
     m_lightsystem.init();
 
+    m_UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
     m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
+    // m_UBO_cascades    = glUBO(4, glDepthCascade::NUM_CASCADES * sizeof(glm::mat4));
     m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
     m_UBO_armature    = glUBO(6, ARMATURE_MAX_BONES * sizeof(glm::mat4));
 
     BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", false, GL_LINEAR, GL_LINEAR);
 
     m_active_camera_id = createCamera();
-    m_UBO_camera = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
-
 
     loadSkybox("IDKGE/resources/skybox/");
 }
@@ -229,17 +227,17 @@ idk::RenderEngine::loadSkybox( const std::string &filepath )
 {
     gl::enable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-    std::vector<std::string> faces
+    static const std::vector<std::string> faces
     {
         "px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"
     };
 
-    std::vector<std::string> faces2
+    static const std::vector<std::string> faces2
     {
         "0px.png", "0nx.png", "0py.png", "0ny.png", "0pz.png", "0nz.png"
     };
 
-    glColorConfig skybox_config = {
+    static const glColorConfig skybox_config = {
         .internalformat = GL_SRGB8_ALPHA8,
         .format         = GL_RGBA,
         .minfilter      = GL_LINEAR,
@@ -248,7 +246,7 @@ idk::RenderEngine::loadSkybox( const std::string &filepath )
         .genmipmap      = false
     };
 
-    glColorConfig diffuse_config = {
+    static const glColorConfig diffuse_config = {
         .internalformat = GL_SRGB8_ALPHA8,
         .format         = GL_RGBA,
         .minfilter      = GL_LINEAR,
@@ -257,7 +255,8 @@ idk::RenderEngine::loadSkybox( const std::string &filepath )
         .genmipmap      = true
     };
 
-    glColorConfig specular_config = {
+
+    static const glColorConfig specular_config = {
         .internalformat = GL_SRGB8_ALPHA8,
         .format         = GL_RGBA,
         .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
@@ -367,48 +366,40 @@ idk::RenderEngine::drawShadowCaster( int model_id, glm::mat4 &model_mat )
 }
 
 
-#define ORTHO_N 0.0f
-#define ORTHO_F 1.0f
-#define ORTHO_W 20.0f
-
 void
 idk::RenderEngine::shadowpass_dirlights()
 {
     idk::Camera &cam = getCamera();
 
+    std::vector<idk::Dirlight> &dirlights = m_lightsystem.dirlights();
+    idk::glDepthCascade &depthcascade = m_lightsystem.depthCascade();
+
+    idk::Dirlight &light = dirlights[0];
+    const glm::vec3 dir = glm::normalize(glm::vec3(light.direction));
+
+
+
+    // Compute matrices
+    // -------------------------------------------------------------------------------------
+    depthcascade.computeCascadeMatrices(
+        cam.getFOV(),    cam.getAspect(),  cam.nearPlane(),
+        cam.farPlane(),  cam.view(),       dir
+    );
+
+    const auto &cascade_matrices = depthcascade.getCascadeMatrices();
+    // -------------------------------------------------------------------------------------
+   
+    depthcascade.bind();
+
     idk::glShader &program = getProgram("dir_shadow");
     program.bind();
 
-    auto &queue  = m_model_draw_queue;
-    auto quadVAO = m_quad_VAO;
-
-    glm::mat4 projection = glm::ortho(-ORTHO_W, ORTHO_W, -ORTHO_W, ORTHO_W, ORTHO_N, ORTHO_F);
-
-    std::vector<idk::Dirlight> &dirlights       = m_lightsystem.dirlights();
-    std::vector<idk::glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
-
-    for (int i=0; i<dirlights.size(); i++)
+    for (int i=0; i<glDepthCascade::NUM_CASCADES; i++)
     {
-        shadowmaps[i].clear(GL_DEPTH_BUFFER_BIT);
+        depthcascade.setOutputAttachment(i);
+        depthcascade.clear(GL_DEPTH_BUFFER_BIT);
 
-        const glm::vec3 dir = glm::normalize(glm::vec3(dirlights[i].direction));
-
-        glm::mat4 view = glm::lookAt(
-            cam.position() - ((ORTHO_N + ORTHO_F) / 4.0f) * dir,
-            glm::vec3(0.0f) + cam.position(),
-            glm::vec3(0.0f, 1.0f, 0.0f)
-        );
-
-        program.set_mat4("un_lightspacematrix", projection * view);
-
-        glm::mat4 modelmat = glm::scale(glm::mat4(1.0f), glm::vec3(300.0f, 300.0f, 1.0f));
-        modelmat = glm::translate(modelmat, glm::vec3(0.0f, 0.0f, -0.9*ORTHO_F));
-        program.set_mat4("un_model", glm::inverse(view) * modelmat);
-
-        gl::bindVertexArray(quadVAO);
-        gl::drawArrays(GL_TRIANGLES, 0, 6);
-        gl::bindVertexArray(0);
-
+        program.set_mat4("un_lightspacematrix", cascade_matrices[i]);
 
         for (auto &[model_id, model_mat]: m_shadowcast_queue)
         {
@@ -418,60 +409,30 @@ idk::RenderEngine::shadowpass_dirlights()
                 model_mat
             );
         }
-    
-        shadowmaps[i].unbind();
     }
 
-    static bool first = true;
 
-    if (first != true)
+    idk::glShader &anim_program = getProgram("dir_shadow-anim");
+    anim_program.bind();
+
+    for (int i=0; i<glDepthCascade::NUM_CASCADES; i++)
     {
-        idk::glShader &anim_program = getProgram("dir_shadow-anim");
-        anim_program.bind();
+        depthcascade.setOutputAttachment(i);
 
-        auto &anim_queue  = m_anim_draw_queue;
+        anim_program.set_mat4("un_lightspacematrix", cascade_matrices[i]);
 
-        for (int i=0; i<dirlights.size(); i++)
+        for (auto &[model_id, model_mat]: m_anim_draw_queue)
         {
-            shadowmaps[i].clear(GL_DEPTH_BUFFER_BIT);
-
-            const glm::vec3 dir = glm::normalize(glm::vec3(dirlights[i].direction));
-
-            glm::mat4 view = glm::lookAt(
-                cam.position() - ((ORTHO_N + ORTHO_F) / 4.0f) * dir,
-                glm::vec3(0.0f) + cam.position(),
-                glm::vec3(0.0f, 1.0f, 0.0f)
+            drawmethods::draw_animated(
+                0.0f,
+                m_UBO_armature,
+                anim_program,
+                modelSystem().getModel(model_id),
+                model_mat,
+                modelSystem().getMaterials()
             );
-
-            anim_program.set_mat4("un_lightspacematrix", projection * view);
-
-            glm::mat4 modelmat = glm::scale(glm::mat4(1.0f), glm::vec3(300.0f, 300.0f, 1.0f));
-            modelmat = glm::translate(modelmat, glm::vec3(0.0f, 0.0f, -0.9*ORTHO_F));
-            anim_program.set_mat4("un_model", glm::inverse(view) * modelmat);
-
-            gl::bindVertexArray(quadVAO);
-            gl::drawArrays(GL_TRIANGLES, 0, 6);
-            gl::bindVertexArray(0);
-
-            for (auto &[model_id, model_mat]: anim_queue)
-            {
-                drawmethods::draw_animated(
-                    0.0f,
-                    m_UBO_armature,
-                    anim_program,
-                    modelSystem().getModel(model_id),
-                    model_mat,
-                    modelSystem().getMaterials()
-                );
-            }
-        
-            shadowmaps[i].unbind();
         }
     }
-
-    first = false;
-
-
 
     glShader::unbind();
 }
@@ -508,27 +469,21 @@ idk::RenderEngine::update_UBO_dirlights()
     std::vector<Dirlight>  lights(IDK_MAX_DIRLIGHTS);
     std::vector<glm::mat4> matrices(IDK_MAX_DIRLIGHTS);
 
-    glm::mat4 projection = glm::ortho(-ORTHO_W, ORTHO_W, -ORTHO_W, ORTHO_W, ORTHO_N, ORTHO_F);
     std::vector<idk::Dirlight> &dirlights = m_lightsystem.dirlights();
+    idk::Dirlight &light = dirlights[0];
+    const glm::vec3 dir = glm::normalize(glm::vec3(light.direction));
 
-    for (int i=0; i<dirlights.size(); i++)
+    const auto &cascade_matrices = m_lightsystem.depthCascade().getCascadeMatrices();
+
+    for (int j=0; j<cascade_matrices.size(); j++)
     {
-        const glm::vec3 dir = glm::normalize(glm::vec3(dirlights[i].direction));
-
-        glm::mat4 view = glm::lookAt(
-            cam.position() - ((ORTHO_N+ORTHO_F) / 4.0f) * dir,
-            glm::vec3(0.0f) + cam.position(),
-            glm::vec3(0.0f, 1.0f, 0.0f)
-        );
-
-        lights[i]   = dirlights[i];
-        matrices[i] = projection * view;
+        lights[0]   = light;
     }
 
 
     m_UBO_dirlights.bind();
     m_UBO_dirlights.add(IDK_MAX_DIRLIGHTS * sizeof(Dirlight),  lights.data());
-    m_UBO_dirlights.add(IDK_MAX_DIRLIGHTS * sizeof(glm::mat4), matrices.data());
+    m_UBO_dirlights.add(glDepthCascade::NUM_CASCADES * sizeof(glm::mat4), cascade_matrices.data());
     m_UBO_dirlights.unbind();
 }
 
@@ -566,28 +521,26 @@ idk::RenderEngine::beginFrame()
 void
 idk::RenderEngine::endFrame( float dt )
 {
-    if (m_lightsystem.changed())
-    {
-        static std::string vert_source = "";
-        static std::string frag_source = "";
+    // if (m_lightsystem.changed())
+    // {
+    //     static std::string vert_source = "";
+    //     static std::string frag_source = "";
 
-        glShader &lighting_ibl = getProgram("lighting_ibl");
-        m_lightsystem.genShaderString(vert_source, frag_source);
-        lighting_ibl.loadStringC(vert_source, frag_source);
-    }
+    //     glShader &lighting_ibl = getProgram("lighting_ibl");
+    //     m_lightsystem.genShaderString(vert_source, frag_source);
+    //     lighting_ibl.loadStringC(vert_source, frag_source);
+    // }
 
     gl::enable(GL_CULL_FACE);
     gl::cullFace(GL_FRONT);
     shadowpass_dirlights();
     gl::cullFace(GL_BACK);
 
-    m_shadowcast_queue.clear();
-
-
     update_UBO_camera();
     update_UBO_dirlights();
     update_UBO_pointlights();
 
+    m_shadowcast_queue.clear();
 
     idk::Camera &camera = getCamera();
 
@@ -600,7 +553,7 @@ idk::RenderEngine::endFrame( float dt )
 
 
     // Non animated models
-    // ------------------------------------------------
+    // -----------------------------------------------------------------------------------------
     glShader &geometrypass = getProgram("geometry_pass");
     geometrypass.bind();
     for (auto &[model_id, model_mat]: m_model_draw_queue)
@@ -613,10 +566,10 @@ idk::RenderEngine::endFrame( float dt )
         );
     }
     m_model_draw_queue.clear();
-    // ------------------------------------------------
+    // -----------------------------------------------------------------------------------------
 
     // Animated models
-    // ------------------------------------------------
+    // -----------------------------------------------------------------------------------------
     glShader &geometrypass_anim = getProgram("geometry_pass_anim");
     geometrypass_anim.bind();
     for (auto &[model_id, model_mat]: m_anim_draw_queue)
@@ -631,7 +584,6 @@ idk::RenderEngine::endFrame( float dt )
         );
     }
     m_anim_draw_queue.clear();
-    // ------------------------------------------------
 
     gl::bindVertexArray(0);
     // -----------------------------------------------------------------------------------------
@@ -662,14 +614,10 @@ idk::RenderEngine::endFrame( float dt )
     lighting.bind();
     lighting.set_sampler2D("un_BRDF_LUT", BRDF_LUT);
 
-    std::vector<glFramebuffer> &shadowmaps = m_lightsystem.shadowmaps();
+    idk::glDepthCascade depthcascade = m_lightsystem.depthCascade();
 
-    for (int i=0; i<m_lightsystem.dirlights().size(); i++)
-    {
-        lighting.set_sampler2D(
-            "un_dirlight_depthmaps[" + std::to_string(i) + "]", shadowmaps[i].depth_attachment
-        );
-    }
+    lighting.set_vec4("un_cascade_depths", depthcascade.getCascadeDepths(camera.farPlane()));
+    lighting.set_sampler2DArray("un_dirlight_depthmap", depthcascade.getTextureArray());
 
     lighting.set_samplerCube("un_skybox_diffuse",  skyboxes_IBL[current_skybox].first);
     lighting.set_samplerCube("un_skybox_specular", skyboxes_IBL[current_skybox].second);
@@ -678,23 +626,6 @@ idk::RenderEngine::endFrame( float dt )
 
     lighting.popTextureUnits();
     glShader::unbind();
-    // -----------------------------------------------------------------------------------------
-
-
-
-    // Volumetric directional lights
-    // -----------------------------------------------------------------------------------------
-    // glShader &dvol = m_shaders["dirvolumetrics"];
-    // dvol.bind();
-    // for (int i=0; i<m_lightsystem.dirlights().size(); i++)
-    // {
-    //     dvol.set_sampler2D(
-    //         "un_dirlight_depthmaps[" + std::to_string(i) + "]", shadowmaps[i].depth_attachment
-    //     );
-    // }
-
-    // tex2tex(dvol, m_deferred_geom_buffer, m_scratchbufs0[2]);
-    // glShader::unbind();
     // -----------------------------------------------------------------------------------------
 
 
@@ -839,12 +770,6 @@ idk::RenderEngine::endFrame( float dt )
     {
         camera.m_exposure.x += stepsize*direction;
     }
-
-    // camera.m_exposure.x = a*camera.m_exposure.x + b*new_exposure;
-
-    // printf("avg: %.2f  %.2f  %.2f\n", avg_color.x, avg_color.y, avg_color.z);
-    // printf("luminance:  %.2f\n",   avg_luminance);
-    // printf("exposure:   %.2f\n\n", camera.m_exposure.x);
 
 
     tex2tex(colorgrade, *buffer_b, *buffer_a);

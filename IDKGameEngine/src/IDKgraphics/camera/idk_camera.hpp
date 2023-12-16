@@ -23,9 +23,10 @@ private:
     glm::vec4           _default_front;
     glm::vec4           _default_up;
 
-    float               _fov;
-    float               _near;
-    float               _far;
+    float               m_aspect;
+    float               m_fov;
+    float               m_near;
+    float               m_far;
 
     bool                _ylock  = false;
     bool                _noroll = false;
@@ -54,6 +55,9 @@ public:
     glm::mat4 &         projection()    { return m_projection; };
     glm::mat4           view();
 
+    float               getFOV()    const { return m_fov;    };
+    float               getAspect() const { return m_aspect; };
+
     void                setOffset(const glm::vec3 &v);
     void                addOffset(const glm::vec3 &v);
     const glm::vec3 &   getOffset() { return m_offset; };
@@ -72,8 +76,8 @@ public:
     void                ylock(bool lock)  { _ylock = lock;  };
     void                noroll(bool lock) { _noroll = lock; };
 
-    float               nearPlane() const { return _near; };
-    float               farPlane()  const { return _far;  };
+    float               nearPlane() const { return m_near; };
+    float               farPlane()  const { return m_far;  };
 
 };
 

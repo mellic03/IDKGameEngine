@@ -32,24 +32,24 @@ layout (std140, binding = 2) uniform UBO_camera_data
     Camera un_camera;
 };
 
-#include "deferred/UBO_lightsources.glsl"
-#include "deferred/methods.glsl"
+// #include "deferred/UBO_lightsources.glsl"
+// #include "deferred/methods.glsl"
 
 
-float PHG (float g, float cosTheta)
-{
-    const float Inv4Pi = 0.07957747154594766788;
+// float PHG (float g, float cosTheta)
+// {
+//     const float Inv4Pi = 0.07957747154594766788;
     
-    float gSq = g * g;
-    float denomPreMul = 1 + gSq - (2.0 * g * cosTheta);
-    return (1 - gSq) * Inv4Pi * inversesqrt(denomPreMul * denomPreMul * denomPreMul);
-}
+//     float gSq = g * g;
+//     float denomPreMul = 1 + gSq - (2.0 * g * cosTheta);
+//     return (1 - gSq) * Inv4Pi * inversesqrt(denomPreMul * denomPreMul * denomPreMul);
+// }
 
 
-float miePhase (float cosTheta)
-{
-    return mix (PHG (0.8, cosTheta), PHG (-0.5, cosTheta), 0.5);
-}
+// float miePhase (float cosTheta)
+// {
+//     return mix (PHG (0.8, cosTheta), PHG (-0.5, cosTheta), 0.5);
+// }
 
 
 

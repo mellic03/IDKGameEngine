@@ -2,14 +2,14 @@
 
 idk::Camera::Camera(float fov, float near, float far):
 m_projection(1.0f), m_view(1.0f),
-_fov(fov), _near(near), _far(far)
+m_fov(fov), m_near(near), m_far(far)
 {
 
 }
 
 
 idk::Camera::Camera():
-Camera(95.0f, 0.1f, 200.0f)
+Camera(80.0f, 0.1f, 100.0f)
 {
     glm::vec3 pos = m_transform.position();
 
@@ -29,16 +29,16 @@ Camera(95.0f, 0.1f, 200.0f)
         _up
     ); 
 
-    m_projection = glm::perspective(glm::radians(_fov), 1.0f, _near, _far);
+    m_projection = glm::perspective(glm::radians(m_fov), 1.0f, m_near, m_far);
 }
 
 
 void
 idk::Camera::aspect(float w, float h)
 {
-    m_projection = glm::perspective(glm::radians(_fov), w/h, _near, _far);
+    m_aspect = w / h;
+    m_projection = glm::perspective(glm::radians(m_fov), m_aspect, m_near, m_far);
 }
-
 
 
 void

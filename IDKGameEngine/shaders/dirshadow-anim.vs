@@ -10,7 +10,6 @@ layout (location = 5) in vec4  vsin_bone_weights;
 uniform mat4 un_lightspacematrix;
 uniform mat4 un_model;
 
-// uniform mat4 un_bonetransforms[50];
 layout (std140, binding = 6) uniform UBO_armature
 {
     mat4 un_bonetransforms[50];

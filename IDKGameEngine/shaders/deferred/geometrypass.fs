@@ -75,7 +75,7 @@ struct DirLight
 layout (std140, binding = 5) uniform UBO_dirlights
 {
     DirLight    ubo_dirlights[10];
-    mat4        ubo_dirlight_matrices[10];
+    mat4        un_cascade_matrices[4];
 };
 uniform sampler2D   un_dirlight_depthmaps[10];
 

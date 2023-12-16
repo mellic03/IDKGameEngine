@@ -113,7 +113,7 @@
     "C_Cpp.default.includePath": [
         "${default}",
         "${workspaceFolder}/IDKGameEngine/src/",
-        "${workspaceFolder}/libidk/src/",
+        "${workspaceFolder}/libidk/",
     ],
 
     "C_Cpp.default.cppStandard": "gnu++23"

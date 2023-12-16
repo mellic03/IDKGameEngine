@@ -70,6 +70,7 @@ private:
     /***/
     glUBO                               m_UBO_pointlights;
     glUBO                               m_UBO_dirlights;
+    glUBO                               m_UBO_cascades;
     glUBO                               m_UBO_camera;
     glUBO                               m_UBO_armature;
     // --------------------------------------------------------

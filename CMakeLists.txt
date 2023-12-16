@@ -12,11 +12,12 @@ set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)
 
 
-include_directories(${CMAKE_SOURCE_DIR}/libidk/src)
+include_directories(${CMAKE_SOURCE_DIR}/libidk)
 include_directories(${CMAKE_SOURCE_DIR}/IDKGameEngine/src)
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/libidk/src/libidk/IDKgl)
-add_subdirectory(${CMAKE_SOURCE_DIR}/libidk/src/libidk/IDKcommon)
+add_subdirectory(${CMAKE_SOURCE_DIR}/libidk/libidk/IDKcore)
+add_subdirectory(${CMAKE_SOURCE_DIR}/libidk/libidk/IDKgl)
+add_subdirectory(${CMAKE_SOURCE_DIR}/libidk/libidk/IDKcommon)
 add_subdirectory(${CMAKE_SOURCE_DIR}/IDKGameEngine/src/IDKaudio)
 add_subdirectory(${CMAKE_SOURCE_DIR}/IDKGameEngine/src/IDKevents)
 add_subdirectory(${CMAKE_SOURCE_DIR}/IDKGameEngine/src/IDKgraphics)
@@ -35,6 +36,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
+    IDKcore
     IDKgl
     IDKcommon
     IDKaudio

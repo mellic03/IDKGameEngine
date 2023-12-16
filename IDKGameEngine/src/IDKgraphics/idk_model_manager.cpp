@@ -239,7 +239,7 @@ idk::ModelManager::loadModel( const std::string &root, const std::string &name )
         auto &textures = header.m_texture_paths[i];
 
         if (bitmask & ALBEDO_BIT)
-            material.albedo_id = get_texture_id(textures[ALBEDO_IDX], false);
+            material.albedo_id = get_texture_id(textures[ALBEDO_IDX], true);
 
         if (bitmask & NORMAL_BIT)
             material.normal_id = get_texture_id(textures[NORMAL_IDX], false);

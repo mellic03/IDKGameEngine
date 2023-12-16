@@ -4,6 +4,7 @@
 #include "libidk/IDKgl.hpp"
 #include "idk_lightsource.hpp"
 #include "idk_shadergen.hpp"
+#include "idk_shadowcascade.hpp"
 
 namespace idk { class LightSystem; };
 
@@ -20,7 +21,8 @@ private:
     std::vector<Spotlight>      m_spot_vec;
     std::vector<Dirlight>       m_dir_vec;
 
-    std::vector<glFramebuffer>  m_dirlight_shadowmaps;
+    idk::glDepthCascade         m_depthcascade;
+    // std::vector<glFramebuffer>  m_dirlight_shadowmaps;
     glColorConfig               m_framebuffer_config;
     DepthAttachmentConfig       m_depthbuffer_config;
 
@@ -56,7 +58,8 @@ public:
 
     std::vector<Pointlight> &       pointlights () { return m_point_vec;       };
     std::vector<Dirlight>   &       dirlights   () { return m_dir_vec;         };
-    std::vector<glFramebuffer> &    shadowmaps  () { return m_dirlight_shadowmaps; };
+    // std::vector<glFramebuffer> &    shadowmaps  () { return m_dirlight_shadowmaps; };
+    idk::glDepthCascade &           depthCascade() { return m_depthcascade; };
 
     /** True if the number of lightsources have changed since the last call to changed(). */
     bool changed();

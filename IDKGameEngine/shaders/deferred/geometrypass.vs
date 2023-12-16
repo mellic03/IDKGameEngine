@@ -14,8 +14,6 @@ out vec3 TBN_fragpos;
 out mat3 TBN;
 out mat3 TBNT;
 
-
-uniform mat4 un_bonetransforms[33];
 uniform mat4 un_model;
 
 struct Camera

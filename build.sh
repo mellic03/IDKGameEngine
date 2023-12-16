@@ -28,7 +28,7 @@ mkdir -p include/{libidk,IDKengine}
 cp CMake/libIDKengine.so* lib/
 cp CMake/libIDKengine.so* IDKGE/shipping/
 cp -R ../IDKGameEngine/src/* include/IDKengine/.
-cp -R ../libidk/src/libidk   include/.
+cp -R ../libidk/libidk   include/.
 
 cp -R ../IDKGameEngine/shaders   ./IDKGE/.
 cp -R ../IDKGameEngine/resources ./IDKGE/.
