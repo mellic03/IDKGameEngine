@@ -155,8 +155,16 @@ idk::Animation::tick( float dt )
 }
 
 
+idk::Animator::Animator( const idk::Animator &other )
+{
+    m_animations = other.m_animations;
+}
+
+
+
+
 void
-idk::AnimationController::computeBlended( float alpha, const glm::mat4 &parent_transform,
+idk::Animator::computeBlended( float alpha, const glm::mat4 &parent_transform,
                                           idk::Animation &A, idk::Animation &B,
                                           int bone_id, std::vector<glm::mat4> &out )
 {
@@ -166,12 +174,22 @@ idk::AnimationController::computeBlended( float alpha, const glm::mat4 &parent_t
     glm::vec3 pos_A = bone_A.getPosition();
     glm::vec3 pos_B = bone_B.getPosition();
 
+
+    if (bone_id <= 3)
+    {
+        pos_A.x *= 0.0f; // = glm::vec3(0.0f);
+        pos_A.y *= 0.0f; // = glm::vec3(0.0f);
+        pos_B.x *= 0.0f; // = glm::vec3(0.0f);
+        pos_B.y *= 0.0f; // = glm::vec3(0.0f);
+    }
+
     glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::mix(pos_A, pos_B, alpha));
     glm::mat4 R = glm::toMat4(glm::slerp(bone_A.getRotation(), bone_B.getRotation(), alpha));
     glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::mix(bone_A.getScale(), bone_A.getScale(), alpha));
 
     glm::mat4 animated_transform = T * R * S;
     glm::mat4 transform = parent_transform * animated_transform;
+
 
     out[bone_id] = transform * bone_B.inverse_bind;
 
@@ -184,18 +202,19 @@ idk::AnimationController::computeBlended( float alpha, const glm::mat4 &parent_t
 
 
 void
-idk::AnimationController::computeTransforms( int animation_id, std::vector<glm::mat4> &out )
+idk::Animator::computeTransforms( int animation_id, std::vector<glm::mat4> &out )
 {
     m_animations[animation_id].computeTransforms(out);
 }
 
 
 void
-idk::AnimationController::computeTransforms( std::vector<glm::mat4> &transforms )
+idk::Animator::computeTransforms( std::vector<glm::mat4> &transforms )
 {
     idk::Animation &A = m_animations[m_anim_A];
     idk::Animation &B = m_animations[m_anim_B];
     transforms.resize(A.m_bones.size());
+
 
     if (m_anim_A == m_anim_B)
     {
@@ -206,17 +225,42 @@ idk::AnimationController::computeTransforms( std::vector<glm::mat4> &transforms 
     {
         computeBlended(m_blend_alpha, glm::mat4(1.0f), A, B, 0, transforms);
     }
+
 }
 
 
 void
-idk::AnimationController::tick( float dt )
+idk::Animator::tick( float dt )
 {
     idk::Animation &anim = m_animations[m_anim_A];
+
+    float last_time = glm::mix(anim.m_time, m_animations[m_anim_B].m_time, m_blend_alpha);
+    glm::vec3 pos = glm::mix(anim.m_bones[3].getPosition(), m_animations[m_anim_B].m_bones[3].getPosition(), m_blend_alpha);
+    glm::vec3 T1 = anim.m_bones[0].local_transform * anim.m_bones[3].inverse_bind * glm::vec4(pos, 1.0f);
+
     anim.tick(1000.0f * dt);
 
     if (m_anim_A != m_anim_B)
         m_animations[m_anim_B].tick(1000.0f * dt);
+
+
+    float now_time = glm::mix(anim.m_time, m_animations[m_anim_B].m_time, m_blend_alpha);;
+    pos = glm::mix(anim.m_bones[3].getPosition(), m_animations[m_anim_B].m_bones[3].getPosition(), m_blend_alpha);
+    glm::vec3 T2 = anim.m_bones[0].local_transform * anim.m_bones[3].inverse_bind * glm::vec4(pos, 1.0f);
+
+
+    if (now_time - last_time < 0.0f)
+    {
+        m_root_motion = glm::vec3(0.0f);
+    }
+
+    else
+    {
+        glm::vec4 motion = 0.01f * glm::vec4(T2 - T1, 1.0f);
+        m_root_motion = glm::vec3(motion);
+    }
+
+
 }
 
 

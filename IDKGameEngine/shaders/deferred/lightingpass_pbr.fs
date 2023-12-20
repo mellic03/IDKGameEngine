@@ -172,7 +172,10 @@ vec3 dirlight_contribution( int idx, vec3 position, vec3 F0, vec3 N, vec3 V, vec
 uniform vec4  un_cascade_depths;
 
 
+
+
 #define KERNEL_HW 2
+#define BLEND_DIST 1.0
 
 float sampleDepthMap( int layer, vec3 uv, float bias )
 {
@@ -185,13 +188,13 @@ float sampleDepthMap( int layer, vec3 uv, float bias )
         for(int y = -KERNEL_HW; y <= KERNEL_HW; ++y)
         {
             vec2 sample_uv    = uv.xy + vec2(x, y) * texelSize;
-            vec4 sample_coord = vec4(sample_uv, float(layer), uv.z);
+            vec4 sample_coord = vec4(sample_uv, float(layer), uv.z - bias);
 
-            shadow -= texture(un_dirlight_depthmap, sample_coord); 
+            shadow += texture(un_dirlight_depthmap, sample_coord); 
         }    
     }
 
-    return shadow / (KERNEL_HW*KERNEL_HW);
+    return shadow / ((2*KERNEL_HW+1)*(2*KERNEL_HW+1));
 }
 
 
@@ -202,26 +205,19 @@ float dirlight_shadow( int idx, vec3 position, vec3 N )
     vec3  fragpos_viewspace = (un_view * vec4(position, 1.0)).xyz;
     float frag_depth        = abs(fragpos_viewspace.z);
 
-    int layer = 3;
-    for (int i=0; i<4; i++)
-    {
-        if (frag_depth < un_cascade_depths[i])
-        {
-            layer = i;
-            break;
-        }
-    }
+    vec4 res   = step(un_cascade_depths, vec4(frag_depth));
+    int  layer = int(res.x + res.y + res.z + res.w);
 
     vec4 fragpos_lightspace = un_cascade_matrices[layer] * vec4(position, 1.0);
     vec3 projCoords = fragpos_lightspace.xyz / fragpos_lightspace.w;
-    projCoords = projCoords * 0.5 + 0.5; 
+    projCoords = projCoords * 0.5 + 0.5;
 
-    float bias = DIRLIGHT_BIAS;
-
+    float bias = 0.0; // DIRLIGHT_BIAS * max(dot(N, L), 0.0);
     float shadow = sampleDepthMap(layer, projCoords, bias);
 
-    return 1.0 - shadow;
+    return shadow;
 }
+
 
 
 vec3 dirlight_contribution_shadowmapped( int idx, vec3 position, vec3 F0, vec3 N, vec3 V, vec3 R,
@@ -300,7 +296,7 @@ void main()
     vec3 specular  = prefilter * (Ks * brdf.x + brdf.y);
     vec3 ambient   = (Kd * diffuse + specular) * ao;
 
-    #if DIRSHADOW_AMBIENT == 0
+    #if DIRSHADOW_AMBIENT == 1
         float shadow = dirlight_shadow(0, position, N);
               shadow = clamp(shadow, un_dirlights[0].ambient.x, 1.0);
         ambient *= shadow;

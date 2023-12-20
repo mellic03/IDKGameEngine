@@ -23,7 +23,7 @@ private:
 
     idk::glDepthCascade         m_depthcascade;
     // std::vector<glFramebuffer>  m_dirlight_shadowmaps;
-    glColorConfig               m_framebuffer_config;
+    glTextureConfig               m_framebuffer_config;
     DepthAttachmentConfig       m_depthbuffer_config;
 
     idk::shadergen::Config      m_shadergen_config;

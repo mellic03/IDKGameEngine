@@ -12,7 +12,7 @@ namespace idk
 {
     struct AnimBone;
     class Animation;
-    class AnimationController;
+    class Animator;
 };
 
 
@@ -70,9 +70,10 @@ public:
 
 
 
-class idk::AnimationController
+class idk::Animator
 {
 private:
+    glm::vec3 m_root_motion = glm::vec3(0.0f);
     float m_blend_alpha = 0.0f;
     int   m_anim_A = 0;
     int   m_anim_B = 0;
@@ -87,6 +88,9 @@ public:
     int m_active_animation = 0;
     std::vector<idk::Animation> m_animations;
 
+            Animator() {  };
+            Animator( const Animator & );
+
     size_t  numAnimations() { return m_animations.size(); };
 
     void    setAnimA( int id ) { m_anim_A = id; };
@@ -95,6 +99,13 @@ public:
 
     void    tick( float dt );
     void    computeTransforms( std::vector<glm::mat4> & );
+
+    const glm::vec3 rootMotion()
+    {
+        glm::vec3 v = m_root_motion;
+        m_root_motion = glm::vec3(0.0f);
+        return v;
+    };
 
 };
 

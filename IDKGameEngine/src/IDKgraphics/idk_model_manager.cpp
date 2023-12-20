@@ -69,17 +69,42 @@ GLuint do_thing_rgb( glm::vec3 v )
 
 
 void
-idk::ModelManager::init()
+idk::ModelSystem::init()
 {
     m_default_albedo = do_thing_rgb(glm::vec3(0.5f));
     m_default_ao_r_m = do_thing_rgb(glm::vec3(1.0f, 0.75f, 0.0f));
     m_default_height = do_thing_r(0.0f);
     m_default_normal = do_thing_rgb(glm::vec3(0.5f, 0.5f, 1.0f));
+
+    m_default_albedo_config = {
+        .internalformat = GL_SRGB8_ALPHA8,
+        .format         = GL_RGBA,
+        .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .wrap_s         = GL_REPEAT,
+        .wrap_t         = GL_REPEAT,
+        .datatype       = GL_UNSIGNED_BYTE,
+        .anisotropic    = GL_TRUE,
+        .genmipmap      = GL_TRUE
+    };
+
+    m_default_lightmap_config = {
+        .internalformat = GL_RGBA16,
+        .format         = GL_RGBA,
+        .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .wrap_s         = GL_REPEAT,
+        .wrap_t         = GL_REPEAT,
+        .datatype       = GL_UNSIGNED_BYTE,
+        .anisotropic    = GL_TRUE,
+        .genmipmap      = GL_TRUE
+    };
+
 }
 
 
 int
-idk::ModelManager::new_material()
+idk::ModelSystem::new_material()
 {
     int material_id = m_materials.create();
     idk::Material &material = m_materials.get(material_id);
@@ -95,38 +120,38 @@ idk::ModelManager::new_material()
 
 
 void
-idk::ModelManager::loadTexture( std::string filepath, bool srgb, GLint minfilter, GLint magfilter )
+idk::ModelSystem::loadTexture( std::string filepath, const glTextureConfig &config )
 {
-    GLuint tex_id = gltools::loadTexture(filepath, srgb, minfilter, magfilter);
+    GLuint tex_id = gltools::loadTexture(filepath, config);
 
     // Textures are referenced using their relative path
     std::string relpath = std::filesystem::path(filepath).relative_path();
 
-    _texture_IDs[relpath].set = true;
-    _texture_IDs[relpath].texture_ID = tex_id;
+    m_texture_IDs[relpath].set = true;
+    m_texture_IDs[relpath].texture_ID = tex_id;
 }
 
 
+// void
+// idk::ModelSystem::loadTextures( std::string path, const glTextureConfig &config )
+// {
+//     using namespace std;
+//     filesystem::path directory(path);
+
+//     for (auto const &dir_entry: filesystem::recursive_directory_iterator{directory})
+//     {
+//         if (dir_entry.is_directory())
+//         {
+//             continue;
+//         }
+
+//         loadTexture( dir_entry.path().string(), srgb, minfilter, magfilter );
+//     }
+// }
+
+
 void
-idk::ModelManager::loadTextures( std::string path, bool srgb, GLint minfilter, GLint magfilter )
-{
-    using namespace std;
-    filesystem::path directory(path);
-
-    for (auto const &dir_entry: filesystem::recursive_directory_iterator{directory})
-    {
-        if (dir_entry.is_directory())
-        {
-            continue;
-        }
-
-        loadTexture( dir_entry.path().string(), srgb, minfilter, magfilter );
-    }
-}
-
-
-void
-idk::ModelManager::model_to_gpu( idk::Model &model )
+idk::ModelSystem::model_to_gpu( idk::Model &model )
 {
     gl::genVertexArrays(1, &model.VAO);
     gl::genBuffers(1, &model.VBO);
@@ -199,7 +224,7 @@ idk::ModelManager::model_to_gpu( idk::Model &model )
 
 
 int
-idk::ModelManager::loadModel( const std::string &root, const std::string &name )
+idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
 {
     idkvi_header_t header = filetools::readheader(root+name+".txt");
 
@@ -210,11 +235,12 @@ idk::ModelManager::loadModel( const std::string &root, const std::string &name )
 
     if (header.animated)
     {
-        model.animated = true;
-        model.m_buffer = new idk::Buffer<idk::AnimatedVertex>();
+        model.animated    = true;
+        model.animator_id = createAnimator();
+        model.m_buffer    = new idk::Buffer<idk::AnimatedVertex>();
 
         filetools::readidkvi(stream, header, model.m_buffer, model.m_indices);
-        filetools::readidka(stream, header, model.m_anim_controller);
+        filetools::readidka(stream, header, m_animators.get(model.animator_id));
     }
     else
     {
@@ -239,13 +265,13 @@ idk::ModelManager::loadModel( const std::string &root, const std::string &name )
         auto &textures = header.m_texture_paths[i];
 
         if (bitmask & ALBEDO_BIT)
-            material.albedo_id = get_texture_id(textures[ALBEDO_IDX], true);
+            material.albedo_id = get_texture_id(textures[ALBEDO_IDX], m_default_albedo_config);
 
         if (bitmask & NORMAL_BIT)
-            material.normal_id = get_texture_id(textures[NORMAL_IDX], false);
+            material.normal_id = get_texture_id(textures[NORMAL_IDX], m_default_lightmap_config);
 
         if (bitmask & RM_BIT)
-            material.arm_id = get_texture_id(textures[RM_IDX], false);
+            material.arm_id = get_texture_id(textures[RM_IDX], m_default_lightmap_config);
     }
 
     model_to_gpu(model);
@@ -256,14 +282,32 @@ idk::ModelManager::loadModel( const std::string &root, const std::string &name )
 
 
 GLuint
-idk::ModelManager::get_texture_id( const std::string &key, bool srgb )
+idk::ModelSystem::get_texture_id( const std::string &key, const glTextureConfig &config )
 {
-    if (_texture_IDs[key].set == false)
+    if (m_texture_IDs[key].set == false)
     {
-        loadTexture(key, srgb, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
+        loadTexture(key, config);
     }
 
-    return _texture_IDs[key].texture_ID;
+    return m_texture_IDs[key].texture_ID;
 }
 
+
+
+int
+idk::ModelSystem::createAnimator()
+{
+    return m_animators.create();
+}
+
+
+
+int
+idk::ModelSystem::copyAnimator( int model_id )
+{
+    int animator_id    = getModel(model_id).animator_id;
+    Animator &animator = getAnimator(animator_id);
+
+    return m_animators.create(animator);
+}
 

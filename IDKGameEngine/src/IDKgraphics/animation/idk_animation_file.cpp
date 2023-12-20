@@ -169,7 +169,7 @@ void read_animation( std::ifstream &stream, idk::Animation &animation )
 
 
 void idk::filetools::readidka( std::ifstream &stream, const idkvi_header_t &header,
-                               idk::AnimationController &controller )
+                               idk::Animator &controller )
 {
     uint32_t num_animations;
     stream.read(reinterpret_cast<char *>(&num_animations), sizeof(uint32_t));

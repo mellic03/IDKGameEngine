@@ -97,7 +97,7 @@ idk::glDepthCascade::get_projection( const float texture_width,
     minv.y = h_texelspace * glm::floor(minv.y / h_texelspace);
     maxv.y = h_texelspace * glm::floor(maxv.y / h_texelspace);
 
-    constexpr float zMult = 10.0f;
+    constexpr float zMult = 4.0f;
     minv.z *= (minv.z < 0) ? zMult : 1.0f/zMult;
     maxv.z *= (maxv.z < 0) ? 1.0f/zMult : zMult;
 

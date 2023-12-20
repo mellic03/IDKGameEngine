@@ -31,7 +31,7 @@ namespace idk::filetools
     idk::idkvi_header_t readheader( const std::string & );
 
     void readidka( std::ifstream &stream, const idkvi_header_t &header,
-                   idk::AnimationController & );
+                   idk::Animator & );
 
     void readidkvi( std::ifstream &stream, const idkvi_header_t &header,
                     idk::iBuffer *vertices, std::vector<uint32_t> &indices );

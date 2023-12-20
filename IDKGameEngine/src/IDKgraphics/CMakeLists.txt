@@ -8,6 +8,7 @@ file(GLOB SOURCES
     "./model/*.cpp"
     "./animation/*.cpp"
     "./camera/*.cpp"
+    "./render/*.cpp"
 )
 
 add_library(${PROJECT_NAME} OBJECT ${SOURCES})

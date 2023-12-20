@@ -3,7 +3,6 @@
 #include <libidk/IDKgl.hpp>
 #include <libidk/libidk.hpp>
 #include "idk_vertex.hpp"
-#include "../animation/IDKanimation.hpp"
 
 #include <vector>
 
@@ -55,8 +54,8 @@ struct idk::Model
     // Animation
     // ---------------------------------------------------
     bool animated = false;
+    int  animator_id = -1;
     std::vector<idk::AnimatedVertex> m_anim_vertices;
-    idk::AnimationController         m_anim_controller;
     // ---------------------------------------------------
 
     GLuint VAO, VBO, IBO;

@@ -55,11 +55,6 @@ void main()
     {
         if (vsin_bone_ids[i] == -1) 
         {
-            if (i == 0)
-            {
-                anim_fragpos = vec4(vsin_pos, 1.0);
-            }
-
             break;
         }
 

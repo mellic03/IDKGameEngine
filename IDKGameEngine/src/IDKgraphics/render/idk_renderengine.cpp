@@ -1,9 +1,5 @@
 #include "idk_renderengine.hpp"
 
-#include <filesystem>
-
-idk::Frustum frustum;
-
 
 void
 idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags )
@@ -109,9 +105,7 @@ idk::RenderEngine::compileShaders()
 void
 idk::RenderEngine::init_framebuffers( int w, int h )
 {
-    // gl::enable(GL_FRAMEBUFFER_SRGB);
-
-    idk::glColorConfig config = {
+    idk::glTextureConfig config = {
         .internalformat = GL_RGBA16F,
         .minfilter      = GL_NEAREST,
         .magfilter      = GL_LINEAR,
@@ -155,6 +149,8 @@ idk::RenderEngine::init_framebuffers( int w, int h )
     m_mainbuffer_0.colorAttachment(0, config);
     m_mainbuffer_0.colorAttachment(1, config);
 
+
+
     config = {
         .internalformat = GL_RGBA16F,
         .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
@@ -185,7 +181,19 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
     m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
     m_UBO_armature    = glUBO(6, ARMATURE_MAX_BONES * sizeof(glm::mat4));
 
-    BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", false, GL_LINEAR, GL_LINEAR);
+
+    glTextureConfig config = {
+        .internalformat = GL_RGBA16,
+        .format         = GL_RGBA,
+        .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .wrap_s         = GL_REPEAT,
+        .wrap_t         = GL_REPEAT,
+        .datatype       = GL_UNSIGNED_BYTE,
+        .genmipmap      = GL_TRUE
+    };
+
+    BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", config);
 
     m_active_camera_id = createCamera();
 
@@ -237,7 +245,7 @@ idk::RenderEngine::loadSkybox( const std::string &filepath )
         "0px.png", "0nx.png", "0py.png", "0ny.png", "0pz.png", "0nz.png"
     };
 
-    static const glColorConfig skybox_config = {
+    static const glTextureConfig skybox_config = {
         .internalformat = GL_SRGB8_ALPHA8,
         .format         = GL_RGBA,
         .minfilter      = GL_LINEAR,
@@ -246,7 +254,7 @@ idk::RenderEngine::loadSkybox( const std::string &filepath )
         .genmipmap      = false
     };
 
-    static const glColorConfig diffuse_config = {
+    static const glTextureConfig diffuse_config = {
         .internalformat = GL_SRGB8_ALPHA8,
         .format         = GL_RGBA,
         .minfilter      = GL_LINEAR,
@@ -256,7 +264,7 @@ idk::RenderEngine::loadSkybox( const std::string &filepath )
     };
 
 
-    static const glColorConfig specular_config = {
+    static const glTextureConfig specular_config = {
         .internalformat = GL_SRGB8_ALPHA8,
         .format         = GL_RGBA,
         .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
@@ -347,22 +355,28 @@ idk::RenderEngine::createCamera()
 void
 idk::RenderEngine::drawModel( int model_id, glm::mat4 &model_mat )
 {
-    if (modelSystem().getModel(model_id).animated)
-    {
-        m_anim_draw_queue.push_back({model_id, model_mat});
-    }
+    m_render_queue.push(model_id, model_mat);
+}
 
-    else
-    {
-        m_model_draw_queue.push_back({model_id, model_mat});
-    }
+
+void
+idk::RenderEngine::drawModel( int model_id, int animator_id, glm::mat4 &model_mat )
+{
+    m_anim_render_queue.push(model_id, animator_id, model_mat);
 }
 
 
 void
 idk::RenderEngine::drawShadowCaster( int model_id, glm::mat4 &model_mat )
 {
-    m_shadowcast_queue.push_back({model_id, model_mat});
+    m_shadow_render_queue.push(model_id, model_mat);
+}
+
+
+void
+idk::RenderEngine::drawShadowCaster( int model_id, int animator_id, glm::mat4 &model_mat )
+{
+    m_shadow_anim_render_queue.push(model_id, animator_id, model_mat);
 }
 
 
@@ -378,7 +392,6 @@ idk::RenderEngine::shadowpass_dirlights()
     const glm::vec3 dir = glm::normalize(glm::vec3(light.direction));
 
 
-
     // Compute matrices
     // -------------------------------------------------------------------------------------
     depthcascade.computeCascadeMatrices(
@@ -388,8 +401,9 @@ idk::RenderEngine::shadowpass_dirlights()
 
     const auto &cascade_matrices = depthcascade.getCascadeMatrices();
     // -------------------------------------------------------------------------------------
-   
+
     depthcascade.bind();
+
 
     idk::glShader &program = getProgram("dir_shadow");
     program.bind();
@@ -401,7 +415,7 @@ idk::RenderEngine::shadowpass_dirlights()
 
         program.set_mat4("un_lightspacematrix", cascade_matrices[i]);
 
-        for (auto &[model_id, model_mat]: m_shadowcast_queue)
+        for (auto &[model_id, dummy, model_mat]: m_shadow_render_queue)
         {
             drawmethods::draw_untextured(
                 program,
@@ -418,18 +432,18 @@ idk::RenderEngine::shadowpass_dirlights()
     for (int i=0; i<glDepthCascade::NUM_CASCADES; i++)
     {
         depthcascade.setOutputAttachment(i);
-
         anim_program.set_mat4("un_lightspacematrix", cascade_matrices[i]);
 
-        for (auto &[model_id, model_mat]: m_anim_draw_queue)
+        for (auto &[model_id, animator_id, model_mat]: m_shadow_anim_render_queue)
         {
             drawmethods::draw_animated(
                 0.0f,
                 m_UBO_armature,
+                animator_id,
+                model_id,
                 anim_program,
-                modelSystem().getModel(model_id),
                 model_mat,
-                modelSystem().getMaterials()
+                modelSystem()
             );
         }
     }
@@ -515,6 +529,17 @@ idk::RenderEngine::beginFrame()
     gl::viewport(0, 0, m_resolution.x, m_resolution.y);
     gl::clearColor(0.0f, 0.0f, 0.0f, 1.0f);
     gl::clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    idk::Camera &camera = getCamera();
+
+    float near     = camera.nearPlane();
+    float far      = camera.farPlane();
+    glm::mat4 view = camera.view();
+
+    m_render_queue.setViewParams(near, far, view);
+    m_anim_render_queue.setViewParams(near, far, view);
+    m_shadow_render_queue.setViewParams(near, far, view);
+    m_shadow_anim_render_queue.setViewParams(near, far, view);
 }
 
 
@@ -531,258 +556,23 @@ idk::RenderEngine::endFrame( float dt )
     //     lighting_ibl.loadStringC(vert_source, frag_source);
     // }
 
-    gl::enable(GL_CULL_FACE);
     gl::cullFace(GL_FRONT);
     shadowpass_dirlights();
+    m_shadow_render_queue.clear();
+    m_shadow_anim_render_queue.clear();
     gl::cullFace(GL_BACK);
+
 
     update_UBO_camera();
     update_UBO_dirlights();
     update_UBO_pointlights();
 
-    m_shadowcast_queue.clear();
 
     idk::Camera &camera = getCamera();
+    RenderStage_deferred_geometry(camera, dt);
+    RenderStage_deferred_lighting(camera, dt);
+    RenderStage_postprocessing(camera);
 
-    glShader::unbind();
-
-    // Deferred geometry pass
-    // -----------------------------------------------------------------------------------------
-    m_deferred_geom_buffer.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    m_deferred_geom_buffer.bind();
-
-
-    // Non animated models
-    // -----------------------------------------------------------------------------------------
-    glShader &geometrypass = getProgram("geometry_pass");
-    geometrypass.bind();
-    for (auto &[model_id, model_mat]: m_model_draw_queue)
-    {
-        drawmethods::draw_textured(
-            geometrypass,
-            modelSystem().getModel(model_id),
-            model_mat,
-            modelSystem().getMaterials()
-        );
-    }
-    m_model_draw_queue.clear();
-    // -----------------------------------------------------------------------------------------
-
-    // Animated models
-    // -----------------------------------------------------------------------------------------
-    glShader &geometrypass_anim = getProgram("geometry_pass_anim");
-    geometrypass_anim.bind();
-    for (auto &[model_id, model_mat]: m_anim_draw_queue)
-    {
-        drawmethods::draw_animated(
-            dt,
-            m_UBO_armature,
-            geometrypass_anim,
-            modelSystem().getModel(model_id),
-            model_mat,
-            modelSystem().getMaterials()
-        );
-    }
-    m_anim_draw_queue.clear();
-
-    gl::bindVertexArray(0);
-    // -----------------------------------------------------------------------------------------
-    
-
-    // Background quad
-    // -----------------------------------------------------------------------------------------
-    glm::mat4 modelmat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.8f * camera.farPlane()));
-    modelmat = glm::scale(modelmat, glm::vec3(500.0f, 500.0f, 1.0f));
-
-    glShader &background = getProgram("background");
-    background.bind();
-    background.set_mat4("un_model", modelmat);
-    background.set_samplerCube("un_skybox", skyboxes[current_skybox]);
-
-    gl::bindVertexArray(m_quad_VAO);
-    gl::drawArrays(GL_TRIANGLES, 0, 6);
-    gl::disable(GL_DEPTH_TEST, GL_CULL_FACE);
-
-    glShader::unbind();
-    // -----------------------------------------------------------------------------------------
-
-
-
-    // Lighting pass
-    // -----------------------------------------------------------------------------------------
-    glShader &lighting = getProgram("lighting_ibl");
-    lighting.bind();
-    lighting.set_sampler2D("un_BRDF_LUT", BRDF_LUT);
-
-    idk::glDepthCascade depthcascade = m_lightsystem.depthCascade();
-
-    lighting.set_vec4("un_cascade_depths", depthcascade.getCascadeDepths(camera.farPlane()));
-    lighting.set_sampler2DArray("un_dirlight_depthmap", depthcascade.getTextureArray());
-
-    lighting.set_samplerCube("un_skybox_diffuse",  skyboxes_IBL[current_skybox].first);
-    lighting.set_samplerCube("un_skybox_specular", skyboxes_IBL[current_skybox].second);
-
-    tex2tex(lighting, m_deferred_geom_buffer, m_scratchbufs1[0]);
-
-    lighting.popTextureUnits();
-    glShader::unbind();
-    // -----------------------------------------------------------------------------------------
-
-
-    // Combine geometry and volumetrics
-    // -----------------------------------------------------------------------------------------
-    glShader &additive = getProgram("additive");
-    // additive.bind();
-    // additive.set_float("intensity", 1.0f);
-    // tex2tex(additive, m_scratchbufs0[0], m_scratchbufs0[2], m_scratchbufs1[0]);
-    // glShader::unbind();
-    // -----------------------------------------------------------------------------------------
-
-
-    // Bloom
-    // -----------------------------------------------------------------------------------------
-    glShader bloom = getProgram("bloom");
-    bloom.bind();
-    tex2tex(bloom, m_scratchbufs1[0], m_scratchbufs2[0]);
-
-    glShader &downsample = getProgram("downsample");
-    glShader &upsample   = getProgram("upsample");
-
-    constexpr int miplevel = 7;
-
-    downsample.bind();
-    tex2tex(downsample, m_scratchbufs2[0], m_scratchbufs1[1]);
-    for (int i=1; i<miplevel; i++)
-    {
-        tex2tex(downsample, m_scratchbufs1[i], m_scratchbufs1[i+1]);
-    }
-
-    upsample.bind();
-    tex2tex(upsample, m_scratchbufs1[miplevel], m_scratchbufs1[miplevel], m_scratchbufs2[miplevel-1]);
-    for (int i=miplevel-1; i>0; i--)
-    {
-        tex2tex(upsample, m_scratchbufs1[i], m_scratchbufs2[i], m_scratchbufs2[i-1]);
-    }
-
-    additive.bind();
-    additive.set_float("intensity", getCamera().m_bloom_gamma.x);
-    tex2tex(additive, m_scratchbufs1[0], m_scratchbufs2[0], m_mainbuffer_0);
-
-    glShader::unbind();
-    // -----------------------------------------------------------------------------------------
-
-
-    glFramebuffer *buffer_a = &m_mainbuffer_0;
-    glFramebuffer *buffer_b = &m_mainbuffer_1;
-
-
-    // Chromatic aberration
-    // -----------------------------------------------------------------------------------------
-    glShader &chromatic = getProgram("chromatic");
-    chromatic.bind();
-    tex2tex(chromatic, *buffer_a, *buffer_b);
-    glShader::unbind();
-    // -----------------------------------------------------------------------------------------
-
-
-    buffer_b->generateMipmap(0);
-
-
-    // Color grading
-    // -----------------------------------------------------------------------------------------
-    glShader &colorgrade = getProgram("colorgrade");
-    colorgrade.bind();
-
-    const GLint secondmip = 4;
-    const GLint level  = log2(GL_MAX_TEXTURE_SIZE);
-    const GLint level2 = level - secondmip;
-
-    const size_t size   = 4;
-    const size_t size2  = size * pow(4, secondmip);
-    static float *data  = new float[size];
-    static float *data2 = new float[size2];
-
-    GLCALL( glGetTextureImage(buffer_b->attachments[0], level,  GL_RGBA, GL_FLOAT, size*sizeof(float),  data); )
-    GLCALL( glGetTextureImage(buffer_b->attachments[0], level2, GL_RGBA, GL_FLOAT, size2*sizeof(float), data2); )
- 
-    float   texw     = m_resolution.x;
-    float   texh     = m_resolution.y;
-
-    float   mipw     = glm::max(1.0f, texw / float(pow(2.0f, level2)));
-    float   miph     = glm::max(1.0f, texh / float(pow(2.0f, level2)));
-
-    size_t  center_x = size_t(mipw / 2.0f);
-    size_t  center_y = size_t(miph / 2.0f);
-
-    size_t idx0 = 4 * (mipw*(center_y-1) + center_x-1);
-    size_t idx1 = 4 * (mipw*(center_y-1) + center_x  );
-    size_t idx2 = 4 * (mipw*(center_y  ) + center_x-1);
-    size_t idx3 = 4 * (mipw*(center_y  ) + center_x  );
-
-    // printf("%.0f  %.0f  %.0f  %.0f  %u  %u\n", texw, texh, mipw, miph, center_x, center_y);
-    
-    glm::vec3   avg_color  = glm::vec3(data2[idx0+0], data2[idx0+1], data2[idx0+2]);
-                avg_color += glm::vec3(data2[idx1+0], data2[idx1+1], data2[idx1+2]);
-                avg_color += glm::vec3(data2[idx2+0], data2[idx2+1], data2[idx2+2]);
-                avg_color += glm::vec3(data2[idx3+0], data2[idx3+1], data2[idx3+2]);
-                avg_color /= 4.0f;
-
-    float alpha = 0.15f;
-    avg_color = alpha*avg_color + (1.0f - alpha)*glm::vec3(data[0], data[1], data[2]);
-
-    auto aces = [](glm::vec3 x)
-    {
-        const float a = 2.51;
-        const float b = 0.03;
-        const float c = 2.43;
-        const float d = 0.59;
-        const float e = 0.14;
-        glm::vec3 color = glm::clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0f, 1.0f);
-        return color;
-    };
-
-    avg_color = aces(avg_color);
-    float avg_luminance = glm::dot(avg_color, glm::vec3(0.2126, 0.7152, 0.0722));
-
-    auto exposure_curve = [](float luminance)
-    {
-        float a = -5.0f;
-        float b = -0.1f;
-        float c = -0.4f;
-        float h =  0.9f;
-        float v =  0.8f;
-        float x = luminance;
-    
-        float l5 = pow(x-h, 5.0f);
-        float l2 = pow(x-h, 2.0f);
-        float l1 = x-h;
-
-        return (a*l5 + b*l2 + c*l1 + v);
-    };
-
-    float new_exposure  = exposure_curve(avg_luminance);
-
-    float stepsize   = 1.0f / camera.m_bloom_gamma.z;
-    float difference = new_exposure - camera.m_exposure.x;
-    float direction  = difference / fabs(difference);
-
-    if (fabs(difference) > stepsize)
-    {
-        camera.m_exposure.x += stepsize*direction;
-    }
-
-
-    tex2tex(colorgrade, *buffer_b, *buffer_a);
-    glShader::unbind();
-    // -----------------------------------------------------------------------------------------
-
-
-    // FXAA
-    // -----------------------------------------------------------------------------------------
-    glShader &fxaa = getProgram("fxaa");
-    fxaa.bind();
-    f_fbfb(fxaa, *buffer_a);
-    // -----------------------------------------------------------------------------------------
 
     gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
     gl::bindVertexArray(0);
@@ -805,13 +595,12 @@ idk::RenderEngine::resize( int w, int h )
 }
 
 
-/** Blit an idk::glFramebuffer onto the renderer's main framebuffer including depth.
- *  @note This is a mildly expensive operation, try to avoid.
-*/
-void
-idk::RenderEngine::blitFramebuffer( const idk::glFramebuffer &fb )
-{
-
-    m_blit_queue.push(fb);
-}
+// /** Blit an idk::glFramebuffer onto the renderer's main framebuffer including depth.
+//  *  @note This is a mildly expensive operation, try to avoid.
+// */
+// void
+// idk::RenderEngine::blitFramebuffer( const idk::glFramebuffer &fb )
+// {
+//     m_blit_queue.push(fb);
+// }
 

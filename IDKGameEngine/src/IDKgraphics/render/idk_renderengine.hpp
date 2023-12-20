@@ -5,16 +5,17 @@
 
 #include "libidk/libidk.hpp"
 
-#include "idk_model_manager.hpp"
 #include "libidk/IDKgl.hpp"
+
 #include "idk_drawmethods.hpp"
+#include "idk_renderqueue.hpp"
 
-#include "camera/idk_camera.hpp"
-#include "camera/idk_frustum.hpp"
+#include "../camera/idk_camera.hpp"
+#include "../camera/idk_frustum.hpp"
 
-#include "primitives/primitives.hpp"
-#include "idk_noisegen.hpp"
-#include "lighting/IDKlighting.hpp"
+// #include "primitives/primitives.hpp"
+#include "../idk_noisegen.hpp"
+#include "../lighting/IDKlighting.hpp"
 
 #define IDK_MAX_POINTLIGHTS 10
 #define IDK_MAX_SPOTLIGHTS 10
@@ -58,47 +59,66 @@ private:
     glFramebuffer                       m_deferred_geom_buffer;
     glFramebuffer                       m_volumetrics_buffer;
     std::queue<glFramebuffer>           m_blit_queue;
-    // --------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
 
-    // Shaders ------------------------------------------------
-    /***/
+    // Shaders
+    // -----------------------------------------------------------------------------------------
     std::map<std::string, glShader>     m_shaders;
     std::vector<std::string>            m_shader_names;
-    // --------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
 
-    // UBO ----------------------------------------------------
-    /***/
+    // UBO
+    // -----------------------------------------------------------------------------------------
     glUBO                               m_UBO_pointlights;
     glUBO                               m_UBO_dirlights;
     glUBO                               m_UBO_cascades;
     glUBO                               m_UBO_camera;
     glUBO                               m_UBO_armature;
-    // --------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
+
 
     int                                 m_active_camera_id;
     Allocator<Camera>                   m_camera_allocator;
-    ModelManager                        m_modelsystem;
+    idk::ModelSystem                    m_modelsystem;
     idk::LightSystem                    m_lightsystem;
 
 
-    modelqueue_t                        m_model_draw_queue;
-    modelqueue_t                        m_anim_draw_queue;
-    std::vector<pair<int, glm::mat4>>   m_shadowcast_queue;
+    idk::RenderQueue                    m_render_queue;
+    idk::RenderQueue                    m_anim_render_queue;
+    idk::RenderQueue                    m_shadow_render_queue;
+    idk::RenderQueue                    m_shadow_anim_render_queue;
 
-    // Initialization ---------------------------------------------------------------------
+    // Initialization
+    // -----------------------------------------------------------------------------------------
     /***/
     void                                init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags );
     void                                init_screenquad();
     void                                init_framebuffers( int width, int height );
     void                                init_all( std::string name, int w, int h );
-    // ------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
 
-    // Draw-related methods ---------------------------------------------------------------
-    /***/
+    // Draw-related methods
+    // -----------------------------------------------------------------------------------------
     void                                update_UBO_camera();
     void                                update_UBO_dirlights();
     void                                update_UBO_pointlights();
     void                                shadowpass_dirlights();
+    // -----------------------------------------------------------------------------------------
+
+
+
+    // Render stages    
+    // ------------------------------------------------------------------------------------
+    void RenderStage_deferred_geometry( idk::Camera &, float dtime );
+    void RenderStage_deferred_lighting( idk::Camera &, float dtime );
+
+    void PostProcess_bloom();
+    void PostProcess_chromatic_aberration( glFramebuffer *buffer_A, glFramebuffer *buffer_B );
+    void PostProcess_colorgrading( idk::Camera &, glFramebuffer *A, glFramebuffer *B );
+
+    void RenderStage_postprocessing( idk::Camera & );
+    // ------------------------------------------------------------------------------------
+
 
 
     /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
@@ -110,7 +130,7 @@ private:
 public:
     static void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
 
-    const static uint32_t               ARMATURE_MAX_BONES = 50;
+    const static uint32_t               ARMATURE_MAX_BONES = 70;
 
     GLuint                              m_quad_VAO, m_quad_VBO;
     GLuint                              solid_shader;
@@ -136,12 +156,15 @@ public:
 
 
     idk::LightSystem &                  lightSystem() { return m_lightsystem; };
-    ModelManager &                      modelSystem() { return m_modelsystem; };
+    ModelSystem &                       modelSystem() { return m_modelsystem; };
 
     int                                 loadSkybox( const std::string &filepath );
 
-    void                                drawModel ( int model_id, glm::mat4 & );
-    void                                drawShadowCaster( int model_id, glm::mat4 & );
+    void                                drawModel( int model, int animator, glm::mat4 & );
+    void                                drawModel( int model, glm::mat4 & );
+
+    void                                drawShadowCaster( int model, int animator, glm::mat4 & );
+    void                                drawShadowCaster( int model, glm::mat4 & );
 
     GLuint                              createProgram( std::string name, std::string, std::string, std::string );
     glShader &                          getProgram ( const std::string &name ) { return m_shaders[name]; };
@@ -151,7 +174,7 @@ public:
     void                                endFrame( float dt );
     void                                swapWindow();
     void                                resize( int w, int h );
-    void                                blitFramebuffer( const idk::glFramebuffer &fb );
+    // void                                blitFramebuffer( const idk::glFramebuffer &fb );
 
     glm::ivec2                          resolution() const { return m_resolution;   };
     int                                 width()      const { return m_resolution.x; };
