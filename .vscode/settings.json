@@ -109,12 +109,15 @@
         "hash_set": "cpp",
         "cassert": "cpp"
     },
-    "cmake.configureOnOpen": false,
+    "cmake.configureOnOpen": true,
     "C_Cpp.default.includePath": [
         "${default}",
         "${workspaceFolder}/IDKGameEngine/src/",
         "${workspaceFolder}/libidk/",
+        "${workspaceFolder}/libidk/IDKcontainers/",
     ],
 
-    "C_Cpp.default.cppStandard": "gnu++23"
+    "C_Cpp.default.cppStandard": "gnu++23",
+    "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.intelliSenseEngineFallback": "enabled"
 }

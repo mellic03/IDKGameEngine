@@ -5,8 +5,12 @@
 #include <string>
 #include "idk_module.hpp"
 
-namespace idk { class Engine; };
-namespace idk { class ComponentSystem; };
+namespace idk
+{
+    class Engine;
+    class ComponentSystem;
+};
+
 
 
 /**

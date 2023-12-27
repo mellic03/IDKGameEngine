@@ -1,4 +1,4 @@
-// #pragma once
+#pragma once
 
 // #include "libidk/libidk.hpp"
 
@@ -8,10 +8,39 @@
 
 // #include <thread>
 // #include <mutex>
-// #include <atomic>
+#include <atomic>
 
 
-// namespace idk { class ThreadPool; };
+namespace idk { class ThreadPool; };
+
+
+class idk::ThreadPool
+{
+public:
+
+    template <typename T>
+    class ResourceHandle;
+
+};
+
+
+template <typename T>
+class idk::ThreadPool::ResourceHandle
+{
+private:
+    friend class idk::ThreadPool;
+    std::atomic_bool m_loaded;
+
+public:
+        ResourceHandle( T &ref ): m_loaded(false), resource(ref) {  };
+        ~ResourceHandle( ) = default;
+
+    T& resource;
+
+
+    constexpr bool is_loaded() { return m_loaded.load(); };
+
+};
 
 
 // class idk::ThreadPool

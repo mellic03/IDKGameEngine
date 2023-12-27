@@ -4,6 +4,7 @@ project(IDKengine_internal)
 
 file(GLOB SOURCES
     "./src/*.cpp"
+    "./src/gameobject/*.cpp"
 )
 
 add_subdirectory(src/IDKaudio)

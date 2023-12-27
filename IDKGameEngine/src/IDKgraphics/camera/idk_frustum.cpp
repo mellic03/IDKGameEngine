@@ -1,7 +1,6 @@
 #include "idk_frustum.hpp"
 
 
-
 const std::vector<glm::vec4> &
 idk::Frustum::getCorners( const glm::mat4 &P, const glm::mat4 &V )
 {

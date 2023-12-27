@@ -1,5 +1,5 @@
 #version 440 core
-#define DIRLIGHT_BIAS  0.01
+#define DIRLIGHT_BIAS 0.0
 #define DIRSHADOW_AMBIENT  1
 #define EPSILON  0.000001
 #define MAX_DIRLIGHTS    10
@@ -25,11 +25,22 @@ uniform samplerCube un_skybox_diffuse;
 uniform samplerCube un_skybox_specular;
 uniform sampler2D un_BRDF_LUT;
 
+
+struct Camera
+{
+    vec4 position;
+    vec4 beg;
+    vec4 aberration_rg;
+    vec4 aberration_b;
+    vec4 exposure;
+};
+
 layout (std140, binding = 2) uniform UBO_camera_data
 {
     mat4 un_view;
     mat4 un_projection;
     vec3 un_viewpos;
+    Camera un_camera;
     vec3 un_cam_beg;
 };
 
@@ -103,13 +114,7 @@ float GSF( float roughness, vec3 N, vec3 V, vec3 L )
     return ggx1 * ggx2;
 }
 
-vec3 cook_torrance( float roughness, vec3 N, vec3 V, vec3 L, vec3 H, vec3 fresnel )
-{
-    float ndf = NDF(roughness, N, H);
-    float gsf = GSF(roughness, N, V, L);
-    float denom = 4.0 * dot(V, N) * dot(L, N);
-    return (ndf * gsf * fresnel) / (max(denom, EPSILON));
-}
+
 vec3 pointlight_contribution( int idx, vec3 position, vec3 F0, vec3 N, vec3 V, vec3 R,
                               vec3 albedo, float metallic, float roughness, float ao, float emission )
 {
@@ -169,17 +174,17 @@ vec3 dirlight_contribution( int idx, vec3 position, vec3 F0, vec3 N, vec3 V, vec
 
     return emission*albedo + (Kd * albedo/PI + specular) * radiance * NdotL;
 }
-uniform vec4  un_cascade_depths;
 
 
 
+uniform vec4 un_cascade_depths;
 
 #define KERNEL_HW 2
 #define BLEND_DIST 1.0
 
 float sampleDepthMap( int layer, vec3 uv, float bias )
 {
-    vec2 texelSize = 1.0 / textureSize(un_dirlight_depthmap, 0).xy;
+    vec2 texelSize = 0.5 / textureSize(un_dirlight_depthmap, 0).xy;
 
     float shadow = 0.0;
 
@@ -191,7 +196,7 @@ float sampleDepthMap( int layer, vec3 uv, float bias )
             vec4 sample_coord = vec4(sample_uv, float(layer), uv.z - bias);
 
             shadow += texture(un_dirlight_depthmap, sample_coord); 
-        }    
+        }
     }
 
     return shadow / ((2*KERNEL_HW+1)*(2*KERNEL_HW+1));
@@ -212,7 +217,7 @@ float dirlight_shadow( int idx, vec3 position, vec3 N )
     vec3 projCoords = fragpos_lightspace.xyz / fragpos_lightspace.w;
     projCoords = projCoords * 0.5 + 0.5;
 
-    float bias = 0.0; // DIRLIGHT_BIAS * max(dot(N, L), 0.0);
+    float bias = DIRLIGHT_BIAS * max(dot(N, L), 0.0);
     float shadow = sampleDepthMap(layer, projCoords, bias);
 
     return shadow;
@@ -243,7 +248,8 @@ vec3 dirlight_contribution_shadowmapped( int idx, vec3 position, vec3 F0, vec3 N
     vec3 Ks = F;
     vec3 Kd = (vec3(1.0) - Ks) * (1.0 - metallic);
 
-    float NdotL = max(dot(N, L), 0.0);
+    // float NdotL = max(dot(N, L), 0.0);
+    float NdotL = dot(N, L) * 0.5 + 0.5;
 
     float shadow = dirlight_shadow(idx, position, N);
 
@@ -252,12 +258,13 @@ vec3 dirlight_contribution_shadowmapped( int idx, vec3 position, vec3 F0, vec3 N
 
 void main()
 {
-    vec4  albedo_metallic = texture( un_texture_0, fsin_texcoords );
-    vec3  albedo       = albedo_metallic.rgb;
-    float metallic     = albedo_metallic.a;
+    vec4  albedo_a = texture( un_texture_0, fsin_texcoords );
+    vec3  albedo   = albedo_a.rgb;
 
-    vec4  position_a   = texture( un_texture_1, fsin_texcoords );
-    vec3  position     = position_a.xyz;
+    vec4  position_metallic = texture( un_texture_1, fsin_texcoords );
+    vec3  position          = position_metallic.xyz;
+    float metallic          = position_metallic.w;
+
     vec4  normal_ao    = texture( un_texture_2, fsin_texcoords );
     vec3  normal       = normal_ao.xyz;
     float ao           = normal_ao.w;
@@ -265,17 +272,16 @@ void main()
     vec4  roughness_ref = texture( un_texture_3, fsin_texcoords);
     float roughness     = roughness_ref.x;
     vec3  F0            = roughness_ref.yzw;
-          F0            = (metallic < 0.2) ? vec3(0.04) : F0;
     float emission      = 0.0; 
 
-    if (F0 == vec3(-1.0))
+    if (albedo_a.a < 1.0)
     {
-       fsout_frag_color = vec4(albedo, 1.0);
+       fsout_frag_color = vec4(0.0);
        return;
     }
 
     vec3 N = normal;
-    vec3 V = normalize(un_viewpos - position);
+    vec3 V = normalize(un_camera.position.xyz - position);
     vec3 R = reflect(-V, N); 
 
     F0 = mix(vec3(0.04), albedo, metallic);
@@ -285,15 +291,19 @@ void main()
 
     Lo += dirlight_contribution_shadowmapped(0, position, F0, N, V, R, albedo, metallic, roughness, ao, emission);
 
-    vec3 Ks = fresnelSchlick(max(dot(N, V), 0.0), F0);
+    // float NdotV = max(dot(N, V), 0.0);
+    float NdotV = dot(N, V) * 0.5 + 0.5;
+
+    vec3 F  = fresnelSchlick(NdotV, F0);
+    vec3 Ks = F;
     vec3 Kd = (vec3(1.0) - Ks) * (1.0 - metallic);
 
-    vec3 irradiance = texture(un_skybox_diffuse, N).rgb;
+    vec3 irradiance = textureLod(un_skybox_diffuse, N, roughness).rgb;
     vec3 diffuse    = irradiance * albedo;
 
     vec3 prefilter = textureLod(un_skybox_specular, R, roughness*MIPLEVEL_SPECULAR).rgb;
-    vec2 brdf      = texture(un_BRDF_LUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-    vec3 specular  = prefilter * (Ks * brdf.x + brdf.y);
+    vec2 brdf      = texture(un_BRDF_LUT, vec2(NdotV, roughness)).rg;
+    vec3 specular  = prefilter * (F * brdf.x + brdf.y);
     vec3 ambient   = (Kd * diffuse + specular) * ao;
 
     #if DIRSHADOW_AMBIENT == 1
@@ -304,5 +314,5 @@ void main()
 
     vec3 color = ambient + Lo;
 
-    fsout_frag_color = vec4(color, 1.0);
+    fsout_frag_color = vec4(color, albedo_a.a);
 }

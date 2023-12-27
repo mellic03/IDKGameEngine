@@ -1,7 +1,7 @@
 #include "idk_animation_file.hpp"
 
 #include <sstream>
-#include <libidk/libidk.hpp>
+#include <array>
 
 
 
@@ -158,8 +158,8 @@ void read_animation( std::ifstream &stream, idk::Animation &animation )
     animation.m_duration = duration;
     animation.m_bones.resize(num_bones);
 
-    std::cout << "Duration:       " << duration << "\n";
-    std::cout << "No. bones:      " << num_bones << "\n";
+    // std::cout << "Duration:       " << duration << "\n";
+    // std::cout << "No. bones:      " << num_bones << "\n";
 
     for (idk::AnimBone &bone: animation.m_bones)
     {
@@ -173,7 +173,7 @@ void idk::filetools::readidka( std::ifstream &stream, const idkvi_header_t &head
 {
     uint32_t num_animations;
     stream.read(reinterpret_cast<char *>(&num_animations), sizeof(uint32_t));
-    std::cout << "No. animations: " << num_animations << "\n";
+    // std::cout << "No. animations: " << num_animations << "\n";
 
     controller.m_animations.resize(num_animations);
 

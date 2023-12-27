@@ -1,6 +1,8 @@
 #pragma once
 
 #include "idk_animation.hpp"
+
+#include <idk_buffer.hpp>
 #include <fstream>
 
 

@@ -17,7 +17,9 @@ protected:
 public:
     virtual                             ~Module() = default;
     void                                base_init( int id, std::string name ) { m_id = id; m_name = name; };
-    std::string                         name() const { return m_name; };
+    
+    const constexpr int                 id() const { return m_id; };
+    const constexpr std::string &       name() const { return m_name; };
 
     virtual void                        init( idk::Engine & ) = 0;
     virtual void                        stage_A( idk::Engine & ) = 0;
@@ -25,7 +27,7 @@ public:
     virtual void                        stage_C( idk::Engine & ) = 0;
 
     void                                addDependency( std::string name ) { m_dependencies.push_back(name); };
-    void                                addDependencies()                 { /* Base case */                };
+    void                                addDependencies()                 { /* Base case */ };
     template <typename ...Args> void    addDependencies( std::string head, Args... );
     const std::vector<std::string> &    getDependencies() const { return m_dependencies; };
 

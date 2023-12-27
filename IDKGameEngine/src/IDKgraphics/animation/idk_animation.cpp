@@ -232,21 +232,25 @@ idk::Animator::computeTransforms( std::vector<glm::mat4> &transforms )
 void
 idk::Animator::tick( float dt )
 {
+    constexpr int ROOT_IDX = 3;
+
     idk::Animation &anim = m_animations[m_anim_A];
 
     float last_time = glm::mix(anim.m_time, m_animations[m_anim_B].m_time, m_blend_alpha);
-    glm::vec3 pos = glm::mix(anim.m_bones[3].getPosition(), m_animations[m_anim_B].m_bones[3].getPosition(), m_blend_alpha);
-    glm::vec3 T1 = anim.m_bones[0].local_transform * anim.m_bones[3].inverse_bind * glm::vec4(pos, 1.0f);
+    glm::vec3 pos = glm::mix(anim.m_bones[ROOT_IDX].getPosition(), m_animations[m_anim_B].m_bones[ROOT_IDX].getPosition(), m_blend_alpha);
+    glm::vec3 T1 = anim.m_bones[0].local_transform * anim.m_bones[ROOT_IDX].inverse_bind * glm::vec4(pos, 1.0f);
 
     anim.tick(1000.0f * dt);
 
     if (m_anim_A != m_anim_B)
+    {
         m_animations[m_anim_B].tick(1000.0f * dt);
+    }
 
 
     float now_time = glm::mix(anim.m_time, m_animations[m_anim_B].m_time, m_blend_alpha);;
-    pos = glm::mix(anim.m_bones[3].getPosition(), m_animations[m_anim_B].m_bones[3].getPosition(), m_blend_alpha);
-    glm::vec3 T2 = anim.m_bones[0].local_transform * anim.m_bones[3].inverse_bind * glm::vec4(pos, 1.0f);
+    pos = glm::mix(anim.m_bones[ROOT_IDX].getPosition(), m_animations[m_anim_B].m_bones[ROOT_IDX].getPosition(), m_blend_alpha);
+    glm::vec3 T2 = anim.m_bones[0].local_transform * anim.m_bones[ROOT_IDX].inverse_bind * glm::vec4(pos, 1.0f);
 
 
     if (now_time - last_time < 0.0f)

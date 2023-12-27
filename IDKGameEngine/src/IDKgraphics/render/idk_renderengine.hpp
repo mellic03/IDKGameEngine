@@ -1,19 +1,14 @@
 #pragma once
 
 #include <unordered_map>
-#include <queue>
 
-#include "libidk/libidk.hpp"
-
-#include "libidk/IDKgl.hpp"
+#include <libidk/IDKgl.hpp>
+#include <idk_allocator.hpp>
 
 #include "idk_drawmethods.hpp"
 #include "idk_renderqueue.hpp"
 
 #include "../camera/idk_camera.hpp"
-#include "../camera/idk_frustum.hpp"
-
-// #include "primitives/primitives.hpp"
 #include "../idk_noisegen.hpp"
 #include "../lighting/IDKlighting.hpp"
 
@@ -36,7 +31,6 @@ public:
 
 
 private:
-    using modelqueue_t = std::vector<idk::pair<int, glm::mat4>>;
 
     glm::ivec2                          m_resolution;
 
@@ -58,7 +52,6 @@ private:
 
     glFramebuffer                       m_deferred_geom_buffer;
     glFramebuffer                       m_volumetrics_buffer;
-    std::queue<glFramebuffer>           m_blit_queue;
     // -----------------------------------------------------------------------------------------
 
     // Shaders
@@ -71,7 +64,6 @@ private:
     // -----------------------------------------------------------------------------------------
     glUBO                               m_UBO_pointlights;
     glUBO                               m_UBO_dirlights;
-    glUBO                               m_UBO_cascades;
     glUBO                               m_UBO_camera;
     glUBO                               m_UBO_armature;
     // -----------------------------------------------------------------------------------------
@@ -82,6 +74,8 @@ private:
     idk::ModelSystem                    m_modelsystem;
     idk::LightSystem                    m_lightsystem;
 
+
+    idk::Allocator<idk::RenderQueue>    m_render_queues;
 
     idk::RenderQueue                    m_render_queue;
     idk::RenderQueue                    m_anim_render_queue;
@@ -153,20 +147,34 @@ public:
     void                                useCamera( int cam_id ) { m_active_camera_id = cam_id; };
     idk::Camera &                       getCamera( int cam_id ) { return m_camera_allocator.get(cam_id); };
     idk::Camera &                       getCamera(            ) { return getCamera(m_active_camera_id);  };
+    idk::Allocator<Camera> &            getCameras() { return m_camera_allocator; };
 
 
     idk::LightSystem &                  lightSystem() { return m_lightsystem; };
     ModelSystem &                       modelSystem() { return m_modelsystem; };
 
+
     int                                 loadSkybox( const std::string &filepath );
 
-    void                                drawModel( int model, int animator, glm::mat4 & );
-    void                                drawModel( int model, glm::mat4 & );
+    int                                 createRenderQueue( const std::string &program_name,
+                                                           const RenderQueueConfig & );
 
-    void                                drawShadowCaster( int model, int animator, glm::mat4 & );
-    void                                drawShadowCaster( int model, glm::mat4 & );
+    idk::RenderQueue &                  getRenderQueue( int id );
 
-    GLuint                              createProgram( std::string name, std::string, std::string, std::string );
+    void                                drawModelRQ( int rq, int model, const glm::mat4 & );
+    void                                drawModelRQ( int rq, int model, int animator, const glm::mat4 & );
+
+    void                                drawModel( int model, int animator, const glm::mat4 & );
+    void                                drawModel( int model, const glm::mat4 & );
+
+    void                                drawShadowCaster( int model, int animator, const glm::mat4 & );
+    void                                drawShadowCaster( int model, const glm::mat4 & );
+
+    GLuint                              createProgram( const std::string &name,
+                                                       const std::string &root,
+                                                       const std::string &vs,
+                                                       const std::string &fs );
+
     glShader &                          getProgram ( const std::string &name ) { return m_shaders[name]; };
     std::map<std::string, glShader> &   getPrograms() { return m_shaders; };
 

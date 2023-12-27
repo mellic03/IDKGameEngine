@@ -29,56 +29,61 @@ idk::Engine::Engine( std::string name, int w, int h, int res_divisor )
 
 
 void
-idk::Engine::idk_CS_stage_A()
+idk::Engine::_idk_modules_init()
 {
-    idk::Engine *engine = this;
-
-    for (size_t i=0; i<m_componentsystems.size(); i++)
+    for (auto &CS: m_componentsystems)
     {
-        idk::ComponentSystem *CS = m_componentsystems[i];
+        CS->init(*this);
+    }
+
+    for (auto &mod: m_idk_modules)
+    {
+        mod->init(*this);
+    }
+}
+
+
+
+void
+idk::Engine::_idk_modules_stage_A()
+{
+    for (auto &CS: m_componentsystems)
+    {
         CS->stage_A(*this);
     }
 
-    for (size_t i=0; i<m_idk_modules.size(); i++)
+    for (auto &mod: m_idk_modules)
     {
-        idk::Module *mod = m_idk_modules[i];
         mod->stage_A(*this);
     }
 }
 
 
 void
-idk::Engine::idk_CS_stage_B()
+idk::Engine::_idk_modules_stage_B()
 {
-    idk::Engine *engine = this;
-
-    for (size_t i=0; i<m_componentsystems.size(); i++)
+    for (auto &CS: m_componentsystems)
     {
-        idk::ComponentSystem *CS = m_componentsystems[i];
         CS->stage_B(*this);
     }
 
-    for (size_t i=0; i<m_idk_modules.size(); i++)
+    for (auto &mod: m_idk_modules)
     {
-        idk::Module *mod = m_idk_modules[i];
         mod->stage_B(*this);
     }
-
 }
 
 
 void
-idk::Engine::idk_CS_stage_C()
+idk::Engine::_idk_modules_stage_C()
 {
-    for (size_t i=0; i<m_componentsystems.size(); i++)
+    for (auto &CS: m_componentsystems)
     {
-        idk::ComponentSystem *CS = m_componentsystems[i];
         CS->stage_C(*this);
     }
 
-    for (size_t i=0; i<m_idk_modules.size(); i++)
+    for (auto &mod: m_idk_modules)
     {
-        idk::Module *mod = m_idk_modules[i];
         mod->stage_C(*this);
     }
 }
@@ -87,24 +92,24 @@ idk::Engine::idk_CS_stage_C()
 void
 idk::Engine::idk_CS_checkDependencies( int obj_id, int component_id )
 {
-    auto cs = m_componentsystems[component_id];
+    auto cs = m_componentsystems.get(component_id);
     auto deps = cs->getDependencies();
 
-    for (auto &name: deps)
-    {
-        std::string assertmsg =
-        "object " + std::to_string(obj_id)
-        + " does not have component dependency "
-        + "\"" + name + "\""
-        + " required for component "
-        + "\"" + cs->name() + "\"";
+    // for (auto &name: deps)
+    // {
+    //     std::string assertmsg =
+    //     "object " + std::to_string(obj_id)
+    //     + " does not have component dependency "
+    //     + "\"" + name + "\""
+    //     + " required for component "
+    //     + "\"" + cs->name() + "\"";
 
-        if (hasComponent(obj_id, name) == false)
-        {
-            std::cout << assertmsg << std::endl;
-            exit(1);
-        }
-    }
+    //     if (hasComponent(obj_id, name) == false)
+    //     {
+    //         std::cout << assertmsg << std::endl;
+    //         exit(1);
+    //     }
+    // }
 }
 
 
@@ -115,31 +120,43 @@ idk::Engine::idk_CS_onObjectAssignment( int component_id, int obj_id )
         idk_CS_checkDependencies(obj_id, component_id);
     #endif
 
-    m_componentsystems[component_id]->onObjectAssignment(obj_id, *this);
+    m_componentsystems.get(component_id)->onObjectAssignment(obj_id, *this);
 }
 
 
 void
 idk::Engine::idk_CS_onObjectCreation( int obj_id )
 {
-    for (idk::ComponentSystem *component: m_componentsystems)
-        component->onObjectCreation(obj_id, *this);
+    for (auto &CS: m_componentsystems)
+    {
+        CS->onObjectCreation(obj_id, *this);
+    }
 }
 
 
 void
 idk::Engine::idk_CS_onObjectDeletion( int obj_id )
 {
-    for (idk::ComponentSystem *component: m_componentsystems)
-        component->onObjectDeletion(obj_id, *this);
+    for (auto &CS: m_componentsystems)
+    {
+        if (hasComponent(obj_id, CS->id()))
+        {
+            CS->onObjectDeletion(obj_id, *this);
+        }
+    }
 }
 
 
 void
 idk::Engine::idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id )
 {
-    for (idk::ComponentSystem *component: m_componentsystems)
-        component->onObjectCopy(src_obj_id, dest_obj_id, *this);
+    for (auto &CS: m_componentsystems)
+    {
+        if (hasComponent(src_obj_id, CS->id()))
+        {
+            CS->onObjectCopy(src_obj_id, dest_obj_id, *this);
+        }
+    }
 }
 
 
@@ -147,8 +164,8 @@ int
 idk::Engine::createGameObject()
 {
     int obj_id = m_gameobjects.create();
+    m_gameobjects.get(obj_id) = obj_id;
 
-    m_object_ids.insert(obj_id);
     idk_CS_onObjectCreation(obj_id);
 
     return obj_id;
@@ -159,18 +176,13 @@ int
 idk::Engine::createGameObject( int prefab_id )
 {
     int obj_id = createGameObject();
+    m_gameobjects.get(obj_id) = obj_id;
 
     idk_CS_onObjectCopy(prefab_id, obj_id);
 
     return obj_id;
 }
 
-
-const std::set<int> &
-idk::Engine::gameObjects()
-{
-    return m_object_ids;
-}
 
 
 const std::set<int> &
@@ -183,6 +195,8 @@ idk::Engine::gameObjects_byComponent( int component_id )
 void
 idk::Engine::deleteGameObject( int obj_id )
 {
+    idk_CS_onObjectDeletion(obj_id);
+
     m_objects_components[obj_id].clear();
 
     for (auto &[cs_id, object_ids]: m_components_objects)
@@ -190,10 +204,7 @@ idk::Engine::deleteGameObject( int obj_id )
         object_ids.erase(obj_id);
     }
 
-    m_object_ids.erase(obj_id);
     m_gameobjects.destroy(obj_id);
-
-    idk_CS_onObjectDeletion(obj_id);
 }
 
 
@@ -221,13 +232,6 @@ idk::Engine::hasComponent( int obj_id, int component_id )
 }
 
 
-bool 
-idk::Engine::hasComponent( int obj_id, std::string component_name )
-{
-    return hasComponent(obj_id, m_componentsystem_ids[component_name]);
-}
-
-
 void
 idk::Engine::beginFrame()
 {
@@ -238,7 +242,7 @@ idk::Engine::beginFrame()
     m_event_manager.update();
 
     m_render_engine.beginFrame();
-    idk_CS_stage_A();
+    this->_idk_modules_stage_A();
 }
 
 
@@ -246,9 +250,9 @@ void
 idk::Engine::endFrame()
 {
     m_render_engine.endFrame(deltaTime());
-    idk_CS_stage_B();
+    _idk_modules_stage_B();
     m_render_engine.swapWindow();
-    idk_CS_stage_C();
+    _idk_modules_stage_C();
 
     m_frame_end = SDL_GetPerformanceCounter();
     m_frame_time = ((double)(m_frame_end - m_frame_start)) / (double)SDL_GetPerformanceFrequency();

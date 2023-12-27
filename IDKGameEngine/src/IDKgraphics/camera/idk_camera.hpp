@@ -1,7 +1,7 @@
 #pragma once
 
-#include "libidk/libidk.hpp"
-#include "libidk/IDKgl.hpp"
+#include <idk_transform.hpp>
+#include <libidk/IDKglm.hpp>
 
 namespace idk { class Camera; };
 

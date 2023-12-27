@@ -39,6 +39,5 @@ void main()
 
     vec3 color = vec3(albedo);
 
-
     fsout_frag_color = vec4(color, 1.0);
 }

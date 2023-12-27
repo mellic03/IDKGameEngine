@@ -1,30 +1,43 @@
 #pragma once
 
 #include <libidk/IDKcore/libidk.hpp>
+#include "../model/idk_OBB.hpp"
 #include <tuple>
 
 
-namespace idk { class RenderQueue; };
+namespace idk { struct RenderQueueConfig; class RenderQueue; };
+
+
+struct idk::RenderQueueConfig
+{
+    bool cull_face = true;
+};
+
 
 class idk::RenderQueue
 {
 private:
     static const size_t NUM_CASCADES = 10;
 
-    float     m_cam_near;
-    float     m_cam_far;
-    glm::mat4 m_cam_view;
+    std::string         m_name;
+    float               m_cam_near;
+    float               m_cam_far;
+    glm::mat4           m_cam_view;
+    glm::mat4           m_cam_proj;
+    RenderQueueConfig   m_config;
 
     using subqueue_t = std::vector<std::tuple<int, int, glm::mat4>>;
     std::vector<subqueue_t> m_queue;
 
 
-
 public:
+            RenderQueue(): m_name("None"), m_queue(NUM_CASCADES) {  };
+            RenderQueue( const std::string &name, const RenderQueueConfig & );
 
-            RenderQueue(): m_queue(NUM_CASCADES) {  };
+    constexpr const std::string         &name()   const { return m_name;   };
+    constexpr const RenderQueueConfig   &config() const { return m_config; };
 
-    void    setViewParams( float cam_near, float cam_far, const glm::mat4 &V );
+    void    setViewParams( float cam_near, float cam_far, const glm::mat4 &P, const glm::mat4 &V );
     void    push( int model_id, int animator_id, const glm::mat4 &transform );
     void    push( int model_id, const glm::mat4 &transform );
     void    clear();

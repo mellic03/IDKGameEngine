@@ -4,14 +4,6 @@
 void
 idk::LightSystem::init()
 {
-    m_framebuffer_config = {
-        .internalformat = GL_RGBA16F,
-        .minfilter      = GL_NEAREST,
-        .magfilter      = GL_NEAREST,
-        .datatype       = GL_FLOAT
-    };
-
-
     constexpr int size = 10;
 
     m_shadergen_config.point_flags.reserve(size);
@@ -23,7 +15,7 @@ idk::LightSystem::init()
     m_dir_vec.reserve(size);
 
     m_depthcascade.reset(2048, 2048);
-    m_depthcascade.setCascadeDepths( 0.1f, 0.2f, 0.5f, 1.0f );
+    m_depthcascade.setCascadeDepths( 0.1f, 0.2f, 0.4f, 1.0f );
 
 }
 

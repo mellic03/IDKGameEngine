@@ -1,10 +1,12 @@
 #pragma once
 
-#include "libidk/libidk.hpp"
 #include "libidk/IDKgl.hpp"
 #include "idk_lightsource.hpp"
 #include "idk_shadergen.hpp"
 #include "idk_shadowcascade.hpp"
+
+#include <idk_allocator.hpp>
+
 
 namespace idk { class LightSystem; };
 
@@ -22,8 +24,6 @@ private:
     std::vector<Dirlight>       m_dir_vec;
 
     idk::glDepthCascade         m_depthcascade;
-    // std::vector<glFramebuffer>  m_dirlight_shadowmaps;
-    glTextureConfig               m_framebuffer_config;
     DepthAttachmentConfig       m_depthbuffer_config;
 
     idk::shadergen::Config      m_shadergen_config;

@@ -1,12 +1,22 @@
 #include "idk_renderqueue.hpp"
 
 
+idk::RenderQueue::RenderQueue( const std::string &name, const RenderQueueConfig &config )
+: m_name(name), m_config(config), m_queue(NUM_CASCADES)
+{
+
+};
+
+
+
 void
-idk::RenderQueue::setViewParams( float cam_near, float cam_far, const glm::mat4 &V )
+idk::RenderQueue::setViewParams( float cam_near, float cam_far,
+                                 const glm::mat4 &P, const glm::mat4 &V )
 {
     m_cam_near = cam_near;
     m_cam_far  = cam_far;
     m_cam_view = V;
+    m_cam_proj = P;
 }
 
 
@@ -19,10 +29,19 @@ idk::RenderQueue::push( int model_id, int animator_id, const glm::mat4 &transfor
         This is to draw the scene front to back, reducing overdraw.
     */
 
-    static glm::vec4 worldspace = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    static const glm::vec4 worldspace = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     static glm::vec4 viewspace;
 
     viewspace = m_cam_view * transform * worldspace;
+
+    // glm::vec4 screenspace = m_cam_proj * viewspace;
+    //           screenspace /= screenspace.w;
+    //           screenspace = screenspace * 0.5f + 0.5f;
+
+    // if (screenspace.x < -1.0f || screenspace.x > 1.0f || screenspace.y < -1.0f || screenspace.y > 1.0f)
+    // {
+    //     return;
+    // }
 
     float  depth   = fabs(viewspace.z);
     size_t cascade = size_t(NUM_CASCADES * (depth / m_cam_far));
@@ -41,7 +60,6 @@ idk::RenderQueue::push( int model_id, const glm::mat4 &transform )
 {
     push(model_id, -1, transform);
 }
-
 
 
 void

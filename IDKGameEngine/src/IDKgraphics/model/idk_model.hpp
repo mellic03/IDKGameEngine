@@ -1,8 +1,11 @@
 #pragma once
 
 #include <libidk/IDKgl.hpp>
-#include <libidk/libidk.hpp>
+#include <libidk/IDKgl/idk_glDrawCommand.hpp>
+#include <idk_buffer.hpp>
+
 #include "idk_vertex.hpp"
+#include "idk_OBB.hpp"
 
 #include <vector>
 
@@ -11,9 +14,26 @@ namespace idk
 {
     struct Material;
     struct Mesh;
-
     struct Model;
+
+    void loadChunked( idk::Model &model, const std::vector<glm::vec4> &positions,
+                      const std::vector<idk::OBB> &OBBs,
+                      const std::vector<std::vector<glm::mat4>> &transforms );
+
+    void genDrawCommands( idk::Model &model, const glm::mat4 &transform,
+                          float cam_near, float cam_far,
+                          const glm::mat4 &cam_proj, const glm::mat4 &cam_view );
+
+
+    enum ModelRenderFlag: uint32_t
+    {
+        NONE      = 0 << 0,
+        ANIMATED  = 1 << 0,
+        INSTANCED = 1 << 1,
+        CHUNKED   = 1 << 2
+    };
 };
+
 
 
 
@@ -43,20 +63,37 @@ struct idk::Mesh
 
 struct idk::Model
 {
-    float alpha = 0.0f;
-
-    idk::iBuffer *m_buffer;
+    uint32_t render_flags = ModelRenderFlag::NONE;
 
     std::vector<idk::Mesh>    meshes;
-    std::vector<idk::Vertex>  m_vertices;
+    idk::iBuffer             *m_vertices = nullptr;
     std::vector<uint32_t>     m_indices;
+
+    idk::OBB m_OBB;
 
     // Animation
     // ---------------------------------------------------
-    bool animated = false;
     int  animator_id = -1;
-    std::vector<idk::AnimatedVertex> m_anim_vertices;
     // ---------------------------------------------------
+
+    // Instancing
+    // ---------------------------------------------------
+    glInstancedTransforms     m_instancedata;
+    // ---------------------------------------------------
+
+
+    // Chunking
+    // ---------------------------------------------------
+    GLuint m_IDB; // Indirect Draw Buffer
+
+    std::vector<glm::vec4>   m_chunk_positions;
+    std::vector<glm::mat4>   m_chunk_transforms;
+    std::vector<idk::OBB>    m_chunk_OBBs;
+
+    std::vector<glDrawElementsIndirectCommand> m_default_draw_params;
+    std::vector<glDrawElementsIndirectCommand> m_draw_params;
+    // ---------------------------------------------------
+
 
     GLuint VAO, VBO, IBO;
 };

@@ -3,8 +3,8 @@
 #define MAX_POINTLIGHTS 10
 
 
-layout (location = 0) out vec4 fsout_albedo_metallic;
-layout (location = 1) out vec4 fsout_position;
+layout (location = 0) out vec4 fsout_albedo;
+layout (location = 1) out vec4 fsout_position_metallic;
 layout (location = 2) out vec4 fsout_normal_ao;
 layout (location = 3) out vec4 fsout_roughness_ref;
 
@@ -130,7 +130,7 @@ void main()
     #endif
 
     vec4  albedo = texture( un_material.albedo, texcoords ).rgba;
-    if (albedo.a < 0.7)
+    if (albedo.a < 0.5)
         discard;
 
     vec3  ao_rough_metal = texture(un_material.rough_metal, texcoords).rgb;
@@ -149,8 +149,8 @@ void main()
           normal = normalize(a*normal + (1.0 - a)*normalize(fsin_normal));
 
 
-    fsout_albedo_metallic = vec4(albedo.rgb, metallic);
-    fsout_position        = vec4(fsin_fragpos, 1.0);
-    fsout_normal_ao       = vec4(normal, ao);
-    fsout_roughness_ref   = vec4(roughness, 0.0, 0.0, 0.0);
+    fsout_albedo            = vec4(albedo.rgb, 1.0);
+    fsout_position_metallic = vec4(fsin_fragpos, metallic);
+    fsout_normal_ao         = vec4(normal, ao);
+    fsout_roughness_ref     = vec4(roughness, 0.0, 0.0, 0.0);
 }

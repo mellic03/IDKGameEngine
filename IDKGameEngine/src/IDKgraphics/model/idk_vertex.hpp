@@ -29,5 +29,3 @@ struct idk::AnimatedVertex
     glm::ivec4 bone_ids     = glm::ivec4(-1);
     glm::vec4  bone_weights = glm::vec4(0.0f);
 };
-
-

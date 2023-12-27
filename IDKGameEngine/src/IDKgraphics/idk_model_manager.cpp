@@ -5,6 +5,8 @@
 #include <set>
 #include <filesystem>
 
+#include <libidk/IDKgl.hpp>
+
 
 
 
@@ -132,24 +134,6 @@ idk::ModelSystem::loadTexture( std::string filepath, const glTextureConfig &conf
 }
 
 
-// void
-// idk::ModelSystem::loadTextures( std::string path, const glTextureConfig &config )
-// {
-//     using namespace std;
-//     filesystem::path directory(path);
-
-//     for (auto const &dir_entry: filesystem::recursive_directory_iterator{directory})
-//     {
-//         if (dir_entry.is_directory())
-//         {
-//             continue;
-//         }
-
-//         loadTexture( dir_entry.path().string(), srgb, minfilter, magfilter );
-//     }
-// }
-
-
 void
 idk::ModelSystem::model_to_gpu( idk::Model &model )
 {
@@ -158,17 +142,14 @@ idk::ModelSystem::model_to_gpu( idk::Model &model )
     gl::genBuffers(1, &model.IBO);
 
     gl::bindVertexArray(model.VAO);
-
     gl::bindBuffer(GL_ARRAY_BUFFER, model.VBO);
 
-
-    size_t vertex_size = model.m_buffer->nbytes() / model.m_buffer->size();
-
+    size_t vertex_size = model.m_vertices->typesize();
 
     gl::bufferData(
         GL_ARRAY_BUFFER,
-        model.m_buffer->nbytes(),
-        model.m_buffer->data(),
+        model.m_vertices->nbytes(),
+        model.m_vertices->data(),
         GL_STATIC_DRAW
     );
 
@@ -179,7 +160,6 @@ idk::ModelSystem::model_to_gpu( idk::Model &model )
         model.m_indices.data(),
         GL_STATIC_DRAW
     );
-
 
 
     GLuint offset = 0;
@@ -204,7 +184,7 @@ idk::ModelSystem::model_to_gpu( idk::Model &model )
     gl::enableVertexAttribArray(3);
     offset += 2 * sizeof(float);
 
-    if (model.animated)
+    if (model.render_flags & ModelRenderFlag::ANIMATED)
     {
         // Bone IDs
         gl::vertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, vertex_size, offset);
@@ -222,6 +202,71 @@ idk::ModelSystem::model_to_gpu( idk::Model &model )
 }
 
 
+void
+idk::ModelSystem::instanced_to_gpu( idk::Model &model, const std::vector<glm::mat4> &transforms )
+{
+    gl::genVertexArrays(1, &model.VAO);
+    gl::genBuffers(1, &model.VBO);
+    gl::genBuffers(1, &model.IBO);
+
+    gl::bindVertexArray(model.VAO);
+    gl::bindBuffer(GL_ARRAY_BUFFER, model.VBO);
+
+
+    size_t vertex_size = sizeof(idk::Vertex);
+
+    gl::bufferData(
+        GL_ARRAY_BUFFER,
+        model.m_vertices->nbytes(),
+        model.m_vertices->data(),
+        GL_STATIC_DRAW
+    );
+
+    gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.IBO);
+    gl::bufferData(
+        GL_ELEMENT_ARRAY_BUFFER,
+        model.m_indices.size() * sizeof(GLuint),
+        model.m_indices.data(),
+        GL_STATIC_DRAW
+    );
+
+
+    GLuint index  = 0;
+    GLuint offset = 0;
+
+    // Position
+    gl::vertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, vertex_size, offset);
+    gl::enableVertexAttribArray(0);
+    index  += 1;
+    offset += 3 * sizeof(float);
+
+    // Normal
+    gl::vertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, vertex_size, offset);
+    gl::enableVertexAttribArray(1);
+    index  += 1;
+    offset += 3 * sizeof(float);
+
+    // Tangent
+    gl::vertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, vertex_size, offset);
+    gl::enableVertexAttribArray(2);
+    index  += 1;
+    offset += 3 * sizeof(float);
+
+    // UV
+    gl::vertexAttribPointer(index, 2, GL_FLOAT, GL_FALSE, vertex_size, offset);
+    gl::enableVertexAttribArray(3);
+    index  += 1;
+    offset += 2 * sizeof(float);
+
+
+    // Send data for instancing
+    model.m_instancedata.init(index, transforms);
+
+
+    gl::bindVertexArray(0);
+    gl::bindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 
 int
 idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
@@ -235,19 +280,18 @@ idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
 
     if (header.animated)
     {
-        model.animated    = true;
+        model.render_flags |= ModelRenderFlag::ANIMATED;
         model.animator_id = createAnimator();
-        model.m_buffer    = new idk::Buffer<idk::AnimatedVertex>();
+        model.m_vertices  = new idk::Buffer<idk::AnimatedVertex>();
 
-        filetools::readidkvi(stream, header, model.m_buffer, model.m_indices);
+        filetools::readidkvi(stream, header, model.m_vertices, model.m_indices);
         filetools::readidka(stream, header, m_animators.get(model.animator_id));
     }
     else
     {
-        model.animated = false;
-        model.m_buffer = new idk::Buffer<idk::Vertex>();
+        model.m_vertices = new idk::Buffer<idk::Vertex>();
     
-        filetools::readidkvi(stream, header, model.m_buffer, model.m_indices);
+        filetools::readidkvi(stream, header, model.m_vertices, model.m_indices);
     }
     stream.close();
 
@@ -280,7 +324,6 @@ idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
 }
 
 
-
 GLuint
 idk::ModelSystem::get_texture_id( const std::string &key, const glTextureConfig &config )
 {
@@ -309,5 +352,34 @@ idk::ModelSystem::copyAnimator( int model_id )
     Animator &animator = getAnimator(animator_id);
 
     return m_animators.create(animator);
+}
+
+
+int
+idk::ModelSystem::createInstancedModel( int model_id, const std::vector<glm::mat4> &transforms )
+{
+    int   id    = m_models.create(m_models.get(model_id));
+    auto &model = m_models.get(id);
+    model.render_flags |= ModelRenderFlag::INSTANCED;
+
+    instanced_to_gpu(model, transforms);
+
+    return id;
+}
+
+
+int
+idk::ModelSystem::createChunkedModel( int model_id, const std::vector<glm::vec4> &positions,
+                                      const std::vector<idk::OBB> &OBBs,
+                                      const std::vector<std::vector<glm::mat4>> &transforms )
+{
+    int  chunked_id = m_models.create(m_models.get(model_id));
+    auto &model     = m_models.get(chunked_id);
+    model.render_flags |= ModelRenderFlag::CHUNKED;
+
+    idk::loadChunked(model, positions, OBBs, transforms);
+    instanced_to_gpu(model, model.m_chunk_transforms);
+
+    return chunked_id;
 }
 

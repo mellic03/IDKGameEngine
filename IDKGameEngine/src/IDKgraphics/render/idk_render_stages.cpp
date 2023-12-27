@@ -9,7 +9,7 @@ void idk::RenderEngine::RenderStage_deferred_geometry( idk::Camera &camera, floa
 
     // Non animated models
     // -----------------------------------------------------------------------------------------
-    glShader &program = getProgram("geometry_pass");
+    glShader &program = getProgram("geometrypass");
     program.bind();
 
     for (auto &[model_id, dummy, model_mat]: m_render_queue)
@@ -28,7 +28,7 @@ void idk::RenderEngine::RenderStage_deferred_geometry( idk::Camera &camera, floa
 
     // Animated models
     // -----------------------------------------------------------------------------------------
-    glShader &program_anim = getProgram("geometry_pass_anim");
+    glShader &program_anim = getProgram("geometrypass-anim");
     program_anim.bind();
 
     for (auto &[model_id, animator_id, model_mat]: m_anim_render_queue)
@@ -47,14 +47,63 @@ void idk::RenderEngine::RenderStage_deferred_geometry( idk::Camera &camera, floa
     m_anim_render_queue.clear();
     // -----------------------------------------------------------------------------------------
 
+    for (idk::RenderQueue &rq: m_render_queues)
+    {
+        const auto &config = rq.config();
+        if (config.cull_face == false)
+        {
+            gl::disable(GL_CULL_FACE);
+        }
+
+        glShader &rq_program = getProgram(rq.name());
+        rq_program.bind();
+
+        for (auto &[model_id, animator_id, transform]: rq)
+        {
+            idk::Model &model = modelSystem().getModel(model_id);
+
+            if (model.render_flags & ModelRenderFlag::CHUNKED)
+            {
+                drawmethods::draw_instanced(
+                    rq_program,
+                    model_id,
+                    transform,
+                    modelSystem()
+                );
+            }
+
+            else
+            {
+                drawmethods::draw_textured(
+                    rq_program,
+                    modelSystem().getModel(model_id),
+                    transform,
+                    modelSystem().getMaterials()
+                );
+            }
+        }
+
+        if (config.cull_face == false)
+        {
+            gl::enable(GL_CULL_FACE);
+        }
+
+        rq.clear();
+    }
 }
 
 
 void idk::RenderEngine::RenderStage_deferred_lighting( idk::Camera &camera, float dtime )
 {
-    // Background quad
+    gl::enable(GL_BLEND);
+    IDK_GLCALL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); )
+
+    m_scratchbufs1[0].bind();
+    m_scratchbufs1[0].clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // Background
     // -----------------------------------------------------------------------------------------
-    glm::mat4 modelmat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.8f * camera.farPlane()));
+    glm::mat4 modelmat = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.9f * camera.farPlane()));
     modelmat = glm::scale(modelmat, glm::vec3(500.0f, 500.0f, 1.0f));
 
     glShader &background = getProgram("background");
@@ -89,6 +138,8 @@ void idk::RenderEngine::RenderStage_deferred_lighting( idk::Camera &camera, floa
     lighting.popTextureUnits();
     glShader::unbind();
     // -----------------------------------------------------------------------------------------
+
+    gl::disable(GL_BLEND);
 }
 
 
@@ -103,24 +154,24 @@ idk::RenderEngine::PostProcess_bloom()
     bloom.bind();
     tex2tex(bloom, m_scratchbufs1[0], m_scratchbufs2[0]);
 
-    glShader &downsample = getProgram("downsample");
-    glShader &upsample   = getProgram("upsample");
+    // glShader &downsample = getProgram("downsample");
+    // glShader &upsample   = getProgram("upsample");
 
-    constexpr int miplevel = 7;
+    // constexpr int miplevel = 7;
 
-    downsample.bind();
-    tex2tex(downsample, m_scratchbufs2[0], m_scratchbufs1[1]);
-    for (int i=1; i<miplevel; i++)
-    {
-        tex2tex(downsample, m_scratchbufs1[i], m_scratchbufs1[i+1]);
-    }
+    // downsample.bind();
+    // tex2tex(downsample, m_scratchbufs2[0], m_scratchbufs1[1]);
+    // for (int i=1; i<miplevel; i++)
+    // {
+    //     tex2tex(downsample, m_scratchbufs1[i], m_scratchbufs1[i+1]);
+    // }
 
-    upsample.bind();
-    tex2tex(upsample, m_scratchbufs1[miplevel], m_scratchbufs1[miplevel], m_scratchbufs2[miplevel-1]);
-    for (int i=miplevel-1; i>0; i--)
-    {
-        tex2tex(upsample, m_scratchbufs1[i], m_scratchbufs2[i], m_scratchbufs2[i-1]);
-    }
+    // upsample.bind();
+    // tex2tex(upsample, m_scratchbufs1[miplevel], m_scratchbufs1[miplevel], m_scratchbufs2[miplevel-1]);
+    // for (int i=miplevel-1; i>0; i--)
+    // {
+    //     tex2tex(upsample, m_scratchbufs1[i], m_scratchbufs2[i], m_scratchbufs2[i-1]);
+    // }
 
 
 
@@ -163,8 +214,8 @@ idk::RenderEngine::PostProcess_colorgrading( idk::Camera &camera,
     static float *data  = new float[size];
     static float *data2 = new float[size2];
 
-    GLCALL( glGetTextureImage(buffer_B->attachments[0], level,  GL_RGBA, GL_FLOAT, size*sizeof(float),  data); )
-    GLCALL( glGetTextureImage(buffer_B->attachments[0], level2, GL_RGBA, GL_FLOAT, size2*sizeof(float), data2); )
+    IDK_GLCALL( glGetTextureImage(buffer_B->attachments[0], level,  GL_RGBA, GL_FLOAT, size*sizeof(float),  data); )
+    IDK_GLCALL( glGetTextureImage(buffer_B->attachments[0], level2, GL_RGBA, GL_FLOAT, size2*sizeof(float), data2); )
  
     float   texw     = m_resolution.x;
     float   texh     = m_resolution.y;

@@ -1,7 +1,8 @@
 #pragma once
 
-#include "libidk/libidk.hpp"
+#include <functional>
 #include "idk_keylog.hpp"
+#include <idk_allocator.hpp>
 
 
 namespace idk

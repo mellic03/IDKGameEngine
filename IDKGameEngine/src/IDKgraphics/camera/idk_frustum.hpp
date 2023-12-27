@@ -1,6 +1,7 @@
 #pragma once
 
 #include "idk_camera.hpp"
+#include <vector>
 
 
 namespace idk { class Frustum; };

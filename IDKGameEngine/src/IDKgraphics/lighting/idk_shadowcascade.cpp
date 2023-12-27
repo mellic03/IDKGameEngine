@@ -17,9 +17,9 @@ idk::glDepthCascade::get_corners( const glm::mat4 &P, const glm::mat4 &V )
             for (uint z=0; z<2; ++z)
             {
                 glm::vec4 pt = inv * glm::vec4(
-                    2.0f * x - 1.0f,
-                    2.0f * y - 1.0f,
-                    2.0f * z - 1.0f,
+                    2.0f*x - 1.0f,
+                    2.0f*y - 1.0f,
+                    2.0f*z - 1.0f,
                     1.0f
                 );
 
@@ -97,7 +97,7 @@ idk::glDepthCascade::get_projection( const float texture_width,
     minv.y = h_texelspace * glm::floor(minv.y / h_texelspace);
     maxv.y = h_texelspace * glm::floor(maxv.y / h_texelspace);
 
-    constexpr float zMult = 4.0f;
+    constexpr float zMult = 2.0f;
     minv.z *= (minv.z < 0) ? zMult : 1.0f/zMult;
     maxv.z *= (maxv.z < 0) ? 1.0f/zMult : zMult;
 
@@ -121,7 +121,7 @@ idk::glDepthCascade::reset( int w, int h )
         .datatype       = GL_FLOAT
     };
 
-    depthArrayAttachment(NUM_CASCADES, config);
+    depthArrayAttachment(NUM_CASCADES+1, config);
 }
 
 
@@ -150,7 +150,6 @@ idk::glDepthCascade::getTextureArray()
 {
     return depth_attachment;
 }
-
 
 
 const std::vector<glm::mat4> &

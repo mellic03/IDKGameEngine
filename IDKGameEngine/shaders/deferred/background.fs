@@ -1,9 +1,6 @@
 #version 440 core
 
-layout (location = 0) out vec4 fsout_albedo_metallic;
-layout (location = 1) out vec4 fsout_position;
-layout (location = 2) out vec4 fsout_normal_ao;
-layout (location = 3) out vec4 fsout_roughness_ref;
+layout (location = 0) out vec4 fsout_albedo;
 
 in vec4 fsin_fragpos;
 uniform samplerCube un_skybox;
@@ -27,10 +24,5 @@ layout (std140, binding = 2) uniform UBO_camera_data
 
 void main()
 {
-    fsout_albedo_metallic = texture(un_skybox, fsin_fragpos.xyz - un_viewpos);
-    fsout_position.xyz = fsin_fragpos.xyz;
-    fsout_position.w   = 1.0;
-
-    fsout_normal_ao     = vec4(1.0);
-    fsout_roughness_ref = vec4(1.0, vec3(-1.0));
+    fsout_albedo = texture(un_skybox, fsin_fragpos.xyz - un_viewpos);
 }

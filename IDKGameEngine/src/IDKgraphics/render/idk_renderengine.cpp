@@ -1,6 +1,9 @@
 #include "idk_renderengine.hpp"
 
 
+static float delta_time = 1.0f;
+
+
 void
 idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags )
 {
@@ -80,8 +83,11 @@ void
 idk::RenderEngine::compileShaders()
 {
     createProgram("background",     "IDKGE/shaders/deferred/", "background.vs", "background.fs");
-    createProgram("geometry_pass",  "IDKGE/shaders/deferred/", "geometrypass.vs", "geometrypass.fs");
-    createProgram("geometry_pass_anim",  "IDKGE/shaders/deferred/", "geometrypass-anim.vs", "geometrypass.fs");
+
+    createProgram("geometrypass",           "IDKGE/shaders/deferred/", "geometrypass.vs", "geometrypass.fs");
+    createProgram("geometrypass-instanced", "IDKGE/shaders/deferred/", "geometrypass-instanced.vs", "geometrypass-instanced.fs");
+    createProgram("geometrypass-anim",      "IDKGE/shaders/deferred/", "geometrypass-anim.vs", "geometrypass.fs");
+
     createProgram("geometry_light", "IDKGE/shaders/deferred/", "geometrypass.vs", "lightsource.fs");
     createProgram("lighting_ibl",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass_pbr.fs");
     createProgram("dirvolumetrics", "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
@@ -93,7 +99,6 @@ idk::RenderEngine::compileShaders()
     createProgram("chromatic",      "IDKGE/shaders/", "screenquad.vs", "postprocess/c-abberation.fs");
     createProgram("blit",           "IDKGE/shaders/", "screenquad.vs", "postprocess/blit.fs");
     createProgram("fxaa",           "IDKGE/shaders/", "screenquad.vs", "postprocess/fxaa.fs");
-    createProgram("getdepth",       "IDKGE/shaders/", "screenquad.vs", "postprocess/getdepth.fs");
     createProgram("colorgrade",     "IDKGE/shaders/", "screenquad.vs", "postprocess/colorgrade.fs");
     createProgram("dir_shadow",     "IDKGE/shaders/", "dirshadow.vs",  "dirshadow.fs");
     createProgram("dir_shadow-anim", "IDKGE/shaders/", "dirshadow-anim.vs",  "dirshadow.fs");
@@ -107,7 +112,14 @@ idk::RenderEngine::init_framebuffers( int w, int h )
 {
     idk::glTextureConfig config = {
         .internalformat = GL_RGBA16F,
-        .minfilter      = GL_NEAREST,
+        .minfilter      = GL_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .datatype       = GL_FLOAT
+    };
+
+    idk::glTextureConfig config_highp = {
+        .internalformat = GL_RGBA32F,
+        .minfilter      = GL_LINEAR,
         .magfilter      = GL_LINEAR,
         .datatype       = GL_FLOAT
     };
@@ -138,7 +150,7 @@ idk::RenderEngine::init_framebuffers( int w, int h )
 
     m_deferred_geom_buffer.reset(w, h, 4);
     m_deferred_geom_buffer.colorAttachment(0, config);
-    m_deferred_geom_buffer.colorAttachment(1, config);
+    m_deferred_geom_buffer.colorAttachment(1, config_highp);
     m_deferred_geom_buffer.colorAttachment(2, config);
     m_deferred_geom_buffer.colorAttachment(3, config);
 
@@ -156,7 +168,6 @@ idk::RenderEngine::init_framebuffers( int w, int h )
         .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
         .magfilter      = GL_LINEAR,
         .datatype       = GL_FLOAT,
-        .genmipmap      = true
     };
 
     m_mainbuffer_1.reset(w, h, 1);
@@ -177,20 +188,18 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
 
     m_UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
     m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
-    // m_UBO_cascades    = glUBO(4, glDepthCascade::NUM_CASCADES * sizeof(glm::mat4));
     m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
     m_UBO_armature    = glUBO(6, ARMATURE_MAX_BONES * sizeof(glm::mat4));
-
 
     glTextureConfig config = {
         .internalformat = GL_RGBA16,
         .format         = GL_RGBA,
         .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
         .magfilter      = GL_LINEAR,
-        .wrap_s         = GL_REPEAT,
-        .wrap_t         = GL_REPEAT,
+        .wrap_s         = GL_CLAMP_TO_EDGE,
+        .wrap_t         = GL_CLAMP_TO_EDGE,
         .datatype       = GL_UNSIGNED_BYTE,
-        .genmipmap      = GL_TRUE
+        .genmipmap      = GL_FALSE
     };
 
     BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", config);
@@ -223,7 +232,8 @@ idk::RenderEngine::init( std::string name, int w, int h, uint32_t flags )
 
 
 GLuint
-idk::RenderEngine::createProgram( std::string name, std::string root, std::string vs, std::string fs )
+idk::RenderEngine::createProgram( const std::string &name, const std::string &root,
+                                  const std::string &vs, const std::string &fs )
 {
     m_shader_names.push_back(name);
     return m_shaders[name].loadFileC(root, vs, fs);
@@ -351,32 +361,86 @@ idk::RenderEngine::createCamera()
 }
 
 
+int
+idk::RenderEngine::createRenderQueue( const std::string &program_name, const RenderQueueConfig &config )
+{
+    int id = m_render_queues.create(idk::RenderQueue(program_name, config));
+    return id;
+}
+
+
+idk::RenderQueue &
+idk::RenderEngine::getRenderQueue( int id )
+{
+    return m_render_queues.get(id);
+}
+
 
 void
-idk::RenderEngine::drawModel( int model_id, glm::mat4 &model_mat )
+idk::RenderEngine::drawModelRQ( int rq, int model_id, const glm::mat4 &transform )
+{
+    idk::Model &model = modelSystem().getModel(model_id);
+
+    if (model.render_flags & ModelRenderFlag::CHUNKED)
+    {
+        idk::Camera &cam = getCamera();
+        idk::genDrawCommands(
+            model, transform, cam.nearPlane(), cam.farPlane(), cam.projection(), cam.view()
+        );
+    }
+
+    getRenderQueue(rq).push(model_id, transform);
+}
+
+
+void
+idk::RenderEngine::drawModelRQ( int rq, int model, int animator, const glm::mat4 &transform )
+{
+    getRenderQueue(rq).push(model, animator, transform);
+}
+
+
+void
+idk::RenderEngine::drawModel( int model_id, const glm::mat4 &model_mat )
 {
     m_render_queue.push(model_id, model_mat);
 }
 
 
 void
-idk::RenderEngine::drawModel( int model_id, int animator_id, glm::mat4 &model_mat )
+idk::RenderEngine::drawModel( int model_id, int animator_id, const glm::mat4 &model_mat )
 {
-    m_anim_render_queue.push(model_id, animator_id, model_mat);
+    if (animator_id == -1)
+    {
+        drawModel(model_id, model_mat);
+    }
+
+    else
+    {
+        m_anim_render_queue.push(model_id, animator_id, model_mat);
+    }
 }
 
 
 void
-idk::RenderEngine::drawShadowCaster( int model_id, glm::mat4 &model_mat )
+idk::RenderEngine::drawShadowCaster( int model_id, const glm::mat4 &model_mat )
 {
     m_shadow_render_queue.push(model_id, model_mat);
 }
 
 
 void
-idk::RenderEngine::drawShadowCaster( int model_id, int animator_id, glm::mat4 &model_mat )
+idk::RenderEngine::drawShadowCaster( int model_id, int animator_id, const glm::mat4 &model_mat )
 {
-    m_shadow_anim_render_queue.push(model_id, animator_id, model_mat);
+    if (animator_id == -1)
+    {
+        drawShadowCaster(model_id, model_mat);
+    }
+
+    else
+    {
+        m_shadow_anim_render_queue.push(model_id, animator_id, model_mat);
+    }
 }
 
 
@@ -460,12 +524,18 @@ idk::RenderEngine::update_UBO_camera()
     m_UBO_camera.add<glm::mat4>(glm::value_ptr(camera.view()));
     m_UBO_camera.add<glm::mat4>(glm::value_ptr(camera.projection()));
 
-    glm::vec3 pos = camera.renderPosition();
+
+    glm::vec3 pos0 = camera.position();
+
+    static float increment = -M_PI;
+    glm::vec4 pos = glm::vec4(camera.renderPosition(), increment);
+    increment = fmod(increment + delta_time, 2.0f * M_PI);
+
     glm::vec4 b(camera.m_r_abr, camera.m_g_abr);
     glm::vec4 c(camera.m_b_abr, camera.m_abr_str, 0.0f);
 
-    m_UBO_camera.add<glm::vec3>(glm::value_ptr(pos));
-    m_UBO_camera.add<glm::vec3>(glm::value_ptr(pos));
+    m_UBO_camera.add<glm::vec3>(glm::value_ptr(pos0));
+    m_UBO_camera.add<glm::vec4>(glm::value_ptr(pos));
     m_UBO_camera.add<glm::vec4>(glm::value_ptr(camera.m_bloom_gamma));
     m_UBO_camera.add<glm::vec4>(glm::value_ptr(b));
     m_UBO_camera.add<glm::vec4>(glm::value_ptr(c));
@@ -535,17 +605,25 @@ idk::RenderEngine::beginFrame()
     float near     = camera.nearPlane();
     float far      = camera.farPlane();
     glm::mat4 view = camera.view();
+    glm::mat4 proj = camera.projection();
 
-    m_render_queue.setViewParams(near, far, view);
-    m_anim_render_queue.setViewParams(near, far, view);
-    m_shadow_render_queue.setViewParams(near, far, view);
-    m_shadow_anim_render_queue.setViewParams(near, far, view);
+    for (idk::RenderQueue &rq: m_render_queues)
+    {
+        rq.setViewParams(near, far, proj, view);
+    }
+
+    m_render_queue.setViewParams(near, far, proj, view);
+    m_anim_render_queue.setViewParams(near, far, proj, view);
+    m_shadow_render_queue.setViewParams(near, far, proj, view);
+    m_shadow_anim_render_queue.setViewParams(near, far, proj, view);
 }
 
 
 void
 idk::RenderEngine::endFrame( float dt )
 {
+    delta_time = dt;
+
     // if (m_lightsystem.changed())
     // {
     //     static std::string vert_source = "";

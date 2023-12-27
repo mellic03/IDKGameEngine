@@ -1,7 +1,8 @@
 #pragma once
 
-#include "libidk/libidk.hpp"
-
+#include <vector>
+#include <string>
+#include <cstdint>
 
 
 /*

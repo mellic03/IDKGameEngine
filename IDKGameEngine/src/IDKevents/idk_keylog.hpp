@@ -1,14 +1,7 @@
 #pragma once
 
 #include "libidk/libidk.hpp"
-
-// #ifdef SDL_h_
-//     #include "../IDK_SDL2/idk_SDL_keybindings.h"
-
-// #elif defined(SFML_h_)
-//     #include "../idk_SFML_keybindings.h"
-
-// #endif
+#include <vector>
 
 
 namespace idk
