@@ -8,7 +8,7 @@ namespace idk_shadergen
 
 
 const std::string shader_screenquad =
-"#version 440 core\n"
+"#version 460 core\n"
 "\n"
 "out vec2 fsin_texcoords;\n"
 "\n"
@@ -25,7 +25,7 @@ const std::string shader_screenquad =
 
 
 const std::string shader_begin_header =
-"#version 440 core\n"
+"#version 460 core\n"
 "\n"
 "layout (location = 0) out vec4 fsout_frag_color;\n"
 "\n"

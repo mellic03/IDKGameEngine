@@ -1,4 +1,4 @@
-#version 440 core
+#version 460 core
 
 layout (location = 0) out vec4 fsout_frag_color;
 layout (location = 1) out vec4 fsout_frag_depth;

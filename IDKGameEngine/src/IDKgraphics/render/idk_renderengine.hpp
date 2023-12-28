@@ -1,11 +1,12 @@
 #pragma once
 
+#include "idk_sdl_glew_init.hpp"
+
 #include <unordered_map>
 
 #include <libidk/IDKgl.hpp>
-#include <idk_allocator.hpp>
+#include <libidk/IDKcontainers/idk_allocator.hpp>
 
-#include "idk_drawmethods.hpp"
 #include "idk_renderqueue.hpp"
 
 #include "../camera/idk_camera.hpp"
@@ -22,20 +23,10 @@ namespace idk { class RenderEngine; };
 
 class idk::RenderEngine
 {
-public:
-    enum InitFlag: uint32_t
-    {
-        NONE          = 0,
-        INIT_HEADLESS = 1 << 0
-    };
-
-
 private:
 
+    internal::SDL_GLEW_Initializer      m_initializer;
     glm::ivec2                          m_resolution;
-
-    SDL_Window *                        m_SDL_window;
-    SDL_GLContext                       m_SDL_gl_context;
 
     // idk::glFramebuffers ------------------------------------
     /***/
@@ -74,13 +65,18 @@ private:
     idk::ModelSystem                    m_modelsystem;
     idk::LightSystem                    m_lightsystem;
 
+    // Render queues
+    // -----------------------------------------------------------------------------------------
+    idk::Allocator<idk::RenderQueue>    m_private_RQs;
+    idk::Allocator<idk::RenderQueue>    m_public_RQs;
 
-    idk::Allocator<idk::RenderQueue>    m_render_queues;
+    int                                 m_terrain_RQ;
 
     idk::RenderQueue                    m_render_queue;
     idk::RenderQueue                    m_anim_render_queue;
     idk::RenderQueue                    m_shadow_render_queue;
     idk::RenderQueue                    m_shadow_anim_render_queue;
+    // -----------------------------------------------------------------------------------------
 
     // Initialization
     // -----------------------------------------------------------------------------------------
@@ -99,6 +95,11 @@ private:
     void                                shadowpass_dirlights();
     // -----------------------------------------------------------------------------------------
 
+
+    idk::RenderQueue &                  _getRenderQueue( int id );
+
+    int                                 _createRenderQueue( const std::string &program_name,
+                                                            const idk_drawmethod & );
 
 
     // Render stages    
@@ -131,17 +132,17 @@ public:
 
     std::vector<GLuint>                     skyboxes;
     std::vector<std::pair<GLuint, GLuint>>  skyboxes_IBL;
-    int                                     current_skybox;
+    int                                     current_skybox = 0;
     GLuint                                  BRDF_LUT;
 
 
+                                        RenderEngine( const std::string &name, int w, int h,
+                                                      uint8_t gl_version, uint32_t flags=0 );
 
     void                                compileShaders();
 
-    void                                init( std::string name, int w, int h, uint32_t flags=0 );
-
-    SDL_Window *                        SDLWindow()     { return m_SDL_window;      };
-    SDL_GLContext                       SDLGLContext()  { return m_SDL_gl_context;  };
+    SDL_Window *                        SDLWindow()    { return m_initializer.SDL_window;     };
+    SDL_GLContext                       SDLGLContext() { return m_initializer.SDL_GL_context; };
 
     int                                 createCamera();
     void                                useCamera( int cam_id ) { m_active_camera_id = cam_id; };
@@ -157,7 +158,8 @@ public:
     int                                 loadSkybox( const std::string &filepath );
 
     int                                 createRenderQueue( const std::string &program_name,
-                                                           const RenderQueueConfig & );
+                                                           const RenderQueueConfig &,
+                                                           const idk_drawmethod & );
 
     idk::RenderQueue &                  getRenderQueue( int id );
 

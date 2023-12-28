@@ -1,51 +1,53 @@
-// #pragma once
+#pragma once
 
-// #include "libidk/libidk.hpp"
-// #include <SDL2/SDL_mixer.h>
+#include "libidk/libidk.hpp"
+#include <SDL2/SDL_mixer.h>
 
-// namespace idk { class AudioEngine; };
-
-
-// class idk::AudioEngine
-// {
-// public:
-//     struct Sound
-//     {
-//         Mix_Chunk *mc;
-//         std::string name;
-//     };
-
-//     struct Emitter
-//     {
-//         int channel;
-//         Mix_Chunk *mc;
-//         idk::Transform *transform;
-//     };
+#include <stack>
 
 
-// private:
-//     Allocator<Mix_Chunk *>  m_mixchunk_allocator;
-//     Allocator<Sound>        m_sound_allocator;
-//     Allocator<Emitter>      m_emitter_allocator;
-//     Transform *             m_listener_transform;
-//     idk::stack<int>         m_audio_channels;
+namespace idk { class AudioEngine; };
+
+class idk::AudioEngine
+{
+public:
+    struct Sound
+    {
+        Mix_Chunk *mc;
+        std::string name;
+    };
+
+    struct Emitter
+    {
+        int channel;
+        Mix_Chunk *mc;
+        idk::Transform *transform;
+    };
 
 
-// public:
-//                 AudioEngine();
+private:
+    Allocator<Mix_Chunk *>  m_mixchunk_allocator;
+    Allocator<Sound>        m_sound_allocator;
+    Allocator<Emitter>      m_emitter_allocator;
+    Transform *             m_listener_transform;
+    std::stack<int>         m_audio_channels;
 
-//     void        update();
 
-//     int         loadWav( std::string );
+public:
+                AudioEngine();
+
+    void        update();
+
+    int         loadWav( std::string );
     
-//     int         createEmitter();
-//     int         createEmitter( int mix_chunk_id, idk::Transform & );
+    int         createEmitter();
+    int         createEmitter( int mix_chunk_id, idk::Transform & );
 
-//     void        listenerPosition( idk::Transform * );
+    void        listenerPosition( idk::Transform * );
 
-//     void        playSound( int emitter_id );
-//     void        stopSound( int emitter_id );
+    void        playSound( int emitter_id );
+    void        stopSound( int emitter_id );
 
-// };
+};
 
 

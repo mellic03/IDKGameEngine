@@ -2,12 +2,13 @@
 
 #include <libidk/IDKgl.hpp>
 #include <libidk/IDKgl/idk_glDrawCommand.hpp>
-#include <idk_buffer.hpp>
+#include <libidk/IDKcontainers/idk_buffer.hpp>
 
 #include "idk_vertex.hpp"
 #include "idk_OBB.hpp"
 
 #include <vector>
+#include <memory>
 
 
 namespace idk
@@ -15,6 +16,15 @@ namespace idk
     struct Material;
     struct Mesh;
     struct Model;
+
+    // Model types
+    // -----------------------------------------------------------------------------------------
+    struct Model_Regular;
+    struct Model_Animated;
+    struct Model_Terrain;
+    struct Model_Chunked;
+    // -----------------------------------------------------------------------------------------
+
 
     void loadChunked( idk::Model &model, const std::vector<glm::vec4> &positions,
                       const std::vector<idk::OBB> &OBBs,
@@ -27,10 +37,11 @@ namespace idk
 
     enum ModelRenderFlag: uint32_t
     {
-        NONE      = 0 << 0,
-        ANIMATED  = 1 << 0,
-        INSTANCED = 1 << 1,
-        CHUNKED   = 1 << 2
+        NONE         = 0 << 0,
+        ANIMATED     = 1 << 0,
+        INSTANCED    = 1 << 1,
+        CHUNKED      = 1 << 2,
+        HEIGHTMAPPED = 1 << 3
     };
 };
 
@@ -61,6 +72,37 @@ struct idk::Mesh
 };
 
 
+
+struct idk::Model_Regular
+{
+    std::vector<idk::Mesh> meshes;
+
+};
+
+
+struct idk::Model_Animated
+{
+    std::vector<idk::AnimatedVertex> vertices;
+
+};
+
+/** Terrain model types have only one mesh -the subdivided plane.
+ *  Only one heightmap texture is used, referenced by heightmap_id.
+ *  There can be up to four materials for texture splatting/blending 
+*/
+struct idk::Model_Terrain
+{
+    std::unique_ptr<uint8_t[]> heightmap_data;
+
+    int     heightmap_id = -1;
+    float   height_scale = 25.0f;
+    float   world_scale  = 50.0f;
+
+    size_t  num_materials = 0;
+    int     material_ids[4];
+};
+
+
 struct idk::Model
 {
     uint32_t render_flags = ModelRenderFlag::NONE;
@@ -71,16 +113,30 @@ struct idk::Model
 
     idk::OBB m_OBB;
 
+    // Model_Regular
+    // ---------------------------------------------------
+    int regular_id = -1;
+    // ---------------------------------------------------
+
+    // Model_Animated
+    // ---------------------------------------------------
+    int animated_id = -1;
+    // ---------------------------------------------------
+
+    // Model_Terrain
+    // ---------------------------------------------------
+    int terrain_id = -1;
+    // ---------------------------------------------------
+
     // Animation
     // ---------------------------------------------------
-    int  animator_id = -1;
+    int animator_id = -1;
     // ---------------------------------------------------
 
     // Instancing
     // ---------------------------------------------------
     glInstancedTransforms     m_instancedata;
     // ---------------------------------------------------
-
 
     // Chunking
     // ---------------------------------------------------

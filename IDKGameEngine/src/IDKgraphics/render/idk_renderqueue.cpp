@@ -1,12 +1,26 @@
 #include "idk_renderqueue.hpp"
 
 
-idk::RenderQueue::RenderQueue( const std::string &name, const RenderQueueConfig &config )
-: m_name(name), m_config(config), m_queue(NUM_CASCADES)
+
+idk::RenderQueue::RenderQueue( const std::string &name )
+: m_drawmethod(drawmethods::dummy), m_name(name), m_queue(NUM_CASCADES)
 {
 
 };
 
+
+idk::RenderQueue::RenderQueue( const idk_drawmethod &drawmethod, const std::string &name )
+: m_name(name), m_drawmethod(drawmethod), m_queue(NUM_CASCADES)
+{
+
+};
+
+idk::RenderQueue::RenderQueue( const idk_drawmethod &drawmethod, const std::string &name,
+                               const RenderQueueConfig &config )
+: m_name(name), m_drawmethod(drawmethod), m_config(config), m_queue(NUM_CASCADES)
+{
+
+};
 
 
 void
@@ -72,6 +86,13 @@ idk::RenderQueue::clear()
 }
 
 
+void
+idk::RenderQueue::drawMethod( glShader &program, int model_id, const glm::mat4 &transform, ModelSystem &MS )
+{
+    m_drawmethod(program, model_id, transform, MS);
+}
+
+
 
 
 idk::RenderQueue::iterator::iterator( RenderQueue *rq )
@@ -119,5 +140,6 @@ idk::RenderQueue::iterator::increment( iterator &it )
         }
     }
 }
+
 
 

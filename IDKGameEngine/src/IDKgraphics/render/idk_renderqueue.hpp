@@ -1,8 +1,15 @@
 #pragma once
 
 #include <libidk/IDKcore/libidk.hpp>
+#include <libidk/IDKgl/idk_glShader.hpp>
+
+#include "../idk_model_manager.hpp"
 #include "../model/idk_OBB.hpp"
+#include "idk_drawmethods.hpp"
+
+
 #include <tuple>
+#include <functional>
 
 
 namespace idk { struct RenderQueueConfig; class RenderQueue; };
@@ -14,25 +21,37 @@ struct idk::RenderQueueConfig
 };
 
 
+/*
+    Render order:
+        1. per shader
+        2. per model type
+
+*/
+
+using idk_drawmethod = std::function<void(idk::glShader &, int, const glm::mat4 &, idk::ModelSystem &)>;
+
+
 class idk::RenderQueue
 {
 private:
     static const size_t NUM_CASCADES = 10;
 
-    std::string         m_name;
-    float               m_cam_near;
-    float               m_cam_far;
-    glm::mat4           m_cam_view;
-    glm::mat4           m_cam_proj;
-    RenderQueueConfig   m_config;
+    std::string             m_name;
+    float                   m_cam_near;
+    float                   m_cam_far;
+    glm::mat4               m_cam_view;
+    glm::mat4               m_cam_proj;
+    RenderQueueConfig       m_config;
+    idk_drawmethod          m_drawmethod;
 
     using subqueue_t = std::vector<std::tuple<int, int, glm::mat4>>;
     std::vector<subqueue_t> m_queue;
 
 
 public:
-            RenderQueue(): m_name("None"), m_queue(NUM_CASCADES) {  };
-            RenderQueue( const std::string &name, const RenderQueueConfig & );
+            RenderQueue( const std::string &name );
+            RenderQueue( const idk_drawmethod &, const std::string & );
+            RenderQueue( const idk_drawmethod &, const std::string &, const RenderQueueConfig & );
 
     constexpr const std::string         &name()   const { return m_name;   };
     constexpr const RenderQueueConfig   &config() const { return m_config; };
@@ -41,6 +60,8 @@ public:
     void    push( int model_id, int animator_id, const glm::mat4 &transform );
     void    push( int model_id, const glm::mat4 &transform );
     void    clear();
+
+    void    drawMethod( glShader &, int, const glm::mat4 &, ModelSystem & );
 
 
     struct iterator

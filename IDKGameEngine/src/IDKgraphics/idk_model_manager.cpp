@@ -102,6 +102,31 @@ idk::ModelSystem::init()
         .genmipmap      = GL_TRUE
     };
 
+
+    for (size_t i=0; i<=MAX_PLANE_LEVEL; i++)
+    {
+        m_planes[i] = loadModel("./IDKGE/resources/planes/", "plane-" + std::to_string(i));
+    }
+}
+
+
+bool
+idk::ModelSystem::_texture_loaded( const std::string &filepath )
+{
+    return m_texture_IDs[filepath].set == true;
+}
+
+
+int
+idk::ModelSystem::_texture_ID( const std::string &filepath )
+{
+    return m_texture_IDs[filepath].texture_ID == true;
+}
+
+idk::glTexture &
+idk::ModelSystem::_get_texture( GLuint gl_id )
+{
+    return m_textures.get(m_rtexture_IDs[gl_id]);
 }
 
 
@@ -121,16 +146,80 @@ idk::ModelSystem::new_material()
 }
 
 
-void
-idk::ModelSystem::loadTexture( std::string filepath, const glTextureConfig &config )
+GLuint
+idk::ModelSystem::loadTexture( const std::string &filepath, const glTextureConfig &config )
 {
-    GLuint tex_id = gltools::loadTexture(filepath, config);
+    int texture_id = m_textures.create(gltools::loadTexture(filepath, config));
+    GLuint gl_id   = m_textures.get(texture_id).ID();
 
-    // Textures are referenced using their relative path
+    // Textures are referenced using their file path
     std::string relpath = std::filesystem::path(filepath).relative_path();
 
     m_texture_IDs[relpath].set = true;
-    m_texture_IDs[relpath].texture_ID = tex_id;
+    m_texture_IDs[relpath].texture_ID = texture_id;
+    m_rtexture_IDs[gl_id] = texture_id;
+
+    return gl_id;
+}
+
+
+GLuint
+idk::ModelSystem::getTexture( const std::string &filepath, const glTextureConfig &config )
+{
+    if (_texture_loaded(filepath) == false)
+    {
+        loadTexture(filepath, config);
+    }
+
+    return _texture_ID(filepath);
+}
+
+
+
+GLuint
+idk::ModelSystem::getTexture( const std::string &filepath )
+{
+    return _texture_ID(filepath);
+}
+
+
+int
+idk::ModelSystem::loadMaterial( const std::string &root,
+                                const std::string &albedo,
+                                const std::string &normal,
+                                const std::string &ao_rough_metal )
+{
+    int material_id = m_materials.create();
+    idk::Material &material = getMaterial(material_id);
+
+    material.albedo_id = m_default_albedo;
+    material.normal_id = m_default_normal;
+    material.arm_id    = m_default_ao_r_m;
+
+    if (albedo != "")
+        material.albedo_id = loadTexture(root+albedo, m_default_albedo_config);
+
+    if (normal != "")
+        material.normal_id = loadTexture(root+normal, m_default_lightmap_config);
+
+    if (ao_rough_metal != "")
+        material.arm_id = loadTexture(root+ao_rough_metal, m_default_lightmap_config);
+
+    return material_id;
+}
+
+
+int
+idk::ModelSystem::createMaterial( int albedo, int normal, int ao_r_m )
+{
+    int material_id = m_materials.create();
+    idk::Material &material = getMaterial(material_id);
+
+    material.albedo_id = (albedo == -1) ? m_default_albedo : albedo;
+    material.normal_id = (normal == -1) ? m_default_normal : normal;
+    material.arm_id    = (ao_r_m == -1) ? m_default_ao_r_m : ao_r_m;
+
+    return material_id;
 }
 
 
@@ -309,13 +398,13 @@ idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
         auto &textures = header.m_texture_paths[i];
 
         if (bitmask & ALBEDO_BIT)
-            material.albedo_id = get_texture_id(textures[ALBEDO_IDX], m_default_albedo_config);
+            material.albedo_id = loadTexture(textures[ALBEDO_IDX], m_default_albedo_config);
 
         if (bitmask & NORMAL_BIT)
-            material.normal_id = get_texture_id(textures[NORMAL_IDX], m_default_lightmap_config);
+            material.normal_id = loadTexture(textures[NORMAL_IDX], m_default_lightmap_config);
 
         if (bitmask & RM_BIT)
-            material.arm_id = get_texture_id(textures[RM_IDX], m_default_lightmap_config);
+            material.arm_id = loadTexture(textures[RM_IDX], m_default_lightmap_config);
     }
 
     model_to_gpu(model);
@@ -324,15 +413,61 @@ idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
 }
 
 
-GLuint
-idk::ModelSystem::get_texture_id( const std::string &key, const glTextureConfig &config )
-{
-    if (m_texture_IDs[key].set == false)
-    {
-        loadTexture(key, config);
-    }
 
-    return m_texture_IDs[key].texture_ID;
+int
+idk::ModelSystem::loadTerrainHeightmap( const std::string &filepath )
+{
+    int model_id = m_models.create(m_models.get(m_planes[7]));
+    idk::Model &model = getModel(model_id);
+
+    model.render_flags |= ModelRenderFlag::HEIGHTMAPPED;
+    model.terrain_id = m_terrain_models.create();
+
+    idk::Model_Terrain &terrain = m_terrain_models.get(model.terrain_id);
+
+    idk::glTextureConfig config = {
+        .internalformat = GL_RGBA16,
+        .format         = GL_RGBA,
+        .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .wrap_s         = GL_REPEAT,
+        .wrap_t         = GL_REPEAT,
+        .datatype       = GL_UNSIGNED_BYTE,
+        .anisotropic    = GL_FALSE,
+        .genmipmap      = GL_TRUE
+    };
+
+    terrain.heightmap_id = loadTexture(filepath, config);
+
+    return model_id;
+}
+
+
+void
+idk::ModelSystem::loadTerrainMaterials( int terrain_id, int a, int b )
+{
+    auto &model   = getModel(terrain_id);
+    auto &terrain = m_terrain_models.get(model.terrain_id);
+
+    terrain.num_materials = 2;
+    terrain.material_ids[0] = a;
+    terrain.material_ids[1] = b;
+}
+
+
+float
+idk::ModelSystem::queryTerrainHeight( int terrain_id, const glm::mat4 &transform,
+                                      float x, float z )
+{
+    auto &model   = getModel(terrain_id);
+    auto &terrain = m_terrain_models.get(model.terrain_id);
+    auto &texture = this->_get_texture(terrain.heightmap_id);
+
+    float u = (x / terrain.world_scale) * 0.5 + 0.5;
+    float v = (z / terrain.world_scale) * 0.5 + 0.5;
+
+    return terrain.height_scale * texture.bisample4f(u, v, 4).r;
+
 }
 
 

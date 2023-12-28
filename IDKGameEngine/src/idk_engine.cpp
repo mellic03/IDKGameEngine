@@ -4,17 +4,18 @@
 // idk::ThreadPool idk::Engine::threadpool = idk::ThreadPool(8);
 
 
-idk::Engine::Engine( std::string name, int w, int h, int res_divisor )
+idk::Engine::Engine( idk::RenderEngine *R, idk::AudioEngine *A )
 {
-    m_render_engine.init(name, w, h);
+    m_render_engine = R;
+    m_audio_engine  = A;
 
-    idk::Engine &engine = *this;
-    idk::RenderEngine &ren = m_render_engine;
-    idk::EventManager &eman = m_event_manager;
+    idk::Engine       &engine = *this;
+    idk::RenderEngine &ren    = _render_engine();
+    idk::EventManager &events = m_event_manager;
 
-    auto resize_lambda = [&ren, &eman]()
+    auto resize_lambda = [&ren, &events]()
     {
-        auto winsize = eman.windowSize();
+        auto winsize = events.windowSize();
         ren.resize(winsize.x, winsize.y);
     };
 
@@ -241,7 +242,7 @@ idk::Engine::beginFrame()
     m_event_manager.processMouseInput();
     m_event_manager.update();
 
-    m_render_engine.beginFrame();
+    _render_engine().beginFrame();
     this->_idk_modules_stage_A();
 }
 
@@ -249,9 +250,9 @@ idk::Engine::beginFrame()
 void
 idk::Engine::endFrame()
 {
-    m_render_engine.endFrame(deltaTime());
+    _render_engine().endFrame(deltaTime());
     _idk_modules_stage_B();
-    m_render_engine.swapWindow();
+    _render_engine().swapWindow();
     _idk_modules_stage_C();
 
     m_frame_end = SDL_GetPerformanceCounter();

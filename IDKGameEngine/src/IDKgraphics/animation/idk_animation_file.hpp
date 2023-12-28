@@ -2,7 +2,7 @@
 
 #include "idk_animation.hpp"
 
-#include <idk_buffer.hpp>
+#include <libidk/IDKcontainers/idk_buffer.hpp>
 #include <fstream>
 
 

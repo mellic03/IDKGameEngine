@@ -4,7 +4,7 @@
 #include "IDKaudio/IDKaudio.hpp"
 #include "IDKevents/IDKevents.hpp"
 
-#include <idk_allocator.hpp>
+#include <libidk/IDKcontainers/idk_allocator.hpp>
 #include "idk_componentsystem.hpp"
 
 #include "idk_threadpool.hpp"
@@ -21,8 +21,8 @@ private:
     float                                       m_frame_time  = 1.0f;
     bool                                        m_running     = true;
 
-    idk::RenderEngine                           m_render_engine;
-    // idk::AudioEngine                            m_audio_engine;
+    idk::RenderEngine *                         m_render_engine;
+    idk::AudioEngine *                          m_audio_engine;
     idk::EventManager                           m_event_manager;
 
     idk::Allocator<idk::Module *>               m_idk_modules;
@@ -46,11 +46,15 @@ private:
     void                                        idk_CS_onObjectDeletion( int obj_id );
     void                                        idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id );
 
+    idk::RenderEngine &                         _render_engine() { return *m_render_engine; };
+    idk::AudioEngine &                          _audio_engine()  { return *m_audio_engine;  };
+
 public:
                                                 // static idk::ThreadPool threadpool;
-                                                Engine( std::string name, int w, int h, int res_divisor );
+                                                Engine( idk::RenderEngine *R = nullptr,
+                                                        idk::AudioEngine  *A = nullptr );
 
-    idk::RenderEngine &                         rengine()   { return m_render_engine; };
+    idk::RenderEngine &                         rengine()   { return _render_engine();   };
     // idk::AudioEngine &                          aengine()   { return m_audio_engine;  };
     idk::EventManager &                         eventManager() { return m_event_manager; };
 

@@ -1,6 +1,6 @@
 // Used for up/down sampling
 
-#version 440 core
+#version 460 core
 
 layout (location = 0) out vec4 fsout_frag_color;
 

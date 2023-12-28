@@ -1,51 +1,8 @@
 #include "idk_renderengine.hpp"
+#include "idk_initflags.hpp"
 
 
 static float delta_time = 1.0f;
-
-
-void
-idk::RenderEngine::init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags )
-{
-    if (SDL_Init(SDL_INIT_VIDEO) < 0)
-    {
-        std::cout << "Error creating window\n";
-        exit(1);
-    }
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE,  24);
-    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
-
-    Uint32 sdl_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-    if (flags & InitFlag::INIT_HEADLESS) sdl_flags |= SDL_WINDOW_HIDDEN;
-
-    m_SDL_window = SDL_CreateWindow(
-        windowname.c_str(),
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        w,
-        h,
-        sdl_flags
-    );
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
-
-
-    m_SDL_gl_context = SDL_GL_CreateContext(m_SDL_window);
-    SDL_GL_MakeCurrent(m_SDL_window, m_SDL_gl_context);
-    SDL_GL_SetSwapInterval(0); // vsync
-    SDL_SetRelativeMouseMode(SDL_FALSE);
-
-    if (glewInit() != GLEW_OK)
-    {
-        std::cout << "Error initializing glew\n";
-        exit(1);
-    }
-
-    gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
-}
 
 
 void
@@ -84,13 +41,15 @@ idk::RenderEngine::compileShaders()
 {
     createProgram("background",     "IDKGE/shaders/deferred/", "background.vs", "background.fs");
 
-    createProgram("geometrypass",           "IDKGE/shaders/deferred/", "geometrypass.vs", "geometrypass.fs");
-    createProgram("geometrypass-instanced", "IDKGE/shaders/deferred/", "geometrypass-instanced.vs", "geometrypass-instanced.fs");
-    createProgram("geometrypass-anim",      "IDKGE/shaders/deferred/", "geometrypass-anim.vs", "geometrypass.fs");
+    createProgram("gpass",           "IDKGE/shaders/deferred/geometry-pass/", "default.vs",   "default.fs");
+    createProgram("gpass-anim",      "IDKGE/shaders/deferred/geometry-pass/", "anim.vs",      "default.fs");
+    createProgram("gpass-instanced", "IDKGE/shaders/deferred/geometry-pass/", "instanced.vs", "instanced.fs");
+    createProgram("gpass-terrain",   "IDKGE/shaders/deferred/geometry-pass/", "terrain.vs",   "terrain.fs");
 
-    createProgram("geometry_light", "IDKGE/shaders/deferred/", "geometrypass.vs", "lightsource.fs");
-    createProgram("lighting_ibl",   "IDKGE/shaders/", "screenquad.vs", "deferred/lightingpass_pbr.fs");
+    createProgram("lpass", "IDKGE/shaders/", "screenquad.vs", "deferred/lighting-pass/pbr.fs");
+
     createProgram("dirvolumetrics", "IDKGE/shaders/", "screenquad.vs", "deferred/volumetric_dirlight.fs");
+
     createProgram("bloom",          "IDKGE/shaders/", "screenquad.vs", "postprocess/bloom.fs");
     createProgram("downsample",     "IDKGE/shaders/", "screenquad.vs", "postprocess/downsample.fs");
     createProgram("upsample",       "IDKGE/shaders/", "screenquad.vs", "postprocess/upsample.fs");
@@ -202,29 +161,46 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
         .genmipmap      = GL_FALSE
     };
 
-    BRDF_LUT = gltools::loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", config);
+    BRDF_LUT = modelSystem().loadTexture("IDKGE/resources/IBL_BRDF_LUT.png", config);
 
     m_active_camera_id = createCamera();
 
     loadSkybox("IDKGE/resources/skybox/");
+
+
+    // Default render queues
+    // -----------------------------------------------------------------------------------------
+    idk::RenderQueueConfig RQ_config = {
+        .cull_face = GL_FALSE
+    };
+
+    m_terrain_RQ = _createRenderQueue("gpass-terrain", drawmethods::draw_heightmapped);
+    // -----------------------------------------------------------------------------------------
+
 }
 
 
-void
-idk::RenderEngine::init( std::string name, int w, int h, uint32_t flags )
+
+idk::RenderEngine::RenderEngine( const std::string &name, int w, int h, uint8_t gl_version,
+                                 uint32_t flags )
+:
+  m_initializer               (name.c_str(), w, h, gl_version, flags),
+  m_render_queue              (drawmethods::draw_textured, "m_render_queue"),
+  m_anim_render_queue         ("m_anim_render_queue"),
+  m_shadow_render_queue       (drawmethods::draw_untextured, "m_shadow_render_queue"),
+  m_shadow_anim_render_queue  ("m_shadow_anim_render_queue")
+
 {
     m_resolution = glm::ivec2(w, h);
+    gl::enable(GL_DEPTH_TEST, GL_CULL_FACE);
 
-    init_SDL_OpenGL(name, w, h, flags);
-    current_skybox = 0;
-
-    if (flags == InitFlag::NONE)
+    if (flags == idk::InitFlag::NONE)
     {
         init_all(name, w, h);
         return;
     }
 
-    if (flags & InitFlag::INIT_HEADLESS)
+    if (flags & idk::InitFlag::INIT_HEADLESS)
     {
         return;
     }
@@ -362,17 +338,41 @@ idk::RenderEngine::createCamera()
 
 
 int
-idk::RenderEngine::createRenderQueue( const std::string &program_name, const RenderQueueConfig &config )
+idk::RenderEngine::_createRenderQueue( const std::string &program_name,
+                                       const idk_drawmethod &drawmethod )
 {
-    int id = m_render_queues.create(idk::RenderQueue(program_name, config));
+    int id = m_private_RQs.create(
+        idk::RenderQueue(drawmethod, program_name)
+    );
+
     return id;
+}
+
+
+int
+idk::RenderEngine::createRenderQueue( const std::string &program_name,
+                                      const RenderQueueConfig &config,
+                                      const idk_drawmethod &drawmethod )
+{
+    int id = m_public_RQs.create(
+        idk::RenderQueue(drawmethod, program_name, config)
+    );
+
+    return id;
+}
+
+
+idk::RenderQueue &
+idk::RenderEngine::_getRenderQueue( int id )
+{
+    return m_private_RQs.get(id);
 }
 
 
 idk::RenderQueue &
 idk::RenderEngine::getRenderQueue( int id )
 {
-    return m_render_queues.get(id);
+    return m_public_RQs.get(id);
 }
 
 
@@ -403,7 +403,22 @@ idk::RenderEngine::drawModelRQ( int rq, int model, int animator, const glm::mat4
 void
 idk::RenderEngine::drawModel( int model_id, const glm::mat4 &model_mat )
 {
-    m_render_queue.push(model_id, model_mat);
+    idk::Model &model = modelSystem().getModel(model_id);
+
+    if (model.render_flags & ModelRenderFlag::ANIMATED)
+    {
+        drawModel(model_id, model.animator_id, model_mat);
+    }
+
+    else if (model.render_flags & ModelRenderFlag::HEIGHTMAPPED)
+    {
+        _getRenderQueue(m_terrain_RQ).push(model_id, model_mat);
+    }
+
+    else
+    {
+        m_render_queue.push(model_id, model_mat);
+    }
 }
 
 
@@ -483,8 +498,9 @@ idk::RenderEngine::shadowpass_dirlights()
         {
             drawmethods::draw_untextured(
                 program,
-                modelSystem().getModel(model_id),
-                model_mat
+                model_id,
+                model_mat,
+                modelSystem()
             );
         }
     }
@@ -607,9 +623,15 @@ idk::RenderEngine::beginFrame()
     glm::mat4 view = camera.view();
     glm::mat4 proj = camera.projection();
 
-    for (idk::RenderQueue &rq: m_render_queues)
+
+    for (idk::RenderQueue &RQ: m_private_RQs)
     {
-        rq.setViewParams(near, far, proj, view);
+        RQ.setViewParams(near, far, proj, view);
+    }
+
+    for (idk::RenderQueue &RQ: m_public_RQs)
+    {
+        RQ.setViewParams(near, far, proj, view);
     }
 
     m_render_queue.setViewParams(near, far, proj, view);
@@ -629,9 +651,9 @@ idk::RenderEngine::endFrame( float dt )
     //     static std::string vert_source = "";
     //     static std::string frag_source = "";
 
-    //     glShader &lighting_ibl = getProgram("lighting_ibl");
+    //     glShader &lpass = getProgram("lpass");
     //     m_lightsystem.genShaderString(vert_source, frag_source);
-    //     lighting_ibl.loadStringC(vert_source, frag_source);
+    //     lpass.loadStringC(vert_source, frag_source);
     // }
 
     gl::cullFace(GL_FRONT);
@@ -660,7 +682,7 @@ idk::RenderEngine::endFrame( float dt )
 void
 idk::RenderEngine::swapWindow()
 {
-    SDL_GL_SwapWindow(m_SDL_window);
+    SDL_GL_SwapWindow(this->SDLWindow());
 }
 
 

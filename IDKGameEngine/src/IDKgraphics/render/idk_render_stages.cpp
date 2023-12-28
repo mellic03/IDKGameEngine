@@ -1,5 +1,5 @@
 #include "idk_renderengine.hpp"
-
+#include "idk_drawmethods.hpp"
 
 
 void idk::RenderEngine::RenderStage_deferred_geometry( idk::Camera &camera, float dtime )
@@ -7,28 +7,55 @@ void idk::RenderEngine::RenderStage_deferred_geometry( idk::Camera &camera, floa
     m_deferred_geom_buffer.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     m_deferred_geom_buffer.bind();
 
+
+    // Heightmapped terrain
+    // -----------------------------------------------------------------------------------------
+    {
+        idk::RenderQueue &RQ = _getRenderQueue(m_terrain_RQ);
+        glShader &program = getProgram(RQ.name());
+        program.bind();
+
+        for (auto &[model_id, dummy, model_mat]: RQ)
+        {
+            RQ.drawMethod(
+                program,
+                model_id,
+                model_mat,
+                modelSystem()
+            );
+        }
+
+        RQ.clear();
+    }
+    // -----------------------------------------------------------------------------------------
+
+
     // Non animated models
     // -----------------------------------------------------------------------------------------
-    glShader &program = getProgram("geometrypass");
-    program.bind();
-
-    for (auto &[model_id, dummy, model_mat]: m_render_queue)
     {
-        drawmethods::draw_textured(
-            program,
-            modelSystem().getModel(model_id),
-            model_mat,
-            modelSystem().getMaterials()
-        );
-    }
+        // idk::RenderQueue &rq = this->_getRenderQueue( )
 
-    m_render_queue.clear();
+        glShader &program = getProgram("gpass");
+        program.bind();
+
+        for (auto &[model_id, dummy, model_mat]: m_render_queue)
+        {
+            m_render_queue.drawMethod(
+                program,
+                model_id,
+                model_mat,
+                modelSystem()
+            );
+        }
+
+        m_render_queue.clear();
+    }
     // -----------------------------------------------------------------------------------------
 
 
     // Animated models
     // -----------------------------------------------------------------------------------------
-    glShader &program_anim = getProgram("geometrypass-anim");
+    glShader &program_anim = getProgram("gpass-anim");
     program_anim.bind();
 
     for (auto &[model_id, animator_id, model_mat]: m_anim_render_queue)
@@ -47,49 +74,34 @@ void idk::RenderEngine::RenderStage_deferred_geometry( idk::Camera &camera, floa
     m_anim_render_queue.clear();
     // -----------------------------------------------------------------------------------------
 
-    for (idk::RenderQueue &rq: m_render_queues)
+
+    // User-facing render queues
+    // -----------------------------------------------------------------------------------------
+    for (idk::RenderQueue &rq: m_public_RQs)
     {
         const auto &config = rq.config();
-        if (config.cull_face == false)
-        {
-            gl::disable(GL_CULL_FACE);
-        }
+
+        bool nocull = config.cull_face == false;
+        if (nocull) gl::disable(GL_CULL_FACE);
 
         glShader &rq_program = getProgram(rq.name());
         rq_program.bind();
 
         for (auto &[model_id, animator_id, transform]: rq)
         {
-            idk::Model &model = modelSystem().getModel(model_id);
-
-            if (model.render_flags & ModelRenderFlag::CHUNKED)
-            {
-                drawmethods::draw_instanced(
-                    rq_program,
-                    model_id,
-                    transform,
-                    modelSystem()
-                );
-            }
-
-            else
-            {
-                drawmethods::draw_textured(
-                    rq_program,
-                    modelSystem().getModel(model_id),
-                    transform,
-                    modelSystem().getMaterials()
-                );
-            }
+            rq.drawMethod(
+                rq_program,
+                model_id,
+                transform,
+                modelSystem()
+            );
         }
 
-        if (config.cull_face == false)
-        {
-            gl::enable(GL_CULL_FACE);
-        }
+        if (nocull) gl::enable(GL_CULL_FACE);
 
         rq.clear();
     }
+    // -----------------------------------------------------------------------------------------
 }
 
 
@@ -121,7 +133,7 @@ void idk::RenderEngine::RenderStage_deferred_lighting( idk::Camera &camera, floa
 
     // Lighting pass
     // -----------------------------------------------------------------------------------------
-    glShader &lighting = getProgram("lighting_ibl");
+    glShader &lighting = getProgram("lpass");
     lighting.bind();
     lighting.set_sampler2D("un_BRDF_LUT", BRDF_LUT);
 
@@ -173,12 +185,9 @@ idk::RenderEngine::PostProcess_bloom()
     //     tex2tex(upsample, m_scratchbufs1[i], m_scratchbufs2[i], m_scratchbufs2[i-1]);
     // }
 
-
-
     additive.bind();
     additive.set_float("intensity", getCamera().m_bloom_gamma.x);
     tex2tex(additive, m_scratchbufs1[0], m_scratchbufs2[0], m_mainbuffer_0);
-
 
     glShader::unbind();
 }
