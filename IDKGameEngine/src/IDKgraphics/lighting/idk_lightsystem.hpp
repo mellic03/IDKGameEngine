@@ -1,17 +1,18 @@
 #pragma once
 
-#include <libidk/IDKgl.hpp>
+#include <libidk/GL/common.hpp>
 #include "idk_lightsource.hpp"
 #include "idk_shadergen.hpp"
 #include "idk_shadowcascade.hpp"
 
-#include <libidk/IDKcontainers/idk_allocator.hpp>
+#include <libidk/idk_allocator.hpp>
+#include <libidk/idk_export.hpp>
 
 
 namespace idk { class LightSystem; };
 
 
-class idk::LightSystem
+class IDK_VISIBLE idk::LightSystem
 {
 private:
 

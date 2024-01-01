@@ -4,8 +4,8 @@
 
 #include <unordered_map>
 
-#include <libidk/IDKgl.hpp>
-#include <libidk/IDKcontainers/idk_allocator.hpp>
+#include <libidk/GL/common.hpp>
+#include <libidk/idk_allocator.hpp>
 
 #include "idk_renderqueue.hpp"
 
@@ -19,11 +19,13 @@
 
 
 namespace idk { class RenderEngine; };
+namespace idk { class EngineAPI;    };
 
 
-class idk::RenderEngine
+class IDK_VISIBLE idk::RenderEngine
 {
 private:
+    friend class EngineAPI;
 
     internal::SDL_GLEW_Initializer      m_initializer;
     glm::ivec2                          m_resolution;
@@ -81,7 +83,7 @@ private:
     // Initialization
     // -----------------------------------------------------------------------------------------
     /***/
-    void                                init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags );
+    // void                                init_SDL_OpenGL( std::string windowname, size_t w, size_t h, uint32_t flags );
     void                                init_screenquad();
     void                                init_framebuffers( int width, int height );
     void                                init_all( std::string name, int w, int h );
@@ -116,13 +118,26 @@ private:
 
 
 
-    /** Run a shader on the output textures of "in" and render the result to the default frame buffer */
-    static void    f_fbfb  ( glShader &, glFramebuffer &in );
-    static void    tex2tex ( glShader &, glFramebuffer &a,  glFramebuffer &b, glFramebuffer &out );
+    /** Run a shader on the output textures of "in" and render the result to the default frame buffer.s
+    */
+    static void    f_fbfb( glShader &, glFramebuffer &in );
+
+    static void    tex2tex( glShader &, glFramebuffer &a,
+                            glFramebuffer &b, glFramebuffer &out );
     // ------------------------------------------------------------------------------------
 
 
+    RenderEngine( const std::string &name, int w, int h,
+                  int gl_major, int gl_minor,
+                  uint32_t flags=0 );
+
+
 public:
+
+    RenderEngine( const idk::RenderEngine & ) = delete;
+
+
+
     static void    tex2tex ( glShader &, glFramebuffer &in, glFramebuffer &out );
 
     const static uint32_t               ARMATURE_MAX_BONES = 70;
@@ -135,9 +150,6 @@ public:
     int                                     current_skybox = 0;
     GLuint                                  BRDF_LUT;
 
-
-                                        RenderEngine( const std::string &name, int w, int h,
-                                                      uint8_t gl_version, uint32_t flags=0 );
 
     void                                compileShaders();
 

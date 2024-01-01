@@ -1,16 +1,15 @@
 #include "idk_engine.hpp"
+#include <libidk/idk_export.hpp>
+
+#include "IDKgraphics/IDKgraphics.hpp"
 
 
-// idk::ThreadPool idk::Engine::threadpool = idk::ThreadPool(8);
 
-
-idk::Engine::Engine( idk::RenderEngine *R, idk::AudioEngine *A )
+idk::Engine::Engine( idk::RenderEngine &renderer )
+: m_renderer(renderer)
 {
-    m_render_engine = R;
-    m_audio_engine  = A;
-
     idk::Engine       &engine = *this;
-    idk::RenderEngine &ren    = _render_engine();
+    idk::RenderEngine &ren    = m_renderer;
     idk::EventManager &events = m_event_manager;
 
     auto resize_lambda = [&ren, &events]()
@@ -29,6 +28,8 @@ idk::Engine::Engine( idk::RenderEngine *R, idk::AudioEngine *A )
 }
 
 
+
+IDK_VISIBLE
 void
 idk::Engine::_idk_modules_init()
 {
@@ -140,7 +141,7 @@ idk::Engine::idk_CS_onObjectDeletion( int obj_id )
 {
     for (auto &CS: m_componentsystems)
     {
-        if (hasComponent(obj_id, CS->id()))
+        if (hasComponent(obj_id, CS->ID()))
         {
             CS->onObjectDeletion(obj_id, *this);
         }
@@ -153,7 +154,7 @@ idk::Engine::idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id )
 {
     for (auto &CS: m_componentsystems)
     {
-        if (hasComponent(src_obj_id, CS->id()))
+        if (hasComponent(src_obj_id, CS->ID()))
         {
             CS->onObjectCopy(src_obj_id, dest_obj_id, *this);
         }
@@ -233,8 +234,9 @@ idk::Engine::hasComponent( int obj_id, int component_id )
 }
 
 
+IDK_VISIBLE
 void
-idk::Engine::beginFrame()
+idk::Engine::_begin_frame( idk::RenderEngine &ren )
 {
     m_frame_start = SDL_GetPerformanceCounter();
    
@@ -242,17 +244,18 @@ idk::Engine::beginFrame()
     m_event_manager.processMouseInput();
     m_event_manager.update();
 
-    _render_engine().beginFrame();
+    ren.beginFrame();
     this->_idk_modules_stage_A();
 }
 
 
+IDK_VISIBLE
 void
-idk::Engine::endFrame()
+idk::Engine::_end_frame( idk::RenderEngine &ren )
 {
-    _render_engine().endFrame(deltaTime());
+    ren.endFrame(deltaTime());
     _idk_modules_stage_B();
-    _render_engine().swapWindow();
+    ren.swapWindow();
     _idk_modules_stage_C();
 
     m_frame_end = SDL_GetPerformanceCounter();
@@ -264,7 +267,5 @@ void
 idk::Engine::shutdown()
 {
     m_running = false;
-
-    // idk::Engine::threadpool.stop();
 }
 

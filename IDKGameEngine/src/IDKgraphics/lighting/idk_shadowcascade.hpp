@@ -1,6 +1,7 @@
 #pragma once
 
-#include <libidk/IDKgl.hpp>
+#include <libidk/GL/common.hpp>
+#include <libidk/GL/idk_glFramebuffer.hpp>
 
 
 namespace idk { class glDepthCascade; };

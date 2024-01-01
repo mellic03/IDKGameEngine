@@ -1,12 +1,12 @@
 #pragma once
 
-#include "libidk/libidk.hpp"
+#include <libidk/idk_transform.hpp>
 #include <SDL2/SDL_mixer.h>
 
-#include <stack>
 
 
 namespace idk { class AudioEngine; };
+namespace idk::internal { class AudioEngineAPI; };
 
 class idk::AudioEngine
 {
@@ -14,39 +14,44 @@ public:
     struct Sound
     {
         Mix_Chunk *mc;
-        std::string name;
+        const char *name;
     };
 
     struct Emitter
     {
         int channel;
-        Mix_Chunk *mc;
-        idk::Transform *transform;
+        const Mix_Chunk *mc;
+        const glm::vec3 &position;
+
+        Emitter ( const Mix_Chunk *mix, const glm::vec3 &pos )
+        : channel(-1),  mc(mix),  position(pos) {  };
+    
+        Emitter( const Emitter &rhs )
+        : channel(rhs.channel),  mc(rhs.mc),  position(rhs.position) {  };
+
+        Emitter( const Emitter &&rhs )
+        : channel(rhs.channel),  mc(rhs.mc),  position(std::move(rhs.position)) {  };
+
     };
 
-
 private:
-    Allocator<Mix_Chunk *>  m_mixchunk_allocator;
-    Allocator<Sound>        m_sound_allocator;
-    Allocator<Emitter>      m_emitter_allocator;
-    Transform *             m_listener_transform;
-    std::stack<int>         m_audio_channels;
+    friend class idk::internal::AudioEngineAPI;
 
 
 public:
                 AudioEngine();
 
-    void        update();
+    // void        update();
 
-    int         loadWav( std::string );
+    // int         loadWav( const char * );
     
-    int         createEmitter();
-    int         createEmitter( int mix_chunk_id, idk::Transform & );
+    // int         createEmitter();
+    int         createEmitter( int mix_chunk_id, const glm::vec3 &position );
 
-    void        listenerPosition( idk::Transform * );
+    // void        listenerPosition( idk::Transform * );
 
-    void        playSound( int emitter_id );
-    void        stopSound( int emitter_id );
+    // void        playSound( int emitter_id );
+    // void        stopSound( int emitter_id );
 
 };
 

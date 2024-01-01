@@ -4,7 +4,6 @@
 
 static float delta_time = 1.0f;
 
-
 void
 idk::RenderEngine::init_screenquad()
 {
@@ -145,10 +144,26 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
     m_modelsystem.init();
     m_lightsystem.init();
 
-    m_UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
-    m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
-    m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
-    m_UBO_armature    = glUBO(6, ARMATURE_MAX_BONES * sizeof(glm::mat4));
+    // m_UBO_camera      = glUBO(2, 2*sizeof(glm::mat4) + 6*sizeof(glm::vec4));
+    // m_UBO_pointlights = glUBO(3, 16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight));
+    // m_UBO_dirlights   = glUBO(5, IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)));
+    // m_UBO_armature    = glUBO(6, ARMATURE_MAX_BONES * sizeof(glm::mat4));
+
+    m_UBO_camera.init();
+    m_UBO_pointlights.init();
+    m_UBO_dirlights.init();
+    m_UBO_armature.init();
+
+    m_UBO_camera.bind(2);
+    m_UBO_pointlights.bind(3);
+    m_UBO_dirlights.bind(5);
+    m_UBO_armature.bind(6);
+
+    m_UBO_camera.bufferData(2*sizeof(glm::mat4) + 6*sizeof(glm::vec4), nullptr);
+    m_UBO_pointlights.bufferData(16 + IDK_MAX_POINTLIGHTS*sizeof(Pointlight), nullptr);
+    m_UBO_dirlights.bufferData(IDK_MAX_DIRLIGHTS * (sizeof(Dirlight) + sizeof(glm::mat4)), nullptr);
+    m_UBO_armature.bufferData(ARMATURE_MAX_BONES * sizeof(glm::mat4), nullptr);
+
 
     glTextureConfig config = {
         .internalformat = GL_RGBA16,
@@ -181,10 +196,10 @@ idk::RenderEngine::init_all( std::string name, int w, int h )
 
 
 
-idk::RenderEngine::RenderEngine( const std::string &name, int w, int h, uint8_t gl_version,
-                                 uint32_t flags )
+idk::RenderEngine::RenderEngine( const std::string &name, int w, int h, int gl_major,
+                                 int gl_minor, uint32_t flags )
 :
-  m_initializer               (name.c_str(), w, h, gl_version, flags),
+  m_initializer               (name.c_str(), w, h, gl_major, gl_minor, flags),
   m_render_queue              (drawmethods::draw_textured, "m_render_queue"),
   m_anim_render_queue         ("m_anim_render_queue"),
   m_shadow_render_queue       (drawmethods::draw_untextured, "m_shadow_render_queue"),
@@ -536,6 +551,7 @@ void
 idk::RenderEngine::update_UBO_camera()
 {
     idk::Camera &camera = getCamera();
+
     m_UBO_camera.bind();
     m_UBO_camera.add<glm::mat4>(glm::value_ptr(camera.view()));
     m_UBO_camera.add<glm::mat4>(glm::value_ptr(camera.projection()));

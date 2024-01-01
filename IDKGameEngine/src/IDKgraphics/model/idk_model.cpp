@@ -3,12 +3,10 @@
 
 void
 idk::loadChunked( idk::Model &model, const std::vector<glm::vec4> &positions,
-                  const std::vector<idk::OBB> &OBBs,
                   const std::vector<std::vector<glm::mat4>> &transforms )
 {
     model.m_chunk_positions = positions;
     model.m_chunk_transforms.clear();
-    model.m_chunk_OBBs = OBBs;
 
 
     GLuint base_instance = 0;
@@ -76,25 +74,6 @@ void idk::genDrawCommands( idk::Model &model, const glm::mat4 &transform,
         {
             continue;
         }
-
-        // idk::OBB obb = OBB_to_NDC(cam_proj * cam_view, model.m_chunk_OBBs[i]);
-        // int num_visible = 0;
-
-        // for (int j=0; j<8; j++)
-        // {
-        //     glm::vec4 ndc = obb.corners[j];
-
-        //     if (fabs(ndc.x) <= 1.0f && fabs(ndc.y) <= 1.0f && fabs(ndc.z) <= 1.0f)
-        //     {
-        //         num_visible += 1;
-        //     }
-
-        // }
-
-        // if (num_visible == 0)
-        // {
-        //     continue;
-        // }
 
         auto &default_param = model.m_default_draw_params[i];
         model.m_draw_params.push_back(default_param);

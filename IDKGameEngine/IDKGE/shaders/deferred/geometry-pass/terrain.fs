@@ -1,7 +1,9 @@
 #version 460 core
 
-#define MAX_POINTLIGHTS 10
+#extension GL_ARB_bindless_texture: require
 
+
+#define MAX_POINTLIGHTS 10
 
 layout (location = 0) out vec4 fsout_albedo;
 layout (location = 1) out vec4 fsout_position_metallic;
@@ -26,7 +28,8 @@ struct Material
     float displacement_strength;
     float normal_strength;
 };
-uniform sampler2D un_heightmap;
+
+layout (bindless_sampler) uniform sampler2D un_heightmap;
 uniform Material  un_material_0;
 uniform Material  un_material_1;
 

@@ -107,11 +107,13 @@
         "hash_map": "cpp",
         "any": "cpp",
         "hash_set": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "filesystem": "cpp"
     },
     "cmake.configureOnOpen": true,
     "C_Cpp.default.includePath": [
         "${default}",
+        "${workspaceFolder}/external/include/",
         "${workspaceFolder}/IDKGameEngine/src/",
         "${workspaceFolder}/libidk/",
         "${workspaceFolder}/libidk/IDKcontainers/",

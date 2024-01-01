@@ -1,5 +1,6 @@
 #include "idk_animation_file.hpp"
 
+#include <iostream>
 #include <sstream>
 #include <array>
 

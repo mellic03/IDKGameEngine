@@ -33,8 +33,6 @@ void idk::RenderEngine::RenderStage_deferred_geometry( idk::Camera &camera, floa
     // Non animated models
     // -----------------------------------------------------------------------------------------
     {
-        // idk::RenderQueue &rq = this->_getRenderQueue( )
-
         glShader &program = getProgram("gpass");
         program.bind();
 

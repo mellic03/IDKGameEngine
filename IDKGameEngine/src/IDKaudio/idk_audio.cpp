@@ -1,26 +1,48 @@
-// #include "idk_audio.hpp"
+#include "idk_audio.hpp"
+
+#include <libidk/idk_allocator.hpp>
+#include <stack>
 
 
-// idk::AudioEngine::AudioEngine()
-// {
-//     constexpr int AUDIOENGINE_NUM_CHANNELS = 8;
-//     for (int i=0; i<AUDIOENGINE_NUM_CHANNELS; i++)
-//     {
-//         m_audio_channels.push(i);
-//     }
+class idk::internal::AudioEngineAPI
+{
+public:
+    static Allocator<Mix_Chunk *>                   mixchunks;
+    static Allocator<idk::AudioEngine::Sound>       sounds;
+    static Allocator<idk::AudioEngine::Emitter>     emitters;
+    static std::stack<int>                          channels;
+};
 
-//     int audio_rate = 44100;
-//     Uint16 audio_format = AUDIO_S16SYS;
-//     int audio_buffers = 4096;
+using namespace idk;
+using EngineAPI = idk::internal::AudioEngineAPI;
 
-//     #ifdef IDK_DEBUG
-//     if (Mix_OpenAudio(audio_rate, audio_format, AUDIOENGINE_NUM_CHANNELS, audio_buffers) != 0)
-//     {
-//         printf("Error initialising SDL2_audio\n");
-//         exit(1);
-//     }
-//     #endif
-// }
+Allocator<Mix_Chunk *>          EngineAPI::mixchunks = Allocator<Mix_Chunk *>();
+Allocator<AudioEngine::Sound>   EngineAPI::sounds    = Allocator<AudioEngine::Sound>();
+Allocator<AudioEngine::Emitter> EngineAPI::emitters  = Allocator<AudioEngine::Emitter>();
+std::stack<int>                 EngineAPI::channels  = std::stack<int>();
+
+
+
+idk::AudioEngine::AudioEngine()
+{
+    constexpr int AUDIOENGINE_NUM_CHANNELS = 8;
+    for (int i=0; i<AUDIOENGINE_NUM_CHANNELS; i++)
+    {
+        EngineAPI::channels.push(i);
+    }
+
+    int audio_rate = 44100;
+    Uint16 audio_format = AUDIO_S16SYS;
+    int audio_buffers = 4096;
+
+    #ifdef IDK_DEBUG
+    if (Mix_OpenAudio(audio_rate, audio_format, AUDIOENGINE_NUM_CHANNELS, audio_buffers) != 0)
+    {
+        printf("Error initialising SDL2_audio\n");
+        exit(1);
+    }
+    #endif
+}
 
 
 // int
@@ -36,23 +58,23 @@
 //     }
 //     #endif
 
-//     return m_mixchunk_allocator.create(mc);
+//     return mixchunks.create(mc);
 // }
 
 
 // int
 // idk::AudioEngine::createEmitter()
 // {
-//     return m_emitter_allocator.create();
+//     return EngineAPI::m_emitter_allocator.create();
 // }
 
 
-// int
-// idk::AudioEngine::createEmitter( int mix_chunk_id, idk::Transform &transform )
-// {
-//     Mix_Chunk *mc = m_mixchunk_allocator.get(mix_chunk_id);
-//     return m_emitter_allocator.create(  { -1, mc, &transform }  );
-// }
+int
+idk::AudioEngine::createEmitter( int mix_chunk_id, const glm::vec3 &position )
+{
+    Mix_Chunk *mc = EngineAPI::mixchunks.get(mix_chunk_id);
+    return EngineAPI::emitters.create(Emitter(mc, position));
+}
 
 
 // void
@@ -66,7 +88,7 @@
 // idk::AudioEngine::playSound( int emitter_id )
 // {
 //     AudioEngine::Emitter emitter = m_emitter_allocator.get(emitter_id);
-//     emitter.channel = m_audio_channels.pop();
+//     emitter.channel = channels.pop();
 //     Mix_PlayChannel(emitter.channel, emitter.mc, -1);
 // }
 
@@ -85,7 +107,7 @@
 //     #endif
 
 //     Mix_HaltChannel(emitter.channel);
-//     m_audio_channels.push(emitter.channel);
+//     channels.push(emitter.channel);
 //     emitter.channel = -1;
 // }
 

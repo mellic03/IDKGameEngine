@@ -1,12 +1,13 @@
 #pragma once
 
-#include <libidk/IDKcontainers/idk_transform.hpp>
-#include <libidk/IDKglm.hpp>
+#include <libidk/idk_transform.hpp>
+#include <libidk/idk_glm.hpp>
+#include <libidk/idk_export.hpp>
 
 namespace idk { class Camera; };
 
 
-class idk::Camera
+class IDK_VISIBLE idk::Camera
 {
 private:
     idk::Transform      m_transform;
@@ -61,6 +62,8 @@ public:
     void                setOffset(const glm::vec3 &v);
     void                addOffset(const glm::vec3 &v);
     const glm::vec3 &   getOffset() { return m_offset; };
+
+    
 
     void                translate(glm::vec3 v);
     void                elevation(float f);

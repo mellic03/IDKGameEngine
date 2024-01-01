@@ -1,13 +1,14 @@
 #include "idk_sdl_glew_init.hpp"
 #include "idk_initflags.hpp"
 
+#include <libidk/GL/common.hpp>
 #include <iostream>
 
 using namespace idk::internal;
 
 
 SDL_GLEW_Initializer::SDL_GLEW_Initializer( const char *windowname, int w, int h,
-                                            uint8_t gl_version, uint32_t flags )
+                                            int gl_major, int gl_minor, uint32_t flags )
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -32,8 +33,6 @@ SDL_GLEW_Initializer::SDL_GLEW_Initializer( const char *windowname, int w, int h
         sdl_flags
     );
 
-    int gl_major = idk::glVersionMajor(gl_version);
-    int gl_minor = idk::glVersionMinor(gl_version);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, gl_major);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, gl_minor);
@@ -51,8 +50,8 @@ SDL_GLEW_Initializer::SDL_GLEW_Initializer( const char *windowname, int w, int h
     }
 
     std::cout
-        << "Initialized OpenGL version "
+        << "OpenGL version "
         << gl_major << "." << gl_minor
-        << " context\n";
+        << "\n";
 
 }

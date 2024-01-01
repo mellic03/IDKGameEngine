@@ -45,10 +45,8 @@ idk::drawmethods::draw_textured( glShader &program, int model_id,
     {
         for (idk::Mesh &mesh: model.meshes)
         {
-            program.popTextureUnits();
-
-            if (mesh.material_id != -1)
-                bind_material(program, MS.getMaterials().get(mesh.material_id));
+            auto &material = MS.getMaterial(mesh.material_id);
+            program.set_int("un_material_id", material.bindless_idx);
 
             gl::drawElementsInstanced(
                 GL_TRIANGLES, mesh.num_indices, GL_UNSIGNED_INT,
@@ -63,10 +61,8 @@ idk::drawmethods::draw_textured( glShader &program, int model_id,
     {
         for (idk::Mesh &mesh: model.meshes)
         {
-            program.popTextureUnits();
-
-            if (mesh.material_id != -1)
-                bind_material(program, MS.getMaterials().get(mesh.material_id));
+            auto &material = MS.getMaterial(mesh.material_id);
+            program.set_int("un_material_id", material.bindless_idx);
 
             gl::drawElements(
                 GL_TRIANGLES, mesh.num_indices, GL_UNSIGNED_INT,
@@ -90,9 +86,7 @@ idk::drawmethods::draw_animated( float dtime, glUBO &UBO, int animator_id, int m
     animator.tick(dtime);
     animator.computeTransforms(transforms);
 
-    UBO.bind();
-    UBO.add(transforms.size()*sizeof(glm::mat4), transforms.data());
-    UBO.unbind();
+    UBO.bufferSubData(0, transforms.size()*sizeof(glm::mat4), transforms.data());
 
     Model &model = MS.getModel(model_id);
 
@@ -129,7 +123,8 @@ idk::drawmethods::draw_instanced( glShader &program, int model_id,
                                   const glm::mat4 &transform, ModelSystem &MS )
 {
     idk::Model &model = MS.getModel(model_id);
-    bind_material(program, MS.getMaterial(model.meshes[0].material_id));
+    auto &material = MS.getMaterial(model.meshes[0].material_id);
+    program.set_int("un_material_id", material.bindless_idx);
 
     gl::bindVertexArray(model.VAO);
     gl::bindBuffer(GL_DRAW_INDIRECT_BUFFER, model.m_IDB);
@@ -153,7 +148,9 @@ idk::drawmethods::draw_indirect( glShader &program, int model_id,
                                  const glm::mat4 &transform, ModelSystem &MS )
 {
     idk::Model &model = MS.getModel(model_id);
-    bind_material(program, MS.getMaterial(model.meshes[0].material_id));
+
+    auto &material = MS.getMaterial(model.meshes[0].material_id);
+    program.set_int("un_material_id", material.bindless_idx);
 
     gl::bindVertexArray(model.VAO);
     gl::bindBuffer(GL_DRAW_INDIRECT_BUFFER, model.m_IDB);
@@ -179,7 +176,9 @@ idk::drawmethods::draw_heightmapped( glShader &program, int model_id,
     idk::Model_Terrain &terrain = MS.getModel_Terrain(model.terrain_id);
 
     program.set_mat4("un_model", transform);
-    program.set_sampler2D("un_heightmap", terrain.heightmap_id);
+
+    program.set_Handleui64ARB("un_heightmap", terrain.heightmap_handle);
+
     program.set_float("un_height_scale", terrain.height_scale);
     program.set_float("un_world_scale",  terrain.world_scale);
 

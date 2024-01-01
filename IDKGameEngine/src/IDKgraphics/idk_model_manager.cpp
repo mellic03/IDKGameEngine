@@ -5,78 +5,84 @@
 #include <set>
 #include <filesystem>
 
-#include <libidk/IDKgl.hpp>
+#include <libidk/idk_gl.hpp>
 
 
 
-
-GLuint do_thing_r( float f )
+std::unique_ptr<uint8_t[]> do_thing_r( size_t size, uint8_t value )
 {
-    constexpr size_t size = 32;
-    float *data = new float[size*size];
+    auto data = std::unique_ptr<uint8_t[]>(new uint8_t[size*size]);
 
     for (size_t i=0; i<size*size; i++)
     {
-        data[i] = f;
+        data[i] = value;
     }
 
-    GLuint texture;
+    return data;
 
-    idk::gl::genTextures(1, &texture);
-    idk::gl::bindTexture(GL_TEXTURE_2D, texture);
+    // GLuint texture;
 
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // idk::gl::genTextures(1, &texture);
+    // idk::gl::bindTexture(GL_TEXTURE_2D, texture);
 
-    idk::gl::texImage2D(GL_TEXTURE_2D, 0, GL_RED, size, size, 0, GL_RED, GL_FLOAT, data);
-    idk::gl::generateMipmap(GL_TEXTURE_2D);
+    // idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    idk::gl::bindTexture(GL_TEXTURE_2D, 0);
+    // idk::gl::texImage2D(GL_TEXTURE_2D, 0, GL_RED, size, size, 0, GL_RED, GL_FLOAT, data);
+    // idk::gl::generateMipmap(GL_TEXTURE_2D);
 
-    delete[] data;
-    return texture;
+    // idk::gl::bindTexture(GL_TEXTURE_2D, 0);
 }
 
 
-GLuint do_thing_rgb( glm::vec3 v )
+std::unique_ptr<uint8_t[]> do_thing_rgba( size_t size, uint8_t r, uint8_t g, uint8_t b, uint8_t a )
 {
-    constexpr size_t size = 32;
-    glm::vec3 *data = new glm::vec3[size*size];
+    auto data = std::unique_ptr<uint8_t[]>(new uint8_t[4*size*size]);
 
-    for (size_t i=0; i<size*size; i++)
+    for (size_t y=0; y<size; y++)
     {
-        data[i] = v;
+        for (size_t x=0; x<size; x++)
+        {
+            data[4*size*y + 4*x + 0] = r;
+            data[4*size*y + 4*x + 1] = g;
+            data[4*size*y + 4*x + 2] = b;
+            data[4*size*y + 4*x + 3] = a;
+        }
     }
 
-    GLuint texture;
+    return data;
 
-    idk::gl::genTextures(1, &texture);
-    idk::gl::bindTexture(GL_TEXTURE_2D, texture);
+    // GLuint gl_id;
 
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // idk::gl::genTextures(1, &gl_id);
+    // idk::gl::bindTexture(GL_TEXTURE_2D, gl_id);
 
-    idk::gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB8, size, size, 0, GL_RGB, GL_FLOAT, data);
-    idk::gl::generateMipmap(GL_TEXTURE_2D);
+    // idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    // idk::gl::texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    idk::gl::bindTexture(GL_TEXTURE_2D, 0);
+    // idk::gl::texImage2D(GL_TEXTURE_2D, 0, GL_RGB8, size, size, 0, GL_RGB, GL_FLOAT, data.get());
+    // idk::gl::generateMipmap(GL_TEXTURE_2D);
 
-    delete[] data;
-    return texture;
+    // idk::gl::bindTexture(GL_TEXTURE_2D, 0);
+
+    // idk::glTexture texture(gl_id, glm::ivec2(32, 32), idk::glTextureConfig());
+
+    // delete[] data;
+    // return gl_id;
 }
 
 
 void
 idk::ModelSystem::init()
 {
-    m_default_albedo = do_thing_rgb(glm::vec3(0.5f));
-    m_default_ao_r_m = do_thing_rgb(glm::vec3(1.0f, 0.75f, 0.0f));
-    m_default_height = do_thing_r(0.0f);
-    m_default_normal = do_thing_rgb(glm::vec3(0.5f, 0.5f, 1.0f));
+    m_texture_SSBO.init();
+    m_texture_SSBO.bind(8);
+    m_texture_SSBO.bufferData(3*128*sizeof(GLuint64), nullptr);
+    m_texture_handles.resize(3*128);
 
     m_default_albedo_config = {
         .internalformat = GL_SRGB8_ALPHA8,
@@ -87,7 +93,8 @@ idk::ModelSystem::init()
         .wrap_t         = GL_REPEAT,
         .datatype       = GL_UNSIGNED_BYTE,
         .anisotropic    = GL_TRUE,
-        .genmipmap      = GL_TRUE
+        .genmipmap      = GL_TRUE,
+        .bindless       = GL_TRUE
     };
 
     m_default_lightmap_config = {
@@ -99,13 +106,17 @@ idk::ModelSystem::init()
         .wrap_t         = GL_REPEAT,
         .datatype       = GL_UNSIGNED_BYTE,
         .anisotropic    = GL_TRUE,
-        .genmipmap      = GL_TRUE
+        .genmipmap      = GL_TRUE,
+        .bindless       = GL_TRUE
     };
 
+    m_default_albedo = loadTexture("IDKGE/resources/default-albedo.png", m_default_albedo_config);
+    m_default_ao_r_m = loadTexture("IDKGE/resources/default-ao_r_m.png", m_default_lightmap_config);
+    m_default_normal = loadTexture("IDKGE/resources/default-normal.png", m_default_lightmap_config);
 
     for (size_t i=0; i<=MAX_PLANE_LEVEL; i++)
     {
-        m_planes[i] = loadModel("./IDKGE/resources/planes/", "plane-" + std::to_string(i));
+        m_planes[i] = loadModel("IDKGE/resources/planes/", "plane-" + std::to_string(i));
     }
 }
 
@@ -124,25 +135,9 @@ idk::ModelSystem::_texture_ID( const std::string &filepath )
 }
 
 idk::glTexture &
-idk::ModelSystem::_get_texture( GLuint gl_id )
+idk::ModelSystem::getidkTexture( GLuint gl_id )
 {
     return m_textures.get(m_rtexture_IDs[gl_id]);
-}
-
-
-int
-idk::ModelSystem::new_material()
-{
-    int material_id = m_materials.create();
-    idk::Material &material = m_materials.get(material_id);
-
-    material.name            = "No idea lmao";
-    material.albedo_id       = m_default_albedo;
-    material.arm_id          = m_default_ao_r_m;
-    material.displacement_id = m_default_height;
-    material.normal_id       = m_default_normal;
-
-    return material_id;
 }
 
 
@@ -152,11 +147,28 @@ idk::ModelSystem::loadTexture( const std::string &filepath, const glTextureConfi
     int texture_id = m_textures.create(gltools::loadTexture(filepath, config));
     GLuint gl_id   = m_textures.get(texture_id).ID();
 
-    // Textures are referenced using their file path
-    std::string relpath = std::filesystem::path(filepath).relative_path();
+    m_texture_IDs[filepath].set = true;
+    m_texture_IDs[filepath].texture_ID = texture_id;
+    m_rtexture_IDs[gl_id] = texture_id;
 
-    m_texture_IDs[relpath].set = true;
-    m_texture_IDs[relpath].texture_ID = texture_id;
+    return gl_id;
+}
+
+
+GLuint
+idk::ModelSystem::loadTexture( const std::string &filepath, bool is_lightmap )
+{
+    auto &config = (is_lightmap) ? m_default_albedo_config : m_default_lightmap_config;
+    return loadTexture(filepath, config);
+}
+
+
+GLuint
+idk::ModelSystem::loadTexture( size_t w, size_t h, void *data, const glTextureConfig &config )
+{
+    int texture_id = m_textures.create(gltools::loadTexture2(w, h, data, config));
+    GLuint gl_id   = m_textures.get(texture_id).ID();
+
     m_rtexture_IDs[gl_id] = texture_id;
 
     return gl_id;
@@ -182,6 +194,21 @@ idk::ModelSystem::getTexture( const std::string &filepath )
     return _texture_ID(filepath);
 }
 
+int
+idk::ModelSystem::createMaterial( int albedo, int normal, int ao_r_m )
+{
+    int material_id = m_materials.create();
+    idk::Material &material = getMaterial(material_id);
+
+    material.bindless_idx = material_id;
+
+    material.albedo_id = (albedo == -1) ? m_default_albedo : albedo;
+    material.normal_id = (normal == -1) ? m_default_normal : normal;
+    material.arm_id    = (ao_r_m == -1) ? m_default_ao_r_m : ao_r_m;
+
+    return material_id;
+}
+
 
 int
 idk::ModelSystem::loadMaterial( const std::string &root,
@@ -189,12 +216,8 @@ idk::ModelSystem::loadMaterial( const std::string &root,
                                 const std::string &normal,
                                 const std::string &ao_rough_metal )
 {
-    int material_id = m_materials.create();
+    int material_id = createMaterial(-1, -1, -1);
     idk::Material &material = getMaterial(material_id);
-
-    material.albedo_id = m_default_albedo;
-    material.normal_id = m_default_normal;
-    material.arm_id    = m_default_ao_r_m;
 
     if (albedo != "")
         material.albedo_id = loadTexture(root+albedo, m_default_albedo_config);
@@ -205,22 +228,24 @@ idk::ModelSystem::loadMaterial( const std::string &root,
     if (ao_rough_metal != "")
         material.arm_id = loadTexture(root+ao_rough_metal, m_default_lightmap_config);
 
+
+    // Update SSBO handles and indirection
+    // -----------------------------------------------------------------------------------------
+    m_texture_handles[3*material_id + 0] = getidkTexture(material.albedo_id).handle();
+    m_texture_handles[3*material_id + 1] = getidkTexture(material.normal_id).handle();
+    m_texture_handles[3*material_id + 2] = getidkTexture(material.arm_id).handle();
+
+    m_texture_SSBO.bufferSubData(
+        0,
+        m_texture_handles.nbytes(),
+        m_texture_handles.data()
+    );
+    // -----------------------------------------------------------------------------------------
+
+
     return material_id;
 }
 
-
-int
-idk::ModelSystem::createMaterial( int albedo, int normal, int ao_r_m )
-{
-    int material_id = m_materials.create();
-    idk::Material &material = getMaterial(material_id);
-
-    material.albedo_id = (albedo == -1) ? m_default_albedo : albedo;
-    material.normal_id = (normal == -1) ? m_default_normal : normal;
-    material.arm_id    = (ao_r_m == -1) ? m_default_ao_r_m : ao_r_m;
-
-    return material_id;
-}
 
 
 void
@@ -376,12 +401,14 @@ idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
         filetools::readidkvi(stream, header, model.m_vertices, model.m_indices);
         filetools::readidka(stream, header, m_animators.get(model.animator_id));
     }
+
     else
     {
         model.m_vertices = new idk::Buffer<idk::Vertex>();
     
         filetools::readidkvi(stream, header, model.m_vertices, model.m_indices);
     }
+
     stream.close();
 
     for (size_t i=0; i<header.num_meshes; i++)
@@ -390,24 +417,43 @@ idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
         idk::Mesh &mesh   = model.meshes.back();
         mesh.num_indices  = header.m_index_counts[i];
 
-        int material_id  = new_material();
-        mesh.material_id = material_id;
-        idk::Material &material = m_materials.get(material_id);
-
         auto &bitmask  = header.m_bitmasks[i];
         auto &textures = header.m_texture_paths[i];
 
-        if (bitmask & ALBEDO_BIT)
-            material.albedo_id = loadTexture(textures[ALBEDO_IDX], m_default_albedo_config);
+        std::string albedo = (bitmask & ALBEDO_BIT) ? textures[ALBEDO_IDX] : "";
+        std::string normal = (bitmask & NORMAL_BIT) ? textures[NORMAL_IDX] : "";
+        std::string ao_r_m = (bitmask & RM_BIT)     ? textures[RM_IDX]     : "";
 
-        if (bitmask & NORMAL_BIT)
-            material.normal_id = loadTexture(textures[NORMAL_IDX], m_default_lightmap_config);
-
-        if (bitmask & RM_BIT)
-            material.arm_id = loadTexture(textures[RM_IDX], m_default_lightmap_config);
+        mesh.material_id = loadMaterial("", albedo, normal, ao_r_m);
     }
 
     model_to_gpu(model);
+
+    return model_id;
+}
+
+int
+idk::ModelSystem::copyModel( int id )
+{
+    return m_models.create(m_models.get(id));
+}
+
+
+
+int
+idk::ModelSystem::loadTerrainHeightmap( GLuint texture_id )
+{
+    int model_id  = copyModel(m_planes[7]);
+    auto &model   = getModel(model_id);
+
+    model.render_flags |= ModelRenderFlag::HEIGHTMAPPED;
+    model.terrain_id = m_terrain_models.create();
+    auto &terrain    = m_terrain_models.get(model.terrain_id);
+
+    idk::glTexture &texture = getidkTexture(texture_id);
+
+    terrain.heightmap_id     = texture.ID();
+    terrain.heightmap_handle = texture.handle();
 
     return model_id;
 }
@@ -417,29 +463,8 @@ idk::ModelSystem::loadModel( const std::string &root, const std::string &name )
 int
 idk::ModelSystem::loadTerrainHeightmap( const std::string &filepath )
 {
-    int model_id = m_models.create(m_models.get(m_planes[7]));
-    idk::Model &model = getModel(model_id);
-
-    model.render_flags |= ModelRenderFlag::HEIGHTMAPPED;
-    model.terrain_id = m_terrain_models.create();
-
-    idk::Model_Terrain &terrain = m_terrain_models.get(model.terrain_id);
-
-    idk::glTextureConfig config = {
-        .internalformat = GL_RGBA16,
-        .format         = GL_RGBA,
-        .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
-        .magfilter      = GL_LINEAR,
-        .wrap_s         = GL_REPEAT,
-        .wrap_t         = GL_REPEAT,
-        .datatype       = GL_UNSIGNED_BYTE,
-        .anisotropic    = GL_FALSE,
-        .genmipmap      = GL_TRUE
-    };
-
-    terrain.heightmap_id = loadTexture(filepath, config);
-
-    return model_id;
+    GLuint gl_id = loadTexture(filepath, m_default_lightmap_config);
+    return loadTerrainHeightmap(gl_id);
 }
 
 
@@ -461,7 +486,7 @@ idk::ModelSystem::queryTerrainHeight( int terrain_id, const glm::mat4 &transform
 {
     auto &model   = getModel(terrain_id);
     auto &terrain = m_terrain_models.get(model.terrain_id);
-    auto &texture = this->_get_texture(terrain.heightmap_id);
+    auto &texture = getidkTexture(terrain.heightmap_id);
 
     float u = (x / terrain.world_scale) * 0.5 + 0.5;
     float v = (z / terrain.world_scale) * 0.5 + 0.5;
@@ -470,14 +495,11 @@ idk::ModelSystem::queryTerrainHeight( int terrain_id, const glm::mat4 &transform
 
 }
 
-
-
 int
 idk::ModelSystem::createAnimator()
 {
     return m_animators.create();
 }
-
 
 
 int
@@ -505,14 +527,13 @@ idk::ModelSystem::createInstancedModel( int model_id, const std::vector<glm::mat
 
 int
 idk::ModelSystem::createChunkedModel( int model_id, const std::vector<glm::vec4> &positions,
-                                      const std::vector<idk::OBB> &OBBs,
                                       const std::vector<std::vector<glm::mat4>> &transforms )
 {
-    int  chunked_id = m_models.create(m_models.get(model_id));
+    int  chunked_id = copyModel(model_id);
     auto &model     = m_models.get(chunked_id);
     model.render_flags |= ModelRenderFlag::CHUNKED;
 
-    idk::loadChunked(model, positions, OBBs, transforms);
+    idk::loadChunked(model, positions, transforms);
     instanced_to_gpu(model, model.m_chunk_transforms);
 
     return chunked_id;

@@ -2,7 +2,12 @@
 
 #include <functional>
 #include "idk_keylog.hpp"
-#include <libidk/IDKcontainers/idk_allocator.hpp>
+
+#include <libidk/idk_export.hpp>
+#include <libidk/idk_enums.hpp>
+#include <libidk/idk_glm.hpp>
+#include <libidk/idk_allocator.hpp>
+#include <libidk/idk_singleton.hpp>
 
 
 namespace idk
@@ -31,14 +36,16 @@ namespace idk
 };
 
 
-struct idk::Event
+
+struct IDK_VISIBLE idk::Event
 {
     std::function<bool()>   trigger;
     std::function<void()>   response;
 };
 
 
-class idk::EventManager
+
+class IDK_VISIBLE idk::EventManager
 {
     using fun_t = std::function<void(SDL_Event *)>;
     using mousefun_t = std::function<void(float f)>;

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../model/idk_vertex.hpp"
-#include <libidk/libidk.hpp>
-#include <libidk/IDKgl.hpp>
+#include <libidk/GL/common.hpp>
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>

@@ -1,16 +1,18 @@
 #pragma once
 
-#include "libidk/libidk.hpp"
+#include <libidk/idk_glm.hpp>
+#include <libidk/idk_export.hpp>
+
 
 namespace idk
 {
-    struct Pointlight;
-    struct Spotlight;
-    struct Dirlight;
+    struct IDK_VISIBLE Pointlight;
+    struct IDK_VISIBLE Spotlight;
+    struct IDK_VISIBLE Dirlight;
 
-    enum class lightsource { POINT, SPOT, DIR };
+    enum class IDK_VISIBLE lightsource { POINT, SPOT, DIR };
 
-    namespace LightFlag
+    namespace IDK_VISIBLE LightFlag
     {
         enum lightflag_t: uint32_t
         {

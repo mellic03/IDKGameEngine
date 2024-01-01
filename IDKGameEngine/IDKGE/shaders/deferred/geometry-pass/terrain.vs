@@ -1,5 +1,7 @@
 #version 460 core
 
+#extension GL_ARB_bindless_texture: require
+
 layout (location = 0) in vec3 vsin_pos;
 layout (location = 1) in vec3 vsin_normal;
 layout (location = 2) in vec3 vsin_tangent;
@@ -48,7 +50,7 @@ struct Material
     float normal_strength;
 };
 
-uniform sampler2D un_heightmap;
+layout (bindless_sampler) uniform sampler2D un_heightmap;
 uniform float     un_height_scale;
 uniform float     un_world_scale;
 uniform Material  un_material_0;

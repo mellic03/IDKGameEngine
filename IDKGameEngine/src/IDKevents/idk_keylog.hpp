@@ -1,6 +1,10 @@
 #pragma once
 
-#include "libidk/libidk.hpp"
+#include <libidk/IDKSDL2.hpp>
+#include <libidk/idk_SDL_keybindings.hpp>
+
+#include <libidk/idk_export.hpp>
+
 #include <vector>
 
 
@@ -11,7 +15,7 @@ namespace idk
 };
 
 
-class idk::Keylog
+class IDK_VISIBLE idk::Keylog
 {
 private:
     std::vector<std::vector<bool>>   m_keys;

@@ -1,9 +1,7 @@
 #pragma once
 
-
-#include <vector>
-#include <string>
 #include "idk_module.hpp"
+
 
 namespace idk
 {

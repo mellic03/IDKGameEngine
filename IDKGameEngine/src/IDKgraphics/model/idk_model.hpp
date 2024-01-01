@@ -1,14 +1,17 @@
 #pragma once
 
-#include <libidk/IDKgl.hpp>
-#include <libidk/IDKgl/idk_glDrawCommand.hpp>
-#include <libidk/IDKcontainers/idk_buffer.hpp>
+#include <libidk/idk_gl.hpp>
+
+#include <libidk/containers/idk_buffer.hpp>
+#include <libidk/idk_export.hpp>
 
 #include "idk_vertex.hpp"
 #include "idk_OBB.hpp"
 
 #include <vector>
 #include <memory>
+
+
 
 
 namespace idk
@@ -27,7 +30,6 @@ namespace idk
 
 
     void loadChunked( idk::Model &model, const std::vector<glm::vec4> &positions,
-                      const std::vector<idk::OBB> &OBBs,
                       const std::vector<std::vector<glm::mat4>> &transforms );
 
     void genDrawCommands( idk::Model &model, const glm::mat4 &transform,
@@ -47,10 +49,11 @@ namespace idk
 
 
 
-
-struct idk::Material
+struct IDK_VISIBLE idk::Material
 {
     std::string name = "";
+
+    GLuint      bindless_idx     = 0;
 
     GLuint      albedo_id        = 0;
     GLuint      arm_id           = 0;
@@ -65,22 +68,22 @@ struct idk::Material
 };
 
 
-struct idk::Mesh
+
+struct IDK_VISIBLE idk::Mesh
 {
     int material_id;
     GLuint num_indices;
 };
 
 
-
-struct idk::Model_Regular
+struct IDK_VISIBLE idk::Model_Regular
 {
     std::vector<idk::Mesh> meshes;
 
 };
 
 
-struct idk::Model_Animated
+struct IDK_VISIBLE idk::Model_Animated
 {
     std::vector<idk::AnimatedVertex> vertices;
 
@@ -90,20 +93,21 @@ struct idk::Model_Animated
  *  Only one heightmap texture is used, referenced by heightmap_id.
  *  There can be up to four materials for texture splatting/blending 
 */
-struct idk::Model_Terrain
+struct IDK_VISIBLE idk::Model_Terrain
 {
     std::unique_ptr<uint8_t[]> heightmap_data;
 
-    int     heightmap_id = -1;
-    float   height_scale = 25.0f;
-    float   world_scale  = 50.0f;
+    GLuint      heightmap_id     = 0;
+    GLuint64    heightmap_handle = 0;
+    float       height_scale     = 25.0f;
+    float       world_scale      = 50.0f;
 
-    size_t  num_materials = 0;
-    int     material_ids[4];
+    size_t      num_materials = 0;
+    int         material_ids[4];
 };
 
 
-struct idk::Model
+struct IDK_VISIBLE idk::Model
 {
     uint32_t render_flags = ModelRenderFlag::NONE;
 

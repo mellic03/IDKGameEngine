@@ -9,6 +9,7 @@ file(GLOB SOURCES
     "./animation/*.cpp"
     "./camera/*.cpp"
     "./render/*.cpp"
+    "./render/idk_batch_system/*.cpp"
 )
 
 add_library(${PROJECT_NAME} OBJECT ${SOURCES})

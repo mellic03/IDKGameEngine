@@ -1,27 +1,38 @@
 #pragma once
 
-#include "IDKgraphics/IDKgraphics.hpp"
+#include <map>
+#include <set>
+
+// #include "IDKgraphics/IDKgraphics.hpp"
 #include "IDKaudio/IDKaudio.hpp"
 #include "IDKevents/IDKevents.hpp"
+#include "IDKmodules/IDKmodules.hpp"
 
-#include <libidk/IDKcontainers/idk_allocator.hpp>
-#include "idk_componentsystem.hpp"
-
-#include "idk_threadpool.hpp"
-
-
-namespace idk { class Engine; };
+#include <libidk/idk_allocator.hpp>
+#include <libidk/idk_singleton.hpp>
 
 
-class idk::Engine
+namespace idk { class Engine;       };
+namespace idk { class RenderEngine; };
+namespace idk { class EngineAPI;    };
+
+namespace idk::internal { class EngineAPI; };
+
+
+
+class IDK_VISIBLE idk::Engine
 {
 private:
+    friend class idk::EngineAPI;
+    friend class idk::internal::EngineAPI;
+
+    idk::RenderEngine &                         m_renderer;
+
     Uint64                                      m_frame_start = 0;
     Uint64                                      m_frame_end   = 0;
     float                                       m_frame_time  = 1.0f;
     bool                                        m_running     = true;
 
-    idk::RenderEngine *                         m_render_engine;
     idk::AudioEngine *                          m_audio_engine;
     idk::EventManager                           m_event_manager;
 
@@ -35,6 +46,7 @@ private:
     idk::Allocator<idk::ComponentSystem *>      m_componentsystems;
     std::unordered_map<size_t, int>             m_componentsystem_ids;
 
+
     void                                        _idk_modules_init();
     void                                        _idk_modules_stage_A();
     void                                        _idk_modules_stage_B();
@@ -46,21 +58,31 @@ private:
     void                                        idk_CS_onObjectDeletion( int obj_id );
     void                                        idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id );
 
-    idk::RenderEngine &                         _render_engine() { return *m_render_engine; };
     idk::AudioEngine &                          _audio_engine()  { return *m_audio_engine;  };
 
-public:
-                                                // static idk::ThreadPool threadpool;
-                                                Engine( idk::RenderEngine *R = nullptr,
-                                                        idk::AudioEngine  *A = nullptr );
+            Engine( idk::RenderEngine & );
+    bool    _running() { return m_running; };
+    void    _begin_frame( idk::RenderEngine & );
+    void    _end_frame( idk::RenderEngine & );
 
-    idk::RenderEngine &                         rengine()   { return _render_engine();   };
-    // idk::AudioEngine &                          aengine()   { return m_audio_engine;  };
+public:
+
+    struct Config
+    {
+        const char *name;
+
+        size_t      width;
+        size_t      height;
+
+        uint32_t    gl_major;
+        uint32_t    gl_minor;
+    };
+
+
+    idk::RenderEngine &                         RenderEngine() { return m_renderer; };
     idk::EventManager &                         eventManager() { return m_event_manager; };
 
     bool                                        running()   { return m_running; };
-    void                                        beginFrame();
-    void                                        endFrame();
     void                                        shutdown();
 
     float                                       deltaTime() { return m_frame_time;       };
@@ -86,8 +108,6 @@ public:
     template <typename CS> int                  registerCS( const std::string &name );
     template <typename CS> CS &                 getCS( int component_id );
     template <typename CS> CS &                 getCS();
-
-    void                                        initModules() { this->_idk_modules_init(); };
 
     const Allocator<ComponentSystem *> &        getComponentSystems() { return m_componentsystems; };
 

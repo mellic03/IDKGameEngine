@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libidk/IDKgl.hpp>
+#include <libidk/GL/common.hpp>
 
 
 namespace idk

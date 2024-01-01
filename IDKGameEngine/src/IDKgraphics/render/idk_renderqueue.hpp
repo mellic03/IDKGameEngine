@@ -1,7 +1,6 @@
 #pragma once
 
-#include <libidk/IDKcore/libidk.hpp>
-#include <libidk/IDKgl/idk_glShader.hpp>
+#include <libidk/GL/idk_glShader.hpp>
 
 #include "../idk_model_manager.hpp"
 #include "../model/idk_OBB.hpp"

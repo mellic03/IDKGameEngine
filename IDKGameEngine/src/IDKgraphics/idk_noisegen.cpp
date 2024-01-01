@@ -1,5 +1,7 @@
 #include "idk_noisegen.hpp"
+#include <libidk/GL/idk_glBindings.hpp>
 
+#include <ctime>
 #include <vector>
 
 

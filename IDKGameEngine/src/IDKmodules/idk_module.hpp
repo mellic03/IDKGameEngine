@@ -18,7 +18,7 @@ public:
     virtual                             ~Module() = default;
     void                                base_init( int id, std::string name ) { m_id = id; m_name = name; };
     
-    const constexpr int                 id() const { return m_id; };
+    const constexpr int                 ID() const { return m_id; };
     const constexpr std::string &       name() const { return m_name; };
 
     virtual void                        init( idk::Engine & ) = 0;
