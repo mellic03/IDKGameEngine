@@ -2,12 +2,6 @@ cmake_minimum_required(VERSION 3.9)
 project(IDKGameEngine)
 
 
-set(CMAKE_BUILD_PARALLEL_LEVEL 8)
-set(CMAKE_CXX_FLAGS "-std=c++17 -Wuninitialized -Winit-self -Wmaybe-uninitialized -Werror -fsanitize=undefined -fdiagnostics-color=always -lstdc++fs")
-add_compile_options("-g" "-fvisibility=hidden" "-fPIC" "-fno-ident" "-fno-asynchronous-unwind-tables")
-add_definitions(-DIDK_DEBUG)
-
-
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKaudio)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKevents)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKgraphics)
@@ -20,8 +14,19 @@ file(GLOB SOURCES
     "src/IDKGameEngine/IDKmodules/*.cpp"
 )
 
-
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
+
+set_target_properties(
+    ${PROJECT_NAME} PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    CXX_STANDARD 17
+)
+
+# if(MSVC)
+#     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+# else()
+#     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+# endif()
 
 
 target_link_libraries(

@@ -1,6 +1,6 @@
 #include <libidk/idk_assert.hpp>
-#include <IDKengine/IDKengine.hpp>
-#include <IDKengine/IDKmodules/idk_game.hpp>
+#include <IDKGameEngine/IDKengine.hpp>
+#include <IDKGameEngine/IDKmodules/idk_game.hpp>
 
 #include <string>
 
