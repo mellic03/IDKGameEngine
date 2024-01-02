@@ -1,8 +1,6 @@
 #pragma once
 
-#include <libidk/IDKSDL2.hpp>
-#include <libidk/idk_SDL_keybindings.hpp>
-
+#include <libidk/idk_sdl2.hpp>
 #include <libidk/idk_export.hpp>
 
 #include <vector>

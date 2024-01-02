@@ -1,6 +1,6 @@
 #pragma once
 
-#include <libidk/IDKSDL2.hpp>
+#include <libidk/idk_sdl2.hpp>
 
 namespace idk::internal { class SDL_GLEW_Initializer; };
 

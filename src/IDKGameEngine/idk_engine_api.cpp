@@ -6,7 +6,7 @@
 #include "IDKthreading/idk_threadpool.hpp"
 
 #include <libidk/idk_platform.hpp>
-#include <idk_dynamiclib.hpp>
+#include "idk_dynamiclib.hpp"
 
 #include <string>
 #include <filesystem>
