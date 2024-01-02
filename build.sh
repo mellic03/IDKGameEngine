@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mkdir -p ./external/{include,lib}
+# mkdir -p ./external/{include,lib}
 
 
 # Build libidk

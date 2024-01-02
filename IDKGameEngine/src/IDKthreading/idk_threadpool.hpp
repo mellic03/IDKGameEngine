@@ -19,7 +19,7 @@ namespace idk { class ThreadPool; };
 namespace idk::internal { class ThreadPoolAPI; };
 
 
-class idk::ThreadPool: public idk::basic_singleton<idk::ThreadPool>
+class IDK_VISIBLE idk::ThreadPool
 {
 public:
     class Task;
@@ -31,7 +31,6 @@ public:
 
 
 private:
-    friend class idk::basic_singleton<idk::ThreadPool>;
     friend class idk::internal::ThreadPoolAPI;
 
     using cond_var = std::condition_variable;
@@ -52,8 +51,6 @@ private:
     std::vector<std::queue<int>>    m_task_queues;
     std::vector<std::queue<int>>    m_finished_tasks;
 
-            ThreadPool();
-
     void    _update();
 
     void    _worker   ( int idx );
@@ -61,14 +58,11 @@ private:
 
 
 public:
+            ThreadPool();
 
-    IDK_VISIBLE
-    int createTask( const Task &task );
-
-    IDK_VISIBLE
-    int createTask( std::function<void()> work, std::function<void()> callback );
-
-    IDK_VISIBLE
+    
+    int  createTask( const Task &task );
+    int  createTask( std::function<void()> work, std::function<void()> callback );
     void detach( int idx );
 
 };

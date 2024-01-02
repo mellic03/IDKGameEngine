@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-namespace idk { class Engine; };
+namespace idk { class EngineAPI; };
 namespace idk { class Module; };
 
 
@@ -21,10 +21,10 @@ public:
     const constexpr int                 ID() const { return m_id; };
     const constexpr std::string &       name() const { return m_name; };
 
-    virtual void                        init( idk::Engine & ) = 0;
-    virtual void                        stage_A( idk::Engine & ) = 0;
-    virtual void                        stage_B( idk::Engine & ) = 0;
-    virtual void                        stage_C( idk::Engine & ) = 0;
+    virtual void                        init( idk::EngineAPI & ) = 0;
+    virtual void                        stage_A( idk::EngineAPI & ) = 0;
+    virtual void                        stage_B( idk::EngineAPI & ) = 0;
+    virtual void                        stage_C( idk::EngineAPI & ) = 0;
 
     void                                addDependency( std::string name ) { m_dependencies.push_back(name); };
     void                                addDependencies()                 { /* Base case */ };

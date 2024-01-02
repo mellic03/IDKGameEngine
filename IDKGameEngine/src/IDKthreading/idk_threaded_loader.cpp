@@ -2,6 +2,24 @@
 
 
 
+idk::ThreadedLoader::ThreadedLoader( idk::ThreadPool &threadpool )
+: m_threadpool(threadpool)
+{
+    m_num_loading.store(0);
+
+    m_allocator.create();
+    m_allocator.create();
+    m_allocator.create();
+    m_allocator.create();
+
+    m_allocator.destroy(3);
+    m_allocator.destroy(2);
+    m_allocator.destroy(1);
+    m_allocator.destroy(0);
+
+};
+
+
 void
 idk::ThreadedLoader::_load_model( std::string filepath, int id )
 {
@@ -41,7 +59,7 @@ idk::ThreadedLoader::loadModel( std::string filepath )
     int model_id = m_allocator.create();
     m_num_loading++;
 
-    idk::ThreadPool &threadpool = idk::ThreadPool::get();
+    idk::ThreadPool &threadpool = m_threadpool;
     std::string *str = new std::string(filepath.c_str());
 
     idk::ThreadPool::Task task(

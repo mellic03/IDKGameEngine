@@ -6,19 +6,16 @@
 
 IDK_EXPORT_API
 (
-    idk::EngineAPI *idk_export_getEngineAPI()
+    idk::EngineAPI *idk_export_getEngineAPI( const char *name )
     {
-        static bool first = true;
+        static idk::EngineAPI *api = nullptr;
 
-        if (first)
+        if (api == nullptr)
         {
-            first = false;
-            return new idk::EngineAPI("Test name");
+            api = new idk::EngineAPI(name);
         }
 
-        return nullptr;
+        return api;
     }
 )
-
-
 

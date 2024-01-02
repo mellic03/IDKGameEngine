@@ -1,13 +1,14 @@
 #pragma once
 
+#include <libidk/idk_export.hpp>
 #include <string>
 
 
 namespace idk { class Game; class GameHandle; };
-namespace idk { class Engine; class RenderEngine; };
+namespace idk { class EngineAPI; };
 
 
-class idk::Game
+class IDK_VISIBLE idk::Game
 {
 private:
     int         m_id   = -1;
@@ -21,15 +22,15 @@ public:
 
     virtual void    config() = 0;
 
-    virtual void    registerModules ( idk::Engine &) = 0;
+    virtual void    registerModules ( idk::EngineAPI & ) = 0;
 
-    virtual void    setup    ( idk::Engine &, idk::RenderEngine & ) = 0;
-    virtual void    mainloop ( idk::Engine &, idk::RenderEngine & ) = 0;
+    virtual void    setup    ( idk::EngineAPI & ) = 0;
+    virtual void    mainloop ( idk::EngineAPI & ) = 0;
 
 };
 
 
-class idk::GameHandle
+class IDK_VISIBLE idk::GameHandle
 {
 private:
     typedef idk::Game *(*getInstance_handle)();

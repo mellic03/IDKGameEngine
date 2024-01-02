@@ -1,6 +1,5 @@
 #include "idk_game.hpp"
 #include <libidk/idk_platform.hpp>
-#include <libidk/idk_export.hpp>
 
 #include <iostream>
 #include <filesystem>
@@ -8,7 +7,6 @@
 #include <SDL2/SDL.h>
 
 
-IDK_VISIBLE
 idk::GameHandle::GameHandle( std::string relpath )
 {
     #ifdef IDK_UNIX
@@ -31,14 +29,12 @@ idk::GameHandle::GameHandle( std::string relpath )
 }
 
 
-IDK_VISIBLE
 idk::GameHandle::~GameHandle()
 {
     SDL_UnloadObject(m_handle);
 }
 
 
-IDK_VISIBLE
 idk::Game *
 idk::GameHandle::getInstance()
 {

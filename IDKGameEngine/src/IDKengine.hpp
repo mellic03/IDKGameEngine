@@ -2,6 +2,6 @@
 
 #include "IDKgraphics/IDKgraphics.hpp"
 #include "idk_engine.hpp"
-// #include "IDKcomponentsystems/IDKcomponentsystems.h"
+#include "idk_engine_api.hpp"
 
 

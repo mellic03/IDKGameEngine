@@ -110,7 +110,6 @@
         "cassert": "cpp",
         "filesystem": "cpp"
     },
-    "cmake.configureOnOpen": true,
     "C_Cpp.default.includePath": [
         "${default}",
         "${workspaceFolder}/external/include/",

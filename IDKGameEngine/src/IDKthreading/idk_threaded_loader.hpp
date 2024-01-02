@@ -4,6 +4,8 @@
 #include "idk_threaded_allocator.hpp"
 #include "../IDKgraphics/animation/idk_animation_file.hpp"
 
+#include <libidk/idk_export.hpp>
+
 #include <string>
 #include <functional>
 
@@ -17,7 +19,7 @@ namespace idk
 
 
 
-class idk::ThreadedResource
+class IDK_VISIBLE idk::ThreadedResource
 {
 private:
     std::atomic_bool m_loaded;
@@ -45,7 +47,7 @@ public:
 
 
 
-struct idk_Model
+struct IDK_VISIBLE idk_Model
 {
     float    *vertices;
     uint32_t *indices;
@@ -53,35 +55,21 @@ struct idk_Model
 
 
 
-class idk::ThreadedLoader
+class IDK_VISIBLE idk::ThreadedLoader
 {
 private:
+    idk::ThreadPool            &m_threadpool;
 
     idk::Allocator<idk_Model>   m_allocator;
     std::atomic_int             m_num_loading;
 
 
 public:
+        ThreadedLoader( idk::ThreadPool &threadpool );
 
     void _load_model( std::string filepath, int id );
     void _finish_loading( int id );
     void _destroy( int id );
-
-    ThreadedLoader()
-    {
-        m_num_loading.store(0);
-    
-        m_allocator.create();
-        m_allocator.create();
-        m_allocator.create();
-        m_allocator.create();
-
-        m_allocator.destroy(3);
-        m_allocator.destroy(2);
-        m_allocator.destroy(1);
-        m_allocator.destroy(0);
-
-    };
 
     int loadModel( std::string filepath );
 

@@ -5,11 +5,9 @@
 
 
 
-idk::Engine::Engine( idk::RenderEngine &renderer )
-: m_renderer(renderer)
+idk::Engine::Engine( idk::RenderEngine &ren )
 {
     idk::Engine       &engine = *this;
-    idk::RenderEngine &ren    = m_renderer;
     idk::EventManager &events = m_event_manager;
 
     auto resize_lambda = [&ren, &events]()
@@ -35,12 +33,12 @@ idk::Engine::_idk_modules_init()
 {
     for (auto &CS: m_componentsystems)
     {
-        CS->init(*this);
+        CS->init(*APIptr);
     }
 
     for (auto &mod: m_idk_modules)
     {
-        mod->init(*this);
+        mod->init(*APIptr);
     }
 }
 
@@ -51,12 +49,12 @@ idk::Engine::_idk_modules_stage_A()
 {
     for (auto &CS: m_componentsystems)
     {
-        CS->stage_A(*this);
+        CS->stage_A(*APIptr);
     }
 
     for (auto &mod: m_idk_modules)
     {
-        mod->stage_A(*this);
+        mod->stage_A(*APIptr);
     }
 }
 
@@ -66,12 +64,12 @@ idk::Engine::_idk_modules_stage_B()
 {
     for (auto &CS: m_componentsystems)
     {
-        CS->stage_B(*this);
+        CS->stage_B(*APIptr);
     }
 
     for (auto &mod: m_idk_modules)
     {
-        mod->stage_B(*this);
+        mod->stage_B(*APIptr);
     }
 }
 
@@ -81,12 +79,12 @@ idk::Engine::_idk_modules_stage_C()
 {
     for (auto &CS: m_componentsystems)
     {
-        CS->stage_C(*this);
+        CS->stage_C(*APIptr);
     }
 
     for (auto &mod: m_idk_modules)
     {
-        mod->stage_C(*this);
+        mod->stage_C(*APIptr);
     }
 }
 

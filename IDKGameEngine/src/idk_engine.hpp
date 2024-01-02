@@ -26,7 +26,7 @@ private:
     friend class idk::EngineAPI;
     friend class idk::internal::EngineAPI;
 
-    idk::RenderEngine &                         m_renderer;
+    idk::EngineAPI *APIptr = nullptr;
 
     Uint64                                      m_frame_start = 0;
     Uint64                                      m_frame_end   = 0;
@@ -60,7 +60,6 @@ private:
 
     idk::AudioEngine &                          _audio_engine()  { return *m_audio_engine;  };
 
-            Engine( idk::RenderEngine & );
     bool    _running() { return m_running; };
     void    _begin_frame( idk::RenderEngine & );
     void    _end_frame( idk::RenderEngine & );
@@ -78,8 +77,9 @@ public:
         uint32_t    gl_minor;
     };
 
+    Engine( idk::RenderEngine & );
 
-    idk::RenderEngine &                         RenderEngine() { return m_renderer; };
+
     idk::EventManager &                         eventManager() { return m_event_manager; };
 
     bool                                        running()   { return m_running; };
@@ -101,9 +101,9 @@ public:
     bool                                        hasComponent( int obj_id, int component_id );
     template <typename CS> bool                 hasComponent( int obj_id );
 
-    template <typename module_t> int            registerModule( const std::string &name );
-    template <typename module_t> module_t &     getModule( int module_id );
-    template <typename module_t> module_t &     getModule( const std::string &name );
+    template <typename module_type> int            registerModule( const std::string &name );
+    template <typename module_type> module_type &  getModule( int module_id );
+    template <typename module_type> module_type &  getModule( const std::string &name );
 
     template <typename CS> int                  registerCS( const std::string &name );
     template <typename CS> CS &                 getCS( int component_id );
@@ -125,11 +125,11 @@ idk::Engine::hasComponent( int obj_id )
 }
 
 
-template <typename module_t>
+template <typename module_type>
 int
 idk::Engine::registerModule( const std::string &name )
 {
-    int module_id = m_idk_modules.create(new module_t);
+    int module_id = m_idk_modules.create(new module_type);
 
     m_idk_modules.get(module_id)->base_init(module_id, name);
     m_idk_module_ids[name] = module_id;
@@ -138,20 +138,20 @@ idk::Engine::registerModule( const std::string &name )
 }
 
 
-template <typename module_t>
-module_t &
+template <typename module_type>
+module_type &
 idk::Engine::getModule( int module_id )
 {   
-    return *dynamic_cast<module_t *>(m_idk_modules.get(module_id));
+    return *dynamic_cast<module_type *>(m_idk_modules.get(module_id));
 }
 
 
-template <typename module_t>
-module_t &
+template <typename module_type>
+module_type &
 idk::Engine::getModule( const std::string &name )
 {
     int module_id = m_idk_module_ids[name];
-    return *dynamic_cast<module_t *>(m_idk_modules.get(module_id));
+    return *dynamic_cast<module_type *>(m_idk_modules.get(module_id));
 }
 
 
