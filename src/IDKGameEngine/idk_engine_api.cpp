@@ -6,7 +6,7 @@
 #include "IDKthreading/idk_threadpool.hpp"
 
 #include <libidk/idk_platform.hpp>
-#include "idk_dynamiclib.hpp"
+#include <libidk/idk_dynamiclib.hpp>
 
 #include <string>
 #include <filesystem>
@@ -50,23 +50,23 @@ idk::EngineAPI::getThreadPool()
 
 
 
-idk::APILoader::APILoader( const char *relpath )
-{
-    m_lib    = idk::dynamiclib::loadObject(relpath);
-    m_getAPI = idk::dynamiclib::loadFunction(m_lib, "idk_export_getEngineAPI");
-}
+// idk::APILoader::APILoader( const char *relpath )
+// {
+//     m_lib    = idk::dynamiclib::loadObject(relpath);
+//     m_getAPI = idk::dynamiclib::loadFunction(m_lib, "idk_export_getEngineAPI");
+// }
 
 
-idk::APILoader::~APILoader()
-{
-    idk::dynamiclib::unloadObject(m_lib);
-}
+// idk::APILoader::~APILoader()
+// {
+//     idk::dynamiclib::unloadObject(m_lib);
+// }
 
 
-idk::EngineAPI &
-idk::APILoader::getEngineAPI( const char *name )
-{
-    return *(*(functionptr_type)(m_getAPI))(name);
-}
+// idk::EngineAPI &
+// idk::APILoader::getEngineAPI( const char *name )
+// {
+//     return *(*(functionptr_type)(m_getAPI))(name);
+// }
 
 

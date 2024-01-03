@@ -39,20 +39,20 @@ public:
 
 
 
-class IDK_VISIBLE idk::APILoader
-{
-private:
-    typedef idk::EngineAPI *(*functionptr_type)( const char * );
+// class IDK_VISIBLE idk::APILoader
+// {
+// private:
+//     typedef idk::EngineAPI *(*functionptr_type)( const char * );
 
-    void        *m_lib;
-    void        *m_getAPI;
+//     void        *m_lib;
+//     void        *m_getAPI;
 
-public:
-        APILoader( const char *path );
-       ~APILoader();
+// public:
+//         APILoader( const char *path );
+//        ~APILoader();
 
-    idk::EngineAPI &getEngineAPI( const char * );
-};
+//     idk::EngineAPI &getEngineAPI( const char * );
+// };
 
 
 

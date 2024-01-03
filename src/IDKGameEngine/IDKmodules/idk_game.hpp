@@ -28,25 +28,3 @@ public:
     virtual void    mainloop ( idk::EngineAPI & ) = 0;
 
 };
-
-
-class IDK_VISIBLE idk::GameHandle
-{
-private:
-    typedef idk::Game *(*getInstance_handle)();
-
-    std::string  m_filepath;
-    void        *m_handle;
-    void        *m_function;
-
-public:
-
-    GameHandle( std::string relpath );
-    ~GameHandle();
-
-    idk::Game *getInstance();
-
-};
-
-
-
