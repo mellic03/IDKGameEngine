@@ -4,7 +4,6 @@ project(IDKGameEngine)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKaudio)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKevents)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKgraphics)
 
 
 file(GLOB SOURCES
@@ -33,7 +32,4 @@ target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     IDKaudio
     IDKevents
-    IDKgraphics
-
-    libidk
 )

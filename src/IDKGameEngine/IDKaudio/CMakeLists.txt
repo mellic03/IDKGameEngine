@@ -8,6 +8,12 @@ file(GLOB SOURCES
 
 add_library(${PROJECT_NAME} OBJECT ${SOURCES})
 
+set_target_properties(
+    ${PROJECT_NAME} PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    CXX_STANDARD 17
+)
+
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
 )
