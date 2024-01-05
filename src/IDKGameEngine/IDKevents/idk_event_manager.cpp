@@ -28,6 +28,14 @@ idk::EventManager::onWindowEvent( WindowEvent winevent, std::function<void()> re
 
 
 void
+idk::EventManager::onDropFile( std::function<void(const char *)> callback )
+{
+    _dropfile_callback = callback;
+};
+
+
+
+void
 idk::EventManager::onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback )
 {
     idk::Keylog &keylog = m_keylog;
@@ -69,6 +77,8 @@ idk::EventManager::processMouseInput()
     }
 
     m_mousewheel_delta = 0.0f;
+    m_dropfile_event = false;
+
 
     SDL_Event e;
 
@@ -76,8 +86,15 @@ idk::EventManager::processMouseInput()
     {
         switch (e.type)
         {
-            case (SDL_QUIT):
+            case SDL_QUIT:
                 m_windowevents[(int)(WindowEvent::EXIT)] = true;
+            break;
+
+
+            case SDL_DROPFILE:
+                m_dropfile_event = true;
+                m_dropfile_path  = e.drop.file;
+                _dropfile_callback(e.drop.file);
             break;
 
 

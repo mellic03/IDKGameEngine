@@ -2,6 +2,7 @@
 #include <libidk/idk_export.hpp>
 
 #include <IDKRenderEngine/render/idk_renderengine.hpp>
+#include "../IDKBuiltinCS/idk_name_cs.hpp"
 
 
 
@@ -20,6 +21,14 @@ idk::Engine::Engine( idk::RenderEngine &ren )
     {
         engine.shutdown();
     };
+
+
+    m_event_manager.onDropFile(
+        []( const char *filepath )
+        {
+            std::cout << "filepath: " << filepath << "\n";
+        }
+    );
 
     m_event_manager.onWindowEvent(WindowEvent::RESIZE, resize_lambda);
     m_event_manager.onWindowEvent(WindowEvent::EXIT,   exit_lambda);
@@ -161,21 +170,22 @@ idk::Engine::idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id )
 
 
 int
-idk::Engine::createGameObject()
+idk::Engine::createGameObject( const std::string &name )
 {
     int obj_id = m_gameobjects.create();
     m_gameobjects.get(obj_id) = obj_id;
 
     idk_CS_onObjectCreation(obj_id);
+    getCS<idk::Name_CS>().setName(obj_id, name);
 
     return obj_id;
 }
 
 
 int
-idk::Engine::createGameObject( int prefab_id )
+idk::Engine::copyGameObject( int prefab_id, const std::string &name )
 {
-    int obj_id = createGameObject();
+    int obj_id = createGameObject(name);
     m_gameobjects.get(obj_id) = obj_id;
 
     idk_CS_onObjectCopy(prefab_id, obj_id);
@@ -267,3 +277,18 @@ idk::Engine::shutdown()
     m_running = false;
 }
 
+
+int
+idk::Engine::registerModule( const std::string &name, const std::string &filepath )
+{
+    idk::APILoader loader("IDKGE/runtime/libIDKEditorUI");
+    idk::Module *module_ptr = loader.call<idk::Module>("getInstance");
+
+    int module_id = m_idk_modules.create(module_ptr);
+
+    m_idk_modules.get(module_id)->base_init(module_id, name);
+    m_idk_module_ids[name] = module_id;
+
+    return module_id;
+
+}

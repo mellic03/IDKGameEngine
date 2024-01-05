@@ -8,6 +8,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKevents)
 
 file(GLOB SOURCES
     "src/IDKGameEngine/*.cpp"
+    "src/IDKBuiltinCS/*.cpp"
     "src/IDKGameEngine/gameobject/*.cpp"
     "src/IDKGameEngine/IDKthreading/*.cpp"
     "src/IDKGameEngine/IDKmodules/*.cpp"

@@ -6,8 +6,9 @@
 // #include "IDKgraphics/IDKgraphics.hpp"
 #include "IDKaudio/IDKaudio.hpp"
 #include "IDKevents/IDKevents.hpp"
-#include "IDKmodules/IDKmodules.hpp"
 
+#include <libidk/idk_module.hpp>
+#include <libidk/idk_componentsystem.hpp>
 #include <libidk/idk_allocator.hpp>
 #include <libidk/idk_singleton.hpp>
 
@@ -36,6 +37,7 @@ private:
     idk::AudioEngine *                          m_audio_engine;
     idk::EventManager                           m_event_manager;
 
+
     idk::Allocator<idk::Module *>               m_idk_modules;
     std::unordered_map<std::string, uint>       m_idk_module_ids;
 
@@ -45,6 +47,7 @@ private:
 
     idk::Allocator<idk::ComponentSystem *>      m_componentsystems;
     std::unordered_map<size_t, int>             m_componentsystem_ids;
+    std::unordered_map<int,    std::string>     m_componentsystem_names;
 
 
     void                                        _idk_modules_init();
@@ -88,37 +91,53 @@ public:
     float                                       deltaTime() { return m_frame_time;       };
     float                                       frameRate() { return 1.0f / deltaTime(); };
 
-    int                                         createGameObject();
-    int                                         createGameObject( int prefab_id );
+    int                                         createGameObject( const std::string &name = "Object" );
+    int                                         copyGameObject( int obj_id, const std::string &name = "Object" );
     void                                        deleteGameObject( int obj_id );
     const Allocator<int> &                      gameObjects() { return m_gameobjects; };
     const std::set<int> &                       gameObjects_byComponent( int component_id );
 
+
+
     void                                        giveComponent( int obj_id, int component_id );
+
+    template <typename CS_type>
+    void                                        giveComponent( int obj_id );
+
     void                                        giveComponents( int obj_id ) {  };
     template <typename... Args> void            giveComponents( int obj_id,  int, Args... );
-    void                                        removeComponent( int obj_id, int component_id );
-    bool                                        hasComponent( int obj_id, int component_id );
-    template <typename CS> bool                 hasComponent( int obj_id );
 
-    template <typename module_type> int            registerModule( const std::string &name );
+    void                                        removeComponent( int obj_id, int component_id );
+
+    bool                                        hasComponent( int obj_id, int component_id );
+    template <typename CS_type> bool            hasComponent( int obj_id );
+
+
+
+    template <typename module_type> int         registerModule( const std::string &name );
+    int                                         registerModule( const std::string &name, const std::string &filepath );
+
     template <typename module_type> module_type &  getModule( int module_id );
     template <typename module_type> module_type &  getModule( const std::string &name );
 
-    template <typename CS> int                  registerCS( const std::string &name );
-    template <typename CS> CS &                 getCS( int component_id );
-    template <typename CS> CS &                 getCS();
+    template <typename CS_type> int             registerCS( const std::string &name );
+    template <typename CS_type> CS_type &       getCS( int component_id );
+    template <typename CS_type> CS_type &       getCS();
+    idk::ComponentSystem *                      getCS( int component_id )
+    {
+        return m_componentsystems.get(component_id);
+    };
 
     const Allocator<ComponentSystem *> &        getComponentSystems() { return m_componentsystems; };
 
 };
 
 
-template <typename CS>
+template <typename CS_type>
 bool 
 idk::Engine::hasComponent( int obj_id )
 {
-    size_t type_idx = typeid(CS).hash_code();
+    size_t type_idx = typeid(CS_type).hash_code();
     int    cs_id    = m_componentsystem_ids[type_idx];
 
     return hasComponent(obj_id, cs_id);
@@ -157,6 +176,25 @@ idk::Engine::getModule( const std::string &name )
 
 
 
+template <typename CS_type>
+void
+idk::Engine::giveComponent( int obj_id )
+{
+    int cs_id = getCS<CS_type>().ID();
+
+    if (hasComponent(obj_id, cs_id))
+    {
+        std::cout
+            << "Warning, object " << obj_id
+            << " already has component with ID " << cs_id
+            << "\n";
+        return;
+    }
+
+    giveComponent(obj_id, cs_id);
+}
+
+
 
 template <typename... Args>
 void
@@ -167,35 +205,36 @@ idk::Engine::giveComponents( int obj_id, int first, Args... rest )
 }
 
 
-template <typename CS>
+template <typename CS_type>
 int
 idk::Engine::registerCS( const std::string &name )
 {
-    int cs_id = m_componentsystems.create(new CS);
+    int cs_id = m_componentsystems.create(new CS_type);
     m_componentsystems.get(cs_id)->base_init(cs_id, name);
 
-    size_t type_idx = typeid(CS).hash_code();
+    size_t type_idx = typeid(CS_type).hash_code();
     m_componentsystem_ids[type_idx] = cs_id;
+    m_componentsystem_names[cs_id] = name;
 
     return cs_id;
 }
 
 
-template <typename CS>
-CS &
+template <typename CS_type>
+CS_type &
 idk::Engine::getCS( int component_id )
 {   
-    return *dynamic_cast<CS *>(m_componentsystems.get(component_id));
+    return *dynamic_cast<CS_type *>(m_componentsystems.get(component_id));
 }
 
 
-template <typename CS>
-CS &
+template <typename CS_type>
+CS_type &
 idk::Engine::getCS()
 {
-    size_t type_idx = typeid(CS).hash_code();
+    size_t type_idx = typeid(CS_type).hash_code();
     int    cs_id    = m_componentsystem_ids[type_idx];
 
-    return *dynamic_cast<CS *>(m_componentsystems.get(cs_id));
+    return *dynamic_cast<CS_type *>(m_componentsystems.get(cs_id));
 }
 

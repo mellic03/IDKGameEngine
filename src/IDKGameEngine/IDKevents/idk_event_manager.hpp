@@ -60,6 +60,10 @@ private:
     std::vector<mousefun_t> m_scroll_events;
     bool                    m_windowevents[2];
 
+    std::function<void(const char *)> _dropfile_callback;
+    std::string                       m_dropfile_path  = "";
+    bool                              m_dropfile_event = false;
+
     glm::ivec2              m_size;
     idk::Keylog             m_keylog;
 
@@ -82,6 +86,11 @@ public:
     glm::ivec2              windowSize() const { return m_size; };
     
     void                    onWindowEvent( WindowEvent, std::function<void()> );
+
+    void                    onDropFile( std::function<void(const char *)> callback );
+    bool                    fileDropped() { return m_dropfile_event; };
+    const std::string &     fileDroppedPath() { return m_dropfile_path; };
+
     void                    onSDLPollEvent( std::function<void(SDL_Event *)> fn) { m_SDL_pollevents.push_back(fn); };
     void                    onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback );
     void                    onMouseWheel( std::function<void(float f)> callback );
