@@ -42,6 +42,7 @@ private:
     std::unordered_map<std::string, uint>       m_idk_module_ids;
 
     idk::Allocator<int>                         m_gameobjects;
+    idk::Allocator<std::string>                 m_gameobject_names;
     std::map<int, std::set<int>>                m_objects_components;   // v[object_id][cs_id]
     std::map<int, std::set<int>>                m_components_objects;   // v[cs_id][object_id]
 
@@ -95,7 +96,8 @@ public:
     int                                         copyGameObject( int obj_id, const std::string &name = "Object" );
     void                                        deleteGameObject( int obj_id );
     const Allocator<int> &                      gameObjects() { return m_gameobjects; };
-    const std::set<int> &                       gameObjects_byComponent( int component_id );
+    std::string &                               getGameObjectName( int obj_id );
+    void                                        setGameObjectName( int obj_id, const std::string & );
 
 
 
@@ -123,12 +125,12 @@ public:
     template <typename CS_type> int             registerCS( const std::string &name );
     template <typename CS_type> CS_type &       getCS( int component_id );
     template <typename CS_type> CS_type &       getCS();
-    idk::ComponentSystem *                      getCS( int component_id )
-    {
-        return m_componentsystems.get(component_id);
-    };
+    idk::ComponentSystem *                      getCS( int component_id );
 
     const Allocator<ComponentSystem *> &        getComponentSystems() { return m_componentsystems; };
+
+    void                                        saveFile( const std::string & );
+    void                                        loadFile( const std::string & );
 
 };
 
@@ -224,7 +226,7 @@ template <typename CS_type>
 CS_type &
 idk::Engine::getCS( int component_id )
 {   
-    return *dynamic_cast<CS_type *>(m_componentsystems.get(component_id));
+    return *dynamic_cast<CS_type *>(getCS(component_id));
 }
 
 
@@ -234,7 +236,6 @@ idk::Engine::getCS()
 {
     size_t type_idx = typeid(CS_type).hash_code();
     int    cs_id    = m_componentsystem_ids[type_idx];
-
-    return *dynamic_cast<CS_type *>(m_componentsystems.get(cs_id));
+    return *dynamic_cast<CS_type *>(getCS(cs_id));
 }
 

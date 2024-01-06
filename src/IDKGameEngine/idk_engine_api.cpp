@@ -2,7 +2,7 @@
 
 
 #include "idk_engine.hpp"
-#include <IDKRenderEngine/render/idk_renderengine.hpp>
+#include <IDKGraphics/render/idk_renderengine.hpp>
 #include "IDKthreading/idk_threadpool.hpp"
 
 #include <libidk/idk_platform.hpp>
