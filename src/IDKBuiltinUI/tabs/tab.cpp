@@ -13,13 +13,22 @@ EditorUI_Module::_tab( idk::EngineAPI &api )
     this->_tab_editor_properties(api);
     this->_tab_inspect(api, _get_selection());
 
-    if (engine.hasComponent<idk::Transform_CS>(_get_selection()))
-    {
-        idkg::ui::transform_component(
-            engine, ren.getCamera(), engine.getCS<idk::Transform_CS>(),
-            _get_selection(), m_tsnap, m_rsnap
-        );
-    }
+
+    // int selected_obj = _get_selection();
+
+    // if (engine.hasComponent<idk::Transform_CS>(selected_obj))
+    // {
+    //     auto &tCS = engine.getCS<idk::Transform_CS>();
+
+    //     glm::mat4 &model    = tCS.getModelMatrix(selected_obj);
+    //     glm::mat4 transform = tCS.getModelMatrixParented(selected_obj);
+    //     glm::mat4 parent    = tCS.getParentModelMatrix(selected_obj);
+
+    //     idk::ui::transform_component(
+    //         engine, ren.getCamera(), engine.getCS<idk::Transform_CS>(),
+    //         model, transform, parent, m_tsnap, m_rsnap
+    //     );
+    // }
 
     EditorTab::shader_programs(api);
     EditorTab::skybox(api);

@@ -3,31 +3,29 @@
 #include <map>
 #include <set>
 
-#include "IDKaudio/IDKaudio.hpp"
-#include "IDKevents/IDKevents.hpp"
-
 #include <libidk/idk_module.hpp>
 #include <libidk/idk_componentsystem.hpp>
 #include <libidk/idk_allocator.hpp>
 #include <libidk/idk_singleton.hpp>
 
+#include <cstdint>
+#include <cstddef>
+
+
 
 namespace idk { class Engine;       };
 namespace idk { class RenderEngine; };
+namespace idk { class EventSystem;  };
 
 
 class IDK_VISIBLE idk::Engine
 {
 private:
 
-    Uint64                                      m_frame_start = 0;
-    Uint64                                      m_frame_end   = 0;
+    uint64_t                                    m_frame_start = 0;
+    uint64_t                                    m_frame_end   = 0;
     float                                       m_frame_time  = 1.0f;
     bool                                        m_running     = true;
-
-    idk::AudioEngine *                          m_audio_engine;
-    idk::EventManager                           m_event_manager;
-
 
     idk::Allocator<idk::Module *>               m_idk_modules;
     std::unordered_map<std::string, uint>       m_idk_module_ids;
@@ -42,31 +40,26 @@ private:
     std::unordered_map<int,    std::string>     m_componentsystem_names;
 
 
-    void                                        _idk_modules_stage_A();
-    void                                        _idk_modules_stage_B();
-    void                                        _idk_modules_stage_C();
+    void                                        _idk_modules_stage_A( idk::EngineAPI & );
+    void                                        _idk_modules_stage_B( idk::EngineAPI & );
+    void                                        _idk_modules_stage_C( idk::EngineAPI & );
 
     void                                        idk_CS_checkDependencies( int obj_id, int component_id );
     void                                        idk_CS_onObjectAssignment( int component_id, int obj_id );
+    void                                        idk_CS_onObjectDeassignment( int component_id, int obj_id );
     void                                        idk_CS_onObjectCreation( int obj_id );
     void                                        idk_CS_onObjectDeletion( int obj_id );
     void                                        idk_CS_onObjectCopy( int src_obj_id, int dest_obj_id );
 
-    idk::AudioEngine &                          _audio_engine()  { return *m_audio_engine;  };
-
 
 public:
+                                                Engine();
 
-    idk::EngineAPI *                            APIptr = nullptr;
-                                                Engine( idk::RenderEngine & );
+    void                                        initModules ( idk::EngineAPI & );
+    void                                        beginFrame  ( idk::EngineAPI & );
+    void                                        endFrame    ( idk::EngineAPI & );
 
-
-    idk::EventManager &                         eventManager() { return m_event_manager; };
-
-    void                                        initModules();
-    bool                                        running()   { return m_running; };
-    void                                        beginFrame( idk::RenderEngine & );
-    void                                        endFrame( idk::RenderEngine & );
+    bool                                        running() { return m_running; };
     void                                        shutdown();
 
     float                                       deltaTime() { return m_frame_time;       };
@@ -78,7 +71,6 @@ public:
     const Allocator<int> &                      gameObjects() { return m_gameobjects; };
     std::string &                               getGameObjectName( int obj_id );
     void                                        setGameObjectName( int obj_id, const std::string & );
-
 
 
     void                                        giveComponent( int obj_id, int component_id );

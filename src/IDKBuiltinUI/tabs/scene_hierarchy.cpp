@@ -107,49 +107,6 @@ EditorUI_Module::_tab_scene_treenode( idk::EngineAPI &api, int id )
 }
 
 
-void rightwindow( idk::EngineAPI &api, int selected )
-{
-    // auto &engine = api.getEngine();
-    // auto &nCS    = engine.getCS<idk::Name_CS>();
-
-    // ImGui::BeginChild("LR", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
-    // std::string *text = &nCS.getName(selected);
-    // ImGui::InputText("Name: ", text);
-    // ImGui::EndChild();
-
-    // if (idkImGui::splitWindow_begin("Details"))
-    // {
-    //     ImGui::Text("Object");
-
-    //     idkImGui::splitWindow_split();
-
-    //     if (ImGui::Button("Add Component"))
-    //     {
-    //         ImGui::OpenPopup("Add Component");
-    //     }
-
-    //     if (ImGui::BeginPopup("Add Component"))
-    //     {
-    //         ImGui::Text("Add Component");
-    //         ImGui::Separator();
-
-    //         for (int i=0; i<5; i++)
-    //         {
-    //             std::string label = engine.getCS(i)->name();
-
-    //             if (ImGui::MenuItem(label.c_str()))
-    //             {
-    //                 engine.giveComponent(selected, i);
-    //             }
-    //         }
-
-    //         ImGui::EndPopup();
-    //     }
-
-    //     idkImGui::splitWindow_end();
-    // }
-}
-
 
 void
 EditorUI_Module::_tab_scene_hierarchy( idk::EngineAPI &api )
@@ -172,15 +129,14 @@ EditorUI_Module::_tab_scene_hierarchy( idk::EngineAPI &api )
         ImGui::EndChild();
 
 
-        if (ImGui::Button(IDK_ICON_PLUS " Create"))
+        if (ImGui::Button(ICON_FA_PLUS " Create"))
         {
-            // m_selected_object = 1;
             engine.createGameObject("Empty");
         }
 
         ImGui::SameLine();
 
-        if (ImGui::Button(IDK_ICON_TRASH " delete"))
+        if (ImGui::Button(ICON_FA_TRASH_CAN " delete"))
         {
             engine.deleteGameObject(_get_selection());
             std::cout << "Deleted object " << _get_selection() << "\n";

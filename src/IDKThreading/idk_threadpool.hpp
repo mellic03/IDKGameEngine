@@ -16,8 +16,6 @@
 
 
 namespace idk { class ThreadPool; };
-namespace idk::internal { class ThreadPoolAPI; };
-
 
 class IDK_VISIBLE idk::ThreadPool
 {
@@ -31,8 +29,6 @@ public:
 
 
 private:
-    friend class idk::internal::ThreadPoolAPI;
-
     using cond_var = std::condition_variable;
 
     int                             m_current_idx = 0;
@@ -51,13 +47,13 @@ private:
     std::vector<std::queue<int>>    m_task_queues;
     std::vector<std::queue<int>>    m_finished_tasks;
 
-    void    _update();
 
     void    _worker   ( int idx );
     Task    _pop_task ( int idx );
 
 
 public:
+    void    _update();
             ThreadPool();
 
     

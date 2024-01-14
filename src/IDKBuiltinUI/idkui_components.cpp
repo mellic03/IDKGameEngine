@@ -1,6 +1,7 @@
 #include "idkui_components.hpp"
 
 #include <IDKGameEngine/IDKengine.hpp>
+#include <IDKEvents/IDKEvents.hpp>
 #include <IDKBuiltinCS/IDKBuiltinCS.hpp>
 
 #include <idk_imgui/imgui.hpp>
@@ -8,9 +9,12 @@
 
 
 void
-idkg::ui::transform_component( idk::Engine &engine, idk::Camera &camera, idk::Transform_CS &CS,
-                               int obj_id, float tsnap, float rsnap )
+idk::ui::transform_component( idk::EngineAPI &api, idk::Camera &camera, idk::Transform_CS &CS,
+                              glm::mat4 &model, glm::mat4 transform, glm::mat4 parent, float tsnap, float rsnap )
 {
+    auto &engine   = api.getEngine();
+    auto &eventsys = api.getEventSys();
+
     ImGuizmo::SetOrthographic(false);
 
     auto &io = ImGui::GetIO();
@@ -26,10 +30,6 @@ idkg::ui::transform_component( idk::Engine &engine, idk::Camera &camera, idk::Tr
     glm::mat4 inv_proj = glm::inverse(proj);
 
 
-    glm::mat4 &model    = CS.getModelMatrix(obj_id);
-    glm::mat4 transform = CS.getModelMatrixParented(obj_id);
-    glm::mat4 parent    = CS.getParentModelMatrix(obj_id);
-
     ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
 
     glm::vec3 tsnp = glm::vec3(tsnap);
@@ -37,12 +37,12 @@ idkg::ui::transform_component( idk::Engine &engine, idk::Camera &camera, idk::Tr
     float *ts      = nullptr;
     float *rs      = nullptr;
 
-    if (engine.eventManager().keylog().keyDown(idk::Keycode::LSHIFT))
+    if (eventsys.keylog().keyDown(idk::Keycode::LSHIFT))
     {
         mode = ImGuizmo::MODE::WORLD;
     }
 
-    if (engine.eventManager().keylog().keyDown(idk::Keycode::LALT))
+    if (eventsys.keylog().keyDown(idk::Keycode::LALT))
     {
         ts = &tsnp[0];
         rs = &rsnp[0];
@@ -69,6 +69,60 @@ idkg::ui::transform_component( idk::Engine &engine, idk::Camera &camera, idk::Tr
     );
 
     model = glm::inverse(parent) * transform;
-
 }
 
+
+
+void
+idk::ui::transform_component2( idk::EngineAPI &api, idk::Camera &camera, idk::Transform_CS &CS,
+                               glm::mat4 &model, glm::mat4 transform, glm::mat4 parent )
+{
+    auto &engine   = api.getEngine();
+    auto &eventsys = api.getEventSys();
+
+    ImGuizmo::SetOrthographic(false);
+
+    auto &io = ImGui::GetIO();
+    float x = ImGui::GetWindowPos().x;
+    float y = ImGui::GetWindowPos().y;
+    float w = io.DisplaySize.x; // ImGui::GetWindowWidth();
+    float h = io.DisplaySize.y; // ImGui::GetWindowHeight();
+    ImGuizmo::SetRect(0, 0, w, h);
+
+    glm::mat4 view     = camera.view();
+    glm::mat4 proj     = camera.projection();
+    glm::mat4 inv_view = glm::inverse(view);
+    glm::mat4 inv_proj = glm::inverse(proj);
+
+
+    ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
+
+    if (eventsys.keylog().keyDown(idk::Keycode::LSHIFT))
+    {
+        mode = ImGuizmo::MODE::WORLD;
+    }
+
+
+    glm::mat4 delta(1.0f);
+
+    ImGuizmo::Manipulate(
+        glm::value_ptr(view),
+        glm::value_ptr(proj),
+        ImGuizmo::OPERATION::TRANSLATE,
+        mode,
+        glm::value_ptr(model),
+        glm::value_ptr(delta)
+    );
+
+    ImGuizmo::Manipulate(
+        glm::value_ptr(view),
+        glm::value_ptr(proj),
+        ImGuizmo::OPERATION::ROTATE,
+        mode,
+        glm::value_ptr(model),
+        glm::value_ptr(delta)
+    );
+
+    // model = glm::inverse(parent) * transform;
+
+}

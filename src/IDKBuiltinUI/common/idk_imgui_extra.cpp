@@ -63,7 +63,7 @@ file_select( const std::string &path, std::string &selection )
         {
             std::string entry_path = dir_entry.path();
             std::string entry_name = dir_entry.path().filename();
-            std::string label = IDK_ICON_FOLDER " " + entry_name;
+            std::string label = ICON_FA_FOLDER " " + entry_name;
 
             int flags = dir_flags;
 
@@ -92,7 +92,7 @@ file_select( const std::string &path, std::string &selection )
     {
         std::string entry_path = dir_entry.path();
         std::string entry_name = dir_entry.path().filename();
-        std::string label = IDK_ICON_FILE " " + entry_name;
+        std::string label = ICON_FA_FILE " " + entry_name;
 
         if (dir_entry.is_directory() == false)
         {

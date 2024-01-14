@@ -10,7 +10,7 @@ namespace idk { class Icon_CS; };
 class idk::Icon_CS: public idk::ComponentSystem
 {
 private:
-    std::string m_default_icon = IDK_ICON_BOX;
+    std::string m_default_icon = ICON_FA_BOX;
 
     idk::Allocator<std::string>    m_icons;
     std::map<int, int>          m_keys;
@@ -23,6 +23,7 @@ public:
     void        stage_C ( idk::EngineAPI & ) {  };
 
     void        onObjectAssignment ( int obj_id, idk::Engine & );
+    void        onObjectDeassignment ( int obj_id, idk::Engine & ) {  };
     void        onObjectCreation   ( int obj_id, idk::Engine & );
     void        onObjectDeletion   ( int obj_id, idk::Engine & );
     void        onObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine & );

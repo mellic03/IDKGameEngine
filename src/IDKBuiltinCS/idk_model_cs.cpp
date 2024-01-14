@@ -81,13 +81,20 @@ idk::Model_CS::getAnimator( idk::RenderEngine &ren, int obj_id )
 
 
 void
+idk::Model_CS::onObjectDeassignment( int obj_id, idk::Engine &engine )
+{
+    m_object_model_ids.destroy(m_keys[obj_id]);
+    m_keys[obj_id] = -1;
+}
+
+
+void
 idk::Model_CS::onObjectDeletion( int obj_id, idk::Engine &engine )
 {
     int &key = m_keys[obj_id];
     m_object_model_ids.destroy(key);
     key = -1;
 }
-
 
 
 void

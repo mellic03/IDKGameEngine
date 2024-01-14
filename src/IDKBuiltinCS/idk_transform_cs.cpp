@@ -1,6 +1,17 @@
 #include "idk_transform_cs.hpp"
 #include "../../external/include/idk_imgui/imgui.hpp"
 #include "../../external/include/idk_imgui/imguizmo.hpp"
+#include "../IDKBuiltinUI/idkui_components.hpp"
+
+
+static idk::EngineAPI *api_ptr;
+
+
+void
+idk::Transform_CS::init( idk::EngineAPI &api )
+{
+    api_ptr = &api;
+}
 
 
 void
@@ -221,20 +232,33 @@ idk::Transform_CS::onObjectCopy( int src_obj_id, int dest_obj_id, idk::Engine &e
 void
 idk::Transform_CS::onObjectSelection( int obj_id )
 {
-    glm::mat4 &model = getModelMatrix(obj_id);
+    auto &engine = api_ptr->getEngine();
+    auto &ren    = api_ptr->getRenderer();
 
-    float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+    glm::mat4 &model    = getModelMatrix(obj_id);
+    glm::mat4 transform = getModelMatrixParented(obj_id);
+    glm::mat4 parent    = getParentModelMatrix(obj_id);
 
-    ImGuizmo::DecomposeMatrixToComponents(
-        glm::value_ptr(model), matrixTranslation, matrixRotation, matrixScale
+    idk::ui::transform_component(
+        *api_ptr, ren.getCamera(), engine.getCS<idk::Transform_CS>(),
+        model, transform, parent, 0.5f, 0.5f
     );
 
-    ImGui::InputFloat3("Tr", matrixTranslation, "%.3f");
-    ImGui::InputFloat3("Rt", matrixRotation, "%.3f");
-    ImGui::InputFloat3("Sc", matrixScale, "%.3f");
 
-    ImGuizmo::RecomposeMatrixFromComponents(
-        matrixTranslation, matrixRotation, matrixScale, glm::value_ptr(model)
-    );
+    // glm::mat4 &model = getModelMatrix(obj_id);
+
+    // float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+
+    // ImGuizmo::DecomposeMatrixToComponents(
+    //     glm::value_ptr(model), matrixTranslation, matrixRotation, matrixScale
+    // );
+
+    // ImGui::InputFloat3("Tr", matrixTranslation, "%.3f");
+    // ImGui::InputFloat3("Rt", matrixRotation, "%.3f");
+    // ImGui::InputFloat3("Sc", matrixScale, "%.3f");
+
+    // ImGuizmo::RecomposeMatrixFromComponents(
+    //     matrixTranslation, matrixRotation, matrixScale, glm::value_ptr(model)
+    // );
 }
 

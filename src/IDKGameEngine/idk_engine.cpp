@@ -1,90 +1,93 @@
 #include "idk_engine.hpp"
-#include <libidk/idk_export.hpp>
 
-#include <IDKGraphics/IDKGraphics.hpp>
+#include <libidk/idk_export.hpp>
 #include <libidk/idk_scene_file.hpp>
 
+#include <IDKGraphics/IDKGraphics.hpp>
+#include <IDKEvents/IDKEvents.hpp>
 
-idk::Engine::Engine( idk::RenderEngine &ren )
+#include "./idk_engine_api.hpp"
+
+
+idk::Engine::Engine()
 {
-    idk::Engine       &engine = *this;
-    idk::EventManager &events = m_event_manager;
+    // idk::Engine &engine = *this;
 
-    auto resize_lambda = [&ren, &events]()
-    {
-        auto winsize = events.windowSize();
-        ren.resize(winsize.x, winsize.y);
-    };
+    // auto resize_lambda = [ren, eventsys]()
+    // {
+    //     auto winsize = eventsys->windowSize();
+    //     ren->resize(winsize.x, winsize.y);
+    // };
 
-    auto exit_lambda = [&engine]()
-    {
-        engine.shutdown();
-    };
+    // auto exit_lambda = [&engine]()
+    // {
+    //     engine.shutdown();
+    // };
 
-    m_event_manager.onWindowEvent(WindowEvent::RESIZE, resize_lambda);
-    m_event_manager.onWindowEvent(WindowEvent::EXIT,   exit_lambda);
+    // eventsys->onWindowEvent(WindowEvent::RESIZE, resize_lambda);
+    // eventsys->onWindowEvent(WindowEvent::EXIT,   exit_lambda);
 }
 
 
 
 IDK_VISIBLE
 void
-idk::Engine::initModules()
+idk::Engine::initModules( idk::EngineAPI &api )
 {
     for (auto *CS: m_componentsystems)
     {
-        CS->init(*APIptr);
+        CS->init(api);
     }
 
     for (auto *mod: m_idk_modules)
     {
-        mod->init(*APIptr);
+        mod->init(api);
     }
 }
 
 
 
 void
-idk::Engine::_idk_modules_stage_A()
+idk::Engine::_idk_modules_stage_A( idk::EngineAPI &api )
 {
     for (auto *CS: m_componentsystems)
     {
-        CS->stage_A(*APIptr);
+        CS->stage_A(api);
     }
 
     for (auto *mod: m_idk_modules)
     {
-        mod->stage_A(*APIptr);
+        mod->stage_A(api);
     }
 }
 
 
 void
-idk::Engine::_idk_modules_stage_B()
+idk::Engine::_idk_modules_stage_B( idk::EngineAPI &api )
 {
     for (auto *CS: m_componentsystems)
     {
-        CS->stage_B(*APIptr);
+        CS->stage_B(api);
     }
 
     for (auto *mod: m_idk_modules)
     {
-        mod->stage_B(*APIptr);
+        mod->stage_B(api);
     }
 }
 
 
 void
-idk::Engine::_idk_modules_stage_C()
+idk::Engine::_idk_modules_stage_C( idk::EngineAPI &api )
 {
     for (auto *CS: m_componentsystems)
     {
-        CS->stage_C(*APIptr);
+        CS->stage_C(api);
     }
 
     for (auto *mod: m_idk_modules)
     {
-        mod->stage_C(*APIptr);
+        mod->stage_C(api);
     }
 }
 
@@ -122,6 +125,14 @@ idk::Engine::idk_CS_onObjectAssignment( int component_id, int obj_id )
 
     auto *CS = getCS(component_id);
     CS->onObjectAssignment(obj_id, *this);
+}
+
+
+void
+idk::Engine::idk_CS_onObjectDeassignment( int component_id, int obj_id )
+{
+    auto *CS = getCS(component_id);
+    CS->onObjectDeassignment(obj_id, *this);
 }
 
 
@@ -227,6 +238,7 @@ idk::Engine::giveComponent( int obj_id, int component_id )
 void
 idk::Engine::removeComponent( int obj_id, int component_id )
 {
+    idk_CS_onObjectDeassignment(component_id, obj_id);
     m_objects_components[obj_id].erase(component_id);
     m_components_objects[component_id].erase(obj_id);
 }
@@ -241,27 +253,27 @@ idk::Engine::hasComponent( int obj_id, int component_id )
 
 IDK_VISIBLE
 void
-idk::Engine::beginFrame( idk::RenderEngine &ren )
+idk::Engine::beginFrame( idk::EngineAPI &api )
 {
+    auto &ren = api.getRenderer();
+
     m_frame_start = SDL_GetPerformanceCounter();
    
-    m_event_manager.processKeyInput();
-    m_event_manager.processMouseInput();
-    m_event_manager.update();
-
     ren.beginFrame();
-    this->_idk_modules_stage_A();
+    this->_idk_modules_stage_A(api);
 }
 
 
 IDK_VISIBLE
 void
-idk::Engine::endFrame( idk::RenderEngine &ren )
+idk::Engine::endFrame( idk::EngineAPI &api )
 {
+    auto &ren = api.getRenderer();
+
     ren.endFrame(deltaTime());
-    _idk_modules_stage_B();
+    _idk_modules_stage_B(api);
     ren.swapWindow();
-    _idk_modules_stage_C();
+    _idk_modules_stage_C(api);
 
     m_frame_end = SDL_GetPerformanceCounter();
     m_frame_time = ((double)(m_frame_end - m_frame_start)) / (double)SDL_GetPerformanceFrequency();

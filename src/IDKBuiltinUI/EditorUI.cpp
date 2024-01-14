@@ -1,6 +1,7 @@
 #include "EditorUI.hpp"
 
 // #include "tabs/EditorUI-tabs.hpp"
+#include <IDKEvents/IDKEvents.hpp>
 
 #include <idk_imgui/imgui.hpp>
 #include <idk_imgui/imguizmo.hpp>
@@ -12,8 +13,9 @@ static ImNodesContext *context;
 void
 EditorUI_Module::init( idk::EngineAPI &api )
 {
-    auto &engine = api.getEngine();
-    auto &ren    = api.getRenderer();
+    auto &engine   = api.getEngine();
+    auto &ren      = api.getRenderer();
+    auto &eventsys = api.getEventSys();
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -34,36 +36,37 @@ EditorUI_Module::init( idk::EngineAPI &api )
 
     ImGui_ImplOpenGL3_Init("#version 440");
 
-    engine.eventManager().onSDLPollEvent(
+    eventsys.onSDLPollEvent(
         [](SDL_Event *event)
         {
             ImGui_ImplSDL2_ProcessEvent(event);
         }
     );
 
+
     for (size_t i=0; i<NUM_FONTS; i++)
     {
-        int font_size = FONT_SIZES[i];
+        float font_size = FONT_SIZES[i];
 
         std::string path = "IDKGE/resources/fonts/Ubuntu/"
-                         + std::to_string(font_size)
+                         + std::to_string(int(font_size))
                          + "/Ubuntu-Medium.ttf";
 
-        m_fonts[i] = io.Fonts->AddFontFromFileTTF(path.c_str(), float(font_size));
+        m_fonts[i] = io.Fonts->AddFontFromFileTTF(path.c_str(), font_size);
 
 
         // Icons
         // -------------------------------------------------------------------------------------
-        ImFontConfig config;
-        config.MergeMode = true;
-        // config.PixelSnapH = true;
         static const ImWchar icon_ranges[] = { IDK_FONT_ICON_MIN, IDK_FONT_ICON_MAX, 0 };
+        float icon_size = font_size * IDK_FONT_ICON_SCALE_FACTOR;
+        float icon_size_2 = font_size * IDK_FONT_ICON_SCALE_FACTOR2;
+        
+        ImFontConfig config;
+        config.MergeMode  = true;
+        config.PixelSnapH = true;
+        config.GlyphMinAdvanceX = 1.5f * icon_size;
 
-        float icon_font_size = float(font_size) * IDK_FONT_ICON_SCALE_FACTOR;
-        io.Fonts->AddFontFromFileTTF(IDK_FONT_ICON_FILEPATH, icon_font_size, &config, icon_ranges);
-
-        // icon_font_size = float(font_size) * IDK_FONT_ICON_SCALE_FACTOR2;
-        io.Fonts->AddFontFromFileTTF(IDK_FONT_ICON_FILEPATH2, icon_font_size, &config, icon_ranges);
+        io.Fonts->AddFontFromFileTTF(IDK_FONT_ICON_FILEPATH, icon_size, &config, icon_ranges);
         // -------------------------------------------------------------------------------------
     }
 
@@ -87,7 +90,7 @@ EditorUI_Module::stage_B( idk::EngineAPI &api )
     ImGuizmo::BeginFrame();
 
 
-    engine.getCS<idk::Icon_CS>().setDefaultIcon(IDK_ICON_BOX_OPEN);
+    engine.getCS<idk::Icon_CS>().setDefaultIcon(ICON_FA_BOX_OPEN);
 
     if (m_show_ImGui_demo)
     {

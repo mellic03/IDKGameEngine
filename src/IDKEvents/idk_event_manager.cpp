@@ -2,7 +2,7 @@
 
 
 
-idk::EventManager::EventManager()
+idk::EventSystem::EventSystem()
 {
     m_windowevents[0] = false;
     m_windowevents[1] = false;
@@ -13,7 +13,7 @@ idk::EventManager::EventManager()
 
 
 void
-idk::EventManager::onWindowEvent( WindowEvent winevent, std::function<void()> response )
+idk::EventSystem::onWindowEvent( WindowEvent winevent, std::function<void()> response )
 {
     int idx = static_cast<int>(winevent);
     auto &winevents = m_windowevents;
@@ -28,7 +28,7 @@ idk::EventManager::onWindowEvent( WindowEvent winevent, std::function<void()> re
 
 
 void
-idk::EventManager::onDropFile( std::function<void(const char *)> callback )
+idk::EventSystem::onDropFile( std::function<void(const char *)> callback )
 {
     _dropfile_callback = callback;
 };
@@ -36,7 +36,7 @@ idk::EventManager::onDropFile( std::function<void(const char *)> callback )
 
 
 void
-idk::EventManager::onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback )
+idk::EventSystem::onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback )
 {
     idk::Keylog &keylog = m_keylog;
 
@@ -51,16 +51,49 @@ idk::EventManager::onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std
 
 
 void
-idk::EventManager::mouseCapture( bool capture )
+idk::EventSystem::mouseCapture( bool capture )
 {
     m_mouse_captured = capture;
     SDL_SetRelativeMouseMode( (capture) ? SDL_TRUE : SDL_FALSE );
 }
 
 void
-idk::EventManager::onMouseWheel( std::function<void(float f)> callback )
+idk::EventSystem::onMouseWheel( std::function<void(float f)> callback )
 {
     m_scroll_events.push_back(callback);
+}
+
+
+void
+idk::EventSystem::onKeyDown( idk::Keycode keycode, std::function<void()> callback )
+{
+    KeyEventWrapper wrapper;
+    wrapper.keycode  = keycode;
+    wrapper.callback = callback;
+
+    m_KeyDown_events.push_back(wrapper);
+}
+
+
+void
+idk::EventSystem::onKeyUp( idk::Keycode keycode, std::function<void()> callback )
+{
+    KeyEventWrapper wrapper;
+    wrapper.keycode  = keycode;
+    wrapper.callback = callback;
+
+    m_KeyUp_events.push_back(wrapper);
+}
+
+
+void
+idk::EventSystem::onKeyTapped( idk::Keycode keycode, std::function<void()> callback )
+{
+    KeyEventWrapper wrapper;
+    wrapper.keycode  = keycode;
+    wrapper.callback = callback;
+
+    m_KeyTapped_events.push_back(wrapper);
 }
 
 
@@ -68,7 +101,7 @@ idk::EventManager::onMouseWheel( std::function<void(float f)> callback )
 
 #ifdef IDK_SDL2
 void
-idk::EventManager::processMouseInput()
+idk::EventSystem::processMouseInput()
 {
     // Reset window events
     for (bool &b: m_windowevents)
@@ -148,7 +181,7 @@ idk::EventManager::processMouseInput()
 
 #elif defined(IDK_SFML)
 void
-idk::EventManager::processMouseInput()
+idk::EventSystem::processMouseInput()
 {
 
 }
@@ -158,7 +191,7 @@ idk::EventManager::processMouseInput()
 
 #ifdef IDK_SDL2
 void
-idk::EventManager::processKeyInput()
+idk::EventSystem::processKeyInput()
 {
     const Uint8 *state = SDL_GetKeyboardState(NULL);
     m_keylog.log(state);
@@ -166,7 +199,7 @@ idk::EventManager::processKeyInput()
 
 #elif defined(IDK_SFML)
 void
-idk::EventManager::processKeyInput()
+idk::EventSystem::processKeyInput()
 {
 
 }
@@ -174,7 +207,7 @@ idk::EventManager::processKeyInput()
 
 
 void
-idk::EventManager::update()
+idk::EventSystem::update()
 {
     for (idk::Event &event: m_events)
     {
@@ -183,6 +216,18 @@ idk::EventManager::update()
             event.response();
         }
     }
+
+    for (KeyEventWrapper wrapper: m_KeyDown_events)
+        if (m_keylog.keyDown(wrapper.keycode))
+            wrapper.callback();
+
+    for (KeyEventWrapper wrapper: m_KeyUp_events)
+        if (m_keylog.keyUp(wrapper.keycode))
+            wrapper.callback();
+
+    for (KeyEventWrapper wrapper: m_KeyTapped_events)
+        if (m_keylog.keyTapped(wrapper.keycode))
+            wrapper.callback();
 
     if (m_mousewheel_delta != 0.0f && mouseCaptured())
     {

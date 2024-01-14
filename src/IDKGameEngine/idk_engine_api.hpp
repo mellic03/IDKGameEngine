@@ -6,6 +6,9 @@
 
 namespace idk
 {
+    class EventSystem;
+    class AudioSystem;
+
     class Engine;
     class RenderEngine;
     class ThreadPool;
@@ -21,9 +24,15 @@ private:
     std::string         m_name;
 
 public:
-    idk::RenderEngine   *renderer_ptr   = nullptr;
+    idk::EventSystem    *eventsys_ptr   = nullptr;
+    idk::AudioSystem    *audiosys_ptr   = nullptr;
+
     idk::Engine         *engine_ptr     = nullptr;
+    idk::RenderEngine   *renderer_ptr   = nullptr;
     idk::ThreadPool     *threadpool_ptr = nullptr;
+
+    idk::EventSystem    &getEventSys()   { return *eventsys_ptr;   };
+    idk::AudioSystem    &getAudioSys()   { return *audiosys_ptr;   };
 
     idk::Engine         &getEngine()     { return *engine_ptr;     };
     idk::RenderEngine   &getRenderer()   { return *renderer_ptr;   };

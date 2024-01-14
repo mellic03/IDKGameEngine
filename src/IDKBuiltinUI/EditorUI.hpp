@@ -14,7 +14,7 @@ class EditorUI_Module: public idk::Module
 private:
     static constexpr int NUM_FONTS = 4;
 
-    const std::array<int, NUM_FONTS> FONT_SIZES = { 14, 16, 18, 20 };
+    const std::array<float, NUM_FONTS> FONT_SIZES = { 14.0f, 16.0f, 18.0f, 20.0f };
     std::array<ImFont *, NUM_FONTS> m_fonts;
 
     ImFont *    m_font;

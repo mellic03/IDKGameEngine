@@ -7,7 +7,7 @@
 static void
 menubar_save( idk::EngineAPI &api )
 {
-    if (ImGui::MenuItem(IDK_ICON_SAVE " Save", "CTRL + S"))
+    if (ImGui::MenuItem(ICON_FA_FLOPPY_DISK " Save", "CTRL + S"))
     {
 
     }
@@ -33,7 +33,7 @@ EditorUI_Module::_menubar( idk::EngineAPI &api )
 
             // menubar_save(api);
 
-            if (ImGui::MenuItem(IDK_ICON_SAVE_AS " Save As", "CTRL + SHFT + S"))
+            if (ImGui::MenuItem(ICON_FA_ID_CARD " Save As", "CTRL + SHFT + S"))
             {
                 popup_open = true;
             }

@@ -5,10 +5,10 @@
 
 
 
-namespace idk { class AudioEngine; };
-namespace idk::internal { class AudioEngineAPI; };
+namespace idk { class AudioSystem; };
 
-class idk::AudioEngine
+
+class idk::AudioSystem
 {
 public:
     struct Sound
@@ -35,18 +35,15 @@ public:
     };
 
 private:
-    friend class idk::internal::AudioEngineAPI;
 
 
 public:
-                AudioEngine();
+                // AudioSystem();
 
     // void        update();
-
     // int         loadWav( const char * );
-    
     // int         createEmitter();
-    int         createEmitter( int mix_chunk_id, const glm::vec3 &position );
+    // int         createEmitter( int mix_chunk_id, const glm::vec3 &position );
 
     // void        listenerPosition( idk::Transform * );
 

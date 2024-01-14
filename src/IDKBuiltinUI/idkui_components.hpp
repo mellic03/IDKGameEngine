@@ -4,10 +4,17 @@
 #include <IDKGraphics/IDKGraphics.hpp>
 
 
-namespace idkg::ui
+namespace idk::ui
 {
-    void transform_component( idk::Engine &engine, idk::Camera &camera, idk::Transform_CS &CS,
-                              int obj_id, float tsnap, float rsnap );
+    void transform_component( idk::EngineAPI &api, idk::Camera &camera, idk::Transform_CS &CS,
+                              glm::mat4 &model, glm::mat4 transform, glm::mat4 parent, float tsnap, float rsnap );
+
+
+    void transform_component2( idk::EngineAPI &api, idk::Camera &camera, idk::Transform_CS &CS,
+                              glm::mat4 &model, glm::mat4 transform, glm::mat4 parent );
+
+
+
 };
 
 

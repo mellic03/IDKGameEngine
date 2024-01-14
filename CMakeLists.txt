@@ -5,23 +5,16 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/imgui-docking/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/ImGuizmo/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/imnodes-0.5)
 
-
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKaudio/)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKevents/)
-
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKAudio/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKEvents/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKThreading/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinCS/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinUI/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/)
 
 
-file(
-    GLOB SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/gameobject/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKthreading/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKmodules/*.cpp
-)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${CMAKE_CURRENT_SOURCE_DIR}/src/dummy.cpp)
 
 set_target_properties(
     ${PROJECT_NAME} PROPERTIES
@@ -40,10 +33,12 @@ set_target_properties(
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
-    IDKaudio
-    IDKevents
+    IDKAudio
+    IDKEvents
+    IDKThreading
     IDKBuiltinCS
     IDKBuiltinUI
+    IDKGameEngine_internal
 )
 
 

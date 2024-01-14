@@ -1,6 +1,8 @@
 #pragma once
 
 #include <functional>
+#include <set>
+
 #include "idk_keylog.hpp"
 
 #include <libidk/idk_export.hpp>
@@ -13,7 +15,7 @@
 namespace idk
 {
     struct  Event;
-    class   EventManager;
+    class   EventSystem;
 
     enum class RenderEvent: int
     {
@@ -45,13 +47,20 @@ struct IDK_VISIBLE idk::Event
 
 
 
-class IDK_VISIBLE idk::EventManager
+class IDK_VISIBLE idk::EventSystem
 {
     using fun_t = std::function<void(SDL_Event *)>;
     using mousefun_t = std::function<void(float f)>;
 
 private:
-    
+
+    struct KeyEventWrapper
+    {
+        idk::Keycode keycode;
+        std::function<void()> callback;
+    };
+
+
     // SDL backend ------------------------------------
     std::vector<fun_t>      m_SDL_pollevents;
     // ------------------------------------------------
@@ -75,8 +84,14 @@ private:
     glm::vec2               m_mouse_delta;
 
 
+    std::vector<KeyEventWrapper> m_KeyDown_events;
+    std::vector<KeyEventWrapper> m_KeyUp_events;
+    std::vector<KeyEventWrapper> m_KeyTapped_events;
+
+
+
 public:
-                            EventManager();
+                            EventSystem();
     Allocator<Event> &      events() { return m_events; };
 
     void                    processKeyInput();
@@ -94,6 +109,11 @@ public:
     void                    onSDLPollEvent( std::function<void(SDL_Event *)> fn) { m_SDL_pollevents.push_back(fn); };
     void                    onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback );
     void                    onMouseWheel( std::function<void(float f)> callback );
+
+    void                    onKeyDown   ( idk::Keycode, std::function<void()> );
+    void                    onKeyUp     ( idk::Keycode, std::function<void()> );
+    void                    onKeyTapped ( idk::Keycode, std::function<void()> );
+
 
     void                    mouseCapture( bool capture );
     bool                    mouseCaptured() const            { return m_mouse_captured;    };
