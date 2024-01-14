@@ -1,7 +1,7 @@
 #include "idk_engine.hpp"
 #include <libidk/idk_export.hpp>
 
-#include <IDKGraphics/render/idk_renderengine.hpp>
+#include <IDKGraphics/IDKGraphics.hpp>
 #include <libidk/idk_scene_file.hpp>
 
 
@@ -29,7 +29,7 @@ idk::Engine::Engine( idk::RenderEngine &ren )
 
 IDK_VISIBLE
 void
-idk::Engine::_idk_modules_init()
+idk::Engine::initModules()
 {
     for (auto *CS: m_componentsystems)
     {
@@ -175,9 +175,9 @@ idk::Engine::createGameObject( const std::string &name )
 
 
 int
-idk::Engine::copyGameObject( int prefab_id, const std::string &name )
+idk::Engine::copyGameObject( int prefab_id )
 {
-    int obj_id = createGameObject(name);
+    int obj_id = createGameObject(getGameObjectName(prefab_id));
     idk_CS_onObjectCopy(prefab_id, obj_id);
 
     return obj_id;
@@ -241,7 +241,7 @@ idk::Engine::hasComponent( int obj_id, int component_id )
 
 IDK_VISIBLE
 void
-idk::Engine::_begin_frame( idk::RenderEngine &ren )
+idk::Engine::beginFrame( idk::RenderEngine &ren )
 {
     m_frame_start = SDL_GetPerformanceCounter();
    
@@ -256,7 +256,7 @@ idk::Engine::_begin_frame( idk::RenderEngine &ren )
 
 IDK_VISIBLE
 void
-idk::Engine::_end_frame( idk::RenderEngine &ren )
+idk::Engine::endFrame( idk::RenderEngine &ren )
 {
     ren.endFrame(deltaTime());
     _idk_modules_stage_B();
@@ -301,39 +301,39 @@ idk::Engine::getCS( int component_id )
 
 
 
-void
-idk::Engine::saveFile( const std::string &filepath )
-{
-    std::ofstream stream(filepath, std::ios::binary);
-    idk::SceneFile scenefile;
+// void
+// idk::Engine::saveFile( const std::string &filepath )
+// {
+//     std::ofstream stream(filepath, std::ios::binary);
+//     idk::SceneFile scenefile;
 
-    for (auto *CS: getComponentSystems())
-    {
-        scenefile.CSFiles.push_back(
-            CS->onFileSave(*this)
-        );
-    }
+//     for (auto *CS: getComponentSystems())
+//     {
+//         scenefile.CSFiles.push_back(
+//             CS->onFileSave(*this)
+//         );
+//     }
 
-    stream.close();
-}
+//     stream.close();
+// }
 
 
 
-void
-idk::Engine::loadFile( const std::string &filepath )
-{
-    std::ifstream stream(filepath, std::ios::binary);
+// void
+// idk::Engine::loadFile( const std::string &filepath )
+// {
+//     std::ifstream stream(filepath, std::ios::binary);
 
-    idk::SceneFile scenefile = idk::Scene::loadFile(filepath.c_str());
-    auto &CSFiles = scenefile.CSFiles;
-    std::reverse(CSFiles.begin(), CSFiles.end());
+//     idk::SceneFile scenefile = idk::Scene::loadFile(filepath.c_str());
+//     auto &CSFiles = scenefile.CSFiles;
+//     std::reverse(CSFiles.begin(), CSFiles.end());
 
-    for (auto *CS: getComponentSystems())
-    {
-        CS->onFileLoad(*this, CSFiles.back());
-        CSFiles.pop_back();
-    }
+//     for (auto *CS: getComponentSystems())
+//     {
+//         CS->onFileLoad(*this, CSFiles.back());
+//         CSFiles.pop_back();
+//     }
 
-    stream.close();
-}
+//     stream.close();
+// }
 

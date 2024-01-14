@@ -3,7 +3,6 @@
 #include <map>
 #include <set>
 
-// #include "IDKgraphics/IDKgraphics.hpp"
 #include "IDKaudio/IDKaudio.hpp"
 #include "IDKevents/IDKevents.hpp"
 
@@ -15,19 +14,11 @@
 
 namespace idk { class Engine;       };
 namespace idk { class RenderEngine; };
-namespace idk { class EngineAPI;    };
-
-namespace idk::internal { class EngineAPI; };
-
 
 
 class IDK_VISIBLE idk::Engine
 {
 private:
-    friend class idk::EngineAPI;
-    friend class idk::internal::EngineAPI;
-
-    idk::EngineAPI *APIptr = nullptr;
 
     Uint64                                      m_frame_start = 0;
     Uint64                                      m_frame_end   = 0;
@@ -51,7 +42,6 @@ private:
     std::unordered_map<int,    std::string>     m_componentsystem_names;
 
 
-    void                                        _idk_modules_init();
     void                                        _idk_modules_stage_A();
     void                                        _idk_modules_stage_B();
     void                                        _idk_modules_stage_C();
@@ -64,36 +54,26 @@ private:
 
     idk::AudioEngine &                          _audio_engine()  { return *m_audio_engine;  };
 
-    bool    _running() { return m_running; };
-    void    _begin_frame( idk::RenderEngine & );
-    void    _end_frame( idk::RenderEngine & );
 
 public:
 
-    struct Config
-    {
-        const char *name;
-
-        size_t      width;
-        size_t      height;
-
-        uint32_t    gl_major;
-        uint32_t    gl_minor;
-    };
-
-    Engine( idk::RenderEngine & );
+    idk::EngineAPI *                            APIptr = nullptr;
+                                                Engine( idk::RenderEngine & );
 
 
     idk::EventManager &                         eventManager() { return m_event_manager; };
 
+    void                                        initModules();
     bool                                        running()   { return m_running; };
+    void                                        beginFrame( idk::RenderEngine & );
+    void                                        endFrame( idk::RenderEngine & );
     void                                        shutdown();
 
     float                                       deltaTime() { return m_frame_time;       };
     float                                       frameRate() { return 1.0f / deltaTime(); };
 
     int                                         createGameObject( const std::string &name = "Object" );
-    int                                         copyGameObject( int obj_id, const std::string &name = "Object" );
+    int                                         copyGameObject( int obj_id );
     void                                        deleteGameObject( int obj_id );
     const Allocator<int> &                      gameObjects() { return m_gameobjects; };
     std::string &                               getGameObjectName( int obj_id );
@@ -129,8 +109,8 @@ public:
 
     const Allocator<ComponentSystem *> &        getComponentSystems() { return m_componentsystems; };
 
-    void                                        saveFile( const std::string & );
-    void                                        loadFile( const std::string & );
+    // void                                        saveFile( const std::string & );
+    // void                                        loadFile( const std::string & );
 
 };
 

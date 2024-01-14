@@ -1,16 +1,24 @@
 cmake_minimum_required(VERSION 3.9)
 project(IDKGameEngine)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/imgui-docking/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/ImGuizmo/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/imnodes-0.5)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKaudio/)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKevents/)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKaudio/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKevents/)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinCS/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinUI/)
 
 
-file(GLOB SOURCES
-    "src/IDKGameEngine/*.cpp"
-    "src/IDKGameEngine/gameobject/*.cpp"
-    "src/IDKGameEngine/IDKthreading/*.cpp"
-    "src/IDKGameEngine/IDKmodules/*.cpp"
+file(
+    GLOB SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/gameobject/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKthreading/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/IDKmodules/*.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
@@ -21,6 +29,7 @@ set_target_properties(
     CXX_STANDARD 17
 )
 
+
 # if(MSVC)
 #     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 # else()
@@ -28,8 +37,18 @@ set_target_properties(
 # endif()
 
 
+
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     IDKaudio
     IDKevents
+    IDKBuiltinCS
+    IDKBuiltinUI
 )
+
+
+FILE(
+    COPY ${CMAKE_CURRENT_SOURCE_DIR}/IDKGE/
+    DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/IDKGE/
+)
+

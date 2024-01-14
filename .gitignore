@@ -3,5 +3,6 @@ html
 latex
 output
 
+external
 external/include/**
 external/lib/**

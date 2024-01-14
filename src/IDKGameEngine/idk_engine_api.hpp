@@ -1,6 +1,7 @@
 #pragma once
 
 #include <libidk/idk_export.hpp>
+#include <string>
 
 
 namespace idk
@@ -10,10 +11,6 @@ namespace idk
     class ThreadPool;
 
     class EngineAPI;
-    class APILoader;
-
-    class Game;
-    class GameLoader;
 };
 
 
@@ -21,51 +18,17 @@ namespace idk
 class IDK_VISIBLE idk::EngineAPI
 {
 private:
-    const char        *m_name;
-
-    idk::RenderEngine *renderer_ptr   = nullptr;
-    idk::Engine       *engine_ptr     = nullptr;
-    idk::ThreadPool   *threadpool_ptr = nullptr;
+    std::string         m_name;
 
 public:
-    idk::Engine         &getEngine();
-    idk::RenderEngine   &getRenderer();
-    idk::ThreadPool     &getThreadPool();
+    idk::RenderEngine   *renderer_ptr   = nullptr;
+    idk::Engine         *engine_ptr     = nullptr;
+    idk::ThreadPool     *threadpool_ptr = nullptr;
 
-    EngineAPI( const char *name ): m_name(name) {  };
+    idk::Engine         &getEngine()     { return *engine_ptr;     };
+    idk::RenderEngine   &getRenderer()   { return *renderer_ptr;   };
+    idk::ThreadPool     &getThreadPool() { return *threadpool_ptr; };
 
-};
+    EngineAPI( const std::string &name ): m_name(name) {  };
 
-
-
-
-// class IDK_VISIBLE idk::APILoader
-// {
-// private:
-//     typedef idk::EngineAPI *(*functionptr_type)( const char * );
-
-//     void        *m_lib;
-//     void        *m_getAPI;
-
-// public:
-//         APILoader( const char *path );
-//        ~APILoader();
-
-//     idk::EngineAPI &getEngineAPI( const char * );
-// };
-
-
-
-class IDK_VISIBLE idk::GameLoader
-{
-private:
-    typedef idk::Game *(*functionptr_type)();
-
-    void        *m_lib;
-    void        *m_getGame;
-
-public:
-        GameLoader( const char *path );
-
-    idk::Game *getGame( const char * );
 };
