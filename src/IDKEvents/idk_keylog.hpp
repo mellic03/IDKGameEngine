@@ -27,4 +27,16 @@ public:
     bool    keyDown   ( idk::Keycode keycode );
     bool    keyUp     ( idk::Keycode keycode );
     bool    keyTapped ( idk::Keycode keycode );
+
+
+    bool keysTapped( idk::Keycode first )
+    {
+        return keyTapped(first);
+    };
+
+    template <typename... Args>
+    bool keysTapped( idk::Keycode first, Args ...rest )
+    {
+        return keyTapped(first) && keysTapped(rest...);
+    };
 };

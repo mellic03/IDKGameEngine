@@ -9,7 +9,7 @@
 #include <libidk/idk_enums.hpp>
 #include <libidk/idk_glm.hpp>
 #include <libidk/idk_allocator.hpp>
-#include <libidk/idk_singleton.hpp>
+#include <libidk/idk_scripting.hpp>
 
 
 namespace idk
@@ -47,7 +47,7 @@ struct IDK_VISIBLE idk::Event
 
 
 
-class IDK_VISIBLE idk::EventSystem
+class IDK_VISIBLE idk::EventSystem: public idk::LuaAPI
 {
     using fun_t = std::function<void(SDL_Event *)>;
     using mousefun_t = std::function<void(float f)>;
@@ -69,7 +69,8 @@ private:
     std::vector<mousefun_t> m_scroll_events;
     bool                    m_windowevents[2];
 
-    std::function<void(const char *)> _dropfile_callback;
+    std::map<std::string, bool> m_dropfile_set;
+    std::map<std::string, std::function<void(const char *)>> m_dropfile_callbacks;
     std::string                       m_dropfile_path  = "";
     bool                              m_dropfile_event = false;
 
@@ -102,11 +103,12 @@ public:
     
     void                    onWindowEvent( WindowEvent, std::function<void()> );
 
-    void                    onDropFile( std::function<void(const char *)> callback );
+    void                    onDropFile( const std::string &extension, std::function<void(const char *)> callback );
     bool                    fileDropped() { return m_dropfile_event; };
     const std::string &     fileDroppedPath() { return m_dropfile_path; };
 
     void                    onSDLPollEvent( std::function<void(SDL_Event *)> fn) { m_SDL_pollevents.push_back(fn); };
+
     void                    onKeyEvent( idk::Keycode keycode, idk::KeyEvent keyevent, std::function<void()> callback );
     void                    onMouseWheel( std::function<void(float f)> callback );
 
@@ -123,6 +125,10 @@ public:
     glm::vec2               mouseDelta()    { return m_mouse_delta;    };
 
     void                    update();
+
+
+
+    void                    exposeToLua( lua_State *L );
 
 };
 

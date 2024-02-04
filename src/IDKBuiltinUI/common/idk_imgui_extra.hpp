@@ -19,6 +19,9 @@ namespace idkImGui
                           const std::string &entry_path, std::string &selection );
 
 
+    bool RadioButton( const std::string &label_a, const std::string &label_b, bool &b );
+
+
     bool splitWindow_begin( const std::string &label );
     void splitWindow_split();
     void splitWindow_end();

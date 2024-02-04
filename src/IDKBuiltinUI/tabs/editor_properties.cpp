@@ -2,7 +2,7 @@
 
 
 void
-EditorUI_Module::_tab_editor_properties( idk::EngineAPI &api )
+EditorUI_MD::_tab_editor_properties( idk::EngineAPI &api )
 {
     ImGui::Begin("Editor Properties");
 
@@ -11,6 +11,9 @@ EditorUI_Module::_tab_editor_properties( idk::EngineAPI &api )
 
     ImGui::Text("Rotation snapping");
     ImGui::InputFloat("##B", &m_rsnap, 10.0f, 5.0f, "%.2f", ImGuiInputTextFlags_None);
-    
+
+
+    ImGui::Checkbox("VXGI Debug", &api.getRenderer().m_vxgi_debug);
+
     ImGui::End();
 }

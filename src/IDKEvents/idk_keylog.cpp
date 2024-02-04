@@ -14,7 +14,7 @@ idk::Keylog::Keylog(): m_keys(3)
 void
 idk::Keylog::log(const Uint8 *state)
 {
-    for (int i=0; i<idk::Keycode::NUM_KEYCODES; i++)
+    for (uint32_t i=0; i<idk::Keycode::NUM_KEYCODES; i++)
     {
         m_keys[static_cast<int>(idk::KeyEvent::TAPPED)][i] = false;
         bool down = m_keys[static_cast<int>(idk::KeyEvent::DOWN)][i];

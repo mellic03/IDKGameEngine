@@ -21,6 +21,7 @@ namespace EditorTab
     void cameras   ( idk::EngineAPI & );
     void models    ( idk::EngineAPI & );
     void editor    ( idk::EngineAPI & );
+    void dirlights ( idk::EngineAPI & );
 
     constexpr auto resizeable_table_flags =   ImGuiTableFlags_SizingStretchSame
                                             | ImGuiTableFlags_Resizable

@@ -1,6 +1,7 @@
 #include "../EditorUI.hpp"
 #include "../common/idk_imgui_extra.hpp"
 
+#include <IDKEvents/IDKEvents.hpp>
 
 
 
@@ -15,12 +16,18 @@ menubar_save( idk::EngineAPI &api )
 
 
 void
-EditorUI_Module::_menubar( idk::EngineAPI &api )
+EditorUI_MD::_menubar( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
 
-    static bool popup_open = false;
+    if (api.getEventSys().keylog().keyTapped(idk::Keycode::F5))
+    {
+        engine.reloadModules();
+    }
+
+    static bool popup_save = false;
+    static bool popup_load = false;
 
     if (ImGui::BeginMainMenuBar())
     {
@@ -31,16 +38,21 @@ EditorUI_Module::_menubar( idk::EngineAPI &api )
 
             }
 
-            // menubar_save(api);
-
             if (ImGui::MenuItem(ICON_FA_ID_CARD " Save As", "CTRL + SHFT + S"))
             {
-                popup_open = true;
+                // api.getECS().writeFile("entry.idksc");
+                popup_save = true;
             }
 
             if (ImGui::MenuItem("Load", "CTRL + L"))
             {
-                
+                // api.getECS().readFile("entry.idksc");
+                popup_load = true;
+            }
+
+            if (ImGui::MenuItem("Reload Modules", "F5"))
+            {
+                engine.reloadModules();
             }
 
             ImGui::Separator();
@@ -63,15 +75,26 @@ EditorUI_Module::_menubar( idk::EngineAPI &api )
 
     static std::string selection = "";
 
-    if (popup_open)
+    if (popup_save)
     {
-        ImGui::OpenPopup("File Selection");
+        ImGui::OpenPopup("File Save");
     }
 
-    if (idkImGui::fileSelectPopup("File Selection", popup_open, "./", selection))
+    if (idkImGui::fileSelectPopup("File Save", popup_save, "./", selection))
     {
-        std::cout << "saving to " << selection << "\n";
+        api.getECS().writeFile(selection);
+        std::cout << "Saved scene to " << selection << "\n";
     }
 
+    if (popup_load)
+    {
+        ImGui::OpenPopup("File Load");
+    }
+
+    if (idkImGui::fileSelectPopup("File Load", popup_load, "./", selection))
+    {
+        api.getECS().readFile(selection);
+        std::cout << "Loaded scene from " << selection << "\n";
+    }
 }
 

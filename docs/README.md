@@ -51,11 +51,11 @@ IDK Engine uses an Entity Component System (ECS) to manage game object propertie
 int main()
 {
     idk::Engine engine(1000, 1000);
-    const int TRANSFORM = engine.registerCS<Transform_CS>("transform");
+    const int TRANSFORM = engine.registerCS<Hierarchy_CS>("transform");
     const int PHYSICS   = engine.registerCS<Physics_CS>("physics");
     const int GRABBABLE = engine.registerCS<Grabbable_CS>("grabbable");
     
-    int obj1 = engine.createGameObject();
+    int obj1 = ecs.createGameObject();
     engine.giveComponents(obj1, TRANSFORM, PHYSICS, GRABBABLE);
 
     /*

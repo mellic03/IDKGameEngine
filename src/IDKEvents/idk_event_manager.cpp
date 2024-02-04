@@ -1,5 +1,8 @@
 #include "idk_event_manager.hpp"
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
 
 
 idk::EventSystem::EventSystem()
@@ -28,9 +31,10 @@ idk::EventSystem::onWindowEvent( WindowEvent winevent, std::function<void()> res
 
 
 void
-idk::EventSystem::onDropFile( std::function<void(const char *)> callback )
+idk::EventSystem::onDropFile( const std::string &extension, std::function<void(const char *)> callback )
 {
-    _dropfile_callback = callback;
+    m_dropfile_set[extension] = true;
+    m_dropfile_callbacks[extension] = callback;
 };
 
 
@@ -127,7 +131,14 @@ idk::EventSystem::processMouseInput()
             case SDL_DROPFILE:
                 m_dropfile_event = true;
                 m_dropfile_path  = e.drop.file;
-                _dropfile_callback(e.drop.file);
+                {
+                    std::string extension = fs::path(m_dropfile_path).extension();
+
+                    if (m_dropfile_set[extension])
+                    {
+                        m_dropfile_callbacks[extension](e.drop.file);
+                    }
+                }
             break;
 
 
@@ -161,10 +172,10 @@ idk::EventSystem::processMouseInput()
                 m_mousewheel_delta = e.wheel.y;
             break;
         }
-    
-        for (auto &fn: m_SDL_pollevents)
+
+        if (m_SDL_pollevents.size() > 0)
         {
-            fn(&e);
+            m_SDL_pollevents.back()(&e);
         }
     }
 
@@ -238,4 +249,32 @@ idk::EventSystem::update()
     }
 
 };
+
+
+
+
+
+void
+idk::EventSystem::exposeToLua( lua_State *L )
+{
+    luaaa::LuaModule mod(L, "EventSystem");
+    mod.fun("mouseCapture",  [this](bool b){  mouseCapture(b); });
+    mod.fun("mouseCaptured", [this](){ return mouseCaptured(); });
+    mod.fun("deltaMouseX",   [this](){ return mouseDelta().x; });
+    mod.fun("deltaMouseY",   [this](){ return mouseDelta().y; });
+
+    mod.def("KEY_W",        (int)idk::Keycode::W);
+    mod.def("KEY_A",        (int)idk::Keycode::A);
+    mod.def("KEY_S",        (int)idk::Keycode::S);
+    mod.def("KEY_D",        (int)idk::Keycode::D);
+    mod.def("KEY_SPACE",    (int)idk::Keycode::SPACE);
+    mod.def("KEY_LCTRL",    (int)idk::Keycode::LCTRL);
+    mod.def("KEY_LSHIFT",   (int)idk::Keycode::LSHIFT);
+    mod.def("KEY_ESCAPE",   (int)idk::Keycode::ESCAPE);
+
+    mod.fun("keyDown",   [this](int k){ return keylog().keyDown((idk::Keycode)k); });
+    mod.fun("keyUp",     [this](int k){ return keylog().keyUp((idk::Keycode)k); });
+    mod.fun("keyTapped", [this](int k){ return keylog().keyTapped((idk::Keycode)k); });
+
+}
 

@@ -33,7 +33,7 @@ EditorTab::shader_programs( idk::EngineAPI &api )
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
 
-    auto &programs = ren.getPrograms();
+    const std::map<std::string, int> &programs = ren.getProgramIDs();
     static std::string selected = "";
 
     ImGui::Begin("Shader Programs");
@@ -43,7 +43,7 @@ EditorTab::shader_programs( idk::EngineAPI &api )
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
 
-        for (auto &[name, program]: programs)
+        for (auto &[name, id]: programs)
         {
             if (ImGui::Selectable(name.c_str(), selected == name))
             {
@@ -52,7 +52,7 @@ EditorTab::shader_programs( idk::EngineAPI &api )
         }
 
         ImGui::TableNextColumn();
-        tab_shader_program_edit(selected, programs[selected]);
+        tab_shader_program_edit(selected, ren.getProgram(selected));
         
         ImGui::EndTable();
     }

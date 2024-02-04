@@ -2,13 +2,16 @@
 #include "EditorUI-tabs.hpp"
 
 
-
 static void
-idk_scene_treenode_drag_drop( int id, idk::Transform_CS &tCS )
+idk_scene_treenode_drag_drop( idecs::ECS &ecs, int obj_id )
 {
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
-        ImGui::SetDragDropPayload("SCENE_HIERARCHY", reinterpret_cast<const void *>(&id), sizeof(int));
+        ImGui::SetDragDropPayload(
+            "SCENE_HIERARCHY",
+            reinterpret_cast<const void *>(&obj_id),
+            sizeof(int)
+        );
         ImGui::EndDragDropSource();
     }
 
@@ -22,15 +25,76 @@ idk_scene_treenode_drag_drop( int id, idk::Transform_CS &tCS )
         {
             IM_ASSERT(payload->DataSize == sizeof(int));
             int child_id = *reinterpret_cast<int *>(payload->Data);
-            tCS.giveChild(id, child_id);
+            ecs.giveChild(obj_id, child_id);
+        }
+
+        else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCRIPT_DRAG_DROP"))
+        {
+            std::string name = (char *)(payload->Data);
+            ecs.getSystem<idk::ScriptSys>().assignScript(obj_id, name);
+        }
+
+        ImGui::EndDragDropTarget();
+    }
+}
+
+
+static void
+idk_scene_treenode_drag_drop_deparent( idecs::ECS &ecs, int obj_id )
+{
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+    {
+        ImGui::SetDragDropPayload(
+            "SCENE_HIERARCHY",
+            reinterpret_cast<const void *>(&obj_id),
+            sizeof(int)
+        );
+        ImGui::EndDragDropSource();
+    }
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        ImGui::BeginTooltip();
+        ImGui::TextColored({255, 0, 0, 255}, "Parent");
+        ImGui::EndTooltip();
+
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+        {
+            IM_ASSERT(payload->DataSize == sizeof(int));
+            int child_id = *reinterpret_cast<int *>(payload->Data);
+            ecs.removeParent(child_id);
         }
         ImGui::EndDragDropTarget();
     }
 }
 
 
+// static void
+// idk_scene_drag_drop_CS( idecs::ECS &ecs, int obj_id )
+// {
+//     if (ImGui::BeginDragDropTarget())
+//     {
+//         ImGui::BeginTooltip();
+//         ImGui::TextColored({255, 0, 0, 255}, "Parent");
+//         ImGui::EndTooltip();
+
+//         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("IDK_CS_DRAG_DROP"))
+//         {
+//             IM_ASSERT(payload->DataSize == sizeof(int));
+
+//             int component = *reinterpret_cast<int *>(payload->Data);
+//             ecs.giveComponent(obj_id, component);
+//         }
+//         ImGui::EndDragDropTarget();
+//     } 
+// }
+
+
+
+
+
 void
-EditorUI_Module::_tab_scene_treenode( idk::EngineAPI &api, int id )
+EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
 {
     if (id == -1)
     {
@@ -38,22 +102,23 @@ EditorUI_Module::_tab_scene_treenode( idk::EngineAPI &api, int id )
     }
 
     auto &engine  = api.getEngine();
-    auto &iCS     = engine.getCS<idk::Icon_CS>();
-    auto &tCS     = engine.getCS<idk::Transform_CS>();
+    auto &ecs     = api.getECS();
 
+    std::string icon = ecs.getComponent<idk::IconCmp>(id).icon;
 
-    std::string &name = engine.getGameObjectName(id);;
-    std::string label = iCS.getIcon(id) + std::string(" ") + name;
+    std::string name = ecs.getGameObjectName(id);
+    std::string label = icon + std::string(" ") + name;
     int flags  = ImGuiTreeNodeFlags_DefaultOpen;
         flags |= ImGuiTreeNodeFlags_OpenOnArrow;
         flags |= ImGuiTreeNodeFlags_SpanFullWidth;
+        flags |= ImGuiTreeNodeFlags_SpanAllColumns;
 
-    if (tCS.getChildren(id).size() == 0)
+    if (ecs.getChildren(id).size() == 0)
     {
         flags |= ImGuiTreeNodeFlags_Leaf;
     }
 
-    if (id == m_selection.front())
+    if (id == ecs.getSelectedGameObject())
     {
         flags |= ImGuiTreeNodeFlags_Selected;
     }
@@ -61,36 +126,51 @@ EditorUI_Module::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
     ImGui::PushID(id);
 
+
+    ImGui::TableNextRow();
+    ImGui::TableNextColumn();
     bool node_open = ImGui::TreeNodeEx(label.c_str(), flags);
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+    bool row_clicked = ImGui::IsItemHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left);
+
+
+    if (row_clicked && !ImGui::IsItemToggledOpen())
     {
-        _select_object(id);
+        ecs.setSelectedGameObject(id);
     }
 
     if (node_open)
     {
         if (ImGui::BeginPopupContextWindow("Object Context"))
         {
-            ImGui::Text(engine.getGameObjectName(_get_selection()).c_str());
+            // auto icon = api.getEngine().getCS<idk::Icon_CS>().getIcon(id);
+            std::string label = ecs.getSelectedGameObjectName();
+                        label = icon + " " + label;
+
+            ImGui::Text(label.c_str());
             ImGui::Separator();
 
             if (ImGui::MenuItem("Copy"))
             {
-                engine.copyGameObject(_get_selection());
+                ecs.copySelectedGameObject();
             }
 
             if (ImGui::MenuItem("Delete"))
             {
-                engine.deleteGameObject(m_selection.front());
-                m_selection.pop_front();
+                ecs.deleteSelectedGameObject();
             }
 
             ImGui::EndPopup();
         }
 
-        idk_scene_treenode_drag_drop(id, tCS);
 
-        for (int child_id: tCS.getChildren(id))
+        // float width = ImGui::GetContentRegionAvail().x;
+        // ImGui::SameLine(width - 1);
+        // ImGui::Text(ICON_FA_BARS);
+    
+        idk_scene_treenode_drag_drop(ecs, id);
+        // idk_scene_drag_drop_CS(id, engine);
+
+        for (int child_id: ecs.getChildren(id))
         {
             if (child_id == 0)
             {
@@ -99,7 +179,7 @@ EditorUI_Module::_tab_scene_treenode( idk::EngineAPI &api, int id )
     
             _tab_scene_treenode(api, child_id);
         }
-
+    
         ImGui::TreePop();
     }
 
@@ -109,38 +189,69 @@ EditorUI_Module::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
 
 void
-EditorUI_Module::_tab_scene_hierarchy( idk::EngineAPI &api )
+EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
+    auto &ecs    = api.getECS();
 
-    // auto &nCS     = engine.getCS<idk::Name_CS>();
-    auto &iCS     = engine.getCS<idk::Icon_CS>();
-    auto &tCS     = engine.getCS<idk::Transform_CS>();
-    auto &objects = engine.gameObjects();
-    int  obj_id   = 0; // root object
+    int  obj_id   = 0;
+
+    int flags  = ImGuiTreeNodeFlags_DefaultOpen;
+        flags |= ImGuiTreeNodeFlags_OpenOnArrow;
+        flags |= ImGuiTreeNodeFlags_SpanFullWidth;
+        flags |= ImGuiTreeNodeFlags_SpanAllColumns;
+
+    uint32_t table_flags = ImGuiTableFlags_Borders
+                         | ImGuiTableFlags_RowBg
+                         | ImGuiTableFlags_ScrollX
+                         | ImGuiTableFlags_ScrollY;
 
     static std::string *text = nullptr;
 
     ImGui::Begin("Scene Hierarchy");
 
-        ImGui::BeginChild("split-window", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
-        _tab_scene_treenode(api, obj_id);
-        ImGui::EndChild();
+        if (ImGui::BeginTable("Hierarchy Table", 1, table_flags, ImVec2(0, -ImGui::GetFrameHeightWithSpacing())))
+        {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            bool row_clicked = ImGui::IsItemClicked() && ImGui::IsMouseReleased(ImGuiMouseButton_Left);
+            bool node_open = ImGui::TreeNodeEx("root", flags);
+
+            if (row_clicked && !ImGui::IsItemToggledOpen())
+            {
+                ecs.setSelectedGameObject(obj_id);
+            }
+
+            if (node_open)
+            {
+                idk_scene_treenode_drag_drop_deparent(ecs, obj_id);
+
+                for (int id: ecs.gameObjects())
+                {
+                    if (ecs.hasParent(id) == false)
+                    {
+                        _tab_scene_treenode(api, id);
+                    }
+                }
+
+                ImGui::TreePop();
+            }
+            ImGui::EndTable();
+        }
 
 
         if (ImGui::Button(ICON_FA_PLUS " Create"))
         {
-            engine.createGameObject("Empty");
+            ecs.createGameObject("Empty");
         }
 
         ImGui::SameLine();
 
         if (ImGui::Button(ICON_FA_TRASH_CAN " delete"))
         {
-            engine.deleteGameObject(_get_selection());
-            std::cout << "Deleted object " << _get_selection() << "\n";
-            m_selection.pop_front();
+            ecs.deleteSelectedGameObject();
         }
 
     ImGui::End();

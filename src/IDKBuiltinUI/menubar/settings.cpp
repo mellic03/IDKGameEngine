@@ -2,7 +2,7 @@
 
 
 void
-EditorUI_Module::_menubar_settings( idk::EngineAPI &api )
+EditorUI_MD::_menubar_settings( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();

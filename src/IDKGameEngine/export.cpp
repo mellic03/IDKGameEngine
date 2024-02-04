@@ -13,24 +13,26 @@
 
 IDK_EXPORT_API
 (
-    idk::EngineAPI *getInstance( const std::string &name )
+    idk::EngineAPI *getInstance()
     {
         static idk::EngineAPI *api = nullptr;
 
         if (api == nullptr)
         {
-            api = new idk::EngineAPI(name);
-
-            api->eventsys_ptr   = new idk::EventSystem();
-            api->audiosys_ptr   = new idk::AudioSystem();
-
-            api->engine_ptr     = new idk::Engine();
-            api->renderer_ptr   = new idk::RenderEngine(name, 1920, 1080, 4, 6);
-            api->threadpool_ptr = new idk::ThreadPool();
-
+            api = new idk::EngineAPI();
         }
 
         return api;
     }
 )
 
+
+IDK_EXPORT_API
+(
+    void deleteInstance( void *instance )
+    {
+        idk::EngineAPI *api = reinterpret_cast<idk::EngineAPI *>(instance);
+        // api->deinit();
+        delete api;
+    }
+)

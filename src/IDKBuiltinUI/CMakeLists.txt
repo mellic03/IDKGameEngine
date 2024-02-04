@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 
 project(IDKBuiltinUI)
+# add_compile_options("-shared" "-fPIC" "-fno-ident" "-fno-asynchronous-unwind-tables")
 
 file(GLOB SOURCES
     # ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinCS/*.cpp
@@ -11,12 +12,12 @@ file(GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/common/*.cpp
 )
 
-add_library(${PROJECT_NAME} STATIC ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+
 
 set_target_properties(
     ${PROJECT_NAME} PROPERTIES
     POSITION_INDEPENDENT_CODE ON
-    CXX_STANDARD 17
 )
 
 target_include_directories(
@@ -26,8 +27,6 @@ target_include_directories(
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
-
-    IDKGraphics
 
     ImGui
     ImGuizmo
@@ -43,11 +42,6 @@ file(
     ${CMAKE_CURRENT_SOURCE_DIR}/menubar/*.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/tabs/*.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/common/*.hpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/idk_camera_cs.hpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/idk_icon_cs.hpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/idk_model_cs.hpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/idk_transform_cs.hpp
-    # ${CMAKE_CURRENT_SOURCE_DIR}/IDKBuiltinCS.hpp
 )
 
 install(

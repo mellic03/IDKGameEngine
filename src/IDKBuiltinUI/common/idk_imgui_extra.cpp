@@ -54,8 +54,14 @@ file_select( const std::string &path, std::string &selection )
 {
     using namespace std::filesystem;
 
-    static const auto dir_flags  = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow;
-    static const auto file_flags = ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf;
+    static int tree_flags  = 0
+                           | ImGuiTreeNodeFlags_OpenOnArrow
+                           | ImGuiTreeNodeFlags_SpanFullWidth
+                           | ImGuiTreeNodeFlags_SpanAllColumns
+                           | ImGuiTreeNodeFlags_FramePadding;
+
+    static const auto dir_flags  = tree_flags | ImGuiTreeNodeFlags_OpenOnArrow;
+    static const auto file_flags = tree_flags | ImGuiTreeNodeFlags_Leaf;
 
     for (auto &dir_entry: directory_iterator(path))
     {
@@ -71,6 +77,9 @@ file_select( const std::string &path, std::string &selection )
             {
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
 
             bool node_open = ImGui::TreeNodeEx(label.c_str(), flags);
             if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
@@ -103,6 +112,9 @@ file_select( const std::string &path, std::string &selection )
                 flags |= ImGuiTreeNodeFlags_Selected;
             }
 
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
             if (ImGui::TreeNodeEx(label.c_str(), flags))
             {
                 if (ImGui::IsItemClicked())
@@ -116,40 +128,72 @@ file_select( const std::string &path, std::string &selection )
 }
 
 
+
+
+bool
+idkImGui::RadioButton( const std::string &label_a, const std::string &label_b, bool &b )
+{
+    // if (ImGui::RadioButton(label_a.c_str(), b))
+    // {
+    //     b = true;
+    // }
+
+    // ImGui::SameLine();
+
+    // if (ImGui::RadioButton(label_b.c_str(), !b))
+    // {
+    //     b = false;
+    // }
+
+
+
+    if (ImGui::RadioButton("Local", b))  b = true;
+    ImGui::SameLine();
+    if (ImGui::RadioButton("World", !b)) b = false;
+
+
+}
+
+
+
+
+
+
+
 bool
 idkImGui::fileSelectPopup( const std::string &name, bool &open,
                            const std::string &entry_path, std::string &selection )
 {
     bool result = false;
 
+    uint32_t table_flags = ImGuiTableFlags_Borders
+                         | ImGuiTableFlags_RowBg
+                         | ImGuiTableFlags_ScrollX
+                         | ImGuiTableFlags_ScrollY;
+
+    ImGui::SetNextWindowSizeConstraints(
+        ImVec2(400, 400), ImVec2(1000, 1000)
+    );
+
     if (ImGui::BeginPopupModal(name.c_str(), &open, 0))
     {
-
-        if (idkImGui::splitWindowH_begin("fileSelectPopup_A"))
+        if (ImGui::BeginTable("Hierarchy Table", 1, table_flags, ImVec2(0, -ImGui::GetFrameHeightWithSpacing())))
         {
             file_select( entry_path, selection );
-    
-            idkImGui::splitWindowH_split();
+            ImGui::EndTable();
+        }
 
-            if (ImGui::Button("Button A"))
-            {
+        if (ImGui::Button("Close"))
+        {
+            open = false;
+        }
 
-            }
+        ImGui::SameLine();
 
-            if (ImGui::Button("Close"))
-            {
-                open = false;
-            }
-
-            ImGui::SameLine();
-
-            if (ImGui::Button("Open"))
-            {
-                open = false;
-                result = true;
-            }
-
-            idkImGui::splitWindowH_end();
+        if (ImGui::Button("Open"))
+        {
+            open = false;
+            result = true;
         }
 
         ImGui::EndPopup();
@@ -225,7 +269,7 @@ idkImGui::splitWindowH_begin( const std::string &label )
     {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
-        ImGui::BeginChild("splitWindowH_begin");
+        ImGui::BeginChild("splitWindowH_begin", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
 
         return true;
     }

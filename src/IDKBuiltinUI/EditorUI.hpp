@@ -9,7 +9,7 @@
 #include <deque>
 
 
-class EditorUI_Module: public idk::Module
+class EditorUI_MD: public idk::Module
 {
 private:
     static constexpr int NUM_FONTS = 4;
@@ -22,45 +22,40 @@ private:
 
     bool        m_show_ImGui_demo = false;
 
-    // // Editor Tabs
-    // // -----------------------------------------------------------------------------------------
-    static constexpr int MAX_SELECTION_HISTORY = 10;
-    std::deque<int> m_selection;
+    // Editor Tabs
+    // -----------------------------------------------------------------------------------------
+    float       m_tsnap = 0.50f;
+    float       m_rsnap = 45.0f;
 
-    float       m_tsnap = 0.25f;
-    float       m_rsnap = 0.25f;
-
-    void _select_object( int id )
-    {
-        m_selection.push_front(id);
-    
-        if (m_selection.size() > MAX_SELECTION_HISTORY)
-        {
-            m_selection.pop_back();
-        }
-    };
-    int         _get_selection() { return m_selection.empty() ? 0 : m_selection.front(); };
+    void        _tab_viewport( idk::EngineAPI & );
 
     void        _tab_scene_treenode( idk::EngineAPI &, int );
     void        _tab_scene_hierarchy( idk::EngineAPI & );
     void        _tab_inspect( idk::EngineAPI &, int object_id );
     void        _tab_editor_properties( idk::EngineAPI & );
+    void        _tab_scripts( idk::EngineAPI & );
     void        _tab( idk::EngineAPI & );
-    // // -----------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
 
-    // // Menu Bar
-    // // -----------------------------------------------------------------------------------------
+    // Menu Bar
+    // -----------------------------------------------------------------------------------------
     void        _menubar( idk::EngineAPI & );
     void        _menubar_settings( idk::EngineAPI & );
-    // // -----------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
+
+    template <typename T>
+    void drawComponent( idk::EngineAPI &, int obj_id ) {  };
 
 
 public:
 
-    void        init( idk::EngineAPI & );
-    void        stage_A( idk::EngineAPI & ) {  };
-    void        stage_B( idk::EngineAPI & );
-    void        stage_C( idk::EngineAPI & ) {  };
+    virtual void        init    ( idk::EngineAPI & ) final;
+    virtual void        deinit  () final;
+    virtual void        stage_A ( idk::EngineAPI & ) final {  };
+    virtual void        stage_B ( idk::EngineAPI & ) final;
+    virtual void        stage_C ( idk::EngineAPI & ) final {  };
 
 };
+
+
 

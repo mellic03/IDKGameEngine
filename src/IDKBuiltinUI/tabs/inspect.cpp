@@ -6,49 +6,33 @@
 
 
 
-
 static void
-tab_inspect_component( idk::EngineAPI &api, int object_id, int CS_id )
+idk_RemoveComponentPopup( idecs::ECS &ecs, int obj_id, int component )
 {
-    auto &engine = api.getEngine();
-
-    idk::ComponentSystem *CS = engine.getCS(CS_id);
-    std::string label = CS->name() + " component";
-
-    ImGui::BeginChild(label.c_str());
-    CS->onObjectSelection(object_id);
-    ImGui::EndChild();
-}
-
-
-static void
-idk_tab_ComponentContextMenu( int obj_id, int &cs_id, idk::Engine &engine )
-{
-    std::string label = "Remove " + engine.getCS(cs_id)->name() + " component";
+    std::string name  = ecs.getComponentArray(component)->name();
+    std::string label = "Remove " + name + " component";
 
     if (ImGui::MenuItem(label.c_str()))
     {
-        engine.removeComponent(obj_id, cs_id);
-        cs_id = -1;
+        ecs.removeComponent(obj_id, component);
     }
 }
 
 
 static void
-idk_tab_giveComponentMenu( int obj_id, idk::Engine &engine )
+idk_AddComponentPopup( idecs::ECS &ecs, int obj_id )
 {
     ImGui::Text("Add Component");
     ImGui::Separator();
 
-    for (auto *CS: engine.getComponentSystems())
+    for (int i=0; i<ecs.numComponents(); i++)
     {
-        int CS_id = CS->ID();
-
-        if (engine.hasComponent(obj_id, CS_id) == false)
+        if (ecs.hasComponent(obj_id, i) == false)
         {
-            if (ImGui::MenuItem(CS->name().c_str()))
+            idk::string name = ecs.getComponentArray(i)->name();
+            if (ImGui::MenuItem(name.c_str()))
             {
-                engine.giveComponent(obj_id, CS_id);
+                ecs.giveComponent(obj_id, i);
             }
         }
     }
@@ -57,7 +41,7 @@ idk_tab_giveComponentMenu( int obj_id, idk::Engine &engine )
 
 
 void
-EditorUI_Module::_tab_inspect( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::_tab_inspect( idk::EngineAPI &api, int obj_id )
 {
     ImGui::Begin("Inspect Object");
 
@@ -69,85 +53,84 @@ EditorUI_Module::_tab_inspect( idk::EngineAPI &api, int obj_id )
 
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
+    auto &ecs    = api.getECS();
 
-    static int selected_CS  = -1;
-    static int selected_obj = 0;
+    static int component = -1;
+    static bool open_popup = false;
 
-    if (obj_id != selected_obj)
+
+    char *name = ecs.getGameObjectName(obj_id);
+    if (ImGui::InputText("Name", name, ImGuiInputTextFlags_EnterReturnsTrue))
     {
-        selected_obj = obj_id;
-
-        if (selected_CS != -1)
-        {
-            if (engine.hasComponent(obj_id, selected_CS) == false)
-            {
-                selected_CS = -1;
-            }
-        }
+        ecs.setGameObjectName(obj_id, name);
     }
 
 
-    std::string label = "Object ID: " + std::to_string(obj_id);
-    ImGui::Text(label.c_str());
-
-    std::string name = engine.getGameObjectName(obj_id);
-    if (ImGui::InputText("Name", &name, ImGuiInputTextFlags_EnterReturnsTrue))
-    {
-        engine.getGameObjectName(obj_id) = name;
-    }
-
-
-    if (idkImGui::splitWindow_begin("Inspect Component"))
+    if (idkImGui::splitWindow_begin("Inspect Object"))
     {
         ImGui::BeginChild("Upper", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()));
-        for (auto *CS: engine.getComponentSystems())
+    
+        for (int i=0; i<ecs.numComponents(); i++)
         {
-            const std::string &name = CS->name();
-            bool selected = CS->ID() == selected_CS;
+            bool selected = component == i;
 
-            if (engine.hasComponent(obj_id, CS->ID()))
+            if (ecs.hasComponent(obj_id, i) == false)
             {
-                if (ImGui::Selectable(name.c_str(), &selected, ImGuiSelectableFlags_SelectOnClick))
-                {
-                    selected_CS = CS->ID();
-                }
-
-                if (ImGui::IsItemClicked(1))
-                {
-                    selected_CS = CS->ID();
-                    ImGui::OpenPopup("CSContext");
-                }
+                continue;
             }
-        }
 
-        if (ImGui::BeginPopup("CSContext"))
-        {
-            idk_tab_ComponentContextMenu(obj_id, selected_CS, engine);
-            ImGui::EndPopup();
+            idk::string label = ecs.getComponentArray(i)->name();
+            if (ImGui::Selectable(label.c_str(), &selected))
+            {
+                component = i;
+            }
+
+            if (ImGui::IsItemClicked(1))
+            {
+                open_popup = true;
+            }
         }
 
         ImGui::EndChild();
 
-        if (ImGui::BeginPopup("my popup"))
+        if (ImGui::Button(ICON_FA_PLUS "Add"))
         {
-            idk_tab_giveComponentMenu(obj_id, engine);
+            ImGui::OpenPopup("Add Component");
+        }
+
+        if (ImGui::BeginPopup("Add Component"))
+        {
+            idk_AddComponentPopup(ecs, obj_id);
             ImGui::EndPopup();
         }
 
-        if (ImGui::Button("Add Component"))
+
+        if (open_popup)
         {
-            ImGui::OpenPopup("my popup");
+            ImGui::OpenPopup("Remove Component");
+            open_popup = false;
+        }
+
+        if (ImGui::BeginPopup("Remove Component"))
+        {
+            idk_RemoveComponentPopup(ecs, obj_id, component);
+            ImGui::EndPopup();
         }
 
 
         idkImGui::splitWindow_split();
-        if (selected_CS != -1)
+
+
+        if (ecs.hasComponent(obj_id, component))
         {
-            tab_inspect_component(api, obj_id, selected_CS);
+            ImGui::BeginChild("Component");
+            auto *CA = ecs.getComponentArray(component);
+            CA->getBehaviour()._userBehaviour(api, obj_id);
+            ImGui::EndChild();
         }
+
         idkImGui::splitWindow_end();
     }
-
 
 
     ImGui::End();
