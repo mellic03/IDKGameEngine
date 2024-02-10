@@ -8,10 +8,11 @@
 namespace idk
 {
     class TransformSys;
-    class PhysicsSys;
+    // class PhysicsSys;
     class ModelSys;
     class ScriptSys;
     class CameraSys;
+
 };
 
 
@@ -40,21 +41,23 @@ public:
     static void         translate_local( int obj_id, const glm::vec3 & );
 
 
-    static glm::vec3   &getPosition    ( int obj_id );
-    static glm::mat4    getModelMatrix ( int obj_id, bool scale = true );
-    static glm::mat4    getWorldMatrix ( int obj_id );
+    static glm::vec3   &getPosition      ( int obj_id );
+    static glm::vec3    getWorldPosition ( int obj_id );
+    static glm::vec3    getFront         ( int obj_id );
+    static glm::mat4    getModelMatrix   ( int obj_id, bool scale = true );
+    static glm::mat4    getWorldMatrix   ( int obj_id );
 
 };
 
 
 
-class idk::PhysicsSys: public idecs::System
-{
-public:
-    virtual void    init   ( idk::EngineAPI & ) final {  };
-    virtual void    update ( idk::EngineAPI & ) final;
+// class idk::PhysicsSys: public idecs::System
+// {
+// public:
+//     virtual void    init   ( idk::EngineAPI & ) final {  };
+//     virtual void    update ( idk::EngineAPI & ) final;
 
-};
+// };
 
 
 
@@ -84,7 +87,7 @@ public:
     void    loadScript  ( const std::string &filepath  );
     void    loadScripts ( const std::string &directory );
     auto   &getScripts() { return m_scripts; };
-    void    assignScript( int obj_id, const std::string &filepath );
+    int     assignScript( int obj_id, const std::string &filepath );
 
 };
 

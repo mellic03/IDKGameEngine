@@ -19,12 +19,13 @@ set_target_properties(
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/../../external/include/
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../thirdparty/physx/include/
 )
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
+    PhysX
 )
-
 
 
 file(

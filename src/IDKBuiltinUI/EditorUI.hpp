@@ -34,6 +34,7 @@ private:
     void        _tab_inspect( idk::EngineAPI &, int object_id );
     void        _tab_editor_properties( idk::EngineAPI & );
     void        _tab_scripts( idk::EngineAPI & );
+    void        _tab_assets( idk::EngineAPI & );
     void        _tab( idk::EngineAPI & );
     // -----------------------------------------------------------------------------------------
 
@@ -43,8 +44,11 @@ private:
     void        _menubar_settings( idk::EngineAPI & );
     // -----------------------------------------------------------------------------------------
 
+
     template <typename T>
     void drawComponent( idk::EngineAPI &, int obj_id ) {  };
+
+    void registerDrawComponents( idk::EngineAPI &api );
 
 
 public:

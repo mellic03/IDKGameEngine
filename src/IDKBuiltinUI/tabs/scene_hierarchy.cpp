@@ -1,6 +1,62 @@
 #include "../EditorUI.hpp"
 #include "EditorUI-tabs.hpp"
 
+#include <filesystem>
+namespace fs = std::filesystem;
+
+template <typename T>
+void idk_file_ree2( const std::string &filepath, idecs::ECS &ecs, int obj_id );
+
+
+
+template <>
+void
+idk_file_ree2<idk::ScriptCmp>( const std::string &filepath, idecs::ECS &ecs, int obj_id )
+{
+    ecs.getSystem<idk::ScriptSys>().assignScript(obj_id, filepath);
+}
+
+
+template <>
+void
+idk_file_ree2<idk::AudioEmitterCmp>( const std::string &filepath, idecs::ECS &ecs, int obj_id )
+{
+    idk::AudioSys::assignSound(obj_id, filepath);
+}
+
+
+template <>
+void
+idk_file_ree2<idk::ModelCmp>( const std::string &filepath, idecs::ECS &ecs, int obj_id )
+{
+    // int model = idk::ModelSys::loadModel(filepath);
+    // idk::ModelSys::assignModel(obj_id, model);
+}
+
+
+
+void idk_file_ree( const std::string &filepath, idecs::ECS &ecs, int obj_id )
+{
+    std::string ext = fs::path(filepath).extension().string();
+
+    if (ext == ".lua")
+    {
+        idk_file_ree2<idk::ScriptCmp>(filepath, ecs, obj_id);
+    }
+
+    else if (ext == ".wav")
+    {
+        idk_file_ree2<idk::AudioEmitterCmp>(filepath, ecs, obj_id);
+    }
+
+    else if (ext == ".idkvi")
+    {
+        idk_file_ree2<idk::ModelCmp>(filepath, ecs, obj_id);
+    }
+}
+
+
+
 
 static void
 idk_scene_treenode_drag_drop( idecs::ECS &ecs, int obj_id )
@@ -21,19 +77,19 @@ idk_scene_treenode_drag_drop( idecs::ECS &ecs, int obj_id )
         ImGui::TextColored({255, 0, 0, 255}, "Parent");
         ImGui::EndTooltip();
 
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_DRAG_DROP"))
+        {
+            std::string filepath(reinterpret_cast<char *>(payload->Data));
+            idk_file_ree(filepath, ecs, obj_id);
+        }
+
+        else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
         {
             IM_ASSERT(payload->DataSize == sizeof(int));
             int child_id = *reinterpret_cast<int *>(payload->Data);
             ecs.giveChild(obj_id, child_id);
         }
-
-        else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCRIPT_DRAG_DROP"))
-        {
-            std::string name = (char *)(payload->Data);
-            ecs.getSystem<idk::ScriptSys>().assignScript(obj_id, name);
-        }
-
+    
         ImGui::EndDragDropTarget();
     }
 }
@@ -67,29 +123,6 @@ idk_scene_treenode_drag_drop_deparent( idecs::ECS &ecs, int obj_id )
         ImGui::EndDragDropTarget();
     }
 }
-
-
-// static void
-// idk_scene_drag_drop_CS( idecs::ECS &ecs, int obj_id )
-// {
-//     if (ImGui::BeginDragDropTarget())
-//     {
-//         ImGui::BeginTooltip();
-//         ImGui::TextColored({255, 0, 0, 255}, "Parent");
-//         ImGui::EndTooltip();
-
-//         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("IDK_CS_DRAG_DROP"))
-//         {
-//             IM_ASSERT(payload->DataSize == sizeof(int));
-
-//             int component = *reinterpret_cast<int *>(payload->Data);
-//             ecs.giveComponent(obj_id, component);
-//         }
-//         ImGui::EndDragDropTarget();
-//     } 
-// }
-
-
 
 
 

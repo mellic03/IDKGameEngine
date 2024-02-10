@@ -1,11 +1,11 @@
 #pragma once
 
 #include <IDKECS/IDKECS.hpp>
+#include <IDKAudio/IDKAudio.hpp>
 #include <IDKGameEngine/IDKGameEngine.hpp>
 
 #include "../../external/include/idk_icons/idk_Icons.hpp"
 #include <libidk/idk_transform.hpp>
-
 #include <libidk/idk_scripting.hpp>
 
 
@@ -16,7 +16,7 @@ namespace idk
         int  obj_id = -1;
         char icon[32];
 
-        IconCmp( int obj = -1, IconCmp *other = nullptr )
+        IconCmp( int obj = -1, IconCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
          {
             std::string str = ICON_FA_CUBE;
@@ -37,7 +37,7 @@ namespace idk
         glm::quat rotation = glm::quat();
         glm::vec3 scale    = glm::vec3(1.0f);
 
-        TransformCmp( int id = -1, TransformCmp *other = nullptr )
+        TransformCmp( int id = -1, TransformCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(id)
         {
             if (other)
@@ -47,7 +47,6 @@ namespace idk
             }
         };
     };
-
 
     struct PhysicsMotionCmp
     {
@@ -61,7 +60,7 @@ namespace idk
         glm::vec3 ang_axis     = glm::vec3(0.0f, 1.0f, 0.0f);
 
 
-        PhysicsMotionCmp( int obj = -1, PhysicsMotionCmp *other = nullptr )
+        PhysicsMotionCmp( int obj = -1, PhysicsMotionCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
         {
             if (other)
@@ -78,7 +77,7 @@ namespace idk
         int  obj_id;
         bool visualize;
 
-        BoxColliderCmp( int obj = -1, BoxColliderCmp *other = nullptr )
+        BoxColliderCmp( int obj = -1, BoxColliderCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
         {
             
@@ -91,7 +90,7 @@ namespace idk
         int  obj_id;
         bool visualize;
 
-        SphereColliderCmp( int obj = -1, SphereColliderCmp *other = nullptr )
+        SphereColliderCmp( int obj = -1, SphereColliderCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
         {
 
@@ -111,9 +110,14 @@ namespace idk
         int  retvalue   = -1;
         char filepath[128];
 
-        ScriptCmp( int obj = -1, ScriptCmp *other = nullptr )
+        ScriptCmp( int obj = -1, ScriptCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
         {
+            if (ecs)
+            {
+                ecs->giveComponent<TransformCmp>(obj);
+            }
+
             std::fill_n(filepath, 128, '\0');
         
             if (other == nullptr)
@@ -146,13 +150,17 @@ namespace idk
         int  model_id    = -1;
         bool visible     = true;
         bool shadowcast  = true;
-        // bool environment = false;
         char filepath[128];
         char filestem[128];
 
-        ModelCmp( int obj = -1, ModelCmp *other = nullptr )
+        ModelCmp( int obj = -1, ModelCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
         {
+            if (ecs && ecs->hasComponent<idk::TransformCmp>(obj) == false)
+            {
+                ecs->giveComponent<idk::TransformCmp>(obj);
+            }
+
             std::fill_n(filepath, 128, '\0');
             std::fill_n(filestem, 128, '\0');
 
@@ -164,7 +172,6 @@ namespace idk
             model_id    = other->model_id;
             visible     = other->visible;
             shadowcast  = other->shadowcast;
-            // environment = other->environment;
             std::strcpy(filepath, other->filepath);
             std::strcpy(filestem, other->filestem);
         };
@@ -176,7 +183,7 @@ namespace idk
         int obj_id = -1;
         int cam_id = -1;
 
-        CameraCmp( int obj = -1, CameraCmp *other = nullptr )
+        CameraCmp( int obj = -1, CameraCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
         {
 
@@ -186,14 +193,28 @@ namespace idk
 
     struct AudioEmitterCmp
     {
-        int obj_id = -1;
-        int emitter_id = -1;
-        float volume = 0.5f;
+        int   obj_id     = -1;
+        int   emitter_id = -1;
+        float volume     = 0.5f;
+        char  filepath[128];
 
-        AudioEmitterCmp( int obj = -1, AudioEmitterCmp *other = nullptr )
+
+        AudioEmitterCmp( int obj = -1, AudioEmitterCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
         {
+            std::fill_n(filepath, 128, '\0');
 
+            if (ecs)
+            {
+                ecs->giveComponent<TransformCmp>(obj);
+            }
+
+            if (other)
+            {
+                emitter_id = other->emitter_id;
+                volume     = other->volume;
+                std::strcpy(filepath, other->filepath);
+            }
         };
     };
 
@@ -202,19 +223,21 @@ namespace idk
     {
         int obj_id = -1;
 
-        AudioListenerCmp( int obj = -1, AudioListenerCmp *other = nullptr )
+        AudioListenerCmp( int obj = -1, AudioListenerCmp *other = nullptr, idecs::ECS *ecs = nullptr )
         : obj_id(obj)
         {
-
+            if (ecs)
+            {
+                ecs->giveComponent<TransformCmp>(obj);
+            }
         };
     };
 
 
 
-    template <typename T>
-    idecs::Behaviour getBehaviour(); 
+    // template <typename T>
+    // idecs::Behaviour getBehaviour(); 
 
-    void registerComponents( idecs::ECS &ecs );
 
 };
 

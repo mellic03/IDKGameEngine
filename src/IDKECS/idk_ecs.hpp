@@ -161,7 +161,7 @@ template <typename T>
 int
 idecs::ECS::registerComponent( const idk::string &name )
 {
-    ComponentArray<T> *C = new ComponentArray<T>(name);
+    ComponentArray<T> *C = new ComponentArray<T>(name, *this);
     size_t key = typeid(ComponentArray<T>).hash_code();
     
     m_components.push_back(C);
@@ -188,6 +188,10 @@ template <typename T>
 T &
 idecs::ECS::getComponent( int obj_id )
 {
+    if (hasComponent<T>(obj_id) == false)
+    {
+        giveComponent<T>(obj_id);
+    }
     IDK_ASSERT("Object does not have component", hasComponent<T>(obj_id));
 
     ComponentArray<T> &v = getComponentArray<T>();

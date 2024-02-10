@@ -62,6 +62,7 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
     glm::mat4 parent = idk::TransformSys::getWorldMatrix(parent_id);
     glm::mat4 world  = idk::TransformSys::getWorldMatrix(obj_id);
     glm::mat4 model  = idk::TransformSys::getModelMatrix(obj_id);
+    glm::mat4 delta;
 
     static float bounds[] = { -0.5f, -0.5f, -0.5f, +0.5f, +0.5f, +0.5f };
 
@@ -71,7 +72,7 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
         op,
         mode,
         glm::value_ptr(world),
-        nullptr,
+        glm::value_ptr(delta),
         (op & ImGuizmo::OPERATION::TRANSLATE) ? ts : rs,
         op & ImGuizmo::OPERATION::BOUNDS ? bounds : nullptr
     );
@@ -89,10 +90,6 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
 
     glm::vec3 &pos = component.position;
     pos = glm::vec3(model[3]);
-    // if (ts)
-    // {
-    //     pos = tsnap * glm::floor(pos / tsnap);
-    // }
 
     component.rotation = glm::quat_cast(model);
 

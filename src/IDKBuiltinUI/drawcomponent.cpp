@@ -81,46 +81,44 @@ EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
 }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::PhysicsMotionCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::PhysicsMotionCmp>(obj_id);
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::PhysicsMotionCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &ecs = api.getECS();
+//     auto &cmp = ecs.getComponent<idk::PhysicsMotionCmp>(obj_id);
 
-    ImGui::SeparatorText("Linear Velocity");
-    ImGui::InputFloat("Drag ##1",      &cmp.lin_drag);
-    ImGui::InputFloat3("Magnitude ##1", &cmp.lin_velocity[0], "%1.f");
+//     ImGui::SeparatorText("Linear Velocity");
+//     ImGui::InputFloat("Drag ##1",      &cmp.lin_drag);
+//     ImGui::InputFloat3("Magnitude ##1", &cmp.lin_velocity[0], "%1.f");
 
-    ImGui::SeparatorText("Angular Velocity");
-    ImGui::InputFloat("Drag ##2",      &cmp.ang_drag);
-    ImGui::InputFloat("Magnitude ##2", &cmp.ang_velocity);
-    ImGui::InputFloat3("Axis ##2",     &cmp.ang_axis[0], "%1.f");
-
-}
-
+//     ImGui::SeparatorText("Angular Velocity");
+//     ImGui::InputFloat("Drag ##2",      &cmp.ang_drag);
+//     ImGui::InputFloat("Magnitude ##2", &cmp.ang_velocity);
+//     ImGui::InputFloat3("Axis ##2",     &cmp.ang_axis[0], "%1.f");
+// }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::BoxColliderCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::BoxColliderCmp>(obj_id);
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::BoxColliderCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &ecs = api.getECS();
+//     auto &cmp = ecs.getComponent<idk::BoxColliderCmp>(obj_id);
 
-    ImGui::Checkbox("Visualize", &cmp.visualize);
-}
+//     ImGui::Checkbox("Visualize", &cmp.visualize);
+// }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::SphereColliderCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::SphereColliderCmp>(obj_id);
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::SphereColliderCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &ecs = api.getECS();
+//     auto &cmp = ecs.getComponent<idk::SphereColliderCmp>(obj_id);
 
-    ImGui::Checkbox("Visualize", &cmp.visualize);
-}
+//     ImGui::Checkbox("Visualize", &cmp.visualize);
+// }
 
 
 template <>
@@ -286,7 +284,6 @@ EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
     }
 
 
-
     // Target drag-drop
     // -----------------------------------------------------------------------------------------
     label = "Depends on " ICON_FA_DOWNLOAD;
@@ -311,3 +308,46 @@ EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
 
     // ImGui::PopStyleColor();
 }
+
+
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::AudioEmitterCmp>( idk::EngineAPI &api, int obj_id )
+{
+    if (ImGui::Button("Assign"))
+    {
+        idk::AudioSys::assignSound(obj_id, 0);
+    }
+
+    if (ImGui::Button("Play"))
+    {
+        idk::AudioSys::playSound(obj_id);
+    }
+}
+
+
+#define ECS_COMPONENT_CALLBACK(component_type) \
+ecs.getComponentArray<component_type>().getBehaviour()._userBehaviour = \
+    [this](idk::EngineAPI &api, int obj_id) \
+    { \
+        drawComponent<component_type>(api, obj_id); \
+    } \
+
+
+void
+EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
+{
+    auto &ecs = api.getECS();
+
+    ECS_COMPONENT_CALLBACK(idk::IconCmp);
+    ECS_COMPONENT_CALLBACK(idk::TransformCmp);
+    ECS_COMPONENT_CALLBACK(idk::ModelCmp);
+    ECS_COMPONENT_CALLBACK(idk::ScriptCmp);
+    ECS_COMPONENT_CALLBACK(idk::CameraCmp);
+    ECS_COMPONENT_CALLBACK(idk::AudioEmitterCmp);
+
+}
+
+

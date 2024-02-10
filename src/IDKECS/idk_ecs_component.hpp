@@ -6,6 +6,8 @@
 
 namespace idecs
 {
+    class ECS;
+
     class iComponentArray;
 
     template <typename T>
@@ -38,11 +40,13 @@ class idecs::iComponentArray
 {
 protected:
     idk::string     m_name;
+    idecs::ECS      &ecs_ref;
 
 public:
 
-    iComponentArray( const idk::string &name )
-    :   m_name(name)
+    iComponentArray( const idk::string &name, idecs::ECS &ecs )
+    :   m_name(name),
+        ecs_ref(ecs)
     {
         
     };
@@ -88,7 +92,8 @@ public:
         return m_behaviour;
     };
 
-    ComponentArray( const idk::string &name ): iComponentArray(name)
+    ComponentArray( const idk::string &name, idecs::ECS &ecs )
+    :   iComponentArray(name, ecs)
     {
         static_assert(std::is_standard_layout_v<T> == true);
     };
@@ -99,7 +104,7 @@ public:
 
     virtual int create( int obj_id ) final
     {
-        int id = m_data.create( T(obj_id) );
+        int id = m_data.create( T(obj_id, nullptr, &ecs_ref) );
         return id;
     };
 

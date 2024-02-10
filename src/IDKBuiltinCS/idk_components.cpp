@@ -1,5 +1,5 @@
 #include "idk_components.hpp"
-
+#include "sys-physx.hpp"
 
 int
 idk::ScriptCmp_getNumParams( idk::ScriptCmp &cmp )
@@ -27,30 +27,3 @@ idk::ScriptCmp_getNumParams( idk::ScriptCmp &cmp )
     return int(ar.nparams);
 }
 
-
-
-void
-idk::registerComponents( idecs::ECS &ecs )
-{
-    ecs.registerComponentMandatory<idk::IconCmp>("Icon");
-    ecs.registerComponent<TransformCmp>         ("Transform");
-    ecs.registerComponent<PhysicsMotionCmp>     ("PhysicsMotion");
-    ecs.registerComponent<BoxColliderCmp>       ("BoxCollider");
-    ecs.registerComponent<SphereColliderCmp>    ("SphereCollider");
-    ecs.registerComponent<ModelCmp>             ("Model");
-    ecs.registerComponent<ScriptCmp>            ("Script");
-    ecs.registerComponent<CameraCmp>            ("Camera");
-
-    ecs.setComponentBehaviour<idk::TransformCmp>  (idk::getBehaviour<idk::TransformCmp>());
-    ecs.setComponentBehaviour<idk::ModelCmp>      (idk::getBehaviour<idk::ModelCmp>());
-}
-
-
-
-
-// void
-// idk::SomeSystem::update( idk::EngineAPI &api )
-// {
-//     int obj_id = api.getEngine().getSelectedGameObject();
-//     std::cout << "selected: " << obj_id << "\n";
-// }

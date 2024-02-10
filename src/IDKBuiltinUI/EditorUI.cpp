@@ -7,6 +7,8 @@
 #include <idk_imgui/imnodes.hpp>
 #include <libidk/idk_export.hpp>
 
+#include "common/idk_imgui_assetbrowser.hpp"
+
 #include "theme.hpp"
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -51,14 +53,6 @@ static SDL_Window   *popout_win;
 
 
 
-#define ECS_COMPONENT_CALLBACK(component_type) \
-ecs.getComponentArray<component_type>().getBehaviour()._userBehaviour = \
-    [this](idk::EngineAPI &api, int obj_id) \
-    { \
-        drawComponent<component_type>(api, obj_id); \
-    } \
-
-
 
 void
 EditorUI_MD::init( idk::EngineAPI &api )
@@ -68,15 +62,8 @@ EditorUI_MD::init( idk::EngineAPI &api )
     auto &ren      = api.getRenderer();
     auto &eventsys = api.getEventSys();
 
-    ECS_COMPONENT_CALLBACK(idk::IconCmp);
-    ECS_COMPONENT_CALLBACK(idk::TransformCmp);
-    ECS_COMPONENT_CALLBACK(idk::PhysicsMotionCmp);
-    ECS_COMPONENT_CALLBACK(idk::BoxColliderCmp);
-    ECS_COMPONENT_CALLBACK(idk::SphereColliderCmp);
-    ECS_COMPONENT_CALLBACK(idk::ModelCmp);
-    ECS_COMPONENT_CALLBACK(idk::ScriptCmp);
-    ECS_COMPONENT_CALLBACK(idk::CameraCmp);
 
+    this->registerDrawComponents(api);
 
     IMGUI_CHECKVERSION();
     main_ctx = ImGui::CreateContext();
@@ -197,11 +184,6 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
     ImGuizmo::BeginFrame();
 
 
-    api.getEventSys().onDropFile(".idksc", [&api](const char *path)
-    {
-        api.getECS().readFile(path);
-    });
-
     api.getEventSys().onDropFile(".idkvi", [&api](const char *path)
     {
         auto &ren = api.getRenderer();
@@ -238,31 +220,44 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
         ImGui::End();
     }
 
-    {
-        ImGui::Begin("VXGI");
+    // {
+    //     ImGui::Begin("VXGI");
 
-        GLuint texture = ren.m_vxgi_buffer.attachments[0];
-        ImGui::Image(
-            *(ImTextureID *)(void *)(&texture),
-            ImVec2(256, 256),
-            ImVec2(0.0f, 1.0f),
-            ImVec2(1.0f, 0.0f)
-        );
+    //     GLuint texture = ren.m_vxgi_buffer.attachments[0];
+    //     ImGui::Image(
+    //         *(ImTextureID *)(void *)(&texture),
+    //         ImVec2(256, 256),
+    //         ImVec2(0.0f, 1.0f),
+    //         ImVec2(1.0f, 0.0f)
+    //     );
 
 
-        texture = ren.m_vxgi_buffer.depth_attachment;
-        ImGui::Image(
-            *(ImTextureID *)(void *)(&texture),
-            ImVec2(256, 256),
-            ImVec2(0.0f, 1.0f),
-            ImVec2(1.0f, 0.0f)
-        );
+    //     texture = ren.m_vxgi_buffer.depth_attachment;
+    //     ImGui::Image(
+    //         *(ImTextureID *)(void *)(&texture),
+    //         ImVec2(256, 256),
+    //         ImVec2(0.0f, 1.0f),
+    //         ImVec2(1.0f, 0.0f)
+    //     );
 
-        ImGui::End();
-    }
+    //     ImGui::End();
+    // }
 
 
     this->_tab(api);
+
+    static bool open = true;
+    static std::string selection = "";
+
+
+    constexpr int NUM_ASSET_BROWSERS = 2;
+
+    static fs::directory_entry dir_1(fs::absolute("assets/models"));
+    static fs::directory_entry dir_2(fs::absolute("assets/scripts"));
+
+    idkImGui::AssetBrowser("Asset Browser ##A", dir_1);
+    idkImGui::AssetBrowser("Asset Browser ##B", dir_2);
+
 
     ImGui::End();
 

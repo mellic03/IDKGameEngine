@@ -110,6 +110,22 @@ idk::TransformSys::getPosition( int obj_id )
 }
 
 
+
+glm::vec3
+idk::TransformSys::getWorldPosition( int obj_id )
+{
+    return glm::vec3(getWorldMatrix(obj_id)[3]);
+}
+
+
+glm::vec3
+idk::TransformSys::getFront( int obj_id )
+{
+    auto &cmp = getECS().getComponent<TransformCmp>(obj_id);
+    return cmp.rotation * glm::vec3(0.0f, 0.0f, -1.0f);
+}
+
+
 glm::mat4
 idk::TransformSys::getModelMatrix( int obj_id, bool scale )
 {

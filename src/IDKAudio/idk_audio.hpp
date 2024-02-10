@@ -2,52 +2,50 @@
 
 #include <SDL2/SDL_mixer.h>
 
+#include <libidk/idk_allocator.hpp>
+#include <libidk/idk_glm.hpp>
+
+#include <string>
+#include <stack>
 
 
 namespace idk { class AudioSystem; };
 
 
+
 class idk::AudioSystem
 {
 public:
-    // struct Sound
-    // {
-    //     Mix_Chunk *mc;
-    //     const char *name;
-    // };
 
-    // struct Emitter
-    // {
-    //     int channel;
-    //     const Mix_Chunk *mc;
-    //     const glm::vec3 &position;
+    struct Emitter
+    {
+        int channel   = -1;
+        int chunk     = -1;
+        glm::vec3 pos = glm::vec3(0.0f);
 
-    //     Emitter ( const Mix_Chunk *mix, const glm::vec3 &pos )
-    //     : channel(-1),  mc(mix),  position(pos) {  };
-    
-    //     Emitter( const Emitter &rhs )
-    //     : channel(rhs.channel),  mc(rhs.mc),  position(rhs.position) {  };
+        Emitter() {  };
+        Emitter( int chunk_id ): chunk(chunk_id) {  };
+    };
 
-    //     Emitter( const Emitter &&rhs )
-    //     : channel(rhs.channel),  mc(rhs.mc),  position(std::move(rhs.position)) {  };
-
-    // };
 
 private:
 
+    std::stack<int>             m_channels;
+    idk::Allocator<Mix_Chunk>   m_chunks;
+    idk::Allocator<Emitter>     m_emitters;
+
 
 public:
-                // AudioSystem();
+                AudioSystem();
 
-    // void        update();
-    // int         loadWav( const char * );
-    // int         createEmitter();
-    // int         createEmitter( int mix_chunk_id, const glm::vec3 &position );
+    void        update( const glm::vec3 &, const glm::vec3 & );
+    int         loadWav( const std::string & );
 
-    // void        listenerPosition( idk::Transform * );
+    IDK_ALLOCATOR_ACCESS(Emitter, Emitter,   m_emitters)
+    IDK_ALLOCATOR_ACCESS(Chunk,   Mix_Chunk, m_chunks)
 
-    // void        playSound( int emitter_id );
-    // void        stopSound( int emitter_id );
+    void        playSound( int emitter_id );
+    void        stopSound( int emitter_id );
 
 };
 

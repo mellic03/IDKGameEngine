@@ -10,46 +10,46 @@ static idecs::ECS &getECS() { return api_ptr->getECS(); }
 
 
 
-void
-idk::PhysicsSys::update( idk::EngineAPI &api )
-{
-    auto &ecs = api.getECS();
-    auto &arr = ecs.getComponentArray<idk::PhysicsMotionCmp>().data();
+// void
+// idk::PhysicsSys::update( idk::EngineAPI &api )
+// {
+//     auto &ecs = api.getECS();
+//     auto &arr = ecs.getComponentArray<idk::PhysicsMotionCmp>().data();
 
-    for (idk::PhysicsMotionCmp &cmp: arr)
-    {
-        IDK_ASSERT("PhysicsMotionCmp::obj_id == -1", cmp.obj_id != -1);
+//     for (idk::PhysicsMotionCmp &cmp: arr)
+//     {
+//         IDK_ASSERT("PhysicsMotionCmp::obj_id == -1", cmp.obj_id != -1);
 
-        auto &transcmp = ecs.getComponent<idk::TransformCmp>(cmp.obj_id);
+//         auto &transcmp = ecs.getComponent<idk::TransformCmp>(cmp.obj_id);
 
-        cmp.lin_velocity *= cmp.lin_drag;
-        cmp.ang_velocity *= cmp.ang_drag;
+//         cmp.lin_velocity *= cmp.lin_drag;
+//         cmp.ang_velocity *= cmp.ang_drag;
 
-        transcmp.position += cmp.lin_velocity;
+//         transcmp.position += cmp.lin_velocity;
 
-        glm::vec3 axis  = glm::normalize(cmp.ang_axis);
-        glm::quat delta = glm::quat_cast(glm::rotate(glm::mat4(1.0f), cmp.ang_velocity, axis));
-        transcmp.rotation = delta * transcmp.rotation;
-    }
+//         glm::vec3 axis  = glm::normalize(cmp.ang_axis);
+//         glm::quat delta = glm::quat_cast(glm::rotate(glm::mat4(1.0f), cmp.ang_velocity, axis));
+//         transcmp.rotation = delta * transcmp.rotation;
+//     }
 
 
-    // for (idk::AngularVelocityCmp &cmp: av_arr)
-    // {
-    //     IDK_ASSERT("VelocityCmp::obj_id == -1", cmp.obj_id != -1);
+//     // for (idk::AngularVelocityCmp &cmp: av_arr)
+//     // {
+//     //     IDK_ASSERT("VelocityCmp::obj_id == -1", cmp.obj_id != -1);
 
-    //     auto &transcmp = ecs.getComponent<idk::TransformCmp>(cmp.obj_id);
+//     //     auto &transcmp = ecs.getComponent<idk::TransformCmp>(cmp.obj_id);
 
-    //     glm::quat &rotation = transcmp.rotation;
+//     //     glm::quat &rotation = transcmp.rotation;
 
-    //     glm::vec3 axis  = glm::normalize(cmp.axis);
-    //     glm::quat delta = glm::quat_cast(glm::rotate(glm::mat4(1.0f), cmp.magnitude, axis));
+//     //     glm::vec3 axis  = glm::normalize(cmp.axis);
+//     //     glm::quat delta = glm::quat_cast(glm::rotate(glm::mat4(1.0f), cmp.magnitude, axis));
 
-    //     rotation = delta * rotation;
+//     //     rotation = delta * rotation;
 
-    //     cmp.magnitude *= cmp.drag;
+//     //     cmp.magnitude *= cmp.drag;
 
-    // }
-}
+//     // }
+// }
 
 
 
@@ -102,17 +102,13 @@ idk::ModelSys::assignModel( int obj_id, int model_id )
 {
     auto &ecs = getECS();
     auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
-    ecs.giveComponent<idk::ModelCmp>(obj_id);
-
     idk::Model &model = api_ptr->getRenderer().modelSystem().getModel(model_id);
 
     cmp.obj_id = obj_id;
     cmp.model_id = model_id;
     std::strcpy(cmp.filepath, model.filepath.c_str());
     std::strcpy(cmp.filestem, model.filestem.c_str());
-
 }
-
 
 
 
@@ -235,7 +231,7 @@ idk::ScriptSys::loadScripts( const std::string &directory )
 }
 
 
-void
+int
 idk::ScriptSys::assignScript( int obj_id, const std::string &filepath )
 {
     auto &ecs = getECS();
@@ -243,7 +239,6 @@ idk::ScriptSys::assignScript( int obj_id, const std::string &filepath )
     int child = ecs.createGameObject(fs::path(filepath).stem());
     ecs.giveChild(obj_id, child);
 
-    ecs.giveComponent<idk::ScriptCmp>(child);
     auto &cmp = ecs.getComponent<idk::ScriptCmp>(child);
 
     std::strcpy(cmp.filepath, filepath.c_str());
@@ -252,6 +247,8 @@ idk::ScriptSys::assignScript( int obj_id, const std::string &filepath )
     auto &icon = ecs.getComponent<idk::IconCmp>(child).icon;
     auto  name = ICON_FA_FILE_CODE;
     std::strcpy(icon, name);
+
+    return child;
 }
 
 
@@ -271,9 +268,7 @@ idk::CameraSys::update( idk::EngineAPI &api )
         }
 
         ren.getCamera(cam_id).model() = TransformSys::getWorldMatrix(obj_id);
-
     }
-
 }
 
 
@@ -289,4 +284,5 @@ idk::CameraSys::in_frustum( int subject, int target )
 
     return false;
 }
+
 
