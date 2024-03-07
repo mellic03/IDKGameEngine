@@ -5,29 +5,25 @@
 namespace fs = std::filesystem;
 
 
-
 static bool
-AssetBrowser_ShowDirectories( fs::directory_entry &current_dir, float size, int &count, int NUM_COLS )
+AssetBrowser_ShowDirectories( fs::directory_entry &current_dir,
+                              std::set<fs::directory_entry> &folder_entries,
+                              float size, int &count, int NUM_COLS )
 {
     bool result = true;
     bool running = true;
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5, 0.5, 0.5, 1.0));
 
-    for (auto dir_iter: fs::directory_iterator(current_dir))
+    for (auto dir_iter: folder_entries)
     {
-        if (dir_iter.is_directory() == false)
-        {
-            continue;
-        }
-
         std::string label = dir_iter.path().filename();
-
+        ImGui::TableNextColumn();
 
         ImGui::PushID(count);
         ImGui::BeginGroup();
 
-        ImGui::SetWindowFontScale(3.0f);
+        ImGui::SetWindowFontScale(2.0f);
         ImGui::Button(ICON_FA_FOLDER, ImVec2(size, size));
         ImGui::SetWindowFontScale(1.0f);
         
@@ -45,9 +41,9 @@ AssetBrowser_ShowDirectories( fs::directory_entry &current_dir, float size, int 
 
 
         count += 1;
-        if (count % NUM_COLS != 0)
+        if (count % NUM_COLS == 0)
         {
-            ImGui::SameLine();
+            ImGui::TableNextRow();
         }
 
         if (!running)
@@ -64,22 +60,17 @@ AssetBrowser_ShowDirectories( fs::directory_entry &current_dir, float size, int 
 
 
 static void
-AssetBrowser_ShowFiles( fs::directory_entry &current_dir, float size, int &count, int NUM_COLS )
+AssetBrowser_ShowFiles( std::set<fs::directory_entry> &file_entries, float size, int &count, int NUM_COLS )
 {
-    for (auto dir_iter: fs::directory_iterator(current_dir))
+    for (auto dir_iter: file_entries)
     {
-        if (dir_iter.is_directory())
-        {
-            continue;
-        }
-
         std::string label = dir_iter.path().filename();
-
+        ImGui::TableNextColumn();
 
         ImGui::PushID(count);
 
         ImGui::BeginGroup();
-        ImGui::SetWindowFontScale(3.0f);
+        ImGui::SetWindowFontScale(2.0f);
         ImGui::Button(ICON_FA_FILE, ImVec2(size, size));
         ImGui::SetWindowFontScale(1.0f);
 
@@ -107,11 +98,10 @@ AssetBrowser_ShowFiles( fs::directory_entry &current_dir, float size, int &count
         ImGui::PopID();
 
 
-
         count += 1;
-        if (count % NUM_COLS != 0)
+        if (count % NUM_COLS == 0)
         {
-            ImGui::SameLine();
+            ImGui::TableNextRow();
         }
     }
 }
@@ -127,7 +117,7 @@ idkImGui::AssetBrowser( const char *name, fs::directory_entry &current_dir )
 
     ImGui::Begin(name);
 
-    float button_size = 125.0f;
+    float button_size = 75.0f;
 
     int NUM_COLS = int(ImGui::GetContentRegionAvail().x) / button_size;
         NUM_COLS = (NUM_COLS <= 0) ? 1 : NUM_COLS;
@@ -137,14 +127,28 @@ idkImGui::AssetBrowser( const char *name, fs::directory_entry &current_dir )
         current_dir = fs::directory_entry(current_dir.path().parent_path());
     }
 
-    // if (ImGui::BeginTable("Icons", NUM_COLS, 0))
+
+    static std::set<fs::directory_entry> folders;   folders.clear();
+    static std::set<fs::directory_entry> files;     files.clear();
+
+    for (auto dir_iter: fs::directory_iterator(current_dir))
+    {
+        if (dir_iter.is_directory())
+            folders.emplace(dir_iter);
+
+        else
+            files.emplace(dir_iter);
+    }
+
+
+    if (ImGui::BeginTable("Icons", NUM_COLS, 0))
     {
         int count = 0;
 
-        // ImGui::TableNextRow();
-        AssetBrowser_ShowDirectories(current_dir, button_size, count, NUM_COLS);
-        AssetBrowser_ShowFiles(current_dir, button_size, count, NUM_COLS);
-        // ImGui::EndTable();
+        ImGui::TableNextRow();
+        AssetBrowser_ShowDirectories(current_dir, folders, button_size, count, NUM_COLS);
+        AssetBrowser_ShowFiles(files, button_size, count, NUM_COLS);
+        ImGui::EndTable();
     }
 
     ImGui::End();

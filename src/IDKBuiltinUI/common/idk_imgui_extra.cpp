@@ -133,25 +133,15 @@ file_select( const std::string &path, std::string &selection )
 bool
 idkImGui::RadioButton( const std::string &label_a, const std::string &label_b, bool &b )
 {
-    // if (ImGui::RadioButton(label_a.c_str(), b))
-    // {
-    //     b = true;
-    // }
+    if (ImGui::RadioButton("Local", b))
+        b = true;
 
-    // ImGui::SameLine();
-
-    // if (ImGui::RadioButton(label_b.c_str(), !b))
-    // {
-    //     b = false;
-    // }
-
-
-
-    if (ImGui::RadioButton("Local", b))  b = true;
     ImGui::SameLine();
-    if (ImGui::RadioButton("World", !b)) b = false;
 
+    if (ImGui::RadioButton("World", !b))
+        b = false;
 
+    return true;
 }
 
 

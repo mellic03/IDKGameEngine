@@ -6,7 +6,7 @@ idk::ScriptCmp_getNumParams( idk::ScriptCmp &cmp )
 {
     lua_State *L = cmp.L;
 
-    if (luaL_dofile(L, cmp.filepath) != 0)
+    if (luaL_dofile(L, cmp.filepath.c_str()) != 0)
     {
         std::cerr << "Error loading Lua script: " << lua_tostring(L, -1) << std::endl;
     }

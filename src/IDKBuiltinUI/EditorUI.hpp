@@ -24,8 +24,8 @@ private:
 
     // Editor Tabs
     // -----------------------------------------------------------------------------------------
-    float       m_tsnap = 0.50f;
-    float       m_rsnap = 45.0f;
+    float       m_tsnap = 0.0f;
+    float       m_rsnap = 0.0f;
 
     void        _tab_viewport( idk::EngineAPI & );
 
@@ -46,7 +46,7 @@ private:
 
 
     template <typename T>
-    void drawComponent( idk::EngineAPI &, int obj_id ) {  };
+    static void drawComponent( idk::EngineAPI &, int obj_id ) {  };
 
     void registerDrawComponents( idk::EngineAPI &api );
 

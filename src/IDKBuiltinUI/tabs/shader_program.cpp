@@ -52,7 +52,11 @@ EditorTab::shader_programs( idk::EngineAPI &api )
         }
 
         ImGui::TableNextColumn();
-        tab_shader_program_edit(selected, ren.getProgram(selected));
+
+        if (selected != "")
+        {
+            tab_shader_program_edit(selected, ren.getProgram(selected));
+        }
         
         ImGui::EndTable();
     }

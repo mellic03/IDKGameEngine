@@ -72,23 +72,23 @@ EditorTab::cameras( idk::EngineAPI &api )
 
             ImGui::Spacing();
 
-            ImGui::SliderFloat("Strength", &cam.m_abr_str, 0.0f, 0.1f, "%.4f");
-            ImGui::SliderFloat2("R",  &cam.m_r_abr.x,  -1.0f, 1.0f, "%.0f");
-            ImGui::SameLine();
-            if (ImGui::Button("RReset"))
-                cam.m_r_abr = glm::vec2(0.0f);
+            // ImGui::SliderFloat("Strength", &cam.m_abr_str, 0.0f, 0.1f, "%.4f");
+            // ImGui::SliderFloat2("R",  &cam.m_r_abr.x,  -1.0f, 1.0f, "%.0f");
+            // ImGui::SameLine();
+            // if (ImGui::Button("RReset"))
+            //     cam.m_r_abr = glm::vec2(0.0f);
 
-            ImGui::SliderFloat2("G",  &cam.m_g_abr.x,  -1.0f, 1.0f, "%.1f");
-            ImGui::SameLine();
-            if (ImGui::Button("GReset"))
-                cam.m_g_abr = glm::vec2(0.0f);
+            // ImGui::SliderFloat2("G",  &cam.m_g_abr.x,  -1.0f, 1.0f, "%.1f");
+            // ImGui::SameLine();
+            // if (ImGui::Button("GReset"))
+            //     cam.m_g_abr = glm::vec2(0.0f);
 
-            ImGui::SliderFloat2("B",  &cam.m_b_abr.x,  -1.0f, 1.0f, "%.1f");
-            ImGui::SameLine();
-            if (ImGui::Button("BReset"))
-                cam.m_b_abr = glm::vec2(0.0f);
+            // ImGui::SliderFloat2("B",  &cam.m_b_abr.x,  -1.0f, 1.0f, "%.1f");
+            // ImGui::SameLine();
+            // if (ImGui::Button("BReset"))
+            //     cam.m_b_abr = glm::vec2(0.0f);
 
-            ImGui::Spacing();
+            // ImGui::Spacing();
         }
 
         idkImGui::splitWindow_end();

@@ -263,10 +263,22 @@ idk::EventSystem::exposeToLua( lua_State *L )
     mod.fun("deltaMouseX",   [this](){ return mouseDelta().x; });
     mod.fun("deltaMouseY",   [this](){ return mouseDelta().y; });
 
+    mod.def("KEY_I",        (int)idk::Keycode::I);
+    mod.def("KEY_J",        (int)idk::Keycode::J);
+    mod.def("KEY_K",        (int)idk::Keycode::K);
+    mod.def("KEY_L",        (int)idk::Keycode::L);
+
     mod.def("KEY_W",        (int)idk::Keycode::W);
     mod.def("KEY_A",        (int)idk::Keycode::A);
     mod.def("KEY_S",        (int)idk::Keycode::S);
     mod.def("KEY_D",        (int)idk::Keycode::D);
+
+    mod.def("KEY_Q",        (int)idk::Keycode::Q);
+    mod.def("KEY_E",        (int)idk::Keycode::E);
+    mod.def("KEY_R",        (int)idk::Keycode::R);
+    mod.def("KEY_F",        (int)idk::Keycode::F);
+
+
     mod.def("KEY_SPACE",    (int)idk::Keycode::SPACE);
     mod.def("KEY_LCTRL",    (int)idk::Keycode::LCTRL);
     mod.def("KEY_LSHIFT",   (int)idk::Keycode::LSHIFT);

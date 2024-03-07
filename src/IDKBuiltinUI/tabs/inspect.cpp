@@ -7,7 +7,7 @@
 
 
 static void
-idk_RemoveComponentPopup( idecs::ECS &ecs, int obj_id, int component )
+idk_RemoveComponentPopup( idk::ecs::ECS &ecs, int obj_id, int component )
 {
     std::string name  = ecs.getComponentArray(component)->name();
     std::string label = "Remove " + name + " component";
@@ -20,7 +20,7 @@ idk_RemoveComponentPopup( idecs::ECS &ecs, int obj_id, int component )
 
 
 static void
-idk_AddComponentPopup( idecs::ECS &ecs, int obj_id )
+idk_AddComponentPopup( idk::ecs::ECS &ecs, int obj_id )
 {
     ImGui::Text("Add Component");
     ImGui::Separator();
@@ -59,8 +59,8 @@ EditorUI_MD::_tab_inspect( idk::EngineAPI &api, int obj_id )
     static bool open_popup = false;
 
 
-    char *name = ecs.getGameObjectName(obj_id);
-    if (ImGui::InputText("Name", name, ImGuiInputTextFlags_EnterReturnsTrue))
+    std::string name = ecs.getGameObjectName(obj_id);
+    if (ImGui::InputText("Name", &name, ImGuiInputTextFlags_EnterReturnsTrue))
     {
         ecs.setGameObjectName(obj_id, name);
     }
@@ -125,7 +125,7 @@ EditorUI_MD::_tab_inspect( idk::EngineAPI &api, int obj_id )
         {
             ImGui::BeginChild("Component");
             auto *CA = ecs.getComponentArray(component);
-            CA->getBehaviour()._userBehaviour(api, obj_id);
+            CA->drawCallback(api, obj_id);
             ImGui::EndChild();
         }
 

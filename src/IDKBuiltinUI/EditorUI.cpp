@@ -187,14 +187,7 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
     api.getEventSys().onDropFile(".idkvi", [&api](const char *path)
     {
         auto &ren = api.getRenderer();
-
-        std::string filepath(path);
-        std::string dir  = fs::path(filepath).parent_path();
-        std::string stem = fs::path(filepath).stem();
-
-        std::cout << dir + "/" << "    " << stem << "\n";
-
-        ren.modelSystem().loadModel(dir + "/", stem);
+        ren.loadModel(path);
     });
 
     // engine.getCS<idk::Icon_CS>().setDefaultIcon(ICON_FA_BOX_OPEN);
@@ -230,7 +223,6 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
     //         ImVec2(0.0f, 1.0f),
     //         ImVec2(1.0f, 0.0f)
     //     );
-
 
     //     texture = ren.m_vxgi_buffer.depth_attachment;
     //     ImGui::Image(

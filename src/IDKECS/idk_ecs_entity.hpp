@@ -3,14 +3,18 @@
 #include "common.hpp"
 
 
-namespace idecs
+namespace idk::ecs
 {
     static constexpr size_t MAX_COMPONENTS = 64;
 
     struct Entity
     {
-        char    name[64];
-        int     components[idecs::MAX_COMPONENTS];
+        #define IDK_STRUCT_MEMBERS(X) \
+            X( std::string,       name,       ""                 ) \
+            X( std::vector<int>,  components, std::vector<int>(MAX_COMPONENTS, -1) )
+
+        IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
+        #undef IDK_STRUCT_MEMBERS
     };
 
 
@@ -19,8 +23,8 @@ namespace idecs
     {
         Entity E;
 
-        std::strcpy(E.name, name.c_str());
-        std::fill_n(E.components, idecs::MAX_COMPONENTS, -1);
+        E.name = name;
+        E.components.resize(idk::ecs::MAX_COMPONENTS, -1);
 
         return E;
     }

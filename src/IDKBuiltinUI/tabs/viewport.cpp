@@ -25,33 +25,34 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
     float h = ImGui::GetWindowHeight();
     ImGuizmo::SetRect(x, y, w, h);
 
-    glm::mat4 view = camera.view();
-    glm::mat4 proj = camera.projection();
+    glm::mat4 view = camera.V();
+    glm::mat4 proj = camera.P();
 
     ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
-    ImGuizmo::OPERATION op = ImGuizmo::TRANSLATE;
 
     glm::vec3 tsnp = glm::vec3(tsnap);
     glm::vec3 rsnp = glm::vec3(rsnap);
     float *ts      = &tsnp[0];
     float *rs      = &rsnp[0];
 
-    if (eventsys.keylog().keyDown(idk::Keycode::LSHIFT))
+    static ImGuizmo::OPERATION op = ImGuizmo::TRANSLATE;
+
+    if (eventsys.keylog().keyDown(idk::Keycode::Z))
     {
-        mode = ImGuizmo::MODE::WORLD;
+        op = ImGuizmo::OPERATION::TRANSLATE;
     }
 
-    if (eventsys.keylog().keyDown(idk::Keycode::S))
+    if (eventsys.keylog().keyDown(idk::Keycode::X))
     {
         op = ImGuizmo::OPERATION::SCALEU;
     }
 
-    if (eventsys.keylog().keyDown(idk::Keycode::R))
+    if (eventsys.keylog().keyDown(idk::Keycode::C))
     {
         op = ImGuizmo::OPERATION::ROTATE;
     }
 
-    if (eventsys.keylog().keyDown(idk::Keycode::B))
+    if (eventsys.keylog().keyDown(idk::Keycode::V))
     {
         op = ImGuizmo::OPERATION::BOUNDS;
     }
@@ -59,9 +60,7 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
     auto &component = ecs.getComponent<idk::TransformCmp>(obj_id);
     int parent_id = ecs.getParent(obj_id);
 
-    glm::mat4 parent = idk::TransformSys::getWorldMatrix(parent_id);
-    glm::mat4 world  = idk::TransformSys::getWorldMatrix(obj_id);
-    glm::mat4 model  = idk::TransformSys::getModelMatrix(obj_id);
+    glm::mat4 world = idk::TransformSys::getModelMatrix(obj_id);
     glm::mat4 delta;
 
     static float bounds[] = { -0.5f, -0.5f, -0.5f, +0.5f, +0.5f, +0.5f };
@@ -77,21 +76,50 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
         op & ImGuizmo::OPERATION::BOUNDS ? bounds : nullptr
     );
 
-    model = glm::inverse(parent) * world;
 
-    glm::vec3 &scale = component.scale;
-    scale.x = glm::length(glm::vec3(model[0]));
-    scale.y = glm::length(glm::vec3(model[1]));
-    scale.z = glm::length(glm::vec3(model[2]));
+    if (op == ImGuizmo::OPERATION::ROTATE)
+    {
+        // glm::vec3 euler = glm::eulerAngles(glm::quat(delta));
+        // idk::TransformSys::getData(obj_id).pitch += euler.x;
+        // idk::TransformSys::getData(obj_id).yaw   += euler.y;
+        // idk::TransformSys::getData(obj_id).roll  += euler.z;
 
-    model[0] /= scale.x;
-    model[1] /= scale.y;
-    model[2] /= scale.z;
+        glm::mat4 R = delta;
+        glm::mat4 M = glm::inverse(idk::TransformSys::getWorldMatrix(obj_id));
 
-    glm::vec3 &pos = component.position;
-    pos = glm::vec3(model[3]);
+        glm::quat &Q = idk::TransformSys::getData(obj_id).rotation;
+                   Q = Q * glm::normalize(glm::quat_cast(R * M));
+    }
 
-    component.rotation = glm::quat_cast(model);
+    else if (op == ImGuizmo::OPERATION::TRANSLATE)
+    {
+        glm::vec3 dpos = delta[3];
+        idk::TransformSys::translateWorldspace(obj_id, dpos);
+    }
+
+    else if (op == ImGuizmo::OPERATION::BOUNDS)
+    {
+        glm::vec3 &scale = idk::TransformSys::getData(obj_id).scale3;
+
+        scale = glm::vec3(
+            glm::length(glm::vec3(world[0])),
+            glm::length(glm::vec3(world[1])),
+            glm::length(glm::vec3(world[2]))
+        );
+    }
+
+
+    // float &scale = component.scale;
+    // scale = glm::length(glm::vec3(model[0]));
+
+    // model[0] /= scale;
+    // model[1] /= scale;
+    // model[2] /= scale;
+
+    // glm::vec3 &pos = component.position;
+    // pos = glm::vec3(model[3]);
+
+    // component.rotation = glm::quat_cast(model);
 
 }
 

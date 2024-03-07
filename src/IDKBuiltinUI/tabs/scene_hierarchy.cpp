@@ -5,13 +5,13 @@
 namespace fs = std::filesystem;
 
 template <typename T>
-void idk_file_ree2( const std::string &filepath, idecs::ECS &ecs, int obj_id );
+void idk_file_ree2( const std::string &filepath, idk::ecs::ECS &ecs, int obj_id );
 
 
 
 template <>
 void
-idk_file_ree2<idk::ScriptCmp>( const std::string &filepath, idecs::ECS &ecs, int obj_id )
+idk_file_ree2<idk::ScriptCmp>( const std::string &filepath, idk::ecs::ECS &ecs, int obj_id )
 {
     ecs.getSystem<idk::ScriptSys>().assignScript(obj_id, filepath);
 }
@@ -19,7 +19,7 @@ idk_file_ree2<idk::ScriptCmp>( const std::string &filepath, idecs::ECS &ecs, int
 
 template <>
 void
-idk_file_ree2<idk::AudioEmitterCmp>( const std::string &filepath, idecs::ECS &ecs, int obj_id )
+idk_file_ree2<idk::AudioEmitterCmp>( const std::string &filepath, idk::ecs::ECS &ecs, int obj_id )
 {
     idk::AudioSys::assignSound(obj_id, filepath);
 }
@@ -27,15 +27,14 @@ idk_file_ree2<idk::AudioEmitterCmp>( const std::string &filepath, idecs::ECS &ec
 
 template <>
 void
-idk_file_ree2<idk::ModelCmp>( const std::string &filepath, idecs::ECS &ecs, int obj_id )
+idk_file_ree2<idk::ModelCmp>( const std::string &filepath, idk::ecs::ECS &ecs, int obj_id )
 {
-    // int model = idk::ModelSys::loadModel(filepath);
-    // idk::ModelSys::assignModel(obj_id, model);
+    idk::ModelSys::assignModel(obj_id, filepath);
 }
 
 
 
-void idk_file_ree( const std::string &filepath, idecs::ECS &ecs, int obj_id )
+void idk_file_ree( const std::string &filepath, idk::ecs::ECS &ecs, int obj_id )
 {
     std::string ext = fs::path(filepath).extension().string();
 
@@ -44,7 +43,7 @@ void idk_file_ree( const std::string &filepath, idecs::ECS &ecs, int obj_id )
         idk_file_ree2<idk::ScriptCmp>(filepath, ecs, obj_id);
     }
 
-    else if (ext == ".wav")
+    else if (ext == ".wav" || ext == ".mp3")
     {
         idk_file_ree2<idk::AudioEmitterCmp>(filepath, ecs, obj_id);
     }
@@ -59,7 +58,7 @@ void idk_file_ree( const std::string &filepath, idecs::ECS &ecs, int obj_id )
 
 
 static void
-idk_scene_treenode_drag_drop( idecs::ECS &ecs, int obj_id )
+idk_scene_treenode_drag_drop( idk::ecs::ECS &ecs, int obj_id )
 {
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
@@ -96,7 +95,7 @@ idk_scene_treenode_drag_drop( idecs::ECS &ecs, int obj_id )
 
 
 static void
-idk_scene_treenode_drag_drop_deparent( idecs::ECS &ecs, int obj_id )
+idk_scene_treenode_drag_drop_deparent( idk::ecs::ECS &ecs, int obj_id )
 {
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {

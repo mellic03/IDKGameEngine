@@ -1,55 +1,17 @@
 #include "idk_systems.hpp"
 #include <IDKEvents/IDKEvents.hpp>
 
+#include "sys-transform.hpp"
+#include "sys-planet.hpp"
+
+
 #include <filesystem>
 namespace fs = std::filesystem;
 
 
 static idk::EngineAPI *api_ptr;
-static idecs::ECS &getECS() { return api_ptr->getECS(); }
+static idk::ecs::ECS &getECS() { return api_ptr->getECS(); }
 
-
-
-// void
-// idk::PhysicsSys::update( idk::EngineAPI &api )
-// {
-//     auto &ecs = api.getECS();
-//     auto &arr = ecs.getComponentArray<idk::PhysicsMotionCmp>().data();
-
-//     for (idk::PhysicsMotionCmp &cmp: arr)
-//     {
-//         IDK_ASSERT("PhysicsMotionCmp::obj_id == -1", cmp.obj_id != -1);
-
-//         auto &transcmp = ecs.getComponent<idk::TransformCmp>(cmp.obj_id);
-
-//         cmp.lin_velocity *= cmp.lin_drag;
-//         cmp.ang_velocity *= cmp.ang_drag;
-
-//         transcmp.position += cmp.lin_velocity;
-
-//         glm::vec3 axis  = glm::normalize(cmp.ang_axis);
-//         glm::quat delta = glm::quat_cast(glm::rotate(glm::mat4(1.0f), cmp.ang_velocity, axis));
-//         transcmp.rotation = delta * transcmp.rotation;
-//     }
-
-
-//     // for (idk::AngularVelocityCmp &cmp: av_arr)
-//     // {
-//     //     IDK_ASSERT("VelocityCmp::obj_id == -1", cmp.obj_id != -1);
-
-//     //     auto &transcmp = ecs.getComponent<idk::TransformCmp>(cmp.obj_id);
-
-//     //     glm::quat &rotation = transcmp.rotation;
-
-//     //     glm::vec3 axis  = glm::normalize(cmp.axis);
-//     //     glm::quat delta = glm::quat_cast(glm::rotate(glm::mat4(1.0f), cmp.magnitude, axis));
-
-//     //     rotation = delta * rotation;
-
-//     //     cmp.magnitude *= cmp.drag;
-
-//     // }
-// }
 
 
 
@@ -58,13 +20,13 @@ idk::ModelSys::init( idk::EngineAPI &api )
 {
     auto &ren = api.getRenderer();
     auto &ecs = getECS();
-    auto &arr = ecs.getComponentArray<idk::ModelCmp>().data();
+    auto &arr = ecs.getComponentArray<idk::ModelCmp>();
 
     for (auto &cmp: arr)
     {
         if (cmp.filepath[0] != '\0')
         {
-            cmp.model_id = ren.modelSystem().loadModel(cmp.filepath, cmp.filestem);
+            cmp.model_id = ren.loadModel(cmp.filepath);
         }
     }
 }
@@ -75,19 +37,28 @@ idk::ModelSys::update( idk::EngineAPI &api )
 {
     auto &ren = api.getRenderer();
     auto &ecs = getECS();
-    auto &arr = ecs.getComponentArray<idk::ModelCmp>().data();
+    auto &arr = ecs.getComponentArray<idk::ModelCmp>();
 
     for (idk::ModelCmp &data: arr)
     {
-        if (data.model_id == -1 || data.visible == false)
+        if (data.visible == false)
         {
             continue;
         }
 
-        glm::mat4 transform = TransformSys::getWorldMatrix(data.obj_id);
+        glm::mat4 transform = TransformSys::getModelMatrix(data.obj_id);
 
-        ren.drawModel(data.model_id, transform);
-        ren.drawEnvironmental(data.model_id, transform);
+
+        if (data.viewspace)
+        {
+            ren.drawModelViewspace(data.model_id, transform);
+        }
+
+        else
+        {
+            ren.drawModel(data.model_id, transform);
+        }
+
 
         if (data.shadowcast)
         {
@@ -98,16 +69,16 @@ idk::ModelSys::update( idk::EngineAPI &api )
 
 
 void
-idk::ModelSys::assignModel( int obj_id, int model_id )
+idk::ModelSys::assignModel( int obj_id, const std::string &filepath )
 {
     auto &ecs = getECS();
     auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
-    idk::Model &model = api_ptr->getRenderer().modelSystem().getModel(model_id);
 
-    cmp.obj_id = obj_id;
+    int model_id = api_ptr->getRenderer().loadModel(filepath);
+
+    cmp.obj_id   = obj_id;
     cmp.model_id = model_id;
-    std::strcpy(cmp.filepath, model.filepath.c_str());
-    std::strcpy(cmp.filestem, model.filestem.c_str());
+    cmp.filepath = filepath;
 }
 
 
@@ -121,11 +92,11 @@ idk::ScriptSys::init( idk::EngineAPI &api )
     static auto &engine = api.getEngine();
     static auto &events = api.getEventSys();
 
-    auto &v = getECS().getComponentArray<idk::ScriptCmp>().data();
-    for (auto &data: v)
-    {
-        data = idk::ScriptCmp(data.obj_id, &data);
-    }
+    // auto &v = getECS().getComponentArray<idk::ScriptCmp>();
+    // for (auto &data: v)
+    // {
+    //     data = idk::ScriptCmp(data.obj_id, &data);
+    // }
 }
 
 
@@ -134,19 +105,25 @@ void
 idk::ScriptSys::update( idk::EngineAPI &api )
 {
     auto &ecs = api.getECS();
-    auto &component_array = ecs.getComponentArray<idk::ScriptCmp>().data();
+    auto &component_array = ecs.getComponentArray<idk::ScriptCmp>();
 
-    for (auto &data: component_array)
+    for (auto &cmp: component_array)
     {
-        auto &L        = data.L;
-        auto &nparams  = data.nparams;
-        auto &subject  = data.subject_id;
-        auto &target   = data.target_id;
-        int  dep       = data.dependency;
-        auto &filepath = data.filepath;
+        auto &L        = cmp.L;
+        auto &nparams  = cmp.nparams;
+        auto &subject  = cmp.subject_id;
+        auto &target   = cmp.target_id;
+        int  dep       = cmp.dependency;
+        auto &filepath = cmp.filepath;
+
+
+        if (cmp.enabled == false)
+        {
+            continue;
+        }
+
 
         IDK_ASSERT("null lua_State!", L != nullptr);
-
 
         if (dep != -1)
         {
@@ -161,12 +138,12 @@ idk::ScriptSys::update( idk::EngineAPI &api )
             }
         }
 
-        if (std::strcmp(filepath, "") == 0)
+        if (filepath == "")
         {
             continue;
         }
 
-        if (luaL_dofile(L, filepath) != 0)
+        if (luaL_dofile(L, filepath.c_str()) != 0)
         {
             std::cerr << "Error loading Lua script: " << lua_tostring(L, -1) << std::endl;
         }
@@ -193,10 +170,8 @@ idk::ScriptSys::update( idk::EngineAPI &api )
             lua_pop(L, 1);
         }
 
-        data.retvalue = lua_tointeger(L, -1);
+        cmp.retvalue = lua_tointeger(L, -1);
         lua_pop(L, 1);
-
-        // idk_printvalue(ret);
     }
 
 }
@@ -241,12 +216,11 @@ idk::ScriptSys::assignScript( int obj_id, const std::string &filepath )
 
     auto &cmp = ecs.getComponent<idk::ScriptCmp>(child);
 
-    std::strcpy(cmp.filepath, filepath.c_str());
+    cmp.filepath = filepath;
     cmp.nparams = idk::ScriptCmp_getNumParams(cmp);
 
     auto &icon = ecs.getComponent<idk::IconCmp>(child).icon;
-    auto  name = ICON_FA_FILE_CODE;
-    std::strcpy(icon, name);
+          icon = ICON_FA_FILE_CODE;
 
     return child;
 }
@@ -255,19 +229,52 @@ idk::ScriptSys::assignScript( int obj_id, const std::string &filepath )
 
 
 void
+idk::CameraSys::exposeToLua( lua_State *LS )
+{
+    luaaa::LuaModule mod(LS, "CameraSys");
+
+}
+
+
+
+void
 idk::CameraSys::update( idk::EngineAPI &api )
 {
-    auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
+    auto &engine = api.getEngine();
+    auto &events = api.getEventSys();
+    auto &ren    = api.getRenderer();
+    auto &ecs    = api.getECS();
 
-    for (auto &[obj_id, cam_id]: ecs.getComponentArray<idk::CameraCmp>().data())
+    float dtime = engine.deltaTime();
+
+    for (auto &cmp: ecs.getComponentArray<idk::CameraCmp>())
     {
-        if (obj_id == -1 || cam_id == -1)
+        int obj_id = cmp.obj_id;
+        int cam_id = cmp.cam_id;
+
+        IDK_ASSERT("Object does not exist", obj_id >= 0);
+        IDK_ASSERT("Camera does not exist", cam_id >= 0);
+
+
+        auto &camera = ren.getCamera(cam_id);
+        camera.bloom = cmp.bloom;
+
+        camera.setModelMatrix(TransformSys::getModelMatrix(obj_id));
+
+
+        int planet = PlanetSys::nearestPlanet(camera.position);
+
+        if (planet == -1)
         {
             continue;
         }
 
-        ren.getCamera(cam_id).model() = TransformSys::getWorldMatrix(obj_id);
+
+        glm::vec3 pos = TransformSys::getPositionWorldspace(planet);
+        glm::vec3 dir = glm::normalize(pos);
+
+        ren.lightSystem().getDirlight(0).direction = glm::vec4(dir, 0.0f);
+        ren.lightSystem().getDirlight(0).ambient   = glm::vec4(0.04f);
     }
 }
 
@@ -281,8 +288,46 @@ idk::CameraSys::in_frustum( int subject, int target )
 
     idk::Camera &cam = ren.getCamera(cmp.cam_id);
 
-
     return false;
 }
 
+
+
+void
+idk::LightSys::init( idk::EngineAPI &api )
+{
+
+}
+
+
+void
+idk::LightSys::update( idk::EngineAPI &api )
+{
+    auto &ecs = api.getECS();
+    auto &ren = api.getRenderer();
+
+    for (auto &[obj_id, light_id, diffuse, radius]: ecs.getComponentArray<idk::PointlightCmp>())
+    {
+        auto &light = ren.getPointlight(light_id);
+    
+        glm::mat4 M    = TransformSys::getModelMatrix(obj_id);
+        light.position = M[3];
+        light.diffuse  = diffuse;
+        light.radius   = radius;
+    }
+
+    for (auto &[obj_id, light_id, diffuse, angle, radius]: ecs.getComponentArray<idk::SpotlightCmp>())
+    {
+        auto &light = ren.getSpotlight(light_id);
+
+        glm::mat4 M = TransformSys::getModelMatrix(obj_id);
+        light.position = M[3];
+        light.orientation = glm::normalize(glm::quat_cast(M));
+
+        light.diffuse = diffuse;
+        light.angle   = angle;
+        light.radius  = radius;
+    }
+
+}
 

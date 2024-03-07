@@ -1,5 +1,7 @@
 #include "idk_audio.hpp"
 
+#include <filesystem>
+
 
 idk::AudioSystem::AudioSystem()
 {
@@ -25,17 +27,22 @@ idk::AudioSystem::AudioSystem()
 int
 idk::AudioSystem::loadWav( const std::string &filepath )
 {
-    Mix_Chunk *mc = Mix_LoadWAV(filepath.c_str());
+    std::string path = std::filesystem::absolute(filepath);
+
+    Mix_Chunk *mc = Mix_LoadWAV(path.c_str());
     IDK_ASSERT("Could not load .wav file", mc != nullptr);
+
+    idk_printvalue(mc);
 
     return createChunk(*mc);
 }
 
 
 void
-idk::AudioSystem::playSound( int emitter_id )
+idk::AudioSystem::playSound( int emitter_id, bool loop )
 {
     auto &emitter = getEmitter(emitter_id);
+    emitter.looping = loop;
 
     // Already playing
     if (emitter.channel != -1)
@@ -55,7 +62,7 @@ idk::AudioSystem::playSound( int emitter_id )
                       m_channels.pop();
 
     Mix_Chunk &chunk = getChunk(emitter.chunk);
-    Mix_PlayChannel(emitter.channel, &chunk, -1);
+    Mix_PlayChannel(emitter.channel, &chunk, (loop) ? -1 : 0);
 }
 
 
@@ -76,20 +83,61 @@ idk::AudioSystem::stopSound( int emitter_id )
 }
 
 
+void
+idk::AudioSystem::resumeSound( int emitter_id )
+{
+    auto &emitter = getEmitter(emitter_id);
+
+    if (emitter.channel == -1)
+    {
+        playSound(emitter_id, emitter.looping);
+        return;
+    }
+
+    if (Mix_Paused(emitter.channel))
+    {
+        Mix_Resume(emitter.channel);
+    }
+}
+
+
+void
+idk::AudioSystem::pauseSound( int emitter_id )
+{
+    auto &emitter = getEmitter(emitter_id);
+
+    if (emitter.channel == -1)
+    {
+        return;
+    }
+
+    if (Mix_Paused(emitter.channel) == false)
+    {
+        Mix_Pause(emitter.channel);
+    }
+}
+
+
 
 void
 idk::AudioSystem::update( const glm::vec3 &listener_pos, const glm::vec3 &listener_front )
 {
-    std::cout << m_emitters.size() << "\n";
-
     for (Emitter &emitter: m_emitters)
     {
-        glm::vec3 dir = glm::normalize(emitter.pos - listener_pos);
-        float     mag = glm::dot(dir, listener_front) * 0.5 + 0.5;
-
-        idk_printvalue(mag);
+        glm::vec3 dir  = glm::normalize(emitter.pos - listener_pos);
+        float     dist = glm::distance(emitter.pos, listener_pos);
+        float     mag  = 0.0f;
+                  mag += 1.0f / (0.25f * dist*dist);
+                  mag += 0.25f * (glm::dot(dir, listener_front) * 0.5 + 0.5);
+                  mag  = glm::clamp(mag, 0.01f, 1.0f);
 
         Mix_Volume(emitter.channel, mag*SDL_MIX_MAXVOLUME);
+
+        if (emitter.looping == false && Mix_Playing(emitter.channel) == 0)
+        {
+            stopSound(emitter.id);
+        }
+
     }
 
 }

@@ -16,11 +16,11 @@ namespace idk
 };
 
 
-namespace idecs { class ECS; };
+namespace idk::ecs { class ECS; };
 
 
 
-class idecs::ECS: public idk::LuaAPI
+class idk::ecs::ECS: public idk::LuaAPI
 {
 public:
     static constexpr size_t MAX_ENTITIES   = 512;
@@ -33,24 +33,27 @@ private:
 
     idk::EngineAPI &m_api;
 
-    std::map<int, int>                  m_parent;
-    std::map<int, std::set<int>>        m_children;
+    std::map<int, int>                   m_parent;
+    std::map<int, std::set<int>>         m_children;
 
-    idk::Allocator<Entity>              m_entities;
-    std::set<int>                       m_entityIDs;
-    std::deque<int>                     m_selection;
+    idk::Allocator<Entity>               m_entities;
+    std::set<int>                        m_entityIDs;
+    std::deque<int>                      m_selection;
 
-    size_t                              m_budget;
-    bool                                m_should_readFile = false;
-    std::string                         m_readFile_path   = "";
+    size_t                               m_budget;
+    bool                                 m_should_readFile = false;
+    std::string                          m_readFile_path   = "";
 
-    idk::vector<iComponentArray *>       m_components;
-    std::unordered_map<size_t, int>      m_componentIDs;
-    std::unordered_map<std::string, int> m_component_names;
-    std::vector<int>                     m_mandatory_components;
+
+    std::map<int, iComponentArray *>        m_components;
+    std::unordered_map<size_t, int>         m_component_IDs;
+    std::unordered_map<std::string, size_t> m_component_keys;
+    std::vector<int>                        m_mandatory_components;
 
     idk::vector<System *>               m_systems;
     std::unordered_map<size_t, int>     m_systemIDs;
+
+
 
 
     void writeEntities   ( std::ofstream &stream );
@@ -62,11 +65,25 @@ private:
 
 public:
 
+    template <typename T>
+    int  getComponentID();
+
+    template <typename T>
+    size_t getComponentKey();
+
+    int    getComponentID( size_t key );
+    size_t getComponentKey( const std::string & );
+    bool   componentExists( const std::string & );
+
+
     ECS( idk::EngineAPI &api ): m_api(api) {  };
 
     void writeFile ( const std::string &filepath );
     void _readFile  ( const std::string &filepath );
     void readFile( const std::string &filepath );
+
+
+    IDK_ALLOCATOR_ACCESS(Entity, idk::ecs::Entity, m_entities);
 
 
     size_t numComponents() { return m_components.size(); };
@@ -87,22 +104,14 @@ public:
     template <typename T>
     ComponentArray<T> &getComponentArray();
     iComponentArray   *getComponentArray( int id ) { return m_components[id]; };
+    iComponentArray   *getComponentArray( const std::string & );
 
-
-    template <typename T>
-    void setComponentBehaviour( const Behaviour &behaviour )
-    {
-        this->getComponentArray<T>().setBehaviour(behaviour);
-    };
-
-    
 
     template <typename T>
     T &getComponent( int obj_id );
 
 
     void giveComponent   ( int obj_id, int component );
-    void giveComponent   ( int obj_id, const std::string &name );
     void copyComponent   ( int obj_id, int src_id, int component );
     bool hasComponent    ( int obj_id, int component );
     void removeComponent ( int obj_id, int component );
@@ -126,14 +135,17 @@ public:
     int                     copyGameObject( int obj_id );
     void                    deleteGameObject( int obj_id );
     std::set<int> &         gameObjects();
-    char *                  getGameObjectName( int obj_id );
+    bool                    gameObjectExists( int obj_id );
+    const std::string &     getGameObjectName( int obj_id );
     void                    setGameObjectName( int obj_id, const std::string &name);
+    int                     getGameObjectByName( const std::string &name );
+
 
     int                     getSelectedGameObject();
     void                    setSelectedGameObject( int obj_id );
     void                    deleteSelectedGameObject();
     int                     copySelectedGameObject();
-    char *                  getSelectedGameObjectName();
+    const std::string &     getSelectedGameObjectName();
 
     void                    giveChild     ( int parent_id, int child_id );
     void                    removeChild   ( int parent_id, int child_id );
@@ -152,41 +164,56 @@ public:
 
 
 
-
+template <typename T>
+size_t
+idk::ecs::ECS::getComponentKey()
+{
+    return typeid(ComponentArray<T>).hash_code();
+}
 
 
 
 
 template <typename T>
 int
-idecs::ECS::registerComponent( const idk::string &name )
+idk::ecs::ECS::getComponentID()
 {
-    ComponentArray<T> *C = new ComponentArray<T>(name, *this);
-    size_t key = typeid(ComponentArray<T>).hash_code();
-    
-    m_components.push_back(C);
-    m_componentIDs[key]     = m_components.size() - 1;
-    m_component_names[name] = m_components.size() - 1;
+    return getComponentID(getComponentKey<T>());
+}
 
-    return m_components.size() - 1;
+
+
+template <typename T>
+int
+idk::ecs::ECS::registerComponent( const idk::string &name )
+{
+    int component_id = m_component_IDs.size();
+
+    ComponentArray<T> *C = new ComponentArray<T>(m_api, name, component_id);
+    size_t key = typeid(ComponentArray<T>).hash_code();
+
+    m_components[component_id] = C;
+    m_component_IDs[key]       = component_id;
+    m_component_keys[name]     = key;
+
+    return component_id;
 };
 
 
 template <typename T>
-idecs::ComponentArray<T> &
-idecs::ECS::getComponentArray()
+idk::ecs::ComponentArray<T> &
+idk::ecs::ECS::getComponentArray()
 {
-    size_t key = typeid(ComponentArray<T>).hash_code();
-    int    idx = m_componentIDs[key];
-
-    return m_components[idx]->cast<ComponentArray<T>>();
+    size_t key = getComponentKey<T>();
+    int    id  = getComponentID(key);
+    return *dynamic_cast<ComponentArray<T> *>(getComponentArray(id));
 };
 
 
 
 template <typename T>
 T &
-idecs::ECS::getComponent( int obj_id )
+idk::ecs::ECS::getComponent( int obj_id )
 {
     if (hasComponent<T>(obj_id) == false)
     {
@@ -194,47 +221,43 @@ idecs::ECS::getComponent( int obj_id )
     }
     IDK_ASSERT("Object does not have component", hasComponent<T>(obj_id));
 
-    ComponentArray<T> &v = getComponentArray<T>();
+    ComponentArray<T> &comp_array = getComponentArray<T>();
 
-    size_t key = typeid(ComponentArray<T>).hash_code();
-    int    idx = m_componentIDs[key];
+    int idx = getComponentID<T>();
 
-    Entity &entity = m_entities.get(obj_id);
-    return v.data().get(entity.components[idx]);
+    Entity &entity = getEntity(obj_id);
+    return comp_array.getComponent(entity.components[idx]);
 };
+
+
 
 
 template <typename T>
 void
-idecs::ECS::giveComponent( int obj_id )
+idk::ecs::ECS::giveComponent( int obj_id )
 {
-    size_t key = typeid(ComponentArray<T>).hash_code();
-    int    idx = m_componentIDs[key];
-
-    giveComponent(obj_id, idx);
+    int component = getComponentID<T>();
+    giveComponent(obj_id, component);
 }
 
 
 template <typename T>
 bool
-idecs::ECS::hasComponent( int obj_id )
+idk::ecs::ECS::hasComponent( int obj_id )
 {
-    size_t key = typeid(ComponentArray<T>).hash_code();
-    int    idx = m_componentIDs[key];
-
-    return hasComponent(obj_id, idx);
+    int component = getComponentID<T>();
+    return hasComponent(obj_id, component);
 }
 
 
 template <typename T>
 void
-idecs::ECS::removeComponent( int obj_id )
+idk::ecs::ECS::removeComponent( int obj_id )
 {
-    size_t key = typeid(ComponentArray<T>).hash_code();
-    int    idx = m_componentIDs[key];
-
-    removeComponent(obj_id, idx);
+    int component = getComponentID<T>();
+    removeComponent(obj_id, component);
 }
+
 
 
 
@@ -242,7 +265,7 @@ idecs::ECS::removeComponent( int obj_id )
 
 template <typename T>
 void
-idecs::ECS::registerSystem()
+idk::ecs::ECS::registerSystem()
 {
     size_t key = typeid(T).hash_code();
     m_systemIDs[key] = m_systems.size();
@@ -254,7 +277,7 @@ idecs::ECS::registerSystem()
 
 template <typename T>
 T &
-idecs::ECS::getSystem()
+idk::ecs::ECS::getSystem()
 {
     size_t key = typeid(T).hash_code();
     int    idx = m_systemIDs[key];

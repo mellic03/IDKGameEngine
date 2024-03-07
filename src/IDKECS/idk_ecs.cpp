@@ -4,11 +4,15 @@
 #include <libidk/idk_io.hpp>
 #include <libidk/idk_view.hpp>
 
+#include "idk_ecs_file.hpp"
+#include "IDKBuiltinCS/sys-transform.hpp"
+
 
 static idk::EngineAPI *api_ptr;
+static bool            file_read_mode = false;
 
 void
-idecs::ECS::init( idk::EngineAPI &api )
+idk::ecs::ECS::init( idk::EngineAPI &api )
 {
     api_ptr = &api;
 
@@ -20,26 +24,24 @@ idecs::ECS::init( idk::EngineAPI &api )
 
 
 void
-idecs::ECS::update( idk::EngineAPI &api )
+idk::ecs::ECS::update( idk::EngineAPI &api )
 {
     for (System *system: m_systems)
     {
         system->update(api);
     }
 
-
     if (m_should_readFile)
     {
         m_should_readFile = false;
         _readFile(m_readFile_path);
     }
-
 }
 
 
 
 void
-idecs::ECS::writeEntities( std::ofstream &stream )
+idk::ecs::ECS::writeEntities( std::ofstream &stream )
 {
     idk::vector<int> entity_ids;
     idk::vector<int> hierarchy;
@@ -60,25 +62,35 @@ idecs::ECS::writeEntities( std::ofstream &stream )
         }
     }
 
-    stream << entity_ids;
-    stream << hierarchy;
-    stream << m_entities;
+    idk::streamwrite(stream, entity_ids);
+    idk::streamwrite(stream, hierarchy);
+    idk::streamwrite(stream, m_entities);
+
 }
 
 
 void
-idecs::ECS::writeComponents( std::ofstream &stream )
+idk::ecs::ECS::writeComponents( std::ofstream &stream )
 {
-    for (auto *cmp: m_components)
+    ECSFileHeader ecs_header = {
+        .major = IDK_ECS_VERSION_MAJOR,
+        .minor = IDK_ECS_VERSION_MINOR,
+        .num_arrays = uint32_t(numComponents())
+    };
+
+    ECSFile_write(stream, ecs_header);
+
+    for (auto &[key, cmp]: m_components)
     {
-        cmp->serialize(stream);
+        ComponentFileHeader cmp_header = ComponentFile_new(cmp);
+        ComponentFile_write(stream, cmp_header, cmp);
     }
 }
 
 
 
 void
-idecs::ECS::readEntities( std::ifstream &stream )
+idk::ecs::ECS::readEntities( std::ifstream &stream )
 {
     m_entityIDs.clear();
     m_parent.clear();
@@ -87,9 +99,9 @@ idecs::ECS::readEntities( std::ifstream &stream )
     std::vector<int> entity_ids;
     std::vector<int> hierarchy;
 
-    stream >> entity_ids;
-    stream >> hierarchy;
-    stream >> m_entities;
+    idk::streamread(stream, entity_ids);
+    idk::streamread(stream, hierarchy);
+    idk::streamread(stream, m_entities);
 
     for (int id: entity_ids)
     {
@@ -127,17 +139,36 @@ idecs::ECS::readEntities( std::ifstream &stream )
 
 
 void
-idecs::ECS::readComponents( std::ifstream &stream )
+idk::ecs::ECS::readComponents( std::ifstream &stream )
 {
-    for (auto *cmp: m_components)
+    ECSFileHeader ecs_header;
+    ECSFile_read(stream, ecs_header);
+
+    for (uint32_t i=0; i<ecs_header.num_arrays; i++)
     {
-        cmp->deserialize(stream);
+        ComponentFileHeader header;
+        ComponentFile_readHeader(stream, header);
+
+        if (componentExists(header.name))
+        {
+            std::cout << "reading \"" << header.name << "\" component\n";
+
+            iComponentArray *comp_array = getComponentArray(header.name);
+            ComponentFile_readData(stream, header, comp_array);
+        }
+
+        else
+        {
+            std::cout << "skipping " << header.name << " component\n";
+            ComponentFile_skipData(stream, header);
+        }
     }
+
 }
 
 
 void
-idecs::ECS::writeFile( const std::string &filepath )
+idk::ecs::ECS::writeFile( const std::string &filepath )
 {
     std::ofstream stream(filepath, std::ios::binary);
 
@@ -152,8 +183,10 @@ idecs::ECS::writeFile( const std::string &filepath )
 
 
 void
-idecs::ECS::_readFile( const std::string &filepath )
+idk::ecs::ECS::_readFile( const std::string &filepath )
 {
+    file_read_mode = true;
+
     std::ifstream stream(filepath, std::ios::binary);
 
     readComponents(stream);
@@ -168,11 +201,20 @@ idecs::ECS::_readFile( const std::string &filepath )
 
     stream.close();
     std::cout << "Scene read from \"" << filepath << "\"\n";
+
+    getSystem<idk::TransformSys>().update(m_api);
+
+    for (auto &[id, cmp]: m_components)
+    {
+        cmp->allObjectAssignment();
+    }
+
+    file_read_mode = false;
 }
 
 
 void
-idecs::ECS::readFile( const std::string &filepath )
+idk::ecs::ECS::readFile( const std::string &filepath )
 {
     m_readFile_path   = filepath;
     m_should_readFile = true;
@@ -180,9 +222,42 @@ idecs::ECS::readFile( const std::string &filepath )
 
 
 
+size_t
+idk::ecs::ECS::getComponentKey( const std::string &name )
+{
+    return m_component_keys[name];
+}
+
+
+bool
+idk::ecs::ECS::componentExists( const std::string &name )
+{
+    return m_component_keys.contains(name);
+}
+
+
+int
+idk::ecs::ECS::getComponentID( size_t key )
+{
+    return m_component_IDs[key];
+}
+
+
+
+idk::ecs::iComponentArray *
+idk::ecs::ECS::getComponentArray( const std::string &name )
+{
+    IDK_ASSERT("No such component array", m_component_keys.contains(name));
+
+    size_t key = m_component_keys[name];
+    int    id  = m_component_IDs[key];
+
+    return getComponentArray(id);
+}
+
 
 void
-idecs::ECS::setSelectedGameObject( int obj_id )
+idk::ecs::ECS::setSelectedGameObject( int obj_id )
 {
     m_selection.push_back(obj_id);
 
@@ -194,7 +269,7 @@ idecs::ECS::setSelectedGameObject( int obj_id )
 
 
 int
-idecs::ECS::getSelectedGameObject()
+idk::ecs::ECS::getSelectedGameObject()
 {
     if (m_selection.size() > 0)
     {
@@ -206,7 +281,7 @@ idecs::ECS::getSelectedGameObject()
 
 
 void
-idecs::ECS::deleteSelectedGameObject()
+idk::ecs::ECS::deleteSelectedGameObject()
 {
     int obj_id = getSelectedGameObject();
 
@@ -219,7 +294,7 @@ idecs::ECS::deleteSelectedGameObject()
 
 
 int
-idecs::ECS::copySelectedGameObject()
+idk::ecs::ECS::copySelectedGameObject()
 {
     int obj_id = getSelectedGameObject();
 
@@ -233,13 +308,13 @@ idecs::ECS::copySelectedGameObject()
 
 
 
-char *
-idecs::ECS::getSelectedGameObjectName()
+const std::string &
+idk::ecs::ECS::getSelectedGameObjectName()
 {
     int obj_id = getSelectedGameObject();
 
     IDK_ASSERT(
-        "Called idecs::ECS::getSelectedGameObjectName with no selected object",
+        "Called idk::ecs::ECS::getSelectedGameObjectName with no selected object",
         obj_id != -1
     );
 
@@ -248,12 +323,8 @@ idecs::ECS::getSelectedGameObjectName()
 
 
 
-
-
-
-
 void
-idecs::ECS::giveComponent( int obj_id, int component )
+idk::ecs::ECS::giveComponent( int obj_id, int component )
 {
     if (hasComponent(obj_id, component))
     {
@@ -264,18 +335,17 @@ idecs::ECS::giveComponent( int obj_id, int component )
     int     data_id = getComponentArray(component)->create(obj_id);
 
     entity.components[component] = data_id;
-
-    getComponentArray(component)->getBehaviour()._onAssignment(*api_ptr, obj_id);
 }
 
 
 void
-idecs::ECS::copyComponent( int dst_id, int src_id, int component )
+idk::ecs::ECS::copyComponent( int dst_id, int src_id, int component )
 {
     Entity &src = m_entities.get(src_id);
     Entity &dst = m_entities.get(dst_id);
 
     getComponentArray(component)->copy(
+        src_id,
         dst_id,
         dst.components[component],
         src.components[component]
@@ -283,40 +353,32 @@ idecs::ECS::copyComponent( int dst_id, int src_id, int component )
 }
 
 
-void
-idecs::ECS::giveComponent( int obj_id, const std::string &name )
-{
-    IDK_ASSERT("Component does not exist", m_component_names.contains(name));
-    giveComponent(obj_id, m_component_names[name]);
-}
-
-
-
 bool
-idecs::ECS::hasComponent( int obj_id, int component_id )
+idk::ecs::ECS::hasComponent( int obj_id, int component )
 {
-    if (obj_id == -1)
-    {
-        return false;
-    }
-
-    if (component_id < 0 || component_id >= m_components.size())
+    if (obj_id < 0 || component < 0)
     {
         return false;
     }
 
     Entity &entity = m_entities.get(obj_id);
-    return entity.components[component_id] != -1;
+
+    IDK_ASSERT(
+        "Index out of range",
+        component < entity.components.size()
+    );
+
+    return entity.components[component] != -1;
 }
 
 
 void
-idecs::ECS::removeComponent( int obj_id, int component_id )
+idk::ecs::ECS::removeComponent( int obj_id, int component_id )
 {
     Entity &entity  = m_entities.get(obj_id);
     int    &data_id = entity.components[component_id];
 
-    getComponentArray(component_id)->destroy(data_id);
+    getComponentArray(component_id)->destroy(obj_id, data_id);
 
     data_id = -1;
 }
@@ -325,12 +387,11 @@ idecs::ECS::removeComponent( int obj_id, int component_id )
 
 
 
-
-
 int
-idecs::ECS::createGameObject( const std::string &name )
+idk::ecs::ECS::createGameObject( const std::string &name )
 {
-    int id = m_entities.create(idecs::createEntity(name));
+    int id = m_entities.create(idk::ecs::createEntity(name));
+
     m_entityIDs.insert(id);
 
     for (int component: m_mandatory_components)
@@ -345,7 +406,7 @@ idecs::ECS::createGameObject( const std::string &name )
 
 
 int
-idecs::ECS::copyGameObject( int src_id )
+idk::ecs::ECS::copyGameObject( int src_id )
 {
     int dst_id = createGameObject(getGameObjectName(src_id));
     giveChild(getParent(src_id), dst_id);
@@ -361,11 +422,6 @@ idecs::ECS::copyGameObject( int src_id )
         {
             giveComponent(dst_id, i);
             copyComponent(dst_id, src_id, i);
-
-            // this->getComponentArray(i)->copy(dst_id, )
-
-            // auto &B = this->getComponentArray(i)->getBehaviour();
-            // B._onCopy(*api_ptr, src_id, dst_id);
         }
     }
 
@@ -374,10 +430,12 @@ idecs::ECS::copyGameObject( int src_id )
 
 
 void
-idecs::ECS::deleteGameObject( int obj_id )
+idk::ecs::ECS::deleteGameObject( int obj_id )
 {
     auto &children = getChildren(obj_id);
     int  parent_id = m_parent[obj_id];
+
+    file_read_mode = true;
 
     for (int i=0; i<ECS::MAX_COMPONENTS; i++)
     {
@@ -400,64 +458,99 @@ idecs::ECS::deleteGameObject( int obj_id )
 
     clearChildren(obj_id);
 
+    file_read_mode = false;
+
+
     m_entities.destroy(obj_id);
     m_entityIDs.erase(obj_id);
 }
 
 
 std::set<int> &
-idecs::ECS::gameObjects()
+idk::ecs::ECS::gameObjects()
 {
     return m_entityIDs;
 }
 
 
-char *
-idecs::ECS::getGameObjectName( int obj_id )
+bool
+idk::ecs::ECS::gameObjectExists( int obj_id )
 {
-    char *name = &(m_entities.get(obj_id).name[0]);
-    return name;
-}
-
-
-void
-idecs::ECS::setGameObjectName( int obj_id, const std::string &name)
-{
-    std::strcpy(m_entities.get(obj_id).name, name.c_str());
+    return m_entityIDs.contains(obj_id);
 }
 
 
 
+const std::string &
+idk::ecs::ECS::getGameObjectName( int obj_id )
+{
+    return m_entities.get(obj_id).name;
+}
 
 
 void
-idecs::ECS::giveChild( int parent_id, int child_id )
+idk::ecs::ECS::setGameObjectName( int obj_id, const std::string &name)
 {
-    int last_parent_id = m_parent[child_id];
-    if (last_parent_id != -1)
+    getEntity(obj_id).name = name;
+}
+
+
+int
+idk::ecs::ECS::getGameObjectByName( const std::string &name )
+{
+    for (int obj_id: gameObjects())
     {
-        m_children[last_parent_id].erase(child_id);
+        if (getGameObjectName(obj_id) == name)
+        {
+            return obj_id;
+        }
     }
+
+    return -1;
+}
+
+
+
+void
+idk::ecs::ECS::giveChild( int parent_id, int child_id )
+{
+    glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+
+    removeChild(getParent(child_id), child_id);
 
     m_children[parent_id].insert(child_id);
     m_parent[child_id] = parent_id;
+
+    if (file_read_mode == false)
+    {
+        TransformSys::recomputeTransformMatrices(child_id);
+        TransformSys::setPositionWorldspace(child_id, child_pos);
+    }
 }
 
 
 void
-idecs::ECS::removeChild( int parent_id, int child_id )
+idk::ecs::ECS::removeChild( int parent_id, int child_id )
 {
+    glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+
     m_children[parent_id].erase(child_id);
     m_parent[child_id] = -1;
+
+    if (file_read_mode == false)
+    {
+        TransformSys::recomputeTransformMatrices(child_id);
+        TransformSys::setPositionWorldspace(child_id, child_pos);
+    }
 }
 
 
 void
-idecs::ECS::clearChildren( int parent_id )
+idk::ecs::ECS::clearChildren( int parent_id )
 {
     for (int child_id: m_children[parent_id])
     {
-        m_parent[child_id] = -1;
+        removeChild(parent_id, child_id);
     }
 
     m_children[parent_id].clear();
@@ -465,7 +558,7 @@ idecs::ECS::clearChildren( int parent_id )
 
 
 void
-idecs::ECS::removeParent( int child_id )
+idk::ecs::ECS::removeParent( int child_id )
 {
     int current_parent = m_parent[child_id];
     if (current_parent >= 0)
@@ -479,7 +572,7 @@ idecs::ECS::removeParent( int child_id )
 
 
 void
-idecs::ECS::exposeToLua( lua_State *L )
+idk::ecs::ECS::exposeToLua( lua_State *L )
 {
     luaaa::LuaModule mod(L, "ECS");
 
@@ -487,4 +580,7 @@ idecs::ECS::exposeToLua( lua_State *L )
     {
         readFile(filepath);
     });
+
+    mod.fun("giveChild", [this](int parent, int child) { giveChild(parent, child); } );
+    mod.fun("removeParent", [this](int child) { removeParent(child); } );
 }

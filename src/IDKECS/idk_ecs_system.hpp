@@ -3,7 +3,7 @@
 #include "common.hpp"
 
 
-namespace idecs
+namespace idk::ecs
 {
     class System
     {

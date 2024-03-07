@@ -19,8 +19,11 @@ public:
 
     struct Emitter
     {
-        int channel   = -1;
-        int chunk     = -1;
+        int  id       = -1;
+        int  channel  = -1;
+        int  chunk    = -1;
+        bool looping  = false;
+        int  next     = -1;
         glm::vec3 pos = glm::vec3(0.0f);
 
         Emitter() {  };
@@ -44,8 +47,11 @@ public:
     IDK_ALLOCATOR_ACCESS(Emitter, Emitter,   m_emitters)
     IDK_ALLOCATOR_ACCESS(Chunk,   Mix_Chunk, m_chunks)
 
-    void        playSound( int emitter_id );
+    void        playSound( int emitter_id, bool loop );
     void        stopSound( int emitter_id );
+
+    void        resumeSound( int emitter_id );
+    void        pauseSound( int emitter_id );
 
 };
 
