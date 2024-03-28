@@ -1,6 +1,9 @@
 
 # IDK Game Engine
 
+This branch exists for testing an ECS (entity component system) implementation.
+
+
 | | | |
 |-|-|-|
 |<img src="scr1.png">|<img src="scr12.png">| |
