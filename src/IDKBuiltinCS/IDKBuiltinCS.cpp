@@ -10,11 +10,15 @@ idk::registerComponents( idk::ecs::ECS &ecs )
     ecs.registerComponent<ScriptCmp>                    ("Script");
     ecs.registerComponent<CameraCmp>                    ("Camera");
 
+    ecs.registerComponent<PlayerControllerCmp>          ("PlayerController");
+    ecs.registerComponent<ProgressionEventCmp>          ("ProgressionEvent");
+    ecs.registerComponent<ProgressionStateCmp>          ("ProgressionState");
 
     ecs.registerComponent<SunCmp>                       ("Sun");
     ecs.registerComponent<PlanetCmp>                    ("Planet");
     ecs.registerComponent<AtmosphereCmp>                ("Atmosphere");
     ecs.registerComponent<PlanetActorCmp>               ("PlanetActor");
+    ecs.registerComponent<LocalGravityCmp>              ("LocalGravity");
 
     ecs.registerComponent<DirlightCmp>                  ("Dirlight");
     ecs.registerComponent<PointlightCmp>                ("Pointlight");
@@ -26,14 +30,7 @@ idk::registerComponents( idk::ecs::ECS &ecs )
     ecs.registerComponent<PhysXSphereRigidDynamicCmp>   ("PhysXSphereRigidDynamic");
     ecs.registerComponent<PhysXMeshRigidStaticCmp>      ("PhysXMeshRigidStatic");
     ecs.registerComponent<PhysXKinematicControllerCmp>  ("PhysXCapsuleKinematic");
-
-    ecs.registerComponent<ProgressionEventCmp>          ("ProgressionEvent");
-    ecs.registerComponent<ProgressionStateCmp>          ("ProgressionState");
-
     ecs.registerComponent<PhysXRectRigidStaticCmp>      ("PhysX_Rect_RigidStatic");
-
-    ecs.registerComponent<PlayerControllerCmp>          ("PlayerController");
-    ecs.registerComponent<LocalGravityCmp>              ("LocalGravity");
 
 }
 

@@ -8,11 +8,11 @@
 #include <libidk/idk_export.hpp>
 
 #include "common/idk_imgui_assetbrowser.hpp"
+#include "tabs/node-editor.hpp"
 
 #include "theme.hpp"
 #include <filesystem>
 namespace fs = std::filesystem;
-// static ImNodesContext *context;
 
 
 static void
@@ -253,59 +253,7 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
 
     ImGui::End();
 
-    {
-    // constexpr int STRIDE = 15;
-    // int ID = 1;
-
-    // static int num_links = 0;
-    // static std::map<int, std::pair<int, int>> links;
-
-    // ImNodes::BeginNodeEditor();
-
-    // context->CurrentAttributeFlags = ImNodesAttributeFlags_EnableLinkDetachWithDragClick;
-
-    // for (auto &[id, pair]: links)
-    // {
-    //     ImNodes::Link(id, pair.first, pair.second);
-    // }
-
-    // for (int i=0; i<5; i++)
-    // {
-    //     ImNodes::BeginNode(ID++);
-
-    //     ImNodes::BeginNodeTitleBar();
-    //     ImGui::Text("Node %d", i);
-    //     ImNodes::EndNodeTitleBar();
-
-    //     for (int j=0; j<3; j++)
-    //     {
-    //         ImNodes::BeginInputAttribute(ID++);
-    //         ImGui::Text("Input %d", j);
-    //         ImNodes::EndInputAttribute();
-    //     }
-
-    //     ImNodes::BeginOutputAttribute(ID++);
-    //     ImGui::Text("Output");
-    //     ImNodes::EndOutputAttribute();
-
-    //     ImNodes::EndNode();
-    // }
-    // ImNodes::EndNodeEditor();
-
-    // int link_id, start, end;
-    // if (ImNodes::IsLinkCreated(&start, &end))
-    // {
-    //     links[num_links] = std::make_pair(start, end);
-    //     num_links += 1;
-    // }
-
-    // if (ImNodes::IsLinkDestroyed(&link_id))
-    // {
-    //     std::cout << "Link " << link_id << "\n";
-    //     links.erase(link_id);
-    // }
-    }
-
+    idk_NodeEditor(api);
 
     ImGui::Render();
 

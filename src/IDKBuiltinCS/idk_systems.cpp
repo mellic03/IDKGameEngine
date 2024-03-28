@@ -37,32 +37,30 @@ idk::ModelSys::update( idk::EngineAPI &api )
 {
     auto &ren = api.getRenderer();
     auto &ecs = getECS();
-    auto &arr = ecs.getComponentArray<idk::ModelCmp>();
 
-    for (idk::ModelCmp &data: arr)
+    for (idk::ModelCmp &cmp: ecs.getComponentArray<idk::ModelCmp>())
     {
-        if (data.visible == false)
+        if (cmp.model_id == -1 || cmp.visible == false)
         {
             continue;
         }
 
-        glm::mat4 transform = TransformSys::getModelMatrix(data.obj_id);
+        glm::mat4 transform = TransformSys::getModelMatrix(cmp.obj_id);
 
 
-        if (data.viewspace)
+        if (cmp.shader_enabled && cmp.shader_name != "")
         {
-            ren.drawModelViewspace(data.model_id, transform);
+            
         }
 
         else
         {
-            ren.drawModel(data.model_id, transform);
+            ren.drawModel(cmp.model_id, transform);
         }
 
-
-        if (data.shadowcast)
+        if (cmp.shadowcast)
         {
-            ren.drawShadowCaster(data.model_id, transform);
+            ren.drawShadowCaster(cmp.model_id, transform);
         }
     }
 }
@@ -82,6 +80,16 @@ idk::ModelSys::assignModel( int obj_id, const std::string &filepath )
 }
 
 
+void
+idk::ModelSys::assignShader_gpass( int obj_id, const std::string &shader_name )
+{
+    auto &ecs  = getECS();
+    auto &cmp  = ecs.getComponent<idk::ModelCmp>(obj_id);
+    cmp.shader_name = shader_name;
+}
+
+
+
 
 void
 idk::ScriptSys::init( idk::EngineAPI &api )
@@ -92,11 +100,6 @@ idk::ScriptSys::init( idk::EngineAPI &api )
     static auto &engine = api.getEngine();
     static auto &events = api.getEventSys();
 
-    // auto &v = getECS().getComponentArray<idk::ScriptCmp>();
-    // for (auto &data: v)
-    // {
-    //     data = idk::ScriptCmp(data.obj_id, &data);
-    // }
 }
 
 
@@ -121,7 +124,6 @@ idk::ScriptSys::update( idk::EngineAPI &api )
         {
             continue;
         }
-
 
         IDK_ASSERT("null lua_State!", L != nullptr);
 
@@ -252,9 +254,13 @@ idk::CameraSys::update( idk::EngineAPI &api )
         int obj_id = cmp.obj_id;
         int cam_id = cmp.cam_id;
 
+        if (cam_id == -1)
+        {
+            continue;
+        }
+
         IDK_ASSERT("Object does not exist", obj_id >= 0);
         IDK_ASSERT("Camera does not exist", cam_id >= 0);
-
 
         auto &camera = ren.getCamera(cam_id);
         camera.bloom = cmp.bloom;

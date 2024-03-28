@@ -32,6 +32,7 @@ public:
     virtual void    update ( idk::EngineAPI & ) final;
 
     static void     assignModel( int obj_id, const std::string &filepath );
+    static void     assignShader_gpass( int obj_id, const std::string &shader_name );
 
 };
 

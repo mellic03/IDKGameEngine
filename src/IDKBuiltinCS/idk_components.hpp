@@ -187,6 +187,10 @@ namespace idk
         bool        viewspace   = false;
         std::string filepath    = "";
 
+        bool        shader_enabled = false;
+        int         render_queue   = -1;
+        std::string shader_name    = "";
+
 
         size_t serialize( std::ofstream &stream ) const
         {
@@ -197,6 +201,9 @@ namespace idk
             n += idk::streamwrite(stream, shadowcast);
             n += idk::streamwrite(stream, viewspace);
             n += idk::streamwrite(stream, filepath);
+            n += idk::streamwrite(stream, shader_enabled);
+            n += idk::streamwrite(stream, render_queue);
+            n += idk::streamwrite(stream, shader_name);
             return n;
         };
 
@@ -209,6 +216,9 @@ namespace idk
             n += idk::streamread(stream, shadowcast);
             n += idk::streamread(stream, viewspace);
             n += idk::streamread(stream, filepath);
+            n += idk::streamread(stream, shader_enabled);
+            n += idk::streamread(stream, render_queue);
+            n += idk::streamread(stream, shader_name);
             return n;
         };
 
