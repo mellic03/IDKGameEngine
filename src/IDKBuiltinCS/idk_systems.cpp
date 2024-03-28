@@ -47,16 +47,7 @@ idk::ModelSys::update( idk::EngineAPI &api )
 
         glm::mat4 transform = TransformSys::getModelMatrix(cmp.obj_id);
 
-
-        if (cmp.shader_enabled && cmp.shader_name != "")
-        {
-            
-        }
-
-        else
-        {
-            ren.drawModel(cmp.model_id, transform);
-        }
+        ren.drawModel(cmp.model_id, transform);
 
         if (cmp.shadowcast)
         {
@@ -267,20 +258,6 @@ idk::CameraSys::update( idk::EngineAPI &api )
 
         camera.setModelMatrix(TransformSys::getModelMatrix(obj_id));
 
-
-        int planet = PlanetSys::nearestPlanet(camera.position);
-
-        if (planet == -1)
-        {
-            continue;
-        }
-
-
-        glm::vec3 pos = TransformSys::getPositionWorldspace(planet);
-        glm::vec3 dir = glm::normalize(pos);
-
-        ren.lightSystem().getDirlight(0).direction = glm::vec4(dir, 0.0f);
-        ren.lightSystem().getDirlight(0).ambient   = glm::vec4(0.04f);
     }
 }
 

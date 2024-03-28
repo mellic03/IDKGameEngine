@@ -47,7 +47,6 @@ idk::AudioSys::update( idk::EngineAPI &api )
     auto &ecs   = getAPI().getECS();
     auto &audio = getAPI().getAudioSys();
 
-
     static std::set<int> finished_callbacks;
     finished_callbacks.clear();
 
@@ -64,7 +63,6 @@ idk::AudioSys::update( idk::EngineAPI &api )
     {
         m_callbacks.erase(obj_id);
     }
-
 
 
     for (auto &[obj_id]: ecs.getComponentArray<AudioListenerCmp>())
