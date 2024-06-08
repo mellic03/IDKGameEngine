@@ -9,6 +9,7 @@ idk::registerComponents( idk::ecs::ECS &ecs )
     ecs.registerComponent<ModelCmp>                     ("Model");
     ecs.registerComponent<ScriptCmp>                    ("Script");
     ecs.registerComponent<CameraCmp>                    ("Camera");
+    ecs.registerComponent<SkeletonCmp>                  ("Skeleton");
 
     ecs.registerComponent<PlayerControllerCmp>          ("PlayerController");
     ecs.registerComponent<ProgressionEventCmp>          ("ProgressionEvent");
@@ -27,10 +28,13 @@ idk::registerComponents( idk::ecs::ECS &ecs )
     ecs.registerComponent<AudioEmitterCmp>              ("AudioEmitter");
     ecs.registerComponent<AudioListenerCmp>             ("AudioListener");
 
-    ecs.registerComponent<PhysXSphereRigidDynamicCmp>   ("PhysXSphereRigidDynamic");
-    ecs.registerComponent<PhysXMeshRigidStaticCmp>      ("PhysXMeshRigidStatic");
-    ecs.registerComponent<PhysXKinematicControllerCmp>  ("PhysXCapsuleKinematic");
-    ecs.registerComponent<PhysXRectRigidStaticCmp>      ("PhysX_Rect_RigidStatic");
+    ecs.registerComponent<PhysicsCmp>                   ("Physics");
+
+
+    // ecs.registerComponent<PhysXSphereRigidDynamicCmp>   ("PhysXSphereRigidDynamic");
+    // ecs.registerComponent<PhysXMeshRigidStaticCmp>      ("PhysXMeshRigidStatic");
+    // ecs.registerComponent<PhysXKinematicControllerCmp>  ("PhysXCapsuleKinematic");
+    // ecs.registerComponent<PhysXRectRigidStaticCmp>      ("PhysX_Rect_RigidStatic");
 
 }
 
@@ -45,9 +49,13 @@ idk::registerSystems( idk::ecs::ECS &ecs )
     ecs.registerSystem<idk::ModelSys>();
     ecs.registerSystem<idk::CameraSys>();
     ecs.registerSystem<idk::LightSys>();
-    ecs.registerSystem<idk::PhysXSys>();
+
+    ecs.registerSystem<idk::PhysicsSys>();
+    // ecs.registerSystem<idk::PhysXSys>();
+
     ecs.registerSystem<idk::PlanetSys>();
     ecs.registerSystem<idk::AudioSys>();
     ecs.registerSystem<idk::GameStateSys>();
     ecs.registerSystem<idk::PlayerSys>();
+    ecs.registerSystem<idk::SkeletonSys>();
 }

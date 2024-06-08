@@ -129,14 +129,15 @@ idk::TransformSys::_computeLocalMatrix( int obj_id, bool scale )
     glm::quat Qpitch = glm::angleAxis(cmp.pitch, glm::vec3(1.0f, 0.0f, 0.0f));
     glm::quat Qyaw   = glm::angleAxis(cmp.yaw,   glm::vec3(0.0f, 1.0f, 0.0f));
 
+
     glm::mat4 Rroll  = glm::mat4_cast(Qroll);
-    glm::mat4 Rpitch = glm::mat4_cast(Qpitch);
-    glm::mat4 Ryaw   = glm::mat4_cast(Qyaw);
+    // glm::mat4 Rpitch = glm::mat4_cast(Qpitch);
+    // glm::mat4 Ryaw   = glm::mat4_cast(Qyaw);
+    glm::mat4 Rpitch = glm::rotate(ident, cmp.pitch, cmp.right);
+    glm::mat4 Ryaw   = glm::rotate(ident, cmp.yaw, cmp.up);
 
 
-    glm::mat4 R = glm::inverse(glm::lookAt(glm::vec3(0.0f), cmp.front, cmp.up));
-              R = glm::mat4_cast(cmp.rotation) * R * Ryaw * Rpitch * Rroll;
-
+    glm::mat4 R = Ryaw * Rpitch * Rroll;
     glm::mat4 T = glm::translate(ident, cmp.position);
     glm::mat4 S = glm::scale(ident, (scale) ? cmp.scale * cmp.scale3 : glm::vec3(1.0f));
 
@@ -460,8 +461,7 @@ idk::TransformSys::pitch( int obj_id, float f )
 void
 idk::TransformSys::yaw( int obj_id, float f )
 {
-    float &y = getData(obj_id).yaw;
-    y += glm::radians(f);
+    getData(obj_id).yaw += glm::radians(f);
 }
 
 

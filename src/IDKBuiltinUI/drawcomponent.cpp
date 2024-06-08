@@ -482,47 +482,47 @@ EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, int obj_
 }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::PhysXMeshRigidStaticCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ecs = api.getECS();
-    ImGui::Checkbox("Enable", &ecs.getComponent<idk::PhysXMeshRigidStaticCmp>(obj_id).enabled);
-}
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::PhysXMeshRigidStaticCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &ecs = api.getECS();
+//     ImGui::Checkbox("Enable", &ecs.getComponent<idk::PhysXMeshRigidStaticCmp>(obj_id).enabled);
+// }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::PhysXSphereRigidDynamicCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::PhysXSphereRigidDynamicCmp>(obj_id);
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::PhysXSphereRigidDynamicCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &ecs = api.getECS();
+//     auto &cmp = ecs.getComponent<idk::PhysXSphereRigidDynamicCmp>(obj_id);
 
-    ImGui::Checkbox("Enable", &cmp.enabled);
+//     ImGui::Checkbox("Enable", &cmp.enabled);
 
-    if (ImGui::Button("Force Up/Left"))
-    {
-        cmp.body->addForce(physx::PxVec3(20.0, 20.0, 20.0));
-    }
+//     if (ImGui::Button("Force Up/Left"))
+//     {
+//         cmp.body->addForce(physx::PxVec3(20.0, 20.0, 20.0));
+//     }
 
-}
+// }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::PhysXKinematicControllerCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::PhysXKinematicControllerCmp>(obj_id);
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::PhysXKinematicControllerCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &ecs = api.getECS();
+//     auto &cmp = ecs.getComponent<idk::PhysXKinematicControllerCmp>(obj_id);
 
-    physx::PxController *CCT = cmp.controller;
+//     physx::PxController *CCT = cmp.controller;
 
-    float offset = CCT->getContactOffset();
-    ImGui::DragFloat("Contact offset", &offset, 0.01f);
-    CCT->setContactOffset(offset);
+//     float offset = CCT->getContactOffset();
+//     ImGui::DragFloat("Contact offset", &offset, 0.01f);
+//     CCT->setContactOffset(offset);
 
-    ImGui::Checkbox("Enable", &cmp.enabled);
-}
+//     ImGui::Checkbox("Enable", &cmp.enabled);
+// }
 
 
 
@@ -649,9 +649,9 @@ EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
     ECS_COMPONENT_CALLBACK(idk::SpotlightCmp);
 
     ECS_COMPONENT_CALLBACK(idk::AudioEmitterCmp);
-    ECS_COMPONENT_CALLBACK(idk::PhysXMeshRigidStaticCmp);
-    ECS_COMPONENT_CALLBACK(idk::PhysXSphereRigidDynamicCmp);
-    ECS_COMPONENT_CALLBACK(idk::PhysXKinematicControllerCmp);
+    // ECS_COMPONENT_CALLBACK(idk::PhysXMeshRigidStaticCmp);
+    // ECS_COMPONENT_CALLBACK(idk::PhysXSphereRigidDynamicCmp);
+    // ECS_COMPONENT_CALLBACK(idk::PhysXKinematicControllerCmp);
 
     ECS_COMPONENT_CALLBACK(idk::ProgressionEventCmp);
     ECS_COMPONENT_CALLBACK(idk::ProgressionStateCmp);

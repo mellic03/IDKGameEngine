@@ -126,8 +126,6 @@ public:
 
     void                    update();
 
-
-
     void                    exposeToLua( lua_State *L );
 
 };
