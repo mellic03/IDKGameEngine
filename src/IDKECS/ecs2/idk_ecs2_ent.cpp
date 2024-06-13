@@ -3,14 +3,14 @@
 
 
 size_t
-idk::ECS2::Entity::serialize( std::ofstream &stream )
+idk::ECS2::Entity::serialize( std::ofstream &stream ) const
 {
     std::vector<std::string> names;
     std::vector<int>         cmp_ids;
 
     for (auto &[key, cmp_id]: components)
     {
-        std::string name = ECS2::getComponentArray(key);
+        std::string name = ECS2::getComponentArray(key)->getName();
         names.push_back(name);
         cmp_ids.push_back(cmp_id);
     }

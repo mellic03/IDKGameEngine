@@ -10,6 +10,7 @@
 
 namespace idk
 {
+    class EngineAPI;
     class ECS2;
 }
 
@@ -36,7 +37,7 @@ private:
     public:
         virtual void init     ( idk::EngineAPI& ) = 0;
         virtual void update   ( idk::EngineAPI& ) = 0;
-        virtual void shutdown ( idk::EngineAPI& ) {  };
+        // virtual void shutdown ( idk::EngineAPI& ) {  };
     };
 
     inline static
@@ -53,7 +54,7 @@ private:
         std::map<size_t, int> components;
         std::set<std::string> component_names;
 
-        size_t serialize( std::ofstream& );
+        size_t serialize( std::ofstream& ) const;
         size_t deserialize( std::ifstream& );
     };
 
@@ -68,17 +69,35 @@ private:
         return typeid(T).hash_code();
     };
 
+    inline static int m_selected_object = -1;
+
+
+    static void giveComponent( int obj_id, size_t key )
+    {
+        auto &e = m_entities.get(obj_id);
+        auto &c = getComponentArray<T>();
+        e.components[key] = c.createComponent();
+    }
+
 
 public:
 
     static const idk::Allocator<Entity> &getEntities() { return m_entities; };
 
-    static int  createGameObject( const std::string &name );
-    static void deleteGameObject( int obj_id, bool deep=false );
+    static int                  createGameObject ( const std::string &name );
+    static int                  copyGameObject   ( int obj_id, bool deep=false );
+    static void                 deleteGameObject ( int obj_id, bool deep=false );
 
-    static int  getParent( int obj_id );
-    static void giveChild( int parent_id, int child_id );
-    static void removeChild( int parent_id, int child_id );
+    static const std::string &  getGameObjectName( int obj_id );
+    static void                 setGameObjectName( int obj_id, const std::string &name);
+    static int                  getSelectedGameObject();
+    static void                 setSelectedGameObject( int obj_id );
+    static void                 deleteSelectedGameObject();
+    static int                  copySelectedGameObject();
+    static const std::string &  getSelectedGameObjectName();
+    static int                  getParent( int obj_id );
+    static void                 giveChild( int parent_id, int child_id );
+    static void                 removeChild( int parent_id, int child_id );
 
     template <typename T>
     static void giveComponent( int obj_id );
