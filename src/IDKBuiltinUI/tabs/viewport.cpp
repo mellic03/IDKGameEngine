@@ -37,6 +37,11 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
 
     static ImGuizmo::OPERATION op = ImGuizmo::TRANSLATE;
 
+    if (eventsys.keylog().keyDown(idk::Keycode::LSHIFT))
+    {
+        mode = ImGuizmo::MODE::WORLD;
+    }
+
     if (eventsys.keylog().keyDown(idk::Keycode::Z))
     {
         op = ImGuizmo::OPERATION::TRANSLATE;
@@ -79,16 +84,16 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
 
     if (op == ImGuizmo::OPERATION::ROTATE)
     {
-        // glm::vec3 euler = glm::eulerAngles(glm::quat(delta));
-        // idk::TransformSys::getData(obj_id).pitch += euler.x;
-        // idk::TransformSys::getData(obj_id).yaw   += euler.y;
-        // idk::TransformSys::getData(obj_id).roll  += euler.z;
-
-        glm::mat4 R = delta;
-        glm::mat4 M = glm::inverse(idk::TransformSys::getWorldMatrix(obj_id));
+        glm::mat4 Mw = idk::TransformSys::getWorldMatrix(obj_id);
+        glm::mat4 Ml = idk::TransformSys::getLocalMatrix(obj_id, false);
 
         glm::quat &Q = idk::TransformSys::getData(obj_id).rotation;
-                   Q = Q * glm::normalize(glm::quat_cast(R * M));
+
+        glm::mat4 R = Mw * glm::mat4_cast(Q);
+                  R = delta * R;
+                  R = glm::inverse(Mw) * R;
+
+        Q = glm::normalize(glm::quat_cast(R));
     }
 
     else if (op == ImGuizmo::OPERATION::TRANSLATE)
@@ -138,12 +143,16 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
     int w = int(ImGui::GetContentRegionAvail().x);
     int h = int(ImGui::GetContentRegionAvail().y);
 
+    w = 8*(w/8);
+    h = 8*(h/8);
+
     glm::ivec2 size = ren.resolution();
 
     if (size.x != w || size.y != h)
     {
         ren.resize(w, h);
     }
+
 
     GLuint texture = ren.getFinalImage();
 

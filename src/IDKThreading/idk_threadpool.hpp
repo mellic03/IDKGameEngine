@@ -25,7 +25,7 @@ public:
     template <typename T>
     class ResourceWrapper;
 
-    static constexpr int NUM_THREADS = 4;
+    static constexpr int NUM_THREADS = 1;
 
 
 private:

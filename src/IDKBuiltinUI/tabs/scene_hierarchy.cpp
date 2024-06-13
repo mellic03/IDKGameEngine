@@ -204,10 +204,10 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
         for (int child_id: ecs.getChildren(id))
         {
-            if (child_id == 0)
-            {
-                continue;
-            }
+            // if (child_id == 0)
+            // {
+            //     continue;
+            // }
     
             _tab_scene_treenode(api, child_id);
         }

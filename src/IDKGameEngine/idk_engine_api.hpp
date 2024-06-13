@@ -39,7 +39,7 @@ public:
     idk::EventSystem    &getEventSys()   { return *eventsys_ptr;   };
     idk::AudioSystem    &getAudioSys()   { return *audiosys_ptr;   };
 
-    idk::ecs::ECS          &getECS()        { return *ecs_ptr;        };
+    idk::ecs::ECS       &getECS()        { return *ecs_ptr;        };
     idk::Engine         &getEngine()     { return *engine_ptr;     };
     idk::RenderEngine   &getRenderer()   { return *renderer_ptr;   };
     idk::ThreadPool     &getThreadPool() { return *threadpool_ptr; };

@@ -1,6 +1,9 @@
 #include "idk_systems.hpp"
 #include "sys-transform.hpp"
 
+#include <libidk/idk_log.hpp>
+#include <libidk/idk_geometry.hpp>
+
 
 static idk::EngineAPI *api_ptr;
 static idk::ecs::ECS &getECS() { return api_ptr->getECS(); }
@@ -19,10 +22,62 @@ idk::TransformSys::update( idk::EngineAPI &api )
 {
     auto &ecs   = api.getECS();
     auto &audio = api.getAudioSys();
+    float dtime = api.getEngine().deltaTime();
 
     for (auto &cmp: ecs.getComponentArray<idk::TransformCmp>().getComponentAllocator())
     {
+        if (cmp.position != cmp.position)
+        {
+            cmp.position = glm::vec3(0.0f);
+            cmp.position.x += (rand() % 100) / 100.0f;
+            cmp.position.y += (rand() % 100) / 100.0f;
+            cmp.position.z += (rand() % 100) / 100.0f;
+        }
+
+        glm::vec3 last_pos = glm::vec3(getModelMatrix(cmp.obj_id)[3]);
+
         recomputeTransformMatrices(cmp.obj_id);
+
+        glm::vec3 curr_pos = glm::vec3(getModelMatrix(cmp.obj_id)[3]);
+
+        cmp.delta = curr_pos - last_pos;
+    }
+
+
+    for (auto &[obj_id, anchor_ids, distances]: ecs.getComponentArray<idk::AnchorCmp>())
+    {
+        if (anchor_ids.back() != -1)
+        {
+            anchor_ids.push_back(-1);
+            distances.push_back(1.0f);
+        }
+
+        glm::vec3 dir = glm::vec3(0.0f);
+
+        for (int i=0; i<anchor_ids.size()-1; i++)
+        {
+            glm::vec3 anchor_pos = getPositionWorldspace(anchor_ids[i]);
+            glm::vec3 obj_pos    = getPositionWorldspace(obj_id);
+
+            float dist = glm::distance(anchor_pos, obj_pos);
+            float error = distances[i] - dist;    
+
+            dir += error*glm::normalize(obj_pos - anchor_pos);
+        }
+
+        dir /= anchor_ids.size();
+
+        translateWorldspace(obj_id, dir);
+    }
+
+    for (auto &[obj_id, anchor_id, speed]: ecs.getComponentArray<idk::SmoothFollowCmp>())
+    {
+        glm::vec3 anchor_pos = getPositionWorldspace(anchor_id);
+        glm::vec3 obj_pos    = getPositionWorldspace(obj_id);
+
+        glm::vec3 dir = anchor_pos - obj_pos;
+    
+        translateWorldspace(obj_id, dtime*speed*dir);
     }
 
     _updateCallbacks();
@@ -47,9 +102,6 @@ idk::TransformSys::exposeToLua( lua_State *LS )
     mod.fun("moveSurfaceUp",    TransformSys::moveSurfaceUp);
     mod.fun("moveSurfaceRight", TransformSys::moveSurfaceRight);
     mod.fun("moveSurfaceFront", TransformSys::moveSurfaceFront);
-
-    mod.fun("lookTowards", TransformSys::lookTowards);
-    mod.fun("moveTowards", TransformSys::moveTowards);
 
 
     mod.fun("getXWorldspace", [](int id)
@@ -129,15 +181,11 @@ idk::TransformSys::_computeLocalMatrix( int obj_id, bool scale )
     glm::quat Qpitch = glm::angleAxis(cmp.pitch, glm::vec3(1.0f, 0.0f, 0.0f));
     glm::quat Qyaw   = glm::angleAxis(cmp.yaw,   glm::vec3(0.0f, 1.0f, 0.0f));
 
-
     glm::mat4 Rroll  = glm::mat4_cast(Qroll);
-    // glm::mat4 Rpitch = glm::mat4_cast(Qpitch);
-    // glm::mat4 Ryaw   = glm::mat4_cast(Qyaw);
-    glm::mat4 Rpitch = glm::rotate(ident, cmp.pitch, cmp.right);
-    glm::mat4 Ryaw   = glm::rotate(ident, cmp.yaw, cmp.up);
+    glm::mat4 Rpitch = glm::mat4_cast(Qpitch);
+    glm::mat4 Ryaw   = glm::mat4_cast(Qyaw);
 
-
-    glm::mat4 R = Ryaw * Rpitch * Rroll;
+    glm::mat4 R = glm::mat4_cast(cmp.rotation) * Ryaw * Rpitch * Rroll;
     glm::mat4 T = glm::translate(ident, cmp.position);
     glm::mat4 S = glm::scale(ident, (scale) ? cmp.scale * cmp.scale3 : glm::vec3(1.0f));
 
@@ -216,6 +264,12 @@ idk::TransformSys::setPositionWorldspace( int obj_id, const glm::vec3 &v )
 {
     glm::vec3 delta = v - getPositionWorldspace(obj_id);
     translateWorldspace(obj_id, delta);
+}
+
+void
+idk::TransformSys::setPositionLocalspace( int obj_id, const glm::vec3 &v )
+{
+    getData(obj_id).position += v;
 }
 
 
@@ -315,7 +369,14 @@ idk::TransformSys::isInsideBoundingRect( int obj_id, const glm::vec3 &pos )
 float
 idk::TransformSys::lookTowards( int subject, int target, float alpha )
 {
-    glm::vec3 dir = getPositionWorldspace(target) - getPositionWorldspace(subject);
+    return lookTowards(subject, getPositionWorldspace(target), alpha);
+}
+
+
+float
+idk::TransformSys::lookTowards( int subject, const glm::vec3 &pos, float alpha )
+{
+    glm::vec3 dir = pos - getPositionWorldspace(subject);
               dir = glm::normalize(dir);
 
     glm::vec3 front = getFront(subject);
@@ -325,10 +386,20 @@ idk::TransformSys::lookTowards( int subject, int target, float alpha )
     float det   = glm::dot(up, glm::cross(dir, front));
     float delta = atan2(det, dot);
 
-    if (fabs(delta) > 3.14f)
+    while (delta < -2.0*M_PI)
     {
-        delta -= glm::sign(delta) * M_PI;
+        delta += 2.0*M_PI;
     }
+
+    while (delta > +2.0*M_PI)
+    {
+        delta -= 2.0*M_PI;
+    }
+
+    // if (fabs(delta) > 3.14f)
+    // {
+    //     delta -= glm::sign(delta) * M_PI;
+    // }
 
     TransformSys::yaw(subject, alpha*delta);
 
@@ -336,23 +407,32 @@ idk::TransformSys::lookTowards( int subject, int target, float alpha )
 }
 
 
+
+
 float
 idk::TransformSys::moveTowards( int subject, int target, float alpha )
 {
-    glm::vec3 pos_A = getPositionWorldspace(target);
+    return moveTowards(subject, getPositionWorldspace(target), alpha);
+}
+
+
+
+float
+idk::TransformSys::moveTowards( int subject, const glm::vec3 &pos, float alpha )
+{
+    glm::vec3 pos_A = pos;
     glm::vec3 pos_B = getPositionWorldspace(subject);
-    glm::vec3 dir = glm::normalize(pos_A - pos_B);
 
-    glm::vec3 up    = getSurfaceUp(subject);
-    glm::vec3 right = getSurfaceRight(subject);
+    glm::vec3 dir = (pos_A - pos_B);
 
-    right = glm::cross(dir, up);
-    dir = glm::cross(up, right);
-
+    if (glm::length(dir) > 1.0f)
+    {
+        dir = glm::normalize(dir);
+    }
 
     translateWorldspace(subject, alpha * dir);
 
-    return getDistanceWorldspace(subject, target);
+    return 1.0f;
 }
 
 
@@ -416,6 +496,114 @@ idk::TransformSys::_updateCallbacks()
         m_move_callbacks.erase(obj_id);
     }
 
+}
+
+
+void
+idk::TransformSys::FABRIK( const glm::vec3 &posA, glm::vec3 &posB, glm::vec3 &posC,
+                           const glm::vec3 &target_posC, const glm::vec3 &pole_target,
+                           float distAB, float distBC )
+{
+    glm::vec3 plane_dir = glm::normalize(glm::cross(posA-pole_target, posC-pole_target));
+    float dist = idk::geometry::distPlanePoint(pole_target, plane_dir, posB);
+
+    // Place middle joint on plane
+    posB -= dist*plane_dir;
+
+    glm::vec3 midpoint = 0.5f * (posA + posB);
+    glm::vec3 pole_dir = glm::normalize(pole_target - midpoint);
+
+    // Move middle joint towards pole target
+    posB += 0.1f*pole_dir;
+
+
+    glm::vec3 dir;
+
+    for (int i=0; i<3; i++)
+    {
+        // Backward pass
+        // -----------------------------------------------------
+        posC = target_posC;
+
+        dir  = glm::normalize(posB - posC);
+        posB = posC + distBC*dir;
+
+        // dir  = glm::normalize(posA - posB);
+        // posA = posB + distAB*dir;
+        // -----------------------------------------------------
+
+
+        // Forward pass
+        // -----------------------------------------------------
+        // posA = start_pos;
+
+        dir  = glm::normalize(posB - posA);
+        posB = posA + distAB*dir;
+
+        dir  = glm::normalize(posC - posB);
+        posC = posB + distBC*dir;
+        // -----------------------------------------------------
+    }
+}
+
+
+void
+idk::TransformSys::FABRIK( int objA, int objB, int objC, glm::vec3 end_pos,
+                           float distAB, float distBC, const glm::vec3 &pole_target )
+{
+    auto &ecs = getECS();
+
+    glm::vec3 start_pos = getPositionWorldspace(objA);
+
+    glm::vec3 posA = start_pos;
+    glm::vec3 posB = getPositionWorldspace(objB);
+    glm::vec3 posC = end_pos;
+    glm::vec3 dir;
+
+
+
+    glm::vec3 plane_dir = glm::normalize(glm::cross(posA-pole_target, posC-pole_target));
+    float dist = idk::geometry::distPlanePoint(pole_target, plane_dir, posB);
+
+    // Place middle joint on plane
+    posB -= dist*plane_dir;
+
+    // glm::vec3 midpoint = 0.5f * (posA + posB);
+    // glm::vec3 pole_dir = glm::normalize(pole_target - midpoint);
+
+    // // Move middle joint towards pole target
+    // posB += 0.1f*pole_dir;
+
+
+    for (int i=0; i<3; i++)
+    {
+        // Backward pass
+        // -----------------------------------------------------
+        posC = end_pos;
+
+        dir  = glm::normalize(posB - posC);
+        posB = posC + distBC*dir;
+
+        dir  = glm::normalize(posA - posB);
+        posA = posB + distAB*dir;
+        // -----------------------------------------------------
+
+
+        // Forward pass
+        // -----------------------------------------------------
+        posA = start_pos;
+
+        dir  = glm::normalize(posB - posA);
+        posB = posA + distAB*dir;
+
+        dir  = glm::normalize(posC - posB);
+        posC = posB + distBC*dir;
+        // -----------------------------------------------------
+    }
+
+    setPositionWorldspace(objC, posC);
+    setPositionWorldspace(objB, posB);
+    setPositionWorldspace(objA, posA);
 }
 
 
@@ -525,11 +713,12 @@ idk::TransformSys::moveSurfaceFront( int obj_id, float f )
 
 
 
+
+
 size_t
 idk::TransformCmp::serialize( std::ofstream &stream ) const
 {
     size_t n = 0;
-
     n += idk::streamwrite(stream, obj_id);
     n += idk::streamwrite(stream, position);
     n += idk::streamwrite(stream, rotation);
@@ -541,7 +730,6 @@ idk::TransformCmp::serialize( std::ofstream &stream ) const
     n += idk::streamwrite(stream, right);
     n += idk::streamwrite(stream, scale);
     n += idk::streamwrite(stream, scale3);
-
     return n;
 };
 
@@ -550,7 +738,6 @@ size_t
 idk::TransformCmp::deserialize( std::ifstream &stream )
 {
     size_t n = 0;
-        
     n += idk::streamread(stream, obj_id);
     n += idk::streamread(stream, position);
     n += idk::streamread(stream, rotation);
@@ -562,10 +749,6 @@ idk::TransformCmp::deserialize( std::ifstream &stream )
     n += idk::streamread(stream, right);
     n += idk::streamread(stream, scale);
     n += idk::streamread(stream, scale3);
-    // up = glm::vec3(0.0f, 1.0f, 0.0f);
-    // right = glm::vec3(1.0f, 0.0f, 0.0f);
-    // front = glm::vec3(0.0f, 0.0f, -1.0f);
-
     return n;
 };
 
@@ -588,6 +771,110 @@ void
 idk::TransformCmp::onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
 {
     auto &src = api.getECS().getComponent<TransformCmp>(src_obj);
+
+    *this = src;
+    this->obj_id = dst_obj;
+};
+
+
+
+
+
+
+
+
+size_t
+idk::AnchorCmp::serialize( std::ofstream &stream ) const
+{
+    size_t n = 0;
+    n += idk::streamwrite(stream, obj_id);
+    n += idk::streamwrite(stream, anchor_ids);
+    n += idk::streamwrite(stream, distances);
+    return n;
+};
+
+
+size_t
+idk::AnchorCmp::deserialize( std::ifstream &stream )
+{
+    size_t n = 0;
+    n += idk::streamread(stream, obj_id);
+    n += idk::streamread(stream, anchor_ids);
+    n += idk::streamread(stream, distances);
+    return n;
+};
+
+
+void
+idk::AnchorCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+{
+    this->obj_id = obj_id;
+};
+
+
+void
+idk::AnchorCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+{
+    this->obj_id = -1;
+};
+
+
+void
+idk::AnchorCmp::onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+{
+    auto &src = api.getECS().getComponent<AnchorCmp>(src_obj);
+
+    *this = src;
+    this->obj_id = dst_obj;
+};
+
+
+
+
+
+
+
+
+size_t
+idk::SmoothFollowCmp::serialize( std::ofstream &stream ) const
+{
+    size_t n = 0;
+    n += idk::streamwrite(stream, obj_id);
+    n += idk::streamwrite(stream, anchor_id);
+    n += idk::streamwrite(stream, speed);
+    return n;
+};
+
+
+size_t
+idk::SmoothFollowCmp::deserialize( std::ifstream &stream )
+{
+    size_t n = 0;
+    n += idk::streamread(stream, obj_id);
+    n += idk::streamread(stream, anchor_id);
+    n += idk::streamread(stream, speed);
+    return n;
+};
+
+
+void
+idk::SmoothFollowCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+{
+    this->obj_id = obj_id;
+};
+
+
+void
+idk::SmoothFollowCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+{
+    this->obj_id = -1;
+};
+
+
+void
+idk::SmoothFollowCmp::onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+{
+    auto &src = api.getECS().getComponent<SmoothFollowCmp>(src_obj);
 
     *this = src;
     this->obj_id = dst_obj;

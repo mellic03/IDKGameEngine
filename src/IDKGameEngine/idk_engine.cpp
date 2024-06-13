@@ -2,6 +2,7 @@
 
 #include <libidk/idk_export.hpp>
 #include <libidk/idk_scene_file.hpp>
+#include <libidk/idk_log.hpp>
 
 #include <IDKGraphics/IDKGraphics.hpp>
 #include <IDKEvents/IDKEvents.hpp>
@@ -167,12 +168,13 @@ idk::Engine::_idk_modules_stage_C( idk::EngineAPI &api )
 
 IDK_VISIBLE
 void
-idk::Engine::beginFrame( idk::EngineAPI &api )
+idk::Engine::beginFrame( idk::EngineAPI &api, float dt )
 {
     auto &ren = api.getRenderer();
 
-    m_frame_start = SDL_GetPerformanceCounter();
-   
+    // m_frame_start = time; // SDL_GetPerformanceCounter();
+    m_frame_time = dt;
+
     ren.beginFrame();
     this->_idk_modules_stage_A(api);
 }
@@ -196,8 +198,16 @@ idk::Engine::endFrame( idk::EngineAPI &api )
         m_reload = false;
     }
 
-    m_frame_end = SDL_GetPerformanceCounter();
-    m_frame_time = ((double)(m_frame_end - m_frame_start)) / (double)SDL_GetPerformanceFrequency();
+    // m_frame_end = time; // SDL_GetPerformanceCounter();
+    // m_frame_time = double(m_frame_end-m_frame_start) / 1000.0; // ((double)(m_frame_end - m_frame_start)) / (double)SDL_GetPerformanceFrequency();
+
+    // static bool first = true;
+    // if (first)
+    // {
+    //     m_frame_time = 0.001f;
+    //     first = false;
+    // }
+
 
     if (m_running == false)
     {
@@ -209,6 +219,7 @@ idk::Engine::endFrame( idk::EngineAPI &api )
 void
 idk::Engine::shutdown()
 {
+    LOG_INFO() << "Shutdown initiated";
     m_running = false;
 }
 

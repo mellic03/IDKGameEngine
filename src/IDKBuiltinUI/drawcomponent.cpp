@@ -83,6 +83,67 @@ EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
 }
 
 
+template <>
+void
+EditorUI_MD::drawComponent<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &cmp    = ecs.getComponent<idk::AnchorCmp>(obj_id);
+
+
+    for (int i=0; i<cmp.anchor_ids.size(); i++)
+    {
+        std::string label = "Anchor Distance " + std::to_string(i) + ICON_FA_DOWNLOAD;
+        ImGui::DragFloat(label.c_str(), &cmp.distances[i], 0.05f, 0.1f, 5.0f);
+
+        label = "Anchor Object " + std::to_string(i) + ICON_FA_DOWNLOAD;
+
+        if (cmp.anchor_ids[i] != -1)
+        {
+            if (ecs.gameObjectExists(cmp.anchor_ids[i]))
+            {
+                label = ecs.getGameObjectName(cmp.anchor_ids[i]) + " " + std::to_string(i);
+            }
+
+            else
+            {
+                cmp.anchor_ids[i] = -1;
+            }
+        }
+
+        ImGui::ButtonEx(label.c_str(), ImVec2(250, 50), ImGuiButtonFlags_None);
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+            {
+                IM_ASSERT(payload->DataSize == sizeof(int));
+                cmp.anchor_ids[i] = *reinterpret_cast<int *>(payload->Data);
+            }
+            ImGui::EndDragDropTarget();
+        }
+    }
+
+}
+
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::SmoothFollowCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &cmp    = ecs.getComponent<idk::SmoothFollowCmp>(obj_id);
+
+    ImGui::InputInt("Anchor ID", &cmp.anchor_id);
+    ImGui::DragFloat("Speed", &cmp.speed, 0.05f, 1.0f, 0.01f);
+
+}
+
+
+
 
 template <>
 void
@@ -93,7 +154,12 @@ EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
     auto &cmp = ecs.getComponent<idk::CameraCmp>(obj_id);
 
     ImGui::DragFloat("Bloom", &cmp.bloom, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("FOV",   &cmp.fov,   0.1f, 60.0f, 120.0f);
 
+    ImGui::DragFloat2("Chromatic R",         &cmp.chromatic_r[0],   -1.0f, +1.0f, 0.05f);
+    ImGui::DragFloat2("Chromatic G",         &cmp.chromatic_g[0],   -1.0f, +1.0f, 0.05f);
+    ImGui::DragFloat2("Chromatic B",         &cmp.chromatic_b[0],   -1.0f, +1.0f, 0.05f);
+    ImGui::DragFloat3("Chromatic strength",  &cmp.chromatic_strength[0], 0.0f, 4.0f, 0.05f);
 
     // Camera drag-drop
     // -----------------------------------------------------------------------------------------
@@ -207,6 +273,27 @@ EditorUI_MD::drawComponent<idk::SpotlightCmp>( idk::EngineAPI &api, int obj_id )
     ImGui::InputFloat("Outer cutoff", &cmp.angle[1]);
 
 }
+
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::DirlightCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &ren = api.getRenderer();
+    auto &ecs = api.getECS();
+    auto &cmp = ecs.getComponent<idk::DirlightCmp>(obj_id);
+
+    if (cmp.light_id == -1)
+    {
+        return;
+    }
+
+    ImGui::ColorEdit4("Diffuse",      &cmp.diffuse[0]);
+    ImGui::ColorEdit4("Ambient",      &cmp.ambient[0]);
+
+}
+
 
 
 template <>
@@ -482,49 +569,6 @@ EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, int obj_
 }
 
 
-// template <>
-// void
-// EditorUI_MD::drawComponent<idk::PhysXMeshRigidStaticCmp>( idk::EngineAPI &api, int obj_id )
-// {
-//     auto &ecs = api.getECS();
-//     ImGui::Checkbox("Enable", &ecs.getComponent<idk::PhysXMeshRigidStaticCmp>(obj_id).enabled);
-// }
-
-
-// template <>
-// void
-// EditorUI_MD::drawComponent<idk::PhysXSphereRigidDynamicCmp>( idk::EngineAPI &api, int obj_id )
-// {
-//     auto &ecs = api.getECS();
-//     auto &cmp = ecs.getComponent<idk::PhysXSphereRigidDynamicCmp>(obj_id);
-
-//     ImGui::Checkbox("Enable", &cmp.enabled);
-
-//     if (ImGui::Button("Force Up/Left"))
-//     {
-//         cmp.body->addForce(physx::PxVec3(20.0, 20.0, 20.0));
-//     }
-
-// }
-
-
-// template <>
-// void
-// EditorUI_MD::drawComponent<idk::PhysXKinematicControllerCmp>( idk::EngineAPI &api, int obj_id )
-// {
-//     auto &ecs = api.getECS();
-//     auto &cmp = ecs.getComponent<idk::PhysXKinematicControllerCmp>(obj_id);
-
-//     physx::PxController *CCT = cmp.controller;
-
-//     float offset = CCT->getContactOffset();
-//     ImGui::DragFloat("Contact offset", &offset, 0.01f);
-//     CCT->setContactOffset(offset);
-
-//     ImGui::Checkbox("Enable", &cmp.enabled);
-// }
-
-
 
 template <>
 void
@@ -614,6 +658,170 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::PlayerControllerCmp>( idk::EngineAPI &api, int obj_id )
 {
+    auto &cmp = api.getECS().getComponent<idk::PlayerControllerCmp>(obj_id);
+
+    ImGui::DragFloat("Walk speed", &cmp.walk_speed, 0.0f, 16.0f);
+    ImGui::DragFloat("Run speed",  &cmp.run_speed,  0.0f, 16.0f);
+    ImGui::DragFloat("Jump force", &cmp.jump_force, 0.0f, 16.0f);
+}
+
+
+
+void drag_drop_thing( idk::ecs::ECS &ecs, std::string label, const std::string &payloadname, int &obj_id )
+{
+    label = label + " " + std::string(ICON_FA_DOWNLOAD);
+
+    if (obj_id != -1)
+    {
+        if (ecs.gameObjectExists(obj_id))
+        {
+            label = ecs.getGameObjectName(obj_id);
+        }
+
+        else
+        {
+            obj_id = -1;
+        }
+    }
+
+    ImGui::ButtonEx(label.c_str(), ImVec2(250, 50), ImGuiButtonFlags_None);
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+        {
+            IM_ASSERT(payload->DataSize == sizeof(int));
+            obj_id = *reinterpret_cast<int *>(payload->Data);
+        }
+        ImGui::EndDragDropTarget();
+    }
+}
+
+
+
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::ArmCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &ecs = api.getECS();
+    auto &cmp = ecs.getComponent<idk::ArmCmp>(obj_id);
+
+    ImGui::Checkbox("is left", &cmp.is_left);
+    ImGui::DragFloat("stride", &cmp.stride,      0.5f, 5.0f);
+    ImGui::DragFloat("speed",  &cmp.step_speed,  2.0f, 16.0f);
+    ImGui::DragFloat("height", &cmp.step_height, 0.1f, 1.0f);
+    ImGui::DragFloat("distAB", &cmp.distAB,      0.1f, 1.0f);
+    ImGui::DragFloat("distBC", &cmp.distBC,      0.1f, 1.0f);
+
+    drag_drop_thing(ecs, "Partner Limb", "SCENE_HIERARCHY", cmp.partner_id);
+    drag_drop_thing(ecs, "Rest Target",  "SCENE_HIERARCHY", cmp.rest_target);
+    drag_drop_thing(ecs, "Ray Target",   "SCENE_HIERARCHY", cmp.ray_target);
+    drag_drop_thing(ecs, "Pole Target",  "SCENE_HIERARCHY", cmp.pole_target);
+
+    // std::string label = "Pole Target " ICON_FA_DOWNLOAD;
+
+    // if (cmp.pole_target != -1)
+    // {
+    //     if (ecs.gameObjectExists(cmp.pole_target))
+    //     {
+    //         label = ecs.getGameObjectName(cmp.pole_target);
+    //     }
+
+    //     else
+    //     {
+    //         cmp.pole_target = -1;
+    //     }
+    // }
+
+    // ImGui::ButtonEx(label.c_str(), ImVec2(250, 50), ImGuiButtonFlags_None);
+
+    // if (ImGui::BeginDragDropTarget())
+    // {
+    //     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+    //     {
+    //         IM_ASSERT(payload->DataSize == sizeof(int));
+    //         cmp.pole_target = *reinterpret_cast<int *>(payload->Data);
+    //     }
+    //     ImGui::EndDragDropTarget();
+    // }
+
+}
+
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::PhysicsCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &cmp    = ecs.getComponent<idk::PhysicsCmp>(obj_id);
+
+    ImGui::InputFloat3("Linear",  &cmp.linear[0], "%0.2f");
+    ImGui::InputFloat3("Angular", &cmp.angular[0], "%0.2f");
+}
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::KinematicRectCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &cmp    = ecs.getComponent<idk::KinematicRectCmp>(obj_id);
+
+    ImGui::Checkbox("Visualise", &cmp.visualise);
+}
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::KinematicCapsuleCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &cmp    = ecs.getComponent<idk::KinematicCapsuleCmp>(obj_id);
+
+    ImGui::Checkbox("Enable",    &cmp.enabled);
+    ImGui::Checkbox("Visualise", &cmp.visualise);
+}
+
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::StaticRectCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &cmp    = ecs.getComponent<idk::StaticRectCmp>(obj_id);
+
+    ImGui::Checkbox("Visualise", &cmp.visualise);
+}
+
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &ren    = api.getRenderer();
+    auto &cmp    = ecs.getComponent<idk::RenderSettingCmp>(obj_id);
+
+    std::string filepath = cmp.filepath;
+
+    if (ImGui::InputText("Skybox", &filepath, ImGuiInputTextFlags_EnterReturnsTrue))
+    {
+        if (filepath != cmp.filepath)
+        {
+            cmp.filepath = filepath;
+            // idk::RenderSettingSys::loadSkybox(filepath);
+        }
+    }
 
 }
 
@@ -636,6 +844,9 @@ EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
 
     ECS_COMPONENT_CALLBACK(idk::IconCmp);
     ECS_COMPONENT_CALLBACK(idk::TransformCmp);
+    ECS_COMPONENT_CALLBACK(idk::AnchorCmp);
+    ECS_COMPONENT_CALLBACK(idk::SmoothFollowCmp);
+
     ECS_COMPONENT_CALLBACK(idk::ModelCmp);
     ECS_COMPONENT_CALLBACK(idk::ScriptCmp);
     ECS_COMPONENT_CALLBACK(idk::CameraCmp);
@@ -645,18 +856,24 @@ EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
     ECS_COMPONENT_CALLBACK(idk::PlanetActorCmp);
     ECS_COMPONENT_CALLBACK(idk::AtmosphereCmp);
 
+    ECS_COMPONENT_CALLBACK(idk::PhysicsCmp);
+    ECS_COMPONENT_CALLBACK(idk::StaticRectCmp);
+    ECS_COMPONENT_CALLBACK(idk::KinematicRectCmp);
+    ECS_COMPONENT_CALLBACK(idk::KinematicCapsuleCmp);
+
+    ECS_COMPONENT_CALLBACK(idk::DirlightCmp);
     ECS_COMPONENT_CALLBACK(idk::PointlightCmp);
     ECS_COMPONENT_CALLBACK(idk::SpotlightCmp);
 
     ECS_COMPONENT_CALLBACK(idk::AudioEmitterCmp);
-    // ECS_COMPONENT_CALLBACK(idk::PhysXMeshRigidStaticCmp);
-    // ECS_COMPONENT_CALLBACK(idk::PhysXSphereRigidDynamicCmp);
-    // ECS_COMPONENT_CALLBACK(idk::PhysXKinematicControllerCmp);
 
     ECS_COMPONENT_CALLBACK(idk::ProgressionEventCmp);
     ECS_COMPONENT_CALLBACK(idk::ProgressionStateCmp);
 
     ECS_COMPONENT_CALLBACK(idk::PlayerControllerCmp);
+    ECS_COMPONENT_CALLBACK(idk::ArmCmp);
+
+    ECS_COMPONENT_CALLBACK(idk::RenderSettingCmp);
 
 }
 

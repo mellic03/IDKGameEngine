@@ -38,7 +38,8 @@ namespace idk
         #define IDK_STRUCT_MEMBERS(X) \
             X( int, obj_id,   -1 ) \
             X( int, light_id, -1 ) \
-            X( glm::vec4, direction, glm::vec4(1.0f, -1.0f, 1.0f, 0.0f))
+            X( glm::vec4, diffuse, glm::vec4(1.0f) ) \
+            X( glm::vec4, ambient, glm::vec4(0.1f) )
     
         IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
         #undef IDK_STRUCT_MEMBERS
@@ -253,7 +254,12 @@ namespace idk
         float gamma    = 2.2f;
         float exposure = 1.0f;
         float bloom    = 0.0f;
+        float fov      = 90.0f;
 
+        glm::vec2 chromatic_r;
+        glm::vec2 chromatic_g;
+        glm::vec2 chromatic_b;
+        glm::vec4 chromatic_strength;
     
         size_t serialize( std::ofstream &stream ) const
         {
@@ -263,6 +269,11 @@ namespace idk
             n += idk::streamwrite(stream, gamma);
             n += idk::streamwrite(stream, exposure);
             n += idk::streamwrite(stream, bloom);
+            n += idk::streamwrite(stream, fov);
+            n += idk::streamwrite(stream, chromatic_r);
+            n += idk::streamwrite(stream, chromatic_g);
+            n += idk::streamwrite(stream, chromatic_b);
+            n += idk::streamwrite(stream, chromatic_strength);
             return n;
         };
 
@@ -274,6 +285,11 @@ namespace idk
             n += idk::streamread(stream, gamma);
             n += idk::streamread(stream, exposure);
             n += idk::streamread(stream, bloom);
+            n += idk::streamread(stream, fov);
+            n += idk::streamread(stream, chromatic_r);
+            n += idk::streamread(stream, chromatic_g);
+            n += idk::streamread(stream, chromatic_b);
+            n += idk::streamread(stream, chromatic_strength);
             return n;
         };
 

@@ -8,8 +8,9 @@ namespace idk::ecs
     class System
     {
     public:
-        virtual void init   ( idk::EngineAPI & ) = 0;
-        virtual void update ( idk::EngineAPI & ) = 0;
+        virtual void init     ( idk::EngineAPI& ) = 0;
+        virtual void update   ( idk::EngineAPI& ) = 0;
+        virtual void shutdown ( idk::EngineAPI& ) {  };
     };
 
 };

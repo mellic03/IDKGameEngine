@@ -7,8 +7,15 @@
 namespace idk
 {
     struct PhysicsCmp;
-    // struct RigidBodyRectCmp;
-    // struct RigidBodySphereCmp;
+
+    struct StaticRectCmp;
+    struct KinematicRectCmp;
+    struct KinematicCapsuleCmp;
+
+    namespace PhysicsConstants
+    {
+        static constexpr float G = 9.8f;
+    };
 
     class  PhysicsSys;
 }
@@ -20,10 +27,18 @@ namespace idk
 class idk::PhysicsSys: public idk::ecs::System
 {
 private:
+    static void kinematicCapsule_staticRect( float timestep, KinematicCapsuleCmp &s_cmp, StaticRectCmp &r_cmp );
+    static void _integrate ( idk::EngineAPI &api, float dt );
+
+    inline static float m_accumulator = 0.0f;
 
 public:
     virtual void    init   ( idk::EngineAPI & ) final;
     virtual void    update ( idk::EngineAPI & ) final;
+
+    static void addForce( int obj_id, const glm::vec3& );
+
+    static bool raycast ( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit );
 
 };
 
@@ -43,29 +58,55 @@ struct idk::PhysicsCmp
 };
 
 
-// struct idk::RigidBodyRectCmp
-// {
-//     int obj_id = -1;
 
-//     glm::vec3 extents;
+struct idk::StaticRectCmp
+{
+    int  obj_id    = -1;
+    bool visualise = false;
 
-//     size_t  serialize            ( std::ofstream &stream ) const;
-//     size_t  deserialize          ( std::ifstream &stream );
-//     void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-//     void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-//     void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
-// };
+    size_t  serialize            ( std::ofstream &stream ) const;
+    size_t  deserialize          ( std::ifstream &stream );
+    void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
+};
 
 
-// struct idk::RigidBodySphereCmp
-// {
-//     int obj_id = -1;
+struct idk::KinematicRectCmp
+{
+    int  obj_id    = -1;
+    bool visualise = false;
 
-//     size_t  serialize            ( std::ofstream &stream ) const;
-//     size_t  deserialize          ( std::ifstream &stream );
-//     void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-//     void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-//     void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
-// };
+    size_t  serialize            ( std::ofstream &stream ) const;
+    size_t  deserialize          ( std::ifstream &stream );
+    void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
+};
 
+
+struct idk::KinematicCapsuleCmp
+{
+    int  obj_id    = -1;
+    bool enabled   = true;
+    bool visualise = false;
+
+    float radius   = 0.24f;
+    float bottom   = 0.75f;
+    float top      = 0.25f;
+    
+    bool  grounded = false;
+    float airtime  = 0.0f;
+
+
+    glm::vec3 prev_pos = glm::vec3(0.0f);
+    glm::vec3 curr_pos = glm::vec3(0.0f);
+    glm::vec3 force = glm::vec3(0.0f);
+
+    size_t  serialize            ( std::ofstream &stream ) const;
+    size_t  deserialize          ( std::ifstream &stream );
+    void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
+};
 

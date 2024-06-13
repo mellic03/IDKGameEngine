@@ -1,5 +1,4 @@
 #include "idk_components.hpp"
-// #include "sys-physx.hpp"
 
 int
 idk::ScriptCmp_getNumParams( idk::ScriptCmp &cmp )

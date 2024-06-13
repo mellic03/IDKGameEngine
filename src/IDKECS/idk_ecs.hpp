@@ -155,8 +155,9 @@ public:
     int                     getParent     ( int child_id  ) { return m_parent[child_id];       };
     std::set<int> &         getChildren   ( int parent_id ) { return m_children[parent_id];    };
 
-    void                    init   ( idk::EngineAPI & );
-    void                    update ( idk::EngineAPI & );
+    void                    init     ( idk::EngineAPI& );
+    void                    update   ( idk::EngineAPI& );
+    void                    shutdown ( idk::EngineAPI& );
 
     virtual void            exposeToLua( lua_State *L ) final;
 

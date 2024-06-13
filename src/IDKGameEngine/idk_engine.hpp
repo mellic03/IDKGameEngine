@@ -28,7 +28,7 @@ private:
 
     uint64_t                                    m_frame_start = 0;
     uint64_t                                    m_frame_end   = 0;
-    float                                       m_frame_time  = 1.0f;
+    float                                       m_frame_time  = 0.0001f;
     bool                                        m_running     = true;
     bool                                        m_reload      = false;
 
@@ -59,12 +59,15 @@ private:
 
 
 public:
+    // static constexpr float TARGET_FPS = 165.0;
+    // static constexpr float TARGET_DT  = 1.0 / TARGET_FPS;
+
 
     void                                        initModules( idk::EngineAPI & );
     void                                        reloadModules() { m_reload = true; };
 
-    void                                        beginFrame  ( idk::EngineAPI & );
-    void                                        endFrame    ( idk::EngineAPI & );
+    void                                        beginFrame  ( idk::EngineAPI&, float );
+    void                                        endFrame    ( idk::EngineAPI& );
 
     bool                                        running() { return m_running; };
     void                                        shutdown();

@@ -142,40 +142,40 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
 
 
 
-    // static bool pop_out = false;
+    static bool pop_out = false;
 
-    // if (api.getEventSys().keylog().keyTapped(idk::Keycode::F11))
-    // {
-    //     pop_out = !pop_out;
-    // }
+    if (api.getEventSys().keylog().keyTapped(idk::Keycode::F11))
+    {
+        pop_out = !pop_out;
+    }
 
-    // if (pop_out)
-    // {
-    //     SDL_GL_MakeCurrent(popout_win, ren.getGLContext());
-    //     ImGui::SetCurrentContext(popout_ctx);
+    if (pop_out)
+    {
+        SDL_GL_MakeCurrent(popout_win, ren.getGLContext());
+        ImGui::SetCurrentContext(popout_ctx);
 
 
-    //     int w, h;
-    //     SDL_GetWindowSize(popout_win, &w, &h);
-    //     ImGui::SetNextWindowPos({0, 0});
-    //     ImGui::SetNextWindowSize(ImVec2(float(w), float(h)));
+        int w, h;
+        SDL_GetWindowSize(popout_win, &w, &h);
+        ImGui::SetNextWindowPos({0, 0});
+        ImGui::SetNextWindowSize(ImVec2(float(w), float(h)));
     
-    //     ImGui_ImplOpenGL3_NewFrame();
-    //     ImGui_ImplSDL2_NewFrame();
-    //     ImGui::NewFrame();
-    //     ImGuizmo::BeginFrame();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+        ImGuizmo::BeginFrame();
 
-    //     // ImGui::Begin("Root", nullptr, windowflags);
-    //     this->_tab_viewport(api);
-    //     // ImGui::End();
+        // ImGui::Begin("Root", nullptr, windowflags);
+        this->_tab_viewport(api);
+        // ImGui::End();
 
-    //     ImGui::Render();
-    //     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    //     SDL_GL_SwapWindow(popout_win);
-    //     SDL_GL_MakeCurrent(ren.getWindow(), ren.getGLContext());
-    //     ImGui::SetCurrentContext(main_ctx);
-    // }
+        SDL_GL_SwapWindow(popout_win);
+        SDL_GL_MakeCurrent(ren.getWindow(), ren.getGLContext());
+        ImGui::SetCurrentContext(main_ctx);
+    }
 
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -206,7 +206,7 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
 
     this->_menubar(api);
 
-    // if (pop_out == false)
+    if (pop_out == false)
     {
         ImGui::Begin("Viewport");
         this->_tab_viewport(api);
@@ -253,7 +253,7 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
 
     ImGui::End();
 
-    idk_NodeEditor(api);
+    // idk_NodeEditor(api);
 
     ImGui::Render();
 

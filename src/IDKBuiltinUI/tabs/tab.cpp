@@ -16,6 +16,7 @@ EditorUI_MD::_tab( idk::EngineAPI &api )
     this->_tab_editor_properties(api);
     this->_tab_inspect(api, ecs.getSelectedGameObject());
     this->_tab_scripts(api);
+    this->_tab_buffers(api);
 
 
     EditorTab::shader_programs(api);
@@ -25,34 +26,34 @@ EditorUI_MD::_tab( idk::EngineAPI &api )
     EditorTab::dirlights(api);
 
 
-    if (api.getEventSys().mouseCaptured())
-    {
-        return;
-    }
+    // if (api.getEventSys().mouseCaptured())
+    // {
+    //     return;
+    // }
 
-    static int lctrl_down = 0;
-    static int d_down     = 0;
+    // static int lctrl_down = 0;
+    // static int d_down     = 0;
 
-    if (api.getEventSys().keylog().keyTapped(idk::Keycode::LCTRL))
-    {
-        lctrl_down = 64;
-    }
+    // if (api.getEventSys().keylog().keyTapped(idk::Keycode::LCTRL))
+    // {
+    //     lctrl_down = 64;
+    // }
 
-    if (api.getEventSys().keylog().keyTapped(idk::Keycode::D))
-    {
-        d_down = 64;
-    }
+    // if (api.getEventSys().keylog().keyTapped(idk::Keycode::D))
+    // {
+    //     d_down = 64;
+    // }
 
-    if (lctrl_down > 0) lctrl_down -= 1;
-    if (d_down > 0)     d_down -= 1;
+    // if (lctrl_down > 0) lctrl_down -= 1;
+    // if (d_down > 0)     d_down -= 1;
 
 
-    if (lctrl_down && d_down)
-    {
-        lctrl_down = 0;
-        d_down     = 0;
+    // if (lctrl_down && d_down)
+    // {
+    //     lctrl_down = 0;
+    //     d_down     = 0;
 
-        ecs.setSelectedGameObject(ecs.copyGameObject(ecs.getSelectedGameObject()));
-    }
+    //     ecs.setSelectedGameObject(ecs.copyGameObject(ecs.getSelectedGameObject()));
+    // }
 
 }

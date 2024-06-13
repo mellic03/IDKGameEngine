@@ -5,13 +5,14 @@
 #include "sys-transform.hpp"
 
 #include "sys-physics.hpp"
-// #include "sys-physx.hpp"
 
 #include "sys-audio.hpp"
 #include "sys-planet.hpp"
 #include "sys-gamestate.hpp"
 #include "sys-player.hpp"
 #include "sys-skeleton.hpp"
+
+#include "sys-rendersetting.hpp"
 
 
 namespace idk

@@ -10,7 +10,8 @@ namespace idk
     struct TransformCmp
     {
         int        obj_id   = -1;
-        glm::vec3  position = glm::vec3(1.0f);
+        glm::vec3  position = glm::vec3(0.0f);
+        glm::vec3  delta    = glm::vec3(0.0f);
         glm::quat  rotation = glm::quat(glm::vec3(0.0f));
         float      pitch    = 0.0f;
         float      yaw      = 0.0f;
@@ -29,6 +30,34 @@ namespace idk
         void    onObjectDeassignment( idk::EngineAPI &api, int obj_id );
         void    onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj );
     };
+
+    struct AnchorCmp
+    {
+        int   obj_id    = -1;
+
+        std::vector<int>   anchor_ids = std::vector<int>(1, -1);
+        std::vector<float> distances  = std::vector<float>(1, 1.0f);
+
+        size_t  serialize( std::ofstream &stream ) const;
+        size_t  deserialize( std::ifstream &stream );
+        void    onObjectAssignment( idk::EngineAPI &api, int obj_id );
+        void    onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+        void    onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj );
+    };
+
+    struct SmoothFollowCmp
+    {
+        int obj_id    = -1;
+        int anchor_id = -1;
+        float speed   = 1.0f;
+
+        size_t  serialize( std::ofstream &stream ) const;
+        size_t  deserialize( std::ifstream &stream );
+        void    onObjectAssignment( idk::EngineAPI &api, int obj_id );
+        void    onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+        void    onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj );
+    };
+
 };
 
 
@@ -44,8 +73,6 @@ private:
     static glm::mat4    _computeLocalMatrix( int obj_id, bool scale = true );
     static glm::mat4    _computeWorldMatrix( int obj_id );
     static glm::mat4    _computeModelMatrix( int obj_id );
-
-
 
     struct TransformCallback
     {
@@ -70,6 +97,13 @@ public:
     
     static idk::TransformCmp &getData( int obj_id );
 
+    static void         FABRIK( int objA, int objB, int objC, glm::vec3 end_pos,
+                                float dAB, float dBC, const glm::vec3& );
+
+    static void         FABRIK( const glm::vec3 &posA, glm::vec3 &posB, glm::vec3 &posC,
+                                const glm::vec3 &target_posC, const glm::vec3 &pole_target,
+                                float distAB, float distBC );
+
     static void         rotateX( int obj_id, float f );
     static void         rotateY( int obj_id, float f );
     static void         rotateZ( int obj_id, float f );
@@ -79,7 +113,9 @@ public:
     static void         roll  ( int obj_id, float f );
 
     static float        lookTowards( int subject, int target, float alpha );
+    static float        lookTowards( int subject, const glm::vec3&, float alpha );
     static float        moveTowards( int subject, int target, float alpha );
+    static float        moveTowards( int subject, const glm::vec3&, float alpha );
 
     static void         lookTowardsCallback( int subject, int target, float alpha, float stop, std::function<void()> );
     static void         moveTowardsCallback( int subject, int target, float alpha, float stop, std::function<void()> );

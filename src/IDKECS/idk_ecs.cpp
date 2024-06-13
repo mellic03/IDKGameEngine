@@ -3,6 +3,7 @@
 #include <fstream>
 #include <libidk/idk_io.hpp>
 #include <libidk/idk_view.hpp>
+#include <libidk/idk_log.hpp>
 
 #include "idk_ecs_file.hpp"
 #include "IDKBuiltinCS/sys-transform.hpp"
@@ -36,6 +37,18 @@ idk::ecs::ECS::update( idk::EngineAPI &api )
         m_should_readFile = false;
         _readFile(m_readFile_path);
     }
+}
+
+
+void
+idk::ecs::ECS::shutdown( idk::EngineAPI &api )
+{
+    for (System *system: m_systems)
+    {
+        system->shutdown(api);
+    }
+
+    LOG_INFO() << "idk::ecs::ECS::shutdown";
 }
 
 
@@ -185,6 +198,8 @@ idk::ecs::ECS::writeFile( const std::string &filepath )
 void
 idk::ecs::ECS::_readFile( const std::string &filepath )
 {
+    LOG_INFO() << "Reading file: " << filepath;
+
     file_read_mode = true;
 
     std::ifstream stream(filepath, std::ios::binary);
@@ -514,6 +529,9 @@ idk::ecs::ECS::getGameObjectByName( const std::string &name )
 void
 idk::ecs::ECS::giveChild( int parent_id, int child_id )
 {
+    glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
+    glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
+    glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
     glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
 
     removeChild(getParent(child_id), child_id);
@@ -525,6 +543,13 @@ idk::ecs::ECS::giveChild( int parent_id, int child_id )
     {
         TransformSys::recomputeTransformMatrices(child_id);
         TransformSys::setPositionWorldspace(child_id, child_pos);
+
+        Mw = TransformSys::getWorldMatrix(child_id);
+        Ml = TransformSys::getLocalMatrix(child_id, false);
+        R  = glm::inverse(Mw*Ml) * R;
+        glm::quat Q = glm::normalize(glm::quat_cast(R));
+        TransformSys::getData(child_id).rotation = Q;
+
     }
 }
 
@@ -532,6 +557,9 @@ idk::ecs::ECS::giveChild( int parent_id, int child_id )
 void
 idk::ecs::ECS::removeChild( int parent_id, int child_id )
 {
+    glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
+    glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
+    glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
     glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
 
     m_children[parent_id].erase(child_id);
@@ -541,6 +569,12 @@ idk::ecs::ECS::removeChild( int parent_id, int child_id )
     {
         TransformSys::recomputeTransformMatrices(child_id);
         TransformSys::setPositionWorldspace(child_id, child_pos);
+
+        Mw = TransformSys::getWorldMatrix(child_id);
+        Ml = TransformSys::getLocalMatrix(child_id, false);
+        R  = glm::inverse(Mw*Ml) * R;
+        glm::quat Q = glm::normalize(glm::quat_cast(R));
+        TransformSys::getData(child_id).rotation = Q;
     }
 }
 

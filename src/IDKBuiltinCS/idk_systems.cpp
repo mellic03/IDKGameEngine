@@ -90,7 +90,6 @@ idk::ScriptSys::init( idk::EngineAPI &api )
     static auto &apiref = api;
     static auto &engine = api.getEngine();
     static auto &events = api.getEventSys();
-
 }
 
 
@@ -255,6 +254,14 @@ idk::CameraSys::update( idk::EngineAPI &api )
 
         auto &camera = ren.getCamera(cam_id);
         camera.bloom = cmp.bloom;
+        camera.fov   = cmp.fov;
+
+        camera.chromatic_r = cmp.chromatic_r;
+        camera.chromatic_g = cmp.chromatic_g;
+        camera.chromatic_b = cmp.chromatic_b;
+        camera.chromatic_strength = cmp.chromatic_strength;
+
+
 
         camera.setModelMatrix(TransformSys::getModelMatrix(obj_id));
 
@@ -288,6 +295,21 @@ idk::LightSys::update( idk::EngineAPI &api )
 {
     auto &ecs = api.getECS();
     auto &ren = api.getRenderer();
+
+    for (auto &[obj_id, light_id, diffuse, ambient]: ecs.getComponentArray<idk::DirlightCmp>())
+    {
+        auto &light = ren.getDirlight(light_id);
+
+        glm::mat4 M = TransformSys::getModelMatrix(obj_id);
+
+        glm::vec3 pos = TransformSys::getPositionWorldspace(obj_id);
+        glm::vec3 dir = glm::vec3(M * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));
+
+        light.transform = M;
+        light.direction = glm::vec4(dir, 0.0f);
+        light.ambient   = ambient;
+        light.diffuse   = diffuse;
+    }
 
     for (auto &[obj_id, light_id, diffuse, radius]: ecs.getComponentArray<idk::PointlightCmp>())
     {

@@ -50,7 +50,6 @@ idk::ThreadPool::_worker( int idx )
     {
         // Aquire work
         // ----------------------------------------------
-        // std::unique_lock lock1(m_mutexes[idx]);
         std::unique_lock lock(m_main_mutex);
 
         m_worker_cvs[idx].wait(lock, [this, idx] {
@@ -71,13 +70,10 @@ idk::ThreadPool::_worker( int idx )
 
         // Push task ID to finished queue
         // ----------------------------------------------
-        // std::unique_lock lock2(m_main_mutex);
-        // std::unique_lock lock2(m_finished_mutexes[idx]);
     
         std::cout << "Finished task " + std::to_string(task_id) + "\n";
         m_finished_tasks[idx].push(task_id);
 
-        // lock2.unlock();
         lock.unlock();
         // ----------------------------------------------
     }
