@@ -41,7 +41,7 @@ private:
     };
 
     inline static
-    std::map<std::string, System*> m_systems;
+    std::vector<System*> m_systems;
 
 
     struct Entity
@@ -72,19 +72,14 @@ private:
     inline static int m_selected_object = -1;
 
 
-    static void giveComponent( int obj_id, size_t key )
-    {
-        auto &e = m_entities.get(obj_id);
-        auto &c = getComponentArray<T>();
-        e.components[key] = c.createComponent();
-    }
+    static void giveComponent( int obj_id, size_t key );
 
 
 public:
 
     static const idk::Allocator<Entity> &getEntities() { return m_entities; };
 
-    static int                  createGameObject ( const std::string &name );
+    static int                  createGameObject ( const std::string &name = "Empty" );
     static int                  copyGameObject   ( int obj_id, bool deep=false );
     static void                 deleteGameObject ( int obj_id, bool deep=false );
 
@@ -129,6 +124,13 @@ public:
 
     template <typename T>
     static void registerComponent( const std::string &name );
+
+
+    template <typename T>
+    static void registerSystem()
+    {
+        m_systems.push_back(dynamic_cast<System *>(new T));
+    }
 
 
     static void save( const std::string &filepath );

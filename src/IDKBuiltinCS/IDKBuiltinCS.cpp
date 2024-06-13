@@ -39,6 +39,23 @@ idk::registerComponents( idk::ecs::ECS &ecs )
 
     ecs.registerComponent<ArmCmp>                       ("Arm");
 
+
+    ECS2::registerComponent<IconCmp>                ("Icon");
+    ECS2::registerComponent<TransformCmp>           ("Transform");
+    ECS2::registerComponent<ModelCmp>               ("Model");
+    ECS2::registerComponent<CameraCmp>              ("Camera");
+    ECS2::registerComponent<PlayerControllerCmp>    ("PlayerController");
+    ECS2::registerComponent<DirlightCmp>            ("Dirlight");
+    ECS2::registerComponent<PointlightCmp>          ("Pointlight");
+    ECS2::registerComponent<SpotlightCmp>           ("Spotlight");
+    ECS2::registerComponent<StaticRectCmp>          ("StaticRect");
+    ECS2::registerComponent<KinematicRectCmp>       ("KinematicRect");
+    ECS2::registerComponent<KinematicCapsuleCmp>    ("KinematicCapsule");
+    ECS2::registerComponent<RenderSettingCmp>       ("RenderSetting");
+    ECS2::registerComponent<AnchorCmp>              ("Anchor");
+    ECS2::registerComponent<SmoothFollowCmp>        ("SmoothFollow");
+
+
 }
 
 
@@ -62,5 +79,14 @@ idk::registerSystems( idk::ecs::ECS &ecs )
     ecs.registerSystem<idk::SkeletonSys>();
 
     ecs.registerSystem<idk::RenderSettingSys>();
+
+
+    ECS2::registerSystem<TransformSys>();
+    ECS2::registerSystem<ModelSys>();
+    ECS2::registerSystem<CameraSys>();
+    ECS2::registerSystem<LightSys>();
+    ECS2::registerSystem<PhysicsSys>();
+    ECS2::registerSystem<PlayerSys>();
+    ECS2::registerSystem<RenderSettingSys>();
 
 }

@@ -100,44 +100,35 @@ idk::ECS2::deleteSelectedGameObject()
 int
 idk::ECS2::copySelectedGameObject()
 {
-
+    if (m_selected_object != -1)
+    {
+        return copyGameObject(m_selected_object);
+    }
 }
 
 
 const std::string &
 idk::ECS2::getSelectedGameObjectName()
 {
-
+    if (m_selected_object != -1)
+    {
+        return getGameObjectName(m_selected_object);
+    }
 }
 
 
-static int
-idk::ECS2::getParent( int obj_id )
+
+
+
+
+
+void
+idk::ECS2::giveComponent( int obj_id, size_t key )
 {
-
+    auto &e = m_entities.get(obj_id);
+    // auto &c = getComponentArray(key);
+    e.components[key] = m_component_arrays[key]->createComponent();
 }
-
-
-static void
-idk::ECS2::giveChild( int parent_id, int child_id )
-{
-
-}
-
-
-static void
-idk::ECS2::removeChild( int parent_id, int child_id )
-{
-
-}
-
-
-
-
-
-
-
-
 
 
 

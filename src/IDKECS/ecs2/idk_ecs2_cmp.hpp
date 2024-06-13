@@ -18,6 +18,9 @@ public:
 
     virtual const std::string &getName() const { return m_name; };
 
+    virtual int  createComponent() = 0;
+    virtual void destroyComponent( int ) = 0;
+
     virtual size_t serialize   ( std::ofstream& ) = 0;
     virtual size_t deserialize ( std::ifstream& ) = 0;
 };
@@ -52,7 +55,7 @@ public:
     }
 
 
-    int createComponent()
+    virtual int createComponent()
     {
         return m_data.create();
     };
@@ -62,7 +65,7 @@ public:
         return m_data.get(component);
     };
 
-    void destroyComponent( int component )
+    virtual void destroyComponent( int component )
     {
         m_data.destroy(component);
     };
