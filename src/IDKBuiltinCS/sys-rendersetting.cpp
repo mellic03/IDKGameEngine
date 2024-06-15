@@ -6,11 +6,11 @@
 
 
 static idk::EngineAPI *api_ptr;
-static idk::ecs::ECS &getECS() { return api_ptr->getECS(); }
+
 
 static idk::RenderSettingCmp &getCmp()
 {
-    return *(getECS().getComponentArray<idk::RenderSettingCmp>().begin());
+    return *(idk::ECS2::getComponentArray<idk::RenderSettingCmp>().begin());
 }
 
 
@@ -21,7 +21,7 @@ idk::RenderSettingSys::init( idk::EngineAPI &api )
     LOG_INFO() << "idk::RenderSettingSys::init";
 
     api_ptr = &api;
-    auto &ecs = api.getECS();
+    
 
 }
 
@@ -31,18 +31,17 @@ void
 idk::RenderSettingSys::update( idk::EngineAPI &api )
 {
     auto  &ren  = api.getRenderer();
-    auto  &ecs  = api.getECS();
     float dtime = api.getEngine().deltaTime();
 
     static std::string current_filepath = "assets/cubemaps/skybox5/";
 
     if (m_obj == -1)
     {
-        m_obj = ecs.createGameObject("RenderSetting");
-        ecs.giveComponent<idk::RenderSettingCmp>(m_obj);
+        m_obj = idk::ECS2::createGameObject("RenderSetting");
+        idk::ECS2::giveComponent<idk::RenderSettingCmp>(m_obj);
     }
 
-    for (auto &cmp: ecs.getComponentArray<idk::RenderSettingCmp>())
+    for (auto &cmp: idk::ECS2::getComponentArray<idk::RenderSettingCmp>())
     {
         if (cmp.filepath != "" && cmp.filepath != current_filepath)
         {
@@ -88,22 +87,22 @@ idk::RenderSettingCmp::deserialize( std::ifstream &stream )
 void
 idk::RenderSettingCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = obj_id;
+    // this->obj_id = obj_id;
 };
 
 
 void
 idk::RenderSettingCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = -1;
+    // this->obj_id = -1;
 };
 
 
 void
-idk::RenderSettingCmp::onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+idk::RenderSettingCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    // auto &src = api.getECS().getComponent<RenderSettingCmp>(src_obj);
-    // auto &dst = api.getECS().getComponent<RenderSettingCmp>(dst_obj);
+    // auto &src = idk::ECS2::getComponent<RenderSettingCmp>(src_obj);
+    // auto &dst = idk::ECS2::getComponent<RenderSettingCmp>(dst_obj);
     // dst.visualise = src.visualise;
 };
 

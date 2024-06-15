@@ -9,7 +9,6 @@
 #include <libidk/idk_componentsystem.hpp>
 #include <libidk/idk_allocator.hpp>
 #include <libidk/idk_dynamiclib.hpp>
-#include <libidk/idk_scripting.hpp>
 
 #include <cstdint>
 #include <cstddef>
@@ -21,7 +20,7 @@ namespace idk { class RenderEngine; };
 namespace idk { class EventSystem;  };
 
 
-class IDK_VISIBLE idk::Engine: public idk::LuaAPI
+class IDK_VISIBLE idk::Engine
 {
 private:
     using ModuleLoader = idk::GenericLoader<idk::Module>;
@@ -89,15 +88,6 @@ public:
     idk::ComponentSystem *                      getCS( int component_id );
 
     const Allocator<ComponentSystem *> &        getComponentSystems() { return m_componentsystems; };
-
-
-
-    void exposeToLua( lua_State *L )
-    {
-        luaaa::LuaModule mod1(L, "Engine");
-        mod1.fun("deltaTime", [this]() { return deltaTime(); });
-    };
-
 
 };
 

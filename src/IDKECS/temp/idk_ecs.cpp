@@ -1,4 +1,4 @@
-#include "IDKECS.hpp"
+#include "IDKECS/IDKECS.hpp"
 
 #include <fstream>
 #include <libidk/idk_io.hpp>
@@ -91,7 +91,7 @@ idk::ecs::ECS::writeComponents( std::ofstream &stream )
         .num_arrays = uint32_t(numComponents())
     };
 
-    ECSFile_write(stream, ecs_header);
+    ECSFile_write(stream_header);
 
     for (auto &[key, cmp]: m_components)
     {
@@ -155,7 +155,7 @@ void
 idk::ecs::ECS::readComponents( std::ifstream &stream )
 {
     ECSFileHeader ecs_header;
-    ECSFile_read(stream, ecs_header);
+    ECSFile_read(stream_header);
 
     for (uint32_t i=0; i<ecs_header.num_arrays; i++)
     {

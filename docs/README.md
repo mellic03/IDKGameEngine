@@ -55,7 +55,7 @@ int main()
     const int PHYSICS   = engine.registerCS<Physics_CS>("physics");
     const int GRABBABLE = engine.registerCS<Grabbable_CS>("grabbable");
     
-    int obj1 = ecs.createGameObject();
+    int obj1 = idk::ECS2::createGameObject();
     engine.giveComponents(obj1, TRANSFORM, PHYSICS, GRABBABLE);
 
     /*

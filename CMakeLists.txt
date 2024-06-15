@@ -42,6 +42,9 @@ target_include_directories(
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
 
+    libidk
+    IDKGraphics
+
     IDKAudio
     IDKEvents
     IDKBuiltinCS
@@ -53,7 +56,6 @@ target_link_libraries(
     ImGuizmo
     ImNodes
 
-    ${LUA_LIBRARIES}
 )
 
 

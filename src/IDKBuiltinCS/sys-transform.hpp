@@ -26,10 +26,38 @@ namespace idk
 
         size_t  serialize( std::ofstream &stream ) const;
         size_t  deserialize( std::ifstream &stream );
-        void    onObjectAssignment( idk::EngineAPI &api, int obj_id );
-        void    onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-        void    onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj );
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectCopy( int src_obj, int dst_obj );
     };
+
+
+    struct IKCmp
+    {
+        int obj_id       = -1;
+        int pole_target  = -1;
+        int chain_length = 3;
+        std::vector<float> distances = { 0.5f, 0.6f };
+
+        size_t  serialize( std::ofstream &stream ) const;
+        size_t  deserialize( std::ifstream &stream );
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectCopy( int src_obj, int dst_obj );
+    };
+
+    struct LookTowardCmp
+    {
+        int obj_id    = -1;
+        int target_id = -1;
+
+        size_t  serialize( std::ofstream &stream ) const;
+        size_t  deserialize( std::ifstream &stream );
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectCopy( int src_obj, int dst_obj );
+    };
+
 
     struct AnchorCmp
     {
@@ -40,9 +68,9 @@ namespace idk
 
         size_t  serialize( std::ofstream &stream ) const;
         size_t  deserialize( std::ifstream &stream );
-        void    onObjectAssignment( idk::EngineAPI &api, int obj_id );
-        void    onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-        void    onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj );
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectCopy( int src_obj, int dst_obj );
     };
 
     struct SmoothFollowCmp
@@ -53,16 +81,16 @@ namespace idk
 
         size_t  serialize( std::ofstream &stream ) const;
         size_t  deserialize( std::ifstream &stream );
-        void    onObjectAssignment( idk::EngineAPI &api, int obj_id );
-        void    onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-        void    onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj );
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectCopy( int src_obj, int dst_obj );
     };
 
 };
 
 
 
-class idk::TransformSys: public idk::ecs::System, public idk::LuaAPI
+class idk::TransformSys: public idk::ECS2::System
 {
 private:
 
@@ -92,7 +120,6 @@ private:
 public:
     virtual void        init   ( idk::EngineAPI & ) final;
     virtual void        update ( idk::EngineAPI & ) final;
-    virtual void        exposeToLua( lua_State *LS ) final;
 
     
     static idk::TransformCmp &getData( int obj_id );
@@ -101,8 +128,17 @@ public:
                                 float dAB, float dBC, const glm::vec3& );
 
     static void         FABRIK( const glm::vec3 &posA, glm::vec3 &posB, glm::vec3 &posC,
-                                const glm::vec3 &target_posC, const glm::vec3 &pole_target,
+                                const glm::vec3 &pole_target,
                                 float distAB, float distBC );
+
+    static void         FABRIK( std::vector<glm::vec3> &positions,
+                                const std::vector<float> &distances,
+                                const glm::vec3 &pole_target );
+
+    static void         FABRIK( int chain_length, int end_obj,
+                                const std::vector<float> &distances,
+                                const glm::vec3 &pole_target );
+
 
     static void         rotateX( int obj_id, float f );
     static void         rotateY( int obj_id, float f );
@@ -160,5 +196,3 @@ public:
     static void moveSurfaceFront ( int obj_id, float f );
     // -----------------------------------------------------------------------------------------
 };
-
-

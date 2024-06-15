@@ -64,7 +64,7 @@ namespace idk::ecs
     void EntityHierarchyFile_read( std::ifstream & );
 
     void ECSFile_write( std::ofstream &, const ECSFileHeader & );
-    void ECSFile_read( std::ifstream &, ECSFileHeader & );
+    void ECSFile_read( std::ifstream &FileHeader & );
 
 };
 

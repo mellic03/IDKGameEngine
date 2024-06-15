@@ -5,7 +5,6 @@
 #include <IDKGameEngine/IDKGameEngine.hpp>
 
 #include "../../external/include/idk_icons/idk_Icons.hpp"
-#include <libidk/idk_scripting.hpp>
 #include <libidk/idk_serialize.hpp>
 
 
@@ -22,36 +21,60 @@ namespace idk
         IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
         #undef IDK_STRUCT_MEMBERS
 
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
         {
-            this->obj_id = obj_id;
+            // this->obj_id = obj_id;
         };
 
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj ) {  };
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
+        static void onObjectCopy( int src_obj, int dst_obj ) {  };
 
     };
 
 
     struct DirlightCmp
     {
-        #define IDK_STRUCT_MEMBERS(X) \
-            X( int, obj_id,   -1 ) \
-            X( int, light_id, -1 ) \
-            X( glm::vec4, diffuse, glm::vec4(1.0f) ) \
-            X( glm::vec4, ambient, glm::vec4(0.1f) )
-    
-        IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
-        #undef IDK_STRUCT_MEMBERS
+        int obj_id   = -1;
+        int light_id = -1;
+        glm::vec4 diffuse = glm::vec4(1.0f);
+        glm::vec4 ambient = glm::vec4(0.1f);
 
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        size_t serialize( std::ofstream &stream ) const
         {
-            this->obj_id = obj_id;
-            light_id = api.getRenderer().createDirlight();
+            size_t n = 0;
+            n += idk::streamwrite(stream, obj_id);
+            n += idk::streamwrite(stream, diffuse);
+            n += idk::streamwrite(stream, ambient);
+            return n;
         };
 
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj ) {  };
+        size_t deserialize( std::ifstream &stream )
+        {
+            size_t n = 0;
+            n += idk::streamread(stream, obj_id);
+            n += idk::streamread(stream, diffuse);
+            n += idk::streamread(stream, ambient);
+        
+            light_id = -1;
+
+            return n;
+        };
+
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        {
+            auto &cmp = ECS2::getComponent<DirlightCmp>(obj_id);
+            cmp.light_id = api.getRenderer().createDirlight();
+        };
+
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+        {
+            
+        };
+
+        static void onObjectCopy( int src_obj, int dst_obj )
+        {
+            std::cout << "DirlightCmp::onObjectCopy\n";
+        };
 
     };
 
@@ -66,18 +89,19 @@ namespace idk
         IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
         #undef IDK_STRUCT_MEMBERS
 
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
         {
-            this->obj_id = obj_id;
-            light_id = api.getRenderer().createPointlight();
+            auto &cmp = ECS2::getComponent<PointlightCmp>(obj_id);
+            cmp.light_id = api.getRenderer().createPointlight();
         };
 
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
         {
-            api.getRenderer().destroyPointlight(light_id);
+            auto &cmp = ECS2::getComponent<PointlightCmp>(obj_id);
+            api.getRenderer().destroyPointlight(cmp.light_id);
         };
 
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj ) {  };
+        static void onObjectCopy( int src_obj, int dst_obj ) {  };
 
     };
 
@@ -93,90 +117,21 @@ namespace idk
         IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
         #undef IDK_STRUCT_MEMBERS
 
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
         {
-            this->obj_id = obj_id;
-            light_id = api.getRenderer().createSpotlight();
+            auto &cmp = ECS2::getComponent<SpotlightCmp>(obj_id);
+            cmp.light_id = api.getRenderer().createSpotlight();
         };
     
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj ) {  };
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+        {
+            auto &cmp = ECS2::getComponent<SpotlightCmp>(obj_id);
+            api.getRenderer().destroyPointlight(cmp.light_id);
+        };
+
+        static void onObjectCopy( int src_obj, int dst_obj ) {  };
 
     };
-
-
-    struct ScriptCmp
-    {
-        int         obj_id     = -1;
-        bool        enabled    = false;
-        lua_State  *L          = nullptr;
-        int         nparams    = -1;
-        int         subject_id = -1;
-        int         target_id  = -1;
-        int         dependency = -1;
-        int         retvalue   = -1;
-        std::string filepath   = "";
-
-
-        size_t serialize( std::ofstream &stream ) const
-        {
-            size_t n = 0;
-            n += idk::streamwrite(stream, obj_id);
-            n += idk::streamwrite(stream, enabled);
-            n += idk::streamwrite(stream, L);
-            n += idk::streamwrite(stream, nparams);
-            n += idk::streamwrite(stream, subject_id);
-            n += idk::streamwrite(stream, target_id);
-            n += idk::streamwrite(stream, dependency);
-            n += idk::streamwrite(stream, retvalue);
-            n += idk::streamwrite(stream, filepath);
-            return n;
-        };
-
-        size_t deserialize( std::ifstream &stream )
-        {
-            size_t n = 0;
-            n += idk::streamread(stream, obj_id);
-            n += idk::streamread(stream, enabled);
-            n += idk::streamread(stream, L);
-            n += idk::streamread(stream, nparams);
-            n += idk::streamread(stream, subject_id);
-            n += idk::streamread(stream, target_id);
-            n += idk::streamread(stream, dependency);
-            n += idk::streamread(stream, retvalue);
-            n += idk::streamread(stream, filepath);
-            return n;
-        };
-
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
-        {
-            this->obj_id = obj_id;
-            L = idk::LuaManager::newState();
-        };
-    
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
-        {
-            lua_close(L);
-        };
-
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
-        {
-            auto &src_cmp = api.getECS().getComponent<idk::ScriptCmp>(src_obj);
-            auto &dst_cmp = api.getECS().getComponent<idk::ScriptCmp>(dst_obj);
-
-            dst_cmp.obj_id      = src_cmp.obj_id;
-            dst_cmp.L           = idk::LuaManager::newState();
-            dst_cmp.nparams     = src_cmp.nparams;
-            dst_cmp.subject_id  = src_cmp.subject_id;
-            dst_cmp.target_id   = src_cmp.target_id;
-            dst_cmp.dependency  = src_cmp.dependency;
-            dst_cmp.retvalue    = src_cmp.retvalue;
-            dst_cmp.filepath    = src_cmp.filepath;
-        };
-
-    };
-
-    int ScriptCmp_getNumParams( idk::ScriptCmp & );
 
 
     struct ModelCmp
@@ -220,28 +175,37 @@ namespace idk
             n += idk::streamread(stream, shader_enabled);
             n += idk::streamread(stream, render_queue);
             n += idk::streamread(stream, shader_name);
+
+            model_id = -1;
+
             return n;
         };
 
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
         {
-            this->obj_id = obj_id;
+            ModelCmp &cmp = idk::ECS2::getComponent<ModelCmp>(obj_id);
+
+            if (cmp.model_id == -1 && cmp.filepath != "")
+            {
+                cmp.model_id = api.getRenderer().loadModel(cmp.filepath);
+            }
         };
 
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
         {
 
         };
 
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+        static void onObjectCopy( int src_obj, int dst_obj )
         {
-            ModelCmp &src = api.getECS().getComponent<ModelCmp>(src_obj);
+            ModelCmp &src = idk::ECS2::getComponent<ModelCmp>(src_obj);
+            ModelCmp &dst = idk::ECS2::getComponent<ModelCmp>(dst_obj);
             
-            model_id    = src.model_id;
-            visible     = src.visible;
-            shadowcast  = src.shadowcast;
-            viewspace   = src.viewspace;
-            filepath    = src.filepath;
+            dst.model_id    = src.model_id;
+            dst.visible     = src.visible;
+            dst.shadowcast  = src.shadowcast;
+            dst.viewspace   = src.viewspace;
+            dst.filepath    = src.filepath;
         };
 
     };
@@ -294,13 +258,13 @@ namespace idk
         };
 
 
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
         {
-            this->obj_id = obj_id;
+            // this->obj_id = obj_id;
         };
 
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj ) {  };
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
+        static void onObjectCopy( int src_obj, int dst_obj ) {  };
 
     };
 
@@ -336,16 +300,16 @@ namespace idk
             return n;
         };
 
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
         {
-            this->obj_id = obj_id;
+            // this->obj_id = obj_id;
         };
     
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
         {
         };
 
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+        static void onObjectCopy( int src_obj, int dst_obj )
         {
 
         };
@@ -361,13 +325,13 @@ namespace idk
         IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
         #undef IDK_STRUCT_MEMBERS
 
-        void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
         {
-            this->obj_id = obj_id;
+            // this->obj_id = obj_id;
         };
 
-        void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
-        void onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj ) {  };
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
+        static void onObjectCopy( int src_obj, int dst_obj ) {  };
 
     };
 

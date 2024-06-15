@@ -6,7 +6,7 @@
 
 
 static idk::EngineAPI *api_ptr;
-static idk::ecs::ECS &getECS() { return api_ptr->getECS(); }
+
 
 
 void
@@ -21,9 +21,9 @@ idk::PhysicsSys::init( idk::EngineAPI &api )
 void
 idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
 {
-    auto &ecs = api.getECS();
+    
 
-    for (auto &s_cmp: ecs.getComponentArray<idk::KinematicCapsuleCmp>())
+    for (auto &s_cmp: idk::ECS2::getComponentArray<idk::KinematicCapsuleCmp>())
     {
         if (s_cmp.enabled == false)
         {
@@ -33,7 +33,7 @@ idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
         s_cmp.curr_pos += s_cmp.force;
         s_cmp.force *= 0.0f;
 
-        for (auto &r_cmp: ecs.getComponentArray<idk::StaticRectCmp>())
+        for (auto &r_cmp: idk::ECS2::getComponentArray<idk::StaticRectCmp>())
         {
             kinematicCapsule_staticRect(dt, s_cmp, r_cmp);
         }
@@ -46,7 +46,6 @@ void
 idk::PhysicsSys::update( idk::EngineAPI &api )
 {
     auto  &ren  = api.getRenderer();
-    auto  &ecs  = api.getECS();
     float dt = api.getEngine().deltaTime();
 
     m_accumulator += dt;
@@ -54,7 +53,7 @@ idk::PhysicsSys::update( idk::EngineAPI &api )
 
     if (m_accumulator > step)
     {
-        for (auto &cmp: ecs.getComponentArray<idk::KinematicCapsuleCmp>())
+        for (auto &cmp: idk::ECS2::getComponentArray<idk::KinematicCapsuleCmp>())
         {
             cmp.prev_pos = cmp.curr_pos;
 
@@ -77,7 +76,7 @@ idk::PhysicsSys::update( idk::EngineAPI &api )
     }
 
 
-    for (auto &s_cmp: ecs.getComponentArray<idk::KinematicCapsuleCmp>())
+    for (auto &s_cmp: idk::ECS2::getComponentArray<idk::KinematicCapsuleCmp>())
     {
         float alpha = m_accumulator / step;
 
@@ -93,7 +92,7 @@ idk::PhysicsSys::update( idk::EngineAPI &api )
         }
     }
 
-    for (auto &r_cmp: ecs.getComponentArray<idk::StaticRectCmp>())
+    for (auto &r_cmp: idk::ECS2::getComponentArray<idk::StaticRectCmp>())
     {
         if (r_cmp.visualise)
         {
@@ -109,19 +108,19 @@ void
 idk::PhysicsSys::addForce( int obj_id, const glm::vec3 &force )
 {
     float dt = api_ptr->getEngine().deltaTime();
-    getECS().getComponent<KinematicCapsuleCmp>(obj_id).force += dt*force;
+    idk::ECS2::getComponent<KinematicCapsuleCmp>(obj_id).force += dt*force;
 }
 
 
 bool
 idk::PhysicsSys::raycast( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit )
 {
-    auto &ecs = getECS();
+    
 
     float nearest_dist = INFINITY;
     glm::vec3 nearest_hit = glm::vec3(0.0f);
 
-    for (auto &r_cmp: ecs.getComponentArray<idk::StaticRectCmp>())
+    for (auto &r_cmp: idk::ECS2::getComponentArray<idk::StaticRectCmp>())
     {
         glm::mat4 M = TransformSys::getModelMatrix(r_cmp.obj_id);
         glm::mat4 R = glm::mat4_cast(TransformSys::getData(r_cmp.obj_id).rotation);
@@ -218,7 +217,7 @@ idk::PhysicsSys::kinematicCapsule_staticRect( float timestep, KinematicCapsuleCm
         s_cmp.airtime += timestep;
     }
 
-    s_cmp.grounded = (s_cmp.airtime < 0.4f);
+    s_cmp.grounded = (s_cmp.airtime < 1.0f / 30.0f);
 
 }
 
@@ -254,21 +253,21 @@ idk::PhysicsCmp::deserialize( std::ifstream &stream )
 void
 idk::PhysicsCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = obj_id;
+    // this->obj_id = obj_id;
 };
 
 
 void
 idk::PhysicsCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = -1;
+    // this->obj_id = -1;
 };
 
 
 void
-idk::PhysicsCmp::onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+idk::PhysicsCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    // auto &src = api.getECS().getComponent<TransformCmp>(src_obj);
+    // auto &src = idk::ECS2::getComponent<TransformCmp>(src_obj);
 
     // *this = src;
     // this->obj_id = dst_obj;
@@ -301,22 +300,22 @@ idk::StaticRectCmp::deserialize( std::ifstream &stream )
 void
 idk::StaticRectCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = obj_id;
+    // this->obj_id = obj_id;
 };
 
 
 void
 idk::StaticRectCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = -1;
+    // this->obj_id = -1;
 };
 
 
 void
-idk::StaticRectCmp::onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+idk::StaticRectCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = api.getECS().getComponent<KinematicRectCmp>(src_obj);
-    auto &dst = api.getECS().getComponent<KinematicRectCmp>(dst_obj);
+    auto &src = idk::ECS2::getComponent<KinematicRectCmp>(src_obj);
+    auto &dst = idk::ECS2::getComponent<KinematicRectCmp>(dst_obj);
     dst.visualise = src.visualise;
 };
 
@@ -347,22 +346,22 @@ idk::KinematicRectCmp::deserialize( std::ifstream &stream )
 void
 idk::KinematicRectCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = obj_id;
+
 };
 
 
 void
 idk::KinematicRectCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = -1;
+
 };
 
 
 void
-idk::KinematicRectCmp::onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+idk::KinematicRectCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = api.getECS().getComponent<KinematicRectCmp>(src_obj);
-    auto &dst = api.getECS().getComponent<KinematicRectCmp>(dst_obj);
+    auto &src = idk::ECS2::getComponent<KinematicRectCmp>(src_obj);
+    auto &dst = idk::ECS2::getComponent<KinematicRectCmp>(dst_obj);
     dst.visualise = src.visualise;
 };
 
@@ -377,6 +376,8 @@ idk::KinematicCapsuleCmp::serialize( std::ofstream &stream ) const
     n += idk::streamwrite(stream, obj_id);
     n += idk::streamwrite(stream, enabled);
     n += idk::streamwrite(stream, visualise);
+    n += idk::streamwrite(stream, curr_pos);
+    n += idk::streamwrite(stream, prev_pos);
     n += idk::streamwrite(stream, radius);
     n += idk::streamwrite(stream, bottom);
     n += idk::streamwrite(stream, top);
@@ -391,6 +392,8 @@ idk::KinematicCapsuleCmp::deserialize( std::ifstream &stream )
     n += idk::streamread(stream, obj_id);
     n += idk::streamread(stream, enabled);
     n += idk::streamread(stream, visualise);
+    n += idk::streamread(stream, curr_pos);
+    n += idk::streamread(stream, prev_pos);
     n += idk::streamread(stream, radius);
     n += idk::streamread(stream, bottom);
     n += idk::streamread(stream, top);
@@ -401,24 +404,24 @@ idk::KinematicCapsuleCmp::deserialize( std::ifstream &stream )
 void
 idk::KinematicCapsuleCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = obj_id;
-    curr_pos = TransformSys::getPositionWorldspace(obj_id);
-    prev_pos = curr_pos;
+    auto &cmp = idk::ECS2::getComponent<KinematicCapsuleCmp>(obj_id);
+    cmp.curr_pos = TransformSys::getPositionWorldspace(obj_id);
+    cmp.prev_pos = cmp.curr_pos;
 };
 
 
 void
 idk::KinematicCapsuleCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-    this->obj_id = -1;
+    // this->obj_id = -1;
 };
 
 
 void
-idk::KinematicCapsuleCmp::onObjectCopy( idk::EngineAPI &api, int src_obj, int dst_obj )
+idk::KinematicCapsuleCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = api.getECS().getComponent<KinematicCapsuleCmp>(src_obj);
-    auto &dst = api.getECS().getComponent<KinematicCapsuleCmp>(dst_obj);
+    auto &src = idk::ECS2::getComponent<KinematicCapsuleCmp>(src_obj);
+    auto &dst = idk::ECS2::getComponent<KinematicCapsuleCmp>(dst_obj);
     dst.visualise = src.visualise;
 };
 

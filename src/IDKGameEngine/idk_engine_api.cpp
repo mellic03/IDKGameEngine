@@ -19,8 +19,10 @@ idk::EngineAPI::init( const std::string &windowname, int gl_major, int gl_minor 
 
     eventsys_ptr   = new idk::EventSystem();
     audiosys_ptr   = new idk::AudioSystem();
-    ecs_ptr        = new idk::ecs::ECS(*this);
+    // ecs_ptr        = new idk::ecs::ECS(*this);
     engine_ptr     = new idk::Engine();
     renderer_ptr   = new idk::RenderEngine(m_name, 1920, 1080, gl_major, gl_minor);
     threadpool_ptr = new idk::ThreadPool();
 };
+
+

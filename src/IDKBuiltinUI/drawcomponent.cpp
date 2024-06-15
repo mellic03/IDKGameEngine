@@ -1,22 +1,11 @@
-#include "EditorUI.hpp"
-
-#include "../../external/include/idk_icons/idk_Icons.hpp"
-#include "../../external/include/idk_imgui/imgui.hpp"
-#include "../IDKBuiltinUI/common/idk_imgui_extra.hpp"
-
-#include <filesystem>
-namespace fs = std::filesystem;
-
-
-#include <typeindex>
-
+#include "drawcomponent.hpp"
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
+idk::ECS2::userCallback<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
+    
 
     auto &data   = idk::TransformSys::getData(obj_id);
 
@@ -83,47 +72,72 @@ EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
 }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
+
+
+void drag_drop_thing( std::string label, const std::string &payloadname, int &obj_id )
 {
-    auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::AnchorCmp>(obj_id);
+    label = label + " " + std::string(ICON_FA_DOWNLOAD);
 
-
-    for (int i=0; i<cmp.anchor_ids.size(); i++)
+    if (obj_id != -1)
     {
-        std::string label = "Anchor Distance " + std::to_string(i) + ICON_FA_DOWNLOAD;
-        ImGui::DragFloat(label.c_str(), &cmp.distances[i], 0.05f, 0.1f, 5.0f);
-
-        label = "Anchor Object " + std::to_string(i) + ICON_FA_DOWNLOAD;
-
-        if (cmp.anchor_ids[i] != -1)
+        if (idk::ECS2::gameObjectExists(obj_id))
         {
-            if (ecs.gameObjectExists(cmp.anchor_ids[i]))
-            {
-                label = ecs.getGameObjectName(cmp.anchor_ids[i]) + " " + std::to_string(i);
-            }
-
-            else
-            {
-                cmp.anchor_ids[i] = -1;
-            }
+            label = idk::ECS2::getGameObjectName(obj_id);
         }
 
-        ImGui::ButtonEx(label.c_str(), ImVec2(250, 50), ImGuiButtonFlags_None);
-
-        if (ImGui::BeginDragDropTarget())
+        else
         {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
-            {
-                IM_ASSERT(payload->DataSize == sizeof(int));
-                cmp.anchor_ids[i] = *reinterpret_cast<int *>(payload->Data);
-            }
-            ImGui::EndDragDropTarget();
+            obj_id = -1;
         }
     }
+
+    ImGui::ButtonEx(label.c_str(), ImVec2(250, 50), ImGuiButtonFlags_None);
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+        {
+            IM_ASSERT(payload->DataSize == sizeof(int));
+            obj_id = *reinterpret_cast<int *>(payload->Data);
+        }
+        ImGui::EndDragDropTarget();
+    }
+}
+
+
+
+
+
+template <>
+void
+idk::ECS2::userCallback<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &cmp    = idk::ECS2::getComponent<idk::AnchorCmp>(obj_id);
+
+    // drag_drop_thing("Anchor Distance", "SCENE_HIERARCHY", cmp.anchor_ids[0]);
+}
+
+
+template <>
+void
+idk::ECS2::userCallback<idk::ParticleCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &cmp    = idk::ECS2::getComponent<idk::ParticleCmp>(obj_id);
+    auto &desc   = cmp.desc;
+
+    drag_drop_thing("Source Object", "SCENE_HIERARCHY", cmp.src_id);
+
+    ImGui::InputInt("Particles", &desc.count);
+    ImGui::InputFloat("Duration", &desc.duration);
+    ImGui::InputFloat("Scale", &desc.scale);
+
+    ImGui::Separator();
+
+    ImGui::InputFloat3("Velocity", &(desc.velocity[0]));
+    ImGui::InputFloat3("Velocity bias", &(desc.velocity_bias[0]));
+    ImGui::InputFloat3("Velocity randomness", &(desc.velocity_randomness[0]));
 
 }
 
@@ -131,27 +145,50 @@ EditorUI_MD::drawComponent<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::SmoothFollowCmp>( idk::EngineAPI &api, int obj_id )
+idk::ECS2::userCallback<idk::SmoothFollowCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::SmoothFollowCmp>(obj_id);
+    auto &cmp    = idk::ECS2::getComponent<idk::SmoothFollowCmp>(obj_id);
 
-    ImGui::InputInt("Anchor ID", &cmp.anchor_id);
+    drag_drop_thing("Anchor ID", "SCENE_HIERARCHY", cmp.anchor_id);
     ImGui::DragFloat("Speed", &cmp.speed, 0.05f, 1.0f, 0.01f);
 
 }
 
 
 
+template <>
+void
+idk::ECS2::userCallback<idk::IKCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &cmp    = idk::ECS2::getComponent<idk::IKCmp>(obj_id);
+
+    drag_drop_thing("Pole Target", "SCENE_HIERARCHY", cmp.pole_target);
+}
+
+
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
+idk::ECS2::userCallback<idk::LookTowardCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &cmp    = idk::ECS2::getComponent<idk::LookTowardCmp>(obj_id);
+
+    drag_drop_thing("Target", "SCENE_HIERARCHY", cmp.target_id);
+}
+
+
+
+
+template <>
+void
+idk::ECS2::userCallback<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::CameraCmp>(obj_id);
+    
+    auto &cmp = idk::ECS2::getComponent<idk::CameraCmp>(obj_id);
 
     ImGui::DragFloat("Bloom", &cmp.bloom, 0.01f, 0.0f, 1.0f);
     ImGui::DragFloat("FOV",   &cmp.fov,   0.1f, 60.0f, 120.0f);
@@ -186,70 +223,70 @@ EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
 }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::SunCmp>( idk::EngineAPI &api, int obj_id )
-{
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::SunCmp>( idk::EngineAPI &api, int obj_id )
+// {
 
-}
-
-
-template <>
-void
-EditorUI_MD::drawComponent<idk::PlanetCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::PlanetCmp>(obj_id);
-
-    ImGui::DragFloat("Gravity", &cmp.gravity, 0.01f, 0.1f, 10.0f);
-    ImGui::DragFloat("SOI",     &cmp.SOI,     0.1f, 128.0f);
-
-    ImGui::Separator();
-
-    ImGui::DragFloat3("Orbital Origin", &cmp.orbital_origin[0], 1.0f, 100.0f, 10000.0f);
-    ImGui::DragFloat3("Orbital Radii",  &cmp.orbital_radii[0], 1.0f, 100.0f, 10000.0f);
-    ImGui::DragFloat3("Orbital Speed",  &cmp.orbital_speed[0], 0.01f, -1.0f, 1.0f);
-
-}
+// }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::PlanetActorCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::PlanetActorCmp>(obj_id);
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::PlanetCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &ren = api.getRenderer();
+    
+//     auto &cmp = idk::ECS2::getComponent<idk::PlanetCmp>(obj_id);
 
-    ImGui::Checkbox("Enabled", &cmp.enabled);
+//     ImGui::DragFloat("Gravity", &cmp.gravity, 0.01f, 0.1f, 10.0f);
+//     ImGui::DragFloat("SOI",     &cmp.SOI,     0.1f, 128.0f);
 
-}
+//     ImGui::Separator();
+
+//     ImGui::DragFloat3("Orbital Origin", &cmp.orbital_origin[0], 1.0f, 100.0f, 10000.0f);
+//     ImGui::DragFloat3("Orbital Radii",  &cmp.orbital_radii[0], 1.0f, 100.0f, 10000.0f);
+//     ImGui::DragFloat3("Orbital Speed",  &cmp.orbital_speed[0], 0.01f, -1.0f, 1.0f);
+
+// }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::AtmosphereCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::AtmosphereCmp>(obj_id);
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::PlanetActorCmp>( idk::EngineAPI &api, int obj_id )
+// {
+    
+//     auto &cmp = idk::ECS2::getComponent<idk::PlanetActorCmp>(obj_id);
 
-    if (cmp.atmosphere_id == -1)
-    {
-        return;
-    }
+//     ImGui::Checkbox("Enabled", &cmp.enabled);
 
-    ImGui::DragFloat("Sea Level", &cmp.sealevel, 10.0f, 200.0f);
+// }
 
-    ImGui::InputFloat("Lambda R",        &cmp.wavelengths[0]);
-    ImGui::InputFloat("Lambda G",        &cmp.wavelengths[1]);
-    ImGui::InputFloat("Lambda B",        &cmp.wavelengths[2]);
-    ImGui::DragFloat("Radius",           &cmp.radius,            0.1f,  10.0f);
-    ImGui::DragFloat("Density Falloff",  &cmp.density_falloff,   0.01f, 0.5f);
-    ImGui::DragFloat("Scatter Strength", &cmp.scatter_strength,  0.01f, 0.1f);
-    ImGui::DragFloat("Atmosphere Scale", &cmp.atmosphere_scale,  0.01f, 1.1f);
 
-}
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::AtmosphereCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &ren = api.getRenderer();
+    
+//     auto &cmp = idk::ECS2::getComponent<idk::AtmosphereCmp>(obj_id);
+
+//     if (cmp.atmosphere_id == -1)
+//     {
+//         return;
+//     }
+
+//     ImGui::DragFloat("Sea Level", &cmp.sealevel, 10.0f, 200.0f);
+
+//     ImGui::InputFloat("Lambda R",        &cmp.wavelengths[0]);
+//     ImGui::InputFloat("Lambda G",        &cmp.wavelengths[1]);
+//     ImGui::InputFloat("Lambda B",        &cmp.wavelengths[2]);
+//     ImGui::DragFloat("Radius",           &cmp.radius,            0.1f,  10.0f);
+//     ImGui::DragFloat("Density Falloff",  &cmp.density_falloff,   0.01f, 0.5f);
+//     ImGui::DragFloat("Scatter Strength", &cmp.scatter_strength,  0.01f, 0.1f);
+//     ImGui::DragFloat("Atmosphere Scale", &cmp.atmosphere_scale,  0.01f, 1.1f);
+
+// }
 
 
 
@@ -258,8 +295,8 @@ void
 EditorUI_MD::drawComponent<idk::SpotlightCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::SpotlightCmp>(obj_id);
+    
+    auto &cmp = idk::ECS2::getComponent<idk::SpotlightCmp>(obj_id);
 
     if (cmp.light_id == -1)
     {
@@ -281,8 +318,8 @@ void
 EditorUI_MD::drawComponent<idk::DirlightCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::DirlightCmp>(obj_id);
+    
+    auto &cmp = idk::ECS2::getComponent<idk::DirlightCmp>(obj_id);
 
     if (cmp.light_id == -1)
     {
@@ -301,8 +338,8 @@ void
 EditorUI_MD::drawComponent<idk::PointlightCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::PointlightCmp>(obj_id);
+    
+    auto &cmp = idk::ECS2::getComponent<idk::PointlightCmp>(obj_id);
 
     if (cmp.light_id == -1)
     {
@@ -322,8 +359,8 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, int obj_id )
 {
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
+    
+    auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
 
 
     ImGui::Text("Model ID: %d", cmp.model_id);
@@ -360,11 +397,65 @@ EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, int obj_id )
 
 
 
+
+
+void drag_drop_texture( std::string label, const std::string &payloadname, std::string &texture )
+{
+    label = label + " " + std::string(ICON_FA_DOWNLOAD);
+
+    if (texture != "")
+    {
+        label = texture;
+    }
+
+    ImGui::ButtonEx(label.c_str(), ImVec2(250, 50), ImGuiButtonFlags_None);
+
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_DRAG_DROP"))
+        {
+            std::string filepath(reinterpret_cast<char *>(payload->Data));
+            texture = filepath;
+        }
+        ImGui::EndDragDropTarget();
+    }
+}
+
+
+
+
+template <>
+void
+EditorUI_MD::drawComponent<idk::StaticHeightmapCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &cmp = idk::ECS2::getComponent<idk::StaticHeightmapCmp>(obj_id);
+
+    ImGui::Text("Model ID: %d", cmp.model);
+    ImGui::Separator();
+
+    // Model drag-drop
+    // -----------------------------------------------------------------------------------------
+    if (cmp.textures.back() != "")
+    {
+        cmp.textures.push_back("");
+    }
+
+    for (int i=0; i<cmp.textures.size(); i++)
+    {
+        drag_drop_texture("Texture", "ASSET_BROWSER_DRAG_DROP", cmp.textures[i]);
+    }
+    // -----------------------------------------------------------------------------------------
+
+
+}
+
+
+
 template <>
 void
 EditorUI_MD::drawComponent<idk::IconCmp>( idk::EngineAPI &api, int obj_id )
 {
-    auto &data = api.getECS().getComponent<idk::IconCmp>(obj_id);
+    auto &data = idk::ECS2::getComponent<idk::IconCmp>(obj_id);
     std::string icon = std::string(data.icon);
 
     size_t NUM_COLS = size_t(ImGui::GetWindowWidth() / ImGui::GetFontSize()) / 2;
@@ -401,131 +492,131 @@ EditorUI_MD::drawComponent<idk::IconCmp>( idk::EngineAPI &api, int obj_id )
 }
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::ScriptCmp>(obj_id);
-    float width  = ImGui::GetWindowWidth() / 2.0f;
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &engine = api.getEngine();
+    
+//     auto &cmp    = idk::ECS2::getComponent<idk::ScriptCmp>(obj_id);
+//     float width  = ImGui::GetWindowWidth() / 2.0f;
 
-    ImGui::Checkbox("Enable", &cmp.enabled);
+//     ImGui::Checkbox("Enable", &cmp.enabled);
 
-    // Script drag-drop
-    // -----------------------------------------------------------------------------------------
-    std::string label = "Script " ICON_FA_DOWNLOAD;
-    std::string &filepath = cmp.filepath;
+//     // Script drag-drop
+//     // -----------------------------------------------------------------------------------------
+//     std::string label = "Script " ICON_FA_DOWNLOAD;
+//     std::string &filepath = cmp.filepath;
 
-    if (filepath != "")
-    {
-        std::string filename = fs::path(filepath).stem();
-        label = filename;
-    }
+//     if (filepath != "")
+//     {
+//         std::string filename = fs::path(filepath).stem();
+//         label = filename;
+//     }
 
-    ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
+//     ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
 
-    if (ImGui::BeginDragDropTarget())
-    {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCRIPT_DRAG_DROP"))
-        {
-            cmp.filepath = std::string((char *)(payload->Data));
-            cmp.nparams = idk::ScriptCmp_getNumParams(cmp);
-        }
-        ImGui::EndDragDropTarget();
-    }
-    // -----------------------------------------------------------------------------------------
+//     if (ImGui::BeginDragDropTarget())
+//     {
+//         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCRIPT_DRAG_DROP"))
+//         {
+//             cmp.filepath = std::string((char *)(payload->Data));
+//             cmp.nparams = idk::ScriptCmp_getNumParams(cmp);
+//         }
+//         ImGui::EndDragDropTarget();
+//     }
+//     // -----------------------------------------------------------------------------------------
 
-    if (cmp.nparams == 1)
-    {
-        width *= 2.0f;
-    }
+//     if (cmp.nparams == 1)
+//     {
+//         width *= 2.0f;
+//     }
 
-    if (cmp.nparams >= 1)
-    {
-        // Subject drag-drop
-        // -----------------------------------------------------------------------------------------
-        label = "Subject " ICON_FA_DOWNLOAD;
+//     if (cmp.nparams >= 1)
+//     {
+//         // Subject drag-drop
+//         // -----------------------------------------------------------------------------------------
+//         label = "Subject " ICON_FA_DOWNLOAD;
 
-        if (cmp.subject_id != -1)
-        {
-            if (ecs.gameObjectExists(cmp.subject_id))
-            {
-                label = ecs.getGameObjectName(cmp.subject_id);
-            }
+//         if (cmp.subject_id != -1)
+//         {
+//             if (idk::ECS2::gameObjectExists(cmp.subject_id))
+//             {
+//                 label = idk::ECS2::getGameObjectName(cmp.subject_id);
+//             }
 
-            else
-            {
-                cmp.subject_id = -1;
-            }
-        }
+//             else
+//             {
+//                 cmp.subject_id = -1;
+//             }
+//         }
 
-        ImGui::ButtonEx(label.c_str(), ImVec2(width, 50), ImGuiButtonFlags_None);
+//         ImGui::ButtonEx(label.c_str(), ImVec2(width, 50), ImGuiButtonFlags_None);
 
-        if (ImGui::BeginDragDropTarget())
-        {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
-            {
-                IM_ASSERT(payload->DataSize == sizeof(int));
-                cmp.subject_id = *reinterpret_cast<int *>(payload->Data);
-            }
-            ImGui::EndDragDropTarget();
-        }
-        // -----------------------------------------------------------------------------------------
-    }
-
-
-    if (cmp.nparams == 2)
-    {
-        ImGui::SameLine();
-
-        // Target drag-drop
-        // -----------------------------------------------------------------------------------------
-        label = "Target " ICON_FA_DOWNLOAD;
-        if (cmp.target_id != -1)
-        {
-            label = ecs.getGameObjectName(cmp.target_id);
-        }
-
-        ImGui::ButtonEx(label.c_str(), ImVec2(width, 50), ImGuiButtonFlags_None);
-
-        if (ImGui::BeginDragDropTarget())
-        {
-            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
-            {
-                IM_ASSERT(payload->DataSize == sizeof(int));
-                cmp.target_id = *reinterpret_cast<int *>(payload->Data);
-            }
-            ImGui::EndDragDropTarget();
-        }
-        // -----------------------------------------------------------------------------------------
-    }
+//         if (ImGui::BeginDragDropTarget())
+//         {
+//             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+//             {
+//                 IM_ASSERT(payload->DataSize == sizeof(int));
+//                 cmp.subject_id = *reinterpret_cast<int *>(payload->Data);
+//             }
+//             ImGui::EndDragDropTarget();
+//         }
+//         // -----------------------------------------------------------------------------------------
+//     }
 
 
-    // Target drag-drop
-    // -----------------------------------------------------------------------------------------
-    label = "Depends on " ICON_FA_DOWNLOAD;
-    if (cmp.dependency != -1)
-    {
-        label = std::string("Depends on ") + ecs.getGameObjectName(cmp.target_id);
-    }
+//     if (cmp.nparams == 2)
+//     {
+//         ImGui::SameLine();
 
-    ImGui::ButtonEx(label.c_str(), ImVec2(width, 50), ImGuiButtonFlags_None);
+//         // Target drag-drop
+//         // -----------------------------------------------------------------------------------------
+//         label = "Target " ICON_FA_DOWNLOAD;
+//         if (cmp.target_id != -1)
+//         {
+//             label = idk::ECS2::getGameObjectName(cmp.target_id);
+//         }
 
-    if (ImGui::BeginDragDropTarget())
-    {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
-        {
-            IM_ASSERT(payload->DataSize == sizeof(int));
-            cmp.dependency = *reinterpret_cast<int *>(payload->Data);
-        }
-        ImGui::EndDragDropTarget();
-    }
-    // -----------------------------------------------------------------------------------------
+//         ImGui::ButtonEx(label.c_str(), ImVec2(width, 50), ImGuiButtonFlags_None);
+
+//         if (ImGui::BeginDragDropTarget())
+//         {
+//             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+//             {
+//                 IM_ASSERT(payload->DataSize == sizeof(int));
+//                 cmp.target_id = *reinterpret_cast<int *>(payload->Data);
+//             }
+//             ImGui::EndDragDropTarget();
+//         }
+//         // -----------------------------------------------------------------------------------------
+//     }
 
 
-    // ImGui::PopStyleColor();
-}
+//     // Target drag-drop
+//     // -----------------------------------------------------------------------------------------
+//     label = "Depends on " ICON_FA_DOWNLOAD;
+//     if (cmp.dependency != -1)
+//     {
+//         label = std::string("Depends on ") + idk::ECS2::getGameObjectName(cmp.target_id);
+//     }
+
+//     ImGui::ButtonEx(label.c_str(), ImVec2(width, 50), ImGuiButtonFlags_None);
+
+//     if (ImGui::BeginDragDropTarget())
+//     {
+//         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+//         {
+//             IM_ASSERT(payload->DataSize == sizeof(int));
+//             cmp.dependency = *reinterpret_cast<int *>(payload->Data);
+//         }
+//         ImGui::EndDragDropTarget();
+//     }
+//     // -----------------------------------------------------------------------------------------
+
+
+//     // ImGui::PopStyleColor();
+// }
 
 
 
@@ -534,7 +625,7 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::AudioEmitterCmp>( idk::EngineAPI &api, int obj_id )
 {
-    std::string label = api.getECS().getComponent<idk::AudioEmitterCmp>(obj_id).filepath;
+    std::string label = idk::ECS2::getComponent<idk::AudioEmitterCmp>(obj_id).filepath;
 
     if (label == "")
     {
@@ -570,184 +661,89 @@ EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, int obj_
 
 
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::ProgressionEventCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::ProgressionEventCmp>(obj_id);
-    float width  = ImGui::GetWindowWidth() / 2.0f;
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::ProgressionEventCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &engine = api.getEngine();
+    
+//     auto &cmp    = idk::ECS2::getComponent<idk::ProgressionEventCmp>(obj_id);
+//     float width  = ImGui::GetWindowWidth() / 2.0f;
 
-    int value = int(cmp.prereq_progress);
-    ImGui::InputInt("Prerequisite progress", &value);
-    cmp.prereq_progress = uint32_t(value);
-
-
-    // Script drag-drop
-    // -----------------------------------------------------------------------------------------
-    std::string label = "Script " ICON_FA_DOWNLOAD;
-
-    if (cmp.script_id != -1)
-    {
-        label = ecs.getComponent<idk::ScriptCmp>(cmp.script_id).filepath;
-    }
-
-    ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
-
-    if (ImGui::BeginDragDropTarget())
-    {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
-        {
-            IM_ASSERT(payload->DataSize == sizeof(int));
-            cmp.script_id = *reinterpret_cast<int *>(payload->Data);
-        }
-        ImGui::EndDragDropTarget();
-    }
-    // -----------------------------------------------------------------------------------------
+//     int value = int(cmp.prereq_progress);
+//     ImGui::InputInt("Prerequisite progress", &value);
+//     cmp.prereq_progress = uint32_t(value);
 
 
-    // State drag-drop
-    // -----------------------------------------------------------------------------------------
-    label = "State " ICON_FA_DOWNLOAD;
-    if (cmp.state_id != -1)
-    {
-        label = ecs.getGameObjectName(cmp.state_id);
-    }
+//     // Script drag-drop
+//     // -----------------------------------------------------------------------------------------
+//     std::string label = "Script " ICON_FA_DOWNLOAD;
 
-    ImGui::ButtonEx(label.c_str(), ImVec2(width, 50), ImGuiButtonFlags_None);
+//     if (cmp.script_id != -1)
+//     {
+//         label = idk::ECS2::getComponent<idk::ScriptCmp>(cmp.script_id).filepath;
+//     }
 
-    if (ImGui::BeginDragDropTarget())
-    {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
-        {
-            IM_ASSERT(payload->DataSize == sizeof(int));
-            cmp.state_id = *reinterpret_cast<int *>(payload->Data);
-        }
-        ImGui::EndDragDropTarget();
-    }
-    // -----------------------------------------------------------------------------------------
+//     ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
 
-}
-
-
-template <>
-void
-EditorUI_MD::drawComponent<idk::ProgressionStateCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &cmp = api.getECS().getComponent<idk::ProgressionStateCmp>(obj_id);
-    int value = int(cmp.progress);
-    ImGui::InputInt("Progression State", &value);
-    cmp.progress = uint32_t(value);
-
-    for (int i=0; i<16; i++)
-    {
-        value = int(cmp.states[i]);
-        std::string label = "State " + std::to_string(i);
-        ImGui::InputInt(label.c_str(), &value);
-        cmp.states[i] = uint32_t(value);
-    }
-
-}
+//     if (ImGui::BeginDragDropTarget())
+//     {
+//         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+//         {
+//             IM_ASSERT(payload->DataSize == sizeof(int));
+//             cmp.script_id = *reinterpret_cast<int *>(payload->Data);
+//         }
+//         ImGui::EndDragDropTarget();
+//     }
+//     // -----------------------------------------------------------------------------------------
 
 
+//     // State drag-drop
+//     // -----------------------------------------------------------------------------------------
+//     label = "State " ICON_FA_DOWNLOAD;
+//     if (cmp.state_id != -1)
+//     {
+//         label = idk::ECS2::getGameObjectName(cmp.state_id);
+//     }
+
+//     ImGui::ButtonEx(label.c_str(), ImVec2(width, 50), ImGuiButtonFlags_None);
+
+//     if (ImGui::BeginDragDropTarget())
+//     {
+//         if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
+//         {
+//             IM_ASSERT(payload->DataSize == sizeof(int));
+//             cmp.state_id = *reinterpret_cast<int *>(payload->Data);
+//         }
+//         ImGui::EndDragDropTarget();
+//     }
+//     // -----------------------------------------------------------------------------------------
+
+// }
 
 
+// template <>
+// void
+// EditorUI_MD::drawComponent<idk::ProgressionStateCmp>( idk::EngineAPI &api, int obj_id )
+// {
+//     auto &cmp = idk::ECS2::getComponent<idk::ProgressionStateCmp>(obj_id);
+//     int value = int(cmp.progress);
+//     ImGui::InputInt("Progression State", &value);
+//     cmp.progress = uint32_t(value);
 
-template <>
-void
-EditorUI_MD::drawComponent<idk::PlayerControllerCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &cmp = api.getECS().getComponent<idk::PlayerControllerCmp>(obj_id);
+//     for (int i=0; i<16; i++)
+//     {
+//         value = int(cmp.states[i]);
+//         std::string label = "State " + std::to_string(i);
+//         ImGui::InputInt(label.c_str(), &value);
+//         cmp.states[i] = uint32_t(value);
+//     }
 
-    ImGui::DragFloat("Walk speed", &cmp.walk_speed, 0.0f, 16.0f);
-    ImGui::DragFloat("Run speed",  &cmp.run_speed,  0.0f, 16.0f);
-    ImGui::DragFloat("Jump force", &cmp.jump_force, 0.0f, 16.0f);
-}
-
-
-
-void drag_drop_thing( idk::ecs::ECS &ecs, std::string label, const std::string &payloadname, int &obj_id )
-{
-    label = label + " " + std::string(ICON_FA_DOWNLOAD);
-
-    if (obj_id != -1)
-    {
-        if (ecs.gameObjectExists(obj_id))
-        {
-            label = ecs.getGameObjectName(obj_id);
-        }
-
-        else
-        {
-            obj_id = -1;
-        }
-    }
-
-    ImGui::ButtonEx(label.c_str(), ImVec2(250, 50), ImGuiButtonFlags_None);
-
-    if (ImGui::BeginDragDropTarget())
-    {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
-        {
-            IM_ASSERT(payload->DataSize == sizeof(int));
-            obj_id = *reinterpret_cast<int *>(payload->Data);
-        }
-        ImGui::EndDragDropTarget();
-    }
-}
+// }
 
 
 
 
-
-template <>
-void
-EditorUI_MD::drawComponent<idk::ArmCmp>( idk::EngineAPI &api, int obj_id )
-{
-    auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::ArmCmp>(obj_id);
-
-    ImGui::Checkbox("is left", &cmp.is_left);
-    ImGui::DragFloat("stride", &cmp.stride,      0.5f, 5.0f);
-    ImGui::DragFloat("speed",  &cmp.step_speed,  2.0f, 16.0f);
-    ImGui::DragFloat("height", &cmp.step_height, 0.1f, 1.0f);
-    ImGui::DragFloat("distAB", &cmp.distAB,      0.1f, 1.0f);
-    ImGui::DragFloat("distBC", &cmp.distBC,      0.1f, 1.0f);
-
-    drag_drop_thing(ecs, "Partner Limb", "SCENE_HIERARCHY", cmp.partner_id);
-    drag_drop_thing(ecs, "Rest Target",  "SCENE_HIERARCHY", cmp.rest_target);
-    drag_drop_thing(ecs, "Ray Target",   "SCENE_HIERARCHY", cmp.ray_target);
-    drag_drop_thing(ecs, "Pole Target",  "SCENE_HIERARCHY", cmp.pole_target);
-
-    // std::string label = "Pole Target " ICON_FA_DOWNLOAD;
-
-    // if (cmp.pole_target != -1)
-    // {
-    //     if (ecs.gameObjectExists(cmp.pole_target))
-    //     {
-    //         label = ecs.getGameObjectName(cmp.pole_target);
-    //     }
-
-    //     else
-    //     {
-    //         cmp.pole_target = -1;
-    //     }
-    // }
-
-    // ImGui::ButtonEx(label.c_str(), ImVec2(250, 50), ImGuiButtonFlags_None);
-
-    // if (ImGui::BeginDragDropTarget())
-    // {
-    //     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
-    //     {
-    //         IM_ASSERT(payload->DataSize == sizeof(int));
-    //         cmp.pole_target = *reinterpret_cast<int *>(payload->Data);
-    //     }
-    //     ImGui::EndDragDropTarget();
-    // }
-
-}
 
 
 
@@ -756,8 +752,8 @@ void
 EditorUI_MD::drawComponent<idk::PhysicsCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::PhysicsCmp>(obj_id);
+    
+    auto &cmp    = idk::ECS2::getComponent<idk::PhysicsCmp>(obj_id);
 
     ImGui::InputFloat3("Linear",  &cmp.linear[0], "%0.2f");
     ImGui::InputFloat3("Angular", &cmp.angular[0], "%0.2f");
@@ -769,8 +765,8 @@ void
 EditorUI_MD::drawComponent<idk::KinematicRectCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::KinematicRectCmp>(obj_id);
+    
+    auto &cmp    = idk::ECS2::getComponent<idk::KinematicRectCmp>(obj_id);
 
     ImGui::Checkbox("Visualise", &cmp.visualise);
 }
@@ -781,8 +777,8 @@ void
 EditorUI_MD::drawComponent<idk::KinematicCapsuleCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::KinematicCapsuleCmp>(obj_id);
+    
+    auto &cmp    = idk::ECS2::getComponent<idk::KinematicCapsuleCmp>(obj_id);
 
     ImGui::Checkbox("Enable",    &cmp.enabled);
     ImGui::Checkbox("Visualise", &cmp.visualise);
@@ -795,8 +791,8 @@ void
 EditorUI_MD::drawComponent<idk::StaticRectCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::StaticRectCmp>(obj_id);
+    
+    auto &cmp    = idk::ECS2::getComponent<idk::StaticRectCmp>(obj_id);
 
     ImGui::Checkbox("Visualise", &cmp.visualise);
 }
@@ -808,9 +804,9 @@ void
 EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
+    
     auto &ren    = api.getRenderer();
-    auto &cmp    = ecs.getComponent<idk::RenderSettingCmp>(obj_id);
+    auto &cmp    = idk::ECS2::getComponent<idk::RenderSettingCmp>(obj_id);
 
     std::string filepath = cmp.filepath;
 
@@ -829,51 +825,40 @@ EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_
 
 
 
-#define ECS_COMPONENT_CALLBACK(component_type) \
-{ \
-    ecs.getComponentArray<component_type>().setDrawCallback( \
-        EditorUI_MD::drawComponent<component_type> \
-    ); \
-}
+// #define ECS_COMPONENT_CALLBACK(component_type) \
+// { \
+//     idk::ECS2::getComponentArray<component_type>().setuserCallback( \
+//         EditorUI_MD::drawComponent<component_type> \
+//     ); \
+// }
 
 
 void
 EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
 {
-    auto &ecs = api.getECS();
+    
 
-    ECS_COMPONENT_CALLBACK(idk::IconCmp);
-    ECS_COMPONENT_CALLBACK(idk::TransformCmp);
-    ECS_COMPONENT_CALLBACK(idk::AnchorCmp);
-    ECS_COMPONENT_CALLBACK(idk::SmoothFollowCmp);
+    // ECS_COMPONENT_CALLBACK(idk::IconCmp);
+    // ECS_COMPONENT_CALLBACK(idk::TransformCmp);
+    // ECS_COMPONENT_CALLBACK(idk::IKCmp);
+    // ECS_COMPONENT_CALLBACK(idk::LookTowardCmp);
+    // ECS_COMPONENT_CALLBACK(idk::SmoothFollowCmp);
+    // ECS_COMPONENT_CALLBACK(idk::AnchorCmp);
 
-    ECS_COMPONENT_CALLBACK(idk::ModelCmp);
-    ECS_COMPONENT_CALLBACK(idk::ScriptCmp);
-    ECS_COMPONENT_CALLBACK(idk::CameraCmp);
+    // ECS_COMPONENT_CALLBACK(idk::ModelCmp);
+    // ECS_COMPONENT_CALLBACK(idk::StaticHeightmapCmp);
+    // ECS_COMPONENT_CALLBACK(idk::CameraCmp);
 
-    ECS_COMPONENT_CALLBACK(idk::SunCmp);
-    ECS_COMPONENT_CALLBACK(idk::PlanetCmp);
-    ECS_COMPONENT_CALLBACK(idk::PlanetActorCmp);
-    ECS_COMPONENT_CALLBACK(idk::AtmosphereCmp);
+    // ECS_COMPONENT_CALLBACK(idk::StaticRectCmp);
+    // ECS_COMPONENT_CALLBACK(idk::KinematicRectCmp);
+    // ECS_COMPONENT_CALLBACK(idk::KinematicCapsuleCmp);
 
-    ECS_COMPONENT_CALLBACK(idk::PhysicsCmp);
-    ECS_COMPONENT_CALLBACK(idk::StaticRectCmp);
-    ECS_COMPONENT_CALLBACK(idk::KinematicRectCmp);
-    ECS_COMPONENT_CALLBACK(idk::KinematicCapsuleCmp);
+    // ECS_COMPONENT_CALLBACK(idk::DirlightCmp);
+    // ECS_COMPONENT_CALLBACK(idk::PointlightCmp);
+    // ECS_COMPONENT_CALLBACK(idk::SpotlightCmp);
 
-    ECS_COMPONENT_CALLBACK(idk::DirlightCmp);
-    ECS_COMPONENT_CALLBACK(idk::PointlightCmp);
-    ECS_COMPONENT_CALLBACK(idk::SpotlightCmp);
-
-    ECS_COMPONENT_CALLBACK(idk::AudioEmitterCmp);
-
-    ECS_COMPONENT_CALLBACK(idk::ProgressionEventCmp);
-    ECS_COMPONENT_CALLBACK(idk::ProgressionStateCmp);
-
-    ECS_COMPONENT_CALLBACK(idk::PlayerControllerCmp);
-    ECS_COMPONENT_CALLBACK(idk::ArmCmp);
-
-    ECS_COMPONENT_CALLBACK(idk::RenderSettingCmp);
+    // ECS_COMPONENT_CALLBACK(idk::RenderSettingCmp);
+    // ECS_COMPONENT_CALLBACK(idk::ParticleCmp);
 
 }
 

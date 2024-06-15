@@ -40,13 +40,13 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
 
             if (ImGui::MenuItem(ICON_FA_ID_CARD " Save As", "CTRL + SHFT + S"))
             {
-                // api.getECS().writeFile("entry.idksc");
+                // idk::ECS2::writeFile("entry.idksc");
                 popup_save = true;
             }
 
             if (ImGui::MenuItem("Load", "CTRL + L"))
             {
-                // api.getECS().readFile("entry.idksc");
+                // idk::ECS2::readFile("entry.idksc");
                 popup_load = true;
             }
 
@@ -82,7 +82,7 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
 
     if (idkImGui::fileSelectPopup("File Save", popup_save, "./", selection))
     {
-        api.getECS().writeFile(selection);
+        idk::ECS2::save(selection);
         std::cout << "Saved scene to " << selection << "\n";
     }
 
@@ -93,7 +93,7 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
 
     if (idkImGui::fileSelectPopup("File Load", popup_load, "./", selection))
     {
-        api.getECS().readFile(selection);
+        idk::ECS2::load(selection);
         std::cout << "Loaded scene from " << selection << "\n";
     }
 }

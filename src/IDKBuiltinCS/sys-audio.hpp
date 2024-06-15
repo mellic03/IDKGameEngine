@@ -10,15 +10,13 @@ namespace idk
 };
 
 
-class idk::AudioSys: public idk::ecs::System, public idk::LuaAPI
+class idk::AudioSys: public idk::ECS2::System
 {
     inline static std::unordered_map<int, std::function<void()>> m_callbacks;
 
 public:
     virtual void        init   ( idk::EngineAPI & ) final;
     virtual void        update ( idk::EngineAPI & ) final;
-
-    virtual void        exposeToLua( lua_State *LS ) final;
 
     static int          loadSound   ( const std::string &filepath );
     static void         assignSound ( int obj_id, int sound );

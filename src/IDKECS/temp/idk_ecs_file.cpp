@@ -77,7 +77,7 @@ idk::ecs::ECSFile_write( std::ofstream &stream, const ECSFileHeader &header )
 
 
 void
-idk::ecs::ECSFile_read( std::ifstream &stream, ECSFileHeader &header )
+idk::ecs::ECSFile_read( std::ifstream &streamFileHeader &header )
 {
     stream.read(reinterpret_cast<char *>(&header), sizeof(ECSFileHeader));
 }

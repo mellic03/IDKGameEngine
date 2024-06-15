@@ -12,11 +12,7 @@ void
 idk::ECS2::giveComponent( int obj_id )
 {
     size_t key = getkey<ComponentArray<T>>();
-
-    auto &e = m_entities.get(obj_id);
-    auto &c = getComponentArray<T>();
-
-    e.components[key] = c.createComponent();
+    giveComponent(obj_id, key);
 }
 
 
@@ -25,11 +21,8 @@ bool
 idk::ECS2::hasComponent( int obj_id )
 {
     size_t key = getkey<ComponentArray<T>>();
-
-    auto &e = m_entities.get(obj_id);
-    return e.components.contains(key);
+    return hasComponent(obj_id, key);
 }
-
 
 
 template <typename T>
@@ -71,5 +64,9 @@ idk::ECS2::registerComponent( const std::string &name )
     size_t key = getkey<ComponentArray<T>>();
  
     m_component_arrays[key] = new ComponentArray<T>(name);
+    // m_component_arrays[key]->userCallback = idk::ECS2::userCallback<T>;
+
+    m_component_keys[name] = key;
 }
+
 

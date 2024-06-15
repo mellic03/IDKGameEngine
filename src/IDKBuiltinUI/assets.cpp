@@ -7,7 +7,7 @@
 // EditorUI_MD::_tab_assets( idk::EngineAPI &api )
 // {
 //     auto &engine = api.getEngine();
-//     auto &ecs    = api.getECS();
+//     
 
 //     static bool open = false;
 //     static std::string selection = "";
@@ -15,7 +15,7 @@
 
 //     ImGui::Begin("Audio");
 
-//     for (auto &path: ecs.getSystem<idk::ScriptSys>().getScripts())
+//     for (auto &path: idk::ECS2::getSystem<idk::ScriptSys>().getScripts())
 //     {
 //         if (ImGui::TreeNodeEx(path.c_str(), ImGuiTreeNodeFlags_Leaf))
 //         {
@@ -56,7 +56,7 @@
 
 //     if (idkImGui::fileSelectPopup("File Load", open, "./", selection))
 //     {
-//         ecs.getSystem<idk::ScriptSys>().loadScript(selection);
+//         idk::ECS2::getSystem<idk::ScriptSys>().loadScript(selection);
 //     }
 
 

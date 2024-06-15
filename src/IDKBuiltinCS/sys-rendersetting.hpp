@@ -12,7 +12,7 @@ namespace idk
 
 
 
-class idk::RenderSettingSys: public idk::ecs::System
+class idk::RenderSettingSys: public idk::ECS2::System
 {
 private:
     inline static int m_obj = -1;
@@ -34,8 +34,8 @@ struct idk::RenderSettingCmp
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
-    void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    static void onObjectCopy         ( int src_obj, int dst_obj );
 };
 

@@ -31,6 +31,10 @@ target_link_libraries(
     ImGui
     ImGuizmo
     ImNodes
+
+    libidk
+    IDKGraphics
+    IDKGameEngine
 )
 
 

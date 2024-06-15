@@ -78,12 +78,12 @@ public:
     int  getID(        ) { return m_id; };
     void setID( int id ) { m_id = id;   };
 
-    void setDrawCallback( std::function<void(idk::EngineAPI&, int)> callback )
+    void setuserCallback( std::function<void(idk::EngineAPI&, int)> callback )
     {
         m_callback = callback;
     };
 
-    void drawCallback( idk::EngineAPI &api, int obj_id )
+    void userCallback( idk::EngineAPI &api, int obj_id )
     {
         m_callback(api, obj_id);
     };

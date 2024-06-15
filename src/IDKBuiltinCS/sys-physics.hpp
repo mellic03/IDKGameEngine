@@ -7,7 +7,6 @@
 namespace idk
 {
     struct PhysicsCmp;
-
     struct StaticRectCmp;
     struct KinematicRectCmp;
     struct KinematicCapsuleCmp;
@@ -24,7 +23,7 @@ namespace idk
 
 
 
-class idk::PhysicsSys: public idk::ecs::System
+class idk::PhysicsSys: public idk::ECS2::System
 {
 private:
     static void kinematicCapsule_staticRect( float timestep, KinematicCapsuleCmp &s_cmp, StaticRectCmp &r_cmp );
@@ -33,11 +32,10 @@ private:
     inline static float m_accumulator = 0.0f;
 
 public:
-    virtual void    init   ( idk::EngineAPI & ) final;
-    virtual void    update ( idk::EngineAPI & ) final;
+    virtual void init   ( idk::EngineAPI & ) final;
+    virtual void update ( idk::EngineAPI & ) final;
 
     static void addForce( int obj_id, const glm::vec3& );
-
     static bool raycast ( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit );
 
 };
@@ -52,9 +50,9 @@ struct idk::PhysicsCmp
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
-    void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    static void onObjectCopy         ( int src_obj, int dst_obj );
 };
 
 
@@ -66,9 +64,9 @@ struct idk::StaticRectCmp
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
-    void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    static void onObjectCopy         ( int src_obj, int dst_obj );
 };
 
 
@@ -79,9 +77,9 @@ struct idk::KinematicRectCmp
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
-    void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    static void onObjectCopy         ( int src_obj, int dst_obj );
 };
 
 
@@ -105,8 +103,8 @@ struct idk::KinematicCapsuleCmp
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
-    void    onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    void    onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    void    onObjectCopy         ( idk::EngineAPI &api, int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    static void onObjectCopy         ( int src_obj, int dst_obj );
 };
 

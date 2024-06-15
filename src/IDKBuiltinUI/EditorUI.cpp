@@ -58,7 +58,7 @@ void
 EditorUI_MD::init( idk::EngineAPI &api )
 {
     auto &engine   = api.getEngine();
-    auto &ecs      = api.getECS();
+    
     auto &ren      = api.getRenderer();
     auto &eventsys = api.getEventSys();
 

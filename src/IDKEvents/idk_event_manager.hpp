@@ -1,15 +1,15 @@
 #pragma once
 
-#include <functional>
-#include <set>
-
-#include "idk_keylog.hpp"
-
 #include <libidk/idk_export.hpp>
 #include <libidk/idk_enums.hpp>
 #include <libidk/idk_glm.hpp>
 #include <libidk/idk_allocator.hpp>
-#include <libidk/idk_scripting.hpp>
+
+#include "idk_keylog.hpp"
+
+#include <functional>
+#include <set>
+#include <map>
 
 
 namespace idk
@@ -47,7 +47,7 @@ struct IDK_VISIBLE idk::Event
 
 
 
-class IDK_VISIBLE idk::EventSystem: public idk::LuaAPI
+class IDK_VISIBLE idk::EventSystem
 {
     using fun_t = std::function<void(SDL_Event *)>;
     using mousefun_t = std::function<void(float f)>;
@@ -126,7 +126,6 @@ public:
 
     void                    update();
 
-    void                    exposeToLua( lua_State *L );
 
 };
 

@@ -8,7 +8,7 @@ static void
 transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, float rsnap = 10.0f )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
+    
     auto &ren    = api.getRenderer();
     auto &eventsys = api.getEventSys();
 
@@ -62,8 +62,8 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
         op = ImGuizmo::OPERATION::BOUNDS;
     }
 
-    auto &component = ecs.getComponent<idk::TransformCmp>(obj_id);
-    int parent_id = ecs.getParent(obj_id);
+    auto &component = idk::ECS2::getComponent<idk::TransformCmp>(obj_id);
+    int parent_id = idk::ECS2::getParent(obj_id);
 
     glm::mat4 world = idk::TransformSys::getModelMatrix(obj_id);
     glm::mat4 delta;
@@ -138,7 +138,7 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
-    auto &ecs    = api.getECS();
+    
 
     int w = int(ImGui::GetContentRegionAvail().x);
     int h = int(ImGui::GetContentRegionAvail().y);
@@ -189,9 +189,13 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
     }
 
 
-    int obj_id = ecs.getSelectedGameObject();
+    int obj_id = idk::ECS2::getSelectedGameObject();
+    if (obj_id == -1)
+    {
+        return;
+    }
 
-    if (ecs.hasComponent<idk::TransformCmp>(obj_id))
+    if (idk::ECS2::hasComponent<idk::TransformCmp>(obj_id))
     {
         transform_component_ecs(api, obj_id, m_tsnap, m_rsnap);
     }
