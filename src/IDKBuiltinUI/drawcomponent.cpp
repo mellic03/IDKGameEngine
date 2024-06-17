@@ -2,7 +2,7 @@
 
 template <>
 void
-idk::ECS2::userCallback<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
     
@@ -110,7 +110,7 @@ void drag_drop_thing( std::string label, const std::string &payloadname, int &ob
 
 template <>
 void
-idk::ECS2::userCallback<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
     auto &cmp    = idk::ECS2::getComponent<idk::AnchorCmp>(obj_id);
@@ -121,7 +121,7 @@ idk::ECS2::userCallback<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-idk::ECS2::userCallback<idk::ParticleCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::ParticleCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
     auto &cmp    = idk::ECS2::getComponent<idk::ParticleCmp>(obj_id);
@@ -145,7 +145,7 @@ idk::ECS2::userCallback<idk::ParticleCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-idk::ECS2::userCallback<idk::SmoothFollowCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::SmoothFollowCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
     auto &cmp    = idk::ECS2::getComponent<idk::SmoothFollowCmp>(obj_id);
@@ -159,7 +159,7 @@ idk::ECS2::userCallback<idk::SmoothFollowCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-idk::ECS2::userCallback<idk::IKCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::IKCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
     auto &cmp    = idk::ECS2::getComponent<idk::IKCmp>(obj_id);
@@ -171,7 +171,7 @@ idk::ECS2::userCallback<idk::IKCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-idk::ECS2::userCallback<idk::LookTowardCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::LookTowardCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
     auto &cmp    = idk::ECS2::getComponent<idk::LookTowardCmp>(obj_id);
@@ -184,7 +184,7 @@ idk::ECS2::userCallback<idk::LookTowardCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-idk::ECS2::userCallback<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &ren = api.getRenderer();
     
@@ -825,40 +825,38 @@ EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_
 
 
 
-// #define ECS_COMPONENT_CALLBACK(component_type) \
-// { \
-//     idk::ECS2::getComponentArray<component_type>().setuserCallback( \
-//         EditorUI_MD::drawComponent<component_type> \
-//     ); \
-// }
+#define ECS_COMPONENT_CALLBACK(component_type) \
+{ \
+    idk::ECS2::getComponentArray<component_type>().userCallback = \
+        EditorUI_MD::drawComponent<component_type> \
+    ; \
+}
 
 
 void
 EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
 {
-    
+    ECS_COMPONENT_CALLBACK(idk::IconCmp);
+    ECS_COMPONENT_CALLBACK(idk::TransformCmp);
+    ECS_COMPONENT_CALLBACK(idk::IKCmp);
+    ECS_COMPONENT_CALLBACK(idk::LookTowardCmp);
+    ECS_COMPONENT_CALLBACK(idk::SmoothFollowCmp);
+    ECS_COMPONENT_CALLBACK(idk::AnchorCmp);
 
-    // ECS_COMPONENT_CALLBACK(idk::IconCmp);
-    // ECS_COMPONENT_CALLBACK(idk::TransformCmp);
-    // ECS_COMPONENT_CALLBACK(idk::IKCmp);
-    // ECS_COMPONENT_CALLBACK(idk::LookTowardCmp);
-    // ECS_COMPONENT_CALLBACK(idk::SmoothFollowCmp);
-    // ECS_COMPONENT_CALLBACK(idk::AnchorCmp);
+    ECS_COMPONENT_CALLBACK(idk::ModelCmp);
+    ECS_COMPONENT_CALLBACK(idk::StaticHeightmapCmp);
+    ECS_COMPONENT_CALLBACK(idk::CameraCmp);
 
-    // ECS_COMPONENT_CALLBACK(idk::ModelCmp);
-    // ECS_COMPONENT_CALLBACK(idk::StaticHeightmapCmp);
-    // ECS_COMPONENT_CALLBACK(idk::CameraCmp);
+    ECS_COMPONENT_CALLBACK(idk::StaticRectCmp);
+    ECS_COMPONENT_CALLBACK(idk::KinematicRectCmp);
+    ECS_COMPONENT_CALLBACK(idk::KinematicCapsuleCmp);
 
-    // ECS_COMPONENT_CALLBACK(idk::StaticRectCmp);
-    // ECS_COMPONENT_CALLBACK(idk::KinematicRectCmp);
-    // ECS_COMPONENT_CALLBACK(idk::KinematicCapsuleCmp);
+    ECS_COMPONENT_CALLBACK(idk::DirlightCmp);
+    ECS_COMPONENT_CALLBACK(idk::PointlightCmp);
+    ECS_COMPONENT_CALLBACK(idk::SpotlightCmp);
 
-    // ECS_COMPONENT_CALLBACK(idk::DirlightCmp);
-    // ECS_COMPONENT_CALLBACK(idk::PointlightCmp);
-    // ECS_COMPONENT_CALLBACK(idk::SpotlightCmp);
-
-    // ECS_COMPONENT_CALLBACK(idk::RenderSettingCmp);
-    // ECS_COMPONENT_CALLBACK(idk::ParticleCmp);
+    ECS_COMPONENT_CALLBACK(idk::RenderSettingCmp);
+    ECS_COMPONENT_CALLBACK(idk::ParticleCmp);
 
 }
 

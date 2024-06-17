@@ -34,7 +34,9 @@ target_link_libraries(
 
     libidk
     IDKGraphics
-    IDKGameEngine
+    IDKAudio
+    IDKEvents
+    IDKECS
 )
 
 

@@ -66,11 +66,12 @@ idk::ECS2::removeComponent( int obj_id, size_t key )
 
 
 int
-idk::ECS2::createGameObject( const std::string &name )
+idk::ECS2::createGameObject( const std::string &name, bool persistent )
 {
     int id = m_entities.create();
     Entity &e = m_entities.get(id);
     e.id = id;
+    e.persistent = persistent;
     e.name = name;
 
     giveComponent<IconCmp>(id);
@@ -107,29 +108,20 @@ idk::ECS2::deleteGameObject( int obj_id, bool deep )
 {
     auto &children = m_entities.get(obj_id).children;
 
-    int parent = getParent(obj_id);
 
-    if (parent >= 0)
+    std::vector<int> cull;
+
+    for (int child_id: children)
     {
-        removeChild(parent, obj_id);
+        cull.push_back(child_id);
     }
 
-
-    if (deep)
+    for (int child_id: cull)
     {
-        for (int child_id: children)
-        {
-            deleteGameObject(child_id, true);
-        }
+        deleteGameObject(child_id, true);
     }
 
-    else
-    {
-        for (int child_id: children)
-        {
-            removeChild(obj_id, child_id);
-        }
-    }
+ 
 
     std::vector<size_t> keys;
 
@@ -143,6 +135,14 @@ idk::ECS2::deleteGameObject( int obj_id, bool deep )
         removeComponent(obj_id, key);
     }
 
+
+    int parent = getParent(obj_id);
+
+    if (parent >= 0)
+    {
+        removeChild(parent, obj_id);
+    }
+
     m_entities.destroy(obj_id);
 }
 
@@ -151,7 +151,13 @@ void
 idk::ECS2::gameObjectPersistent( int obj_id, bool p )
 {
     m_entities.get(obj_id).persistent = p;
-    
+}
+
+
+bool*
+idk::ECS2::getGameObjectPersistency( int obj_id )
+{
+    return &(m_entities.get(obj_id).persistent);
 }
 
 
@@ -297,10 +303,10 @@ idk::ECS2::giveChild( int parent_id, int child_id )
 void
 idk::ECS2::removeChild( int parent_id, int child_id )
 {
-    glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
-    glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
-    glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
-    glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+    // glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
+    // glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
+    // glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
+    // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
 
     if (parent_id != -1)
     {
@@ -308,17 +314,17 @@ idk::ECS2::removeChild( int parent_id, int child_id )
         m_entities.get(child_id).parent = -1;
     }
 
-    if (m_readfile == false)
-    {
-        TransformSys::recomputeTransformMatrices(child_id);
-        TransformSys::setPositionWorldspace(child_id, child_pos);
+    // if (m_readfile == false)
+    // {
+    //     TransformSys::recomputeTransformMatrices(child_id);
+    //     TransformSys::setPositionWorldspace(child_id, child_pos);
 
-        Mw = TransformSys::getWorldMatrix(child_id);
-        Ml = TransformSys::getLocalMatrix(child_id, false);
-        R  = glm::inverse(Mw*Ml) * R;
-        glm::quat Q = glm::normalize(glm::quat_cast(R));
-        TransformSys::getData(child_id).rotation = Q;
-    }
+    //     Mw = TransformSys::getWorldMatrix(child_id);
+    //     Ml = TransformSys::getLocalMatrix(child_id, false);
+    //     R  = glm::inverse(Mw*Ml) * R;
+    //     glm::quat Q = glm::normalize(glm::quat_cast(R));
+    //     TransformSys::getData(child_id).rotation = Q;
+    // }
 }
 
 
@@ -396,7 +402,28 @@ idk::ECS2::_load()
 
     stream.close();
 
+
+    // Absolutely terrible way to handle persistency.
+    // --------------------------------------------------
+    std::vector<int> cull;
+
+    for (Entity &e: m_entities)
+    {
+        if (e.persistent == false)
+        {
+            cull.push_back(e.id);
+        }
+    }
+
+    for (int id: cull)
+    {
+        LOG_INFO() << "Non-persistent object: " << id;
+        deleteGameObject(id, true);
+    }
+    // --------------------------------------------------
+
     init(*m_api_ptr);
+
 }
 
 

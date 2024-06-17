@@ -93,11 +93,12 @@ public:
 
     static const idk::Allocator<Entity> &getEntities() { return m_entities; };
 
-    static int                  createGameObject ( const std::string &name = "Empty" );
+    static int                  createGameObject ( const std::string &name = "Empty", bool persistent = true );
     static int                  copyGameObject   ( int obj_id, bool deep=false );
-    static void                 deleteGameObject ( int obj_id, bool deep=false );
+    static void                 deleteGameObject ( int obj_id, bool deep=true );
 
     static void                 gameObjectPersistent( int obj_id, bool p );
+    static bool*                getGameObjectPersistency( int obj_id );
     static bool                 gameObjectExists ( int obj_id );
 
     static const std::string &  getGameObjectName( int obj_id );

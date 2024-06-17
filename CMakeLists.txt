@@ -4,7 +4,6 @@ project(IDKGameEngine)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/imgui-docking/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/ImGuizmo/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/imnodes-0.5)
-# add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/luajit)
 
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKAudio/)
@@ -13,34 +12,52 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKThreading/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinCS/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinUI/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKECS/)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/)
 
 
 
-add_library(${PROJECT_NAME} SHARED ${CMAKE_CURRENT_SOURCE_DIR}/src/dummy.cpp)
+# add_library(${PROJECT_NAME} SHARED ${CMAKE_CURRENT_SOURCE_DIR}/src/dummy.cpp)
 
-set_target_properties(
-    ${PROJECT_NAME} PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
+
+set(OpenGL_GL_PREFERENCE GLVND)
+find_package(GLEW REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
+find_package(SDL2_mixer REQUIRED)
+find_package(SDL2_ttf REQUIRED)
+
+
+
+file(GLOB SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/*.cpp
 )
 
+add_executable(${PROJECT_NAME} ${SOURCES})
 
-# if(MSVC)
-#     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
-# else()
-#     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
-# endif()
-find_package(Lua51 REQUIRED)
-include_directories(${LUA_INCLUDE_DIR})
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
 
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
 )
 
+include_directories(${GLEW_INCLUDE_DIRS})
+include_directories(${OPENGL_INCLUDE_DIRS})
+include_directories(${SDL2_INCLUDE_DIRS})
+include_directories(${SDL2_image_INCLUDE_DIRS})
+include_directories(${SDL2_mixer_INCLUDE_DIRS})
+include_directories(${SDL2_ttf_INCLUDE_DIRS})
+
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
+
+    GLEW
+    SDL2
+    SDL2_image
+    SDL2_mixer
+    SDL2_ttf
+    ${OPENGL_LIBRARIES}
 
     libidk
     IDKGraphics
@@ -50,7 +67,6 @@ target_link_libraries(
     IDKBuiltinCS
     IDKThreading
     IDKECS
-    IDKGameEngine_internal
 
     ImGui
     ImGuizmo
@@ -63,4 +79,5 @@ FILE(
     COPY ${CMAKE_CURRENT_SOURCE_DIR}/IDKGE/
     DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/IDKGE/
 )
+
 

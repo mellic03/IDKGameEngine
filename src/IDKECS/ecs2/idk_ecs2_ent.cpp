@@ -23,6 +23,7 @@ idk::ECS2::Entity::serialize( std::ofstream &stream ) const
 
     size_t n = 0;
     n += idk::streamwrite(stream, id);
+    n += idk::streamwrite(stream, persistent);
     n += idk::streamwrite(stream, name);
     n += idk::streamwrite(stream, parent);
     n += idk::streamwrite(stream, child_ids);
@@ -37,6 +38,7 @@ idk::ECS2::Entity::deserialize( std::ifstream &stream )
 {
     size_t n = 0;
     n += idk::streamread(stream, id);
+    n += idk::streamread(stream, persistent);
     n += idk::streamread(stream, name);
     n += idk::streamread(stream, parent);
 

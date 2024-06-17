@@ -10,6 +10,7 @@ idk::EventSystem::EventSystem()
     m_windowevents[0] = false;
     m_windowevents[1] = false;
 
+    m_mousebutton_clicked = std::vector<bool>(3, false);
     m_mousebutton_down = std::vector<bool>(3, false);
     m_mousebutton_up   = std::vector<bool>(3, false);
 }
@@ -116,6 +117,9 @@ idk::EventSystem::processMouseInput()
     m_mousewheel_delta = 0.0f;
     m_dropfile_event = false;
 
+    m_mousebutton_clicked[0] = false;
+    m_mousebutton_clicked[1] = false;
+    m_mousebutton_clicked[2] = false;
 
     SDL_Event e;
 
@@ -163,8 +167,18 @@ idk::EventSystem::processMouseInput()
 
 
             case (SDL_MOUSEBUTTONUP):
+            {
+                bool prev_down = m_mousebutton_down[e.button.button - 1];
+                bool prev_up   = m_mousebutton_up[e.button.button - 1];
+
                 m_mousebutton_down[e.button.button - 1] = false;
                 m_mousebutton_up[e.button.button - 1] = true;
+
+                bool curr_down = m_mousebutton_down[e.button.button - 1];
+                bool curr_up   = m_mousebutton_up[e.button.button - 1];
+
+                m_mousebutton_clicked[e.button.button-1] = (prev_down == true && curr_down == false);
+            }
             break;
 
 

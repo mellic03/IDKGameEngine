@@ -76,7 +76,8 @@ idk::ParticleCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 void
 idk::ParticleCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-
+    auto &cmp = idk::ECS2::getComponent<ParticleCmp>(obj_id);
+    api.getRenderer().destroyParticleEmitter(cmp.emitter_id);
 };
 
 

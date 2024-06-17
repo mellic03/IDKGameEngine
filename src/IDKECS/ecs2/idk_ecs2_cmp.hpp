@@ -107,6 +107,7 @@ public:
         T::onObjectCopy(src_obj, dst_obj);
     };
 
+    size_t size() const { return m_data.size(); };
 
     idk::Allocator<T> &getData() { return m_data; };
 

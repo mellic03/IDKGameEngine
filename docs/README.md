@@ -1,12 +1,12 @@
 
 # IDK Game Engine
 
-| | | |
-|-|-|-|
-|<img src="scr1.png">|<img src="scr12.png">| |
-|<img src="scr0.png">|<img src="scr13.png">| |
-|<img src="scr9.png">|<img src="scr2.png">| |
-|<img src="scr3.png">|<img src="scr10.png">| |
+| | |
+|-|-|
+|<img src="img0.png">|<img src="img1.png">|
+|<img src="img2.png">|<img src="img3.png">|
+
+
 
 
 ##  Dependencies

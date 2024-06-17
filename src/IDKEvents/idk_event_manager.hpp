@@ -80,7 +80,9 @@ private:
     bool                    m_mouse_captured = false;
     std::vector<bool>       m_mousebutton_up;
     std::vector<bool>       m_mousebutton_down;
+    std::vector<bool>       m_mousebutton_clicked;
     float                   m_mousewheel_delta = 0.0f;
+    glm::vec2               m_mouse_offset = glm::vec2(0.0f);
     glm::vec2               m_mouse_position;
     glm::vec2               m_mouse_delta;
 
@@ -121,8 +123,12 @@ public:
     bool                    mouseCaptured() const            { return m_mouse_captured;    };
     bool                    mouseUp( idk::MouseButton mb )   { return m_mousebutton_up[(int)mb];   };
     bool                    mouseDown( idk::MouseButton mb ) { return m_mousebutton_down[(int)mb]; };
-    glm::vec2               mousePosition() { return m_mouse_position; };
+    bool                    mouseClicked( idk::MouseButton mb ) { return m_mousebutton_clicked[(int)mb]; };;
+
+    glm::vec2               mousePosition() { return m_mouse_position - m_mouse_offset; };
     glm::vec2               mouseDelta()    { return m_mouse_delta;    };
+
+    void                    setMouseOffset( const glm::vec2 &offset ) { m_mouse_offset = offset; };
 
     void                    update();
 

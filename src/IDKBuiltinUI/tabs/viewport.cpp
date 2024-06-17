@@ -138,7 +138,13 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
-    
+
+
+    ImVec2 cornerA = ImGui::GetWindowContentRegionMin();
+    ImVec2 cornerB = ImGui::GetWindowPos();
+    ImVec2 corner = cornerA + cornerB;
+    api.getEventSys().setMouseOffset(glm::vec2(corner.x, corner.y));
+
 
     int w = int(ImGui::GetContentRegionAvail().x);
     int h = int(ImGui::GetContentRegionAvail().y);
