@@ -17,7 +17,7 @@
 - [SDL_mixer](https://github.com/libsdl-org/SDL_mixer)
 
 
-
+<!-- 
 ## Building
 Running `build.bat` or `build.sh` will generate a folder called `build` in the root directory of the project. 
 ```
@@ -99,4 +99,4 @@ Each callback is run whenever a game object is created, deleted or copied.
     ```
 
 ### Creating a new Component System
-Inherit from `idk::ComponentSystem` to create a new component system.
+Inherit from `idk::ComponentSystem` to create a new component system. -->
