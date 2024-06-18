@@ -98,12 +98,12 @@ int main( int argc, char **argv )
     {
         std::string arg = std::string(argv[i]);
 
-        if (arg == "--modules")
+        if (arg == "-lm" || arg == "--load-modules")
         {
             arg_load_modules = true;
         }
 
-        else if (arg == "--scene")
+        else if (arg == "-ls" || arg == "--load-scene")
         {
             arg_load_idksc = true;
             arg_idksc = std::string(argv[i+1]);

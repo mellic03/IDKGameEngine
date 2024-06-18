@@ -435,6 +435,11 @@ EditorUI_MD::drawComponent<idk::StaticHeightmapCmp>( idk::EngineAPI &api, int ob
 
     // Model drag-drop
     // -----------------------------------------------------------------------------------------
+    if (cmp.textures.size() == 0)
+    {
+        cmp.textures.push_back("");
+    }
+
     if (cmp.textures.back() != "")
     {
         cmp.textures.push_back("");

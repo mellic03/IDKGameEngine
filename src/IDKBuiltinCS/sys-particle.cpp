@@ -26,12 +26,12 @@ idk::ParticleSys::update( idk::EngineAPI &api )
 
         auto &emitter = ren.getParticleEmitter(cmp.emitter_id);
 
-        emitter.origin   = position;
-        emitter.velocity = TransformSys::getData(cmp.obj_id).delta;
+        emitter.origin    = position;
+        emitter.velocity  = TransformSys::getData(cmp.obj_id).delta;
         emitter.direction = TransformSys::getFront(cmp.obj_id);
-        emitter.model_id = model;
-        emitter.scale    = TransformSys::getData(cmp.src_id).scale;
-        emitter.m_desc   = cmp.desc;
+        emitter.model_id  = model;
+        emitter.scale     = TransformSys::getData(cmp.src_id).scale;
+        emitter.m_desc    = cmp.desc;
 
     }
 
@@ -70,6 +70,29 @@ void
 idk::ParticleCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
     auto &cmp = idk::ECS2::getComponent<ParticleCmp>(obj_id);
+
+    cmp.src_id = ECS2::createGameObject("source");
+
+    int model = api.getRenderer().loadModel("assets/models/fire-sprite.idkvi");
+    ECS2::giveComponent<ModelCmp>(cmp.src_id);
+    ECS2::getComponent<ModelCmp>(cmp.src_id).model_id = model;
+
+    cmp.desc = {
+        .model_id            = model,
+        .count               = 32,
+        .velocity            = glm::vec3(0.0f, 0.0f, 15.0f),
+        .velocity_randomness = glm::vec3(1.0f, 1.0f, 1.0f),
+        .scale               = 1.0f,
+        .scale_randomness    = 0.0f,
+        .duration            = 1.0f,
+        .duration_randomness = 0.0f
+    };
+
+    glm::vec3 position = TransformSys::getPositionWorldspace(cmp.obj_id);
+
+    idk::ParticleEmitter P(cmp.desc, position);
+    cmp.emitter_id = api.getRenderer().createParticleEmitter(P);
+
 };
 
 

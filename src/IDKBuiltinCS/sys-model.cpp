@@ -11,11 +11,16 @@ idk::ModelSys::init( idk::EngineAPI &api )
     auto &ren = api.getRenderer();
 
 
-    m_heightmap_program = ren.createProgram(
-        "ModelSys-terrain", "assets/shaders/", "gpass-terrain.vs", "gpass-terrain.fs"
+    ren.createProgram(
+        "ModelSys-terrain", "assets/shaders/", "terrain-gpass.vs", "terrain-gpass.fs"
+    );
+
+    ren.createProgram(
+        "ModelSys-terrain-shadow", "assets/shaders/", "terrain-shadow.vs", "terrain-shadow.fs"
     );
 
     m_heightmap_RQ = ren.createRenderQueue("ModelSys-terrain");
+    m_shadow_RQ    = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
 
     for (auto &cmp: ECS2::getComponentArray<idk::ModelCmp>())
     {
@@ -57,29 +62,50 @@ idk::ModelSys::update( idk::EngineAPI &api )
         m_heightmap_RQ = ren.createRenderQueue("ModelSys-terrain");
     }
 
+    if (m_shadow_RQ == -1)
+    {
+        m_shadow_RQ = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
+    }
+
+
     for (auto &cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
     {
+        static const idk::glTextureConfig config = {
+            .internalformat = GL_SRGB8_ALPHA8,
+            .format         = GL_RGBA,
+            .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
+            .magfilter      = GL_LINEAR,
+            .wrap_s         = GL_REPEAT,
+            .wrap_t         = GL_REPEAT,
+            .datatype       = GL_UNSIGNED_BYTE,
+            .genmipmap      = GL_TRUE
+        };
+
         if (cmp.model == -1)
         {
-            static const idk::glTextureConfig config = {
-                .internalformat = GL_RGBA8,
-                .format         = GL_RGBA,
-                .minfilter      = GL_LINEAR,
-                .magfilter      = GL_LINEAR,
-                .wrap_s         = GL_CLAMP_TO_BORDER,
-                .wrap_t         = GL_CLAMP_TO_BORDER,
-                .datatype       = GL_UNSIGNED_BYTE,
-                .genmipmap      = GL_FALSE
-            };
-
-            uint32_t texture = idk::gltools::loadTexture("assets/heightmaps/terrain.png", config);
-            cmp.model = api_ptr->getRenderer().loadModel("assets/models/plane.idkvi");
-            ren.modelAllocator().addUserMaterials(cmp.model, {texture});
+            cmp.model = ren.loadModel("assets/models/plane.idkvi");
         }
 
+        if (cmp.textures.empty())
+        {
+            continue;
+        }
+
+        if (cmp.textures.back() == "")
+        {
+            cmp.textures.pop_back();
+        }
+    
+        if (cmp.textures.empty())
+        {
+            continue;
+        }
+
+        ren.modelAllocator().addUserMaterials(cmp.model, cmp.textures, config);
+
         glm::mat4 M = TransformSys::getModelMatrix(cmp.obj_id);
-        std::cout << "Model: " << cmp.model << "\n";
         ren.drawModelRQ(m_heightmap_RQ, cmp.model, M);
+        ren.drawShadowCasterRQ(m_shadow_RQ, cmp.model, M);
     }
 
 }

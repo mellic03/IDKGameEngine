@@ -18,6 +18,7 @@ class idk::ModelSys: public idk::ECS2::System
 private:
     inline static   int m_heightmap_program = -1;
     inline static   int m_heightmap_RQ = -1;
+    inline static   int m_shadow_RQ = -1;
 
 
 public:
@@ -36,6 +37,7 @@ struct idk::StaticHeightmapCmp
     int obj_id = -1;
     int model  = -1;
     std::vector<std::string> textures;
+    std::vector<uint32_t>    texture_ids;
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
