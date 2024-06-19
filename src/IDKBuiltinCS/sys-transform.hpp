@@ -22,7 +22,11 @@ namespace idk
 
         float      scale    = 1.0f;
         glm::vec3  scale3   = glm::vec3(1.0f);
+        bool       roll_lock = false;
 
+        glm::mat4  world = glm::mat4(0.0f);
+        glm::mat4  local = glm::mat4(0.0f);
+        glm::mat4  model = glm::mat4(0.0f);
 
         size_t  serialize( std::ofstream &stream ) const;
         size_t  deserialize( std::ifstream &stream );
@@ -93,10 +97,6 @@ namespace idk
 class idk::TransformSys: public idk::ECS2::System
 {
 private:
-
-    inline static std::unordered_map<int, glm::mat4> cached_world;
-    inline static std::unordered_map<int, glm::mat4> cached_local;
-    inline static std::unordered_map<int, glm::mat4> cached_model;
 
     static glm::mat4    _computeLocalMatrix( int obj_id, bool scale = true );
     static glm::mat4    _computeWorldMatrix( int obj_id );

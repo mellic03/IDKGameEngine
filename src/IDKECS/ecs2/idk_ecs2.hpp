@@ -97,6 +97,9 @@ public:
     static int                  copyGameObject   ( int obj_id, bool deep=false );
     static void                 deleteGameObject ( int obj_id, bool deep=true );
 
+    static void                 createPrefab     ( int obj_id, const std::string &filepath );
+    static int                  loadPrefab       ( const std::string &filepath );
+
     static void                 gameObjectPersistent( int obj_id, bool p );
     static bool*                getGameObjectPersistency( int obj_id );
     static bool                 gameObjectExists ( int obj_id );

@@ -71,7 +71,7 @@ idk::ModelSys::update( idk::EngineAPI &api )
     for (auto &cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
     {
         static const idk::glTextureConfig config = {
-            .internalformat = GL_SRGB8_ALPHA8,
+            .internalformat = GL_RGBA8,
             .format         = GL_RGBA,
             .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
             .magfilter      = GL_LINEAR,

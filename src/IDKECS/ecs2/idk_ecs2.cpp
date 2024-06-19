@@ -56,6 +56,11 @@ idk::ECS2::removeComponent( int obj_id, size_t key )
     auto &e = m_entities.get(obj_id);
     auto *c = getComponentArray(key);
 
+    if (e.components.contains(key) == false)
+    {
+        LOG_WARN() << "Object " << obj_id << " does not have component " << key;
+    }
+
     c->onObjectDeassignment(*m_api_ptr, obj_id);
     c->destroyComponent(e.components[key]);
 
@@ -106,20 +111,21 @@ idk::ECS2::copyGameObject( int obj_id, bool deep )
 void
 idk::ECS2::deleteGameObject( int obj_id, bool deep )
 {
-    auto &children = m_entities.get(obj_id).children;
-
-
+    // Delete children
+    // --------------------------------------------
     std::vector<int> cull;
 
-    for (int child_id: children)
+    for (int child_id: m_entities.get(obj_id).children)
     {
         cull.push_back(child_id);
     }
 
     for (int child_id: cull)
     {
+        removeChild(obj_id, child_id);
         deleteGameObject(child_id, true);
     }
+    // --------------------------------------------
 
  
 
@@ -135,15 +141,8 @@ idk::ECS2::deleteGameObject( int obj_id, bool deep )
         removeComponent(obj_id, key);
     }
 
-
-    int parent = getParent(obj_id);
-
-    if (parent >= 0)
-    {
-        removeChild(parent, obj_id);
-    }
-
     m_entities.destroy(obj_id);
+
 }
 
 
@@ -245,6 +244,8 @@ idk::ECS2::giveComponent( int obj_id, size_t key )
 bool
 idk::ECS2::hasComponent( int obj_id, size_t key )
 {
+    IDK_ASSERT("Object does not exist", m_entities.contains(obj_id));
+
     auto &e = m_entities.get(obj_id);
     return e.components.contains(key);
 }
@@ -402,27 +403,28 @@ idk::ECS2::_load()
 
     stream.close();
 
+    init(*m_api_ptr);
 
     // Absolutely terrible way to handle persistency.
     // --------------------------------------------------
-    std::vector<int> cull;
+    // std::vector<int> cull;
 
-    for (Entity &e: m_entities)
-    {
-        if (e.persistent == false)
-        {
-            cull.push_back(e.id);
-        }
-    }
+    // for (Entity &e: m_entities)
+    // {
+    //     if (e.persistent == false)
+    //     {
+    //         cull.push_back(e.id);
+    //     }
+    // }
 
-    for (int id: cull)
-    {
-        LOG_INFO() << "Non-persistent object: " << id;
-        deleteGameObject(id, true);
-    }
+    // for (int id: cull)
+    // {
+    //     std::cout << "Non-persistent object: " << id << "\n";
+    //     deleteGameObject(id, true);
+    // }
     // --------------------------------------------------
 
-    init(*m_api_ptr);
+    update(*m_api_ptr);
 
 }
 

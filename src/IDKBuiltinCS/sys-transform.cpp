@@ -116,9 +116,9 @@ idk::TransformSys::update( idk::EngineAPI &api )
 void
 idk::TransformSys::recomputeTransformMatrices( int obj_id )
 {
-    cached_local[obj_id] = _computeLocalMatrix(obj_id, false);
-    cached_world[obj_id] = _computeWorldMatrix(obj_id);
-    cached_model[obj_id] = _computeModelMatrix(obj_id);
+    getData(obj_id).local = _computeLocalMatrix(obj_id, false);
+    getData(obj_id).world = _computeWorldMatrix(obj_id);
+    getData(obj_id).model = _computeModelMatrix(obj_id);
 }
 
 
@@ -146,6 +146,14 @@ idk::TransformSys::_computeLocalMatrix( int obj_id, bool scale )
     glm::mat4 Rroll  = glm::mat4_cast(Qroll);
     glm::mat4 Rpitch = glm::mat4_cast(Qpitch);
     glm::mat4 Ryaw   = glm::mat4_cast(Qyaw);
+
+
+    if (cmp.roll_lock)
+    {
+        Qroll = glm::quat(glm::vec3(0.0f));
+        Rroll = glm::mat4(1.0f);
+    }
+
 
     glm::mat4 R = glm::mat4_cast(cmp.rotation) * Ryaw * Rpitch * Rroll;
     glm::mat4 T = glm::translate(ident, cmp.position);
@@ -291,14 +299,14 @@ idk::TransformSys::getSurfaceFront( int obj_id )
 glm::mat4
 idk::TransformSys::getLocalMatrix( int obj_id, bool scale )
 {
-    return _computeLocalMatrix(obj_id, scale);
+    return getData(obj_id).local;
 }
 
 
 glm::mat4
 idk::TransformSys::getWorldMatrix( int obj_id )
 {
-    return cached_world[obj_id];
+    return getData(obj_id).world;
 }
 
 
@@ -306,7 +314,7 @@ idk::TransformSys::getWorldMatrix( int obj_id )
 glm::mat4
 idk::TransformSys::getModelMatrix( int obj_id)
 {
-    return cached_model[obj_id];
+    return getData(obj_id).model;
 }
 
 

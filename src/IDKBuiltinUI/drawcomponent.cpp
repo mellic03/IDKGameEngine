@@ -28,7 +28,8 @@ EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
     ImGui::DragFloat("Pitch", &data.pitch, 0.025f);
     ImGui::DragFloat("Yaw",   &data.yaw,   0.025f);
     ImGui::DragFloat("Roll",  &data.roll,  0.025f);
-
+    ImGui::SameLine();
+    ImGui::Checkbox("Lock", &data.roll_lock);
 
     ImGui::InputFloat("Sc", &data.scale, 0.1f);
     ImGui::SameLine();
