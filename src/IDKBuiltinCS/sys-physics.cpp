@@ -1,5 +1,6 @@
 #include "sys-physics.hpp"
 #include "sys-transform.hpp"
+#include "sys-model.hpp"
 
 #include <libidk/idk_geometry.hpp>
 #include <libidk/idk_log.hpp>
@@ -21,8 +22,6 @@ idk::PhysicsSys::init( idk::EngineAPI &api )
 void
 idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
 {
-    
-
     for (auto &s_cmp: idk::ECS2::getComponentArray<idk::KinematicCapsuleCmp>())
     {
         if (s_cmp.enabled == false)
@@ -36,6 +35,23 @@ idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
         for (auto &r_cmp: idk::ECS2::getComponentArray<idk::StaticRectCmp>())
         {
             kinematicCapsule_staticRect(dt, s_cmp, r_cmp);
+        }
+
+        for (auto &t_cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
+        {
+            auto &heightmap = t_cmp.heightmap;
+        
+            float height = queryHeightmap(
+                heightmap, 
+                s_cmp.curr_pos,
+                TransformSys::getData(t_cmp.obj_id).scale * TransformSys::getData(t_cmp.obj_id).scale3
+            );
+
+            // if (height < s_cmp.bottom)
+            {
+                float overlap = s_cmp.bottom - height;
+                s_cmp.curr_pos.y += overlap;
+            }
         }
     }
 }
@@ -160,6 +176,24 @@ idk::PhysicsSys::raycast( const glm::vec3 &origin, const glm::vec3 &dir, glm::ve
 
     hit = nearest_hit;
 
+    for (auto &cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
+    {
+        auto &heightmap = cmp.heightmap;
+    
+        float height = queryHeightmap(
+            heightmap, 
+            origin,
+            TransformSys::getData(cmp.obj_id).scale * TransformSys::getData(cmp.obj_id).scale3
+        );
+
+        if (height < glm::distance(hit, origin))
+        {
+            hit = origin - glm::vec3(0.0f, height, 0.0f);
+            return true;
+        }
+    }
+
+
     return nearest_dist < INFINITY;
 }
 
@@ -232,8 +266,9 @@ idk::PhysicsSys::bakeHeightmap( idk::TextureWrapper &wrapper )
 }
 
 
+
 float
-idk::PhysicsSys::queryHeightmap( const glm::vec3 &position, const glm::vec3 &scale )
+idk::PhysicsSys::queryHeightmap( TextureWrapper &heightmap, const glm::vec3 &position, const glm::vec3 &scale )
 {
     float xmin = -0.5f * scale.x;
     float xmax = +0.5f * scale.x;
@@ -249,6 +284,19 @@ idk::PhysicsSys::queryHeightmap( const glm::vec3 &position, const glm::vec3 &sca
         return -1.0f;
     }
 
+    uint32_t *pixels = (uint32_t *)(heightmap.data());
+
+    int row = int(heightmap.height * ((zpos - zmin) / (zmax - zmin)));
+    int col = int(heightmap.width  * ((xpos - xmin) / (xmax - xmin)));
+
+    uint32_t argb   = pixels[heightmap.width*row + col];
+    uint8_t  red    = (argb >> 8) & 0xFF;
+
+    float    height = float(red);
+             height /= 255.0f;
+             height *= scale.y;
+
+    return position.y - height;
 
 }
 

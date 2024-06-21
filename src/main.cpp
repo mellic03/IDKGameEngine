@@ -82,17 +82,14 @@ message_callback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsize
 
 int main( int argc, char **argv )
 {
-    std::string win_name;
-    int gl_major, gl_minor;
-
-    win_name = "MEATWORLD";
-    gl_major = 4;
-    gl_minor = 6;
-
-
+    // Parse command-line arguments
+    // -----------------------------------------------------------------------------------------
     bool arg_load_modules = false;
     bool arg_load_idksc   = false;
+    bool arg_load_game    = false;
+
     std::string arg_idksc = "";
+    std::string arg_game  = "";
 
     for (int i=1; i<argc; i++)
     {
@@ -108,13 +105,29 @@ int main( int argc, char **argv )
             arg_load_idksc = true;
             arg_idksc = std::string(argv[i+1]);
         }
+
+        else if (arg == "-lg" || arg == "--load-game")
+        {
+            arg_load_game = true;
+            arg_game = std::string(argv[i+1]);
+        }
     }
+    // -----------------------------------------------------------------------------------------
+
+
+    // Load game code
+    // -----------------------------------------------------------------------------------------
+    std::string game_path = (arg_load_game) ? arg_game : "libgame.so";
+
+    idk::GenericLoader<idk::Game> gameLoader(game_path);
+    idk::Game *game = gameLoader.getInstance();
+    // -----------------------------------------------------------------------------------------
 
 
     // Load engine code
     // // -----------------------------------------------------------------------------------------
     idk::EngineAPI api;
-    api.init(win_name, gl_major, gl_minor);
+    api.init(game->getName(), 4, 6);
 
     auto &eventsys   = api.getEventSys();
     auto &audiosys   = api.getAudioSys();
@@ -182,16 +195,10 @@ int main( int argc, char **argv )
     // -----------------------------------------------------------------------------------------
 
 
-    // Load game code
-    // -----------------------------------------------------------------------------------------
-    idk::GenericLoader<idk::Game> gameLoader("libgame.so");
-    idk::Game *game = gameLoader.getInstance();
-    game->registerModules(api);
-    // -----------------------------------------------------------------------------------------
-
-
     // Setup
     // -----------------------------------------------------------------------------------------
+    game->registerModules(api);
+
     idk::ECS2::init(api);
     engine.initModules(api);
 

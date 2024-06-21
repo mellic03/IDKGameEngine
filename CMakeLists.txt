@@ -14,49 +14,38 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinUI/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKECS/)
 
 
-
-# add_library(${PROJECT_NAME} SHARED ${CMAKE_CURRENT_SOURCE_DIR}/src/dummy.cpp)
-
-
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(GLEW REQUIRED)
 find_package(OpenGL REQUIRED)
-# find_package(SDL2 REQUIRED)
-# find_package(SDL2_image REQUIRED)
-# find_package(SDL2_mixer REQUIRED)
-# find_package(SDL2_ttf REQUIRED)
+
 
 file(GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(IDKGameLoader ${SOURCES})
+
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
 if (IDK_DEBUG)
-    target_compile_options(${PROJECT_NAME} PUBLIC -O0 -g)
+    target_compile_options(IDKGameLoader PUBLIC -Werror -fsanitize=undefined -lstdc++fs -g)
 else()
-    target_compile_options(${PROJECT_NAME} PUBLIC -Ofast)
+    target_compile_options(IDKGameLoader PUBLIC -Ofast)
 endif ()
 
 
 
 
-target_include_directories(
-    ${PROJECT_NAME} PUBLIC
-)
+target_include_directories(IDKGameLoader PUBLIC)
 
 include_directories(${GLEW_INCLUDE_DIRS})
 include_directories(${OPENGL_INCLUDE_DIRS})
-# include_directories(${SDL2_INCLUDE_DIRS})
-# include_directories(${SDL2_image_INCLUDE_DIRS})
-# include_directories(${SDL2_mixer_INCLUDE_DIRS})
-# include_directories(${SDL2_ttf_INCLUDE_DIRS})
 
 
 target_link_libraries(
-    ${PROJECT_NAME} PUBLIC
+    IDKGameLoader PUBLIC
 
     GLEW
     SDL2
@@ -75,9 +64,6 @@ target_link_libraries(
     IDKECS
 
     ImGui
-    ImGuizmo
-    ImNodes
-
 )
 
 

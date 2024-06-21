@@ -41,7 +41,7 @@ public:
     static bool raycast ( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit );
 
     static void bakeHeightmap( idk::TextureWrapper &wrapper );
-    static float queryHeightmap( const glm::vec3 &position, const glm::vec3 &scale );
+    static float queryHeightmap( TextureWrapper &wrapper, const glm::vec3 &position, const glm::vec3 &scale );
 
 };
 

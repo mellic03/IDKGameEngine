@@ -57,6 +57,17 @@ idk::ModelSys::update( idk::EngineAPI &api )
     }
 
 
+    static const idk::glTextureConfig config = {
+        .internalformat = GL_RGBA8,
+        .format         = GL_RGBA,
+        .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .wrap_s         = GL_REPEAT,
+        .wrap_t         = GL_REPEAT,
+        .datatype       = GL_UNSIGNED_BYTE,
+        .genmipmap      = GL_TRUE
+    };
+
     if (m_heightmap_RQ == -1)
     {
         m_heightmap_RQ = ren.createRenderQueue("ModelSys-terrain");
@@ -70,38 +81,18 @@ idk::ModelSys::update( idk::EngineAPI &api )
 
     for (auto &cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
     {
-        static const idk::glTextureConfig config = {
-            .internalformat = GL_RGBA8,
-            .format         = GL_RGBA,
-            .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
-            .magfilter      = GL_LINEAR,
-            .wrap_s         = GL_REPEAT,
-            .wrap_t         = GL_REPEAT,
-            .datatype       = GL_UNSIGNED_BYTE,
-            .genmipmap      = GL_TRUE
-        };
-
-        if (cmp.model == -1)
+        if (cmp.textures.empty() == false && cmp.textures[0] != "")
         {
-            cmp.model = ren.loadModel("assets/models/plane.idkvi");
+            if (cmp.textures.back() == "")
+            {
+                cmp.textures.pop_back();
+            }
+        
+            if (cmp.textures.empty() == false)
+            {
+                ren.modelAllocator().addUserMaterials(cmp.model, cmp.textures, config);
+            }
         }
-
-        if (cmp.textures.empty())
-        {
-            continue;
-        }
-
-        if (cmp.textures.back() == "")
-        {
-            cmp.textures.pop_back();
-        }
-    
-        if (cmp.textures.empty())
-        {
-            continue;
-        }
-
-        ren.modelAllocator().addUserMaterials(cmp.model, cmp.textures, config);
 
         glm::mat4 M = TransformSys::getModelMatrix(cmp.obj_id);
         ren.drawModelRQ(m_heightmap_RQ, cmp.model, M);
@@ -154,6 +145,20 @@ idk::StaticHeightmapCmp::deserialize( std::ifstream &stream )
     n += idk::streamread(stream, obj_id);
     n += idk::streamread(stream, textures);
 
+    static const idk::glTextureConfig config = {
+        .internalformat = GL_RGBA8,
+        .format         = GL_RGBA,
+        .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .wrap_s         = GL_REPEAT,
+        .wrap_t         = GL_REPEAT,
+        .datatype       = GL_UNSIGNED_BYTE,
+        .genmipmap      = GL_TRUE
+    };
+
+    gltools::loadTexture("assets/heightmaps/sand-dunes.jpg", config, &(this->heightmap));
+    this->model = api_ptr->getRenderer().loadModel("assets/models/unit-plane.idkvi");
+
     return n;
 };
 
@@ -162,7 +167,21 @@ void
 idk::StaticHeightmapCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
     auto &cmp = idk::ECS2::getComponent<StaticHeightmapCmp>(obj_id);
-    // cmp.model = api_ptr->getRenderer().loadModel(cmp.filepath);
+
+    static const idk::glTextureConfig config = {
+        .internalformat = GL_RGBA8,
+        .format         = GL_RGBA,
+        .minfilter      = GL_LINEAR_MIPMAP_LINEAR,
+        .magfilter      = GL_LINEAR,
+        .wrap_s         = GL_REPEAT,
+        .wrap_t         = GL_REPEAT,
+        .datatype       = GL_UNSIGNED_BYTE,
+        .genmipmap      = GL_TRUE
+    };
+
+    gltools::loadTexture("assets/heightmaps/sand-dunes.jpg", config, &(cmp.heightmap));
+    cmp.model = api.getRenderer().loadModel("assets/models/unit-plane.idkvi");
+
 };
 
 
