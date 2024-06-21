@@ -28,6 +28,14 @@ idk::ECS2::update( idk::EngineAPI &api )
         m_readfile = false;
         _load();
     }
+
+
+    for (int obj_id: m_delete_list)
+    {
+        _deleteGameObject(obj_id, true);
+    }
+    m_delete_list.clear();
+
 }
 
 
@@ -74,10 +82,16 @@ int
 idk::ECS2::createGameObject( const std::string &name, bool persistent )
 {
     int id = m_entities.create();
+    std::cout << "[ECS2::createGameObject] obj_id " << id << "\n";
+
     Entity &e = m_entities.get(id);
     e.id = id;
     e.persistent = persistent;
     e.name = name;
+    e.children.clear();
+    e.components.clear();
+    e.component_names.clear();
+    e.parent = -1;
 
     giveComponent<IconCmp>(id);
     giveComponent<TransformCmp>(id);
@@ -109,8 +123,10 @@ idk::ECS2::copyGameObject( int obj_id, bool deep )
 
 
 void
-idk::ECS2::deleteGameObject( int obj_id, bool deep )
+idk::ECS2::_deleteGameObject( int obj_id, bool deep )
 {
+    LOG_DEBUG() << "[ECS2::deleteGameObject] obj_id " << obj_id;
+
     // Delete children
     // --------------------------------------------
     std::vector<int> cull;
@@ -122,8 +138,14 @@ idk::ECS2::deleteGameObject( int obj_id, bool deep )
 
     for (int child_id: cull)
     {
-        removeChild(obj_id, child_id);
-        deleteGameObject(child_id, true);
+        _deleteGameObject(child_id, true);
+    }
+
+    int parent = getParent(obj_id);
+
+    if (parent != -1)
+    {
+        removeChild(parent, obj_id);
     }
     // --------------------------------------------
 
@@ -143,6 +165,16 @@ idk::ECS2::deleteGameObject( int obj_id, bool deep )
 
     m_entities.destroy(obj_id);
 
+}
+
+
+
+void
+idk::ECS2::deleteGameObject( int obj_id, bool deep )
+{
+    LOG_DEBUG() << "[ECS2::deleteGameObject] obj_id " << obj_id;
+
+    m_delete_list.push_back(obj_id);
 }
 
 
@@ -234,17 +266,24 @@ idk::ECS2::getSelectedGameObjectName()
 void
 idk::ECS2::giveComponent( int obj_id, size_t key )
 {
+    if (hasComponent(obj_id, key))
+    {
+        LOG_WARN() << "Object " << obj_id << " already has component " << getComponentArray(key)->getName();
+        return;
+    }
+
     auto &e = m_entities.get(obj_id);
-    auto &c = m_component_arrays[key];
-    e.components[key] = c->createComponent(obj_id);
-    c->onObjectAssignment(*m_api_ptr, obj_id);
+    auto *C = m_component_arrays[key].get();
+    e.components[key] = C->createComponent(obj_id);
+    C->onObjectAssignment(*m_api_ptr, obj_id);
 }
 
 
 bool
 idk::ECS2::hasComponent( int obj_id, size_t key )
 {
-    IDK_ASSERT("Object does not exist", m_entities.contains(obj_id));
+    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
+    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
 
     auto &e = m_entities.get(obj_id);
     return e.components.contains(key);
@@ -262,6 +301,9 @@ idk::ECS2::getParent( int obj_id )
 bool
 idk::ECS2::hasParent( int obj_id )
 {
+    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
+    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
+
     return m_entities.get(obj_id).parent != -1;
 }
 
@@ -269,6 +311,9 @@ idk::ECS2::hasParent( int obj_id )
 const std::set<int>&
 idk::ECS2::getChildren( int obj_id )
 {
+    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
+    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
+
     return m_entities.get(obj_id).children;
 }
 
@@ -346,7 +391,7 @@ idk::ECS2::save( const std::string &filepath )
 
     for (auto &[key, C]: m_component_arrays)
     {
-        names.push_back(C->getName());
+        names.push_back((C.get())->getName());
     }
 
     idk::streamwrite(stream, names);
@@ -356,7 +401,7 @@ idk::ECS2::save( const std::string &filepath )
     // --------------------------------------------------
     for (auto &[key, C]: m_component_arrays)
     {
-        C->serialize(stream);
+        (C.get())->serialize(stream);
     }
     // --------------------------------------------------
 
@@ -404,27 +449,31 @@ idk::ECS2::_load()
     stream.close();
 
     init(*m_api_ptr);
+    update(*m_api_ptr);
 
     // Absolutely terrible way to handle persistency.
     // --------------------------------------------------
-    // std::vector<int> cull;
+    std::vector<int> cull;
 
-    // for (Entity &e: m_entities)
-    // {
-    //     if (e.persistent == false)
-    //     {
-    //         cull.push_back(e.id);
-    //     }
-    // }
+    for (Entity &e: m_entities)
+    {
+        if (e.persistent == false)
+        {
+            cull.push_back(e.id);
+        }
+    }
 
-    // for (int id: cull)
-    // {
-    //     std::cout << "Non-persistent object: " << id << "\n";
-    //     deleteGameObject(id, true);
-    // }
+    for (int id: cull)
+    {
+        std::cout << "Non-persistent object: " << id << "\n";
+
+        if (gameObjectExists(id))
+        {
+            _deleteGameObject(id, true);
+        }
+    }
     // --------------------------------------------------
 
-    update(*m_api_ptr);
 
 }
 

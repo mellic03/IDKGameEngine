@@ -29,10 +29,12 @@ template <typename T>
 T&
 idk::ECS2::getComponent( int obj_id )
 {
-    if (hasComponent<T>(obj_id) == false)
-    {
-        giveComponent<T>(obj_id);
-    }
+    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
+    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
+
+    msg = "Object " + std::to_string(obj_id) + " does not have component ";
+    msg += getComponentArray<T>().getName();
+    IDK_ASSERT(msg.c_str(), hasComponent<T>(obj_id));
 
     size_t key = getkey<ComponentArray<T>>();
     auto   &e  = m_entities.get(obj_id);
@@ -48,9 +50,7 @@ idk::ECS2::ComponentArray<T>&
 idk::ECS2::getComponentArray()
 {
     size_t key = getkey<ComponentArray<T>>();
-
-    iComponentArray *C = m_component_arrays[key];
-    return *dynamic_cast<ComponentArray<T> *>(C);
+    return *dynamic_cast<ComponentArray<T> *>(m_component_arrays[key].get());
 }
 
 
@@ -63,9 +63,7 @@ idk::ECS2::registerComponent( const std::string &name )
 {
     size_t key = getkey<ComponentArray<T>>();
  
-    m_component_arrays[key] = new ComponentArray<T>(name);
-    // m_component_arrays[key]->userCallback = idk::ECS2::userCallback<T>;
-
+    m_component_arrays[key] = std::make_unique<ComponentArray<T>>(name);
     m_component_keys[name] = key;
 }
 

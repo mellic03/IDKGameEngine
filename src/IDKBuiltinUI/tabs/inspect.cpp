@@ -34,7 +34,7 @@ idk_AddComponentPopup( int obj_id )
     {
         if (idk::ECS2::hasComponent(obj_id, key) == false)
         {
-            std::string name = C->getName();
+            std::string name = (C.get())->getName();
 
             if (ImGui::MenuItem(name.c_str()))
             {
@@ -85,7 +85,7 @@ EditorUI_MD::_tab_inspect( idk::EngineAPI &api, int obj_id )
                 continue;
             }
 
-            std::string label = C->getName();
+            std::string label = (C.get())->getName();
             if (ImGui::Selectable(label.c_str(), &selected))
             {
                 component = key;

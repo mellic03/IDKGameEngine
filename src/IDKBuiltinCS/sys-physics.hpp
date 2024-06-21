@@ -29,7 +29,9 @@ private:
     static void kinematicCapsule_staticRect( float timestep, KinematicCapsuleCmp &s_cmp, StaticRectCmp &r_cmp );
     static void _integrate ( idk::EngineAPI &api, float dt );
 
+    inline static std::vector<idk::TextureWrapper> m_heightmaps;
     inline static float m_accumulator = 0.0f;
+
 
 public:
     virtual void init   ( idk::EngineAPI & ) final;
@@ -37,6 +39,9 @@ public:
 
     static void addForce( int obj_id, const glm::vec3& );
     static bool raycast ( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit );
+
+    static void bakeHeightmap( idk::TextureWrapper &wrapper );
+    static float queryHeightmap( const glm::vec3 &position, const glm::vec3 &scale );
 
 };
 

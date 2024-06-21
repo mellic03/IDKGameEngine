@@ -54,6 +54,8 @@ public:
 
     }
 
+    virtual ~ComponentArray() = default;
+
     virtual size_t serialize( std::ofstream &stream )
     {
         size_t n = 0;

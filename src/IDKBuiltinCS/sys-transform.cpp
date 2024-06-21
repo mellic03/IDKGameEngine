@@ -669,7 +669,7 @@ idk::TransformSys::FABRIK( int objA, int objB, int objC, glm::vec3 end_pos,
     // posB += 0.1f*pole_dir;
 
 
-    for (int i=0; i<3; i++)
+    for (int i=0; i<1; i++)
     {
         // Backward pass
         // -----------------------------------------------------

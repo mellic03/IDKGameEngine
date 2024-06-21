@@ -1,20 +1,91 @@
 #include "idk_ecs2.hpp"
 
 
+template<typename key_type, typename value_type>
+size_t
+idk_stdmap_streamwrite( std::ofstream &stream, const std::map<key_type, value_type> &data )
+{
+    size_t n = 0;
+
+    uint32_t size = uint32_t(data.size());
+    n += idk::streamwrite(stream, size);
+
+    for (const auto &[key, value]: data)
+    {
+        n += idk::streamwrite(stream, key);
+        n += idk::streamwrite(stream, value);
+    }
+
+    return n;
+}
+
+template<typename key_type, typename value_type>
+size_t
+idk_stdmap_streamread( std::ifstream &stream, std::map<key_type, value_type> &data )
+{
+    size_t n = 0;
+
+    uint32_t size;
+    n += idk::streamread(stream, size);
+
+    for (uint32_t i=0; i<size; i++)
+    {
+        key_type   key;
+        value_type value;
+
+        n += idk::streamread(stream, key);
+        n += idk::streamread(stream, value);
+
+        data[key] = value;
+    }
+
+    return n;
+}
+
+
+
+template<typename T>
+size_t
+idk_stdset_streamwrite( std::ofstream &stream, const std::set<T> &data )
+{
+    size_t n = 0;
+
+    uint32_t size = uint32_t(data.size());
+    n += idk::streamwrite(stream, size);
+
+    for (const auto &value: data)
+    {
+        n += idk::streamwrite(stream, value);
+    }
+
+    return n;
+}
+
+template<typename T>
+size_t
+idk_stdset_streamread( std::ifstream &stream, std::set<T> &data )
+{
+    size_t n = 0;
+
+    uint32_t size;
+    n += idk::streamread(stream, size);
+
+    for (uint32_t i=0; i<size; i++)
+    {
+        T value;
+        n += idk::streamread(stream, value);
+        data.insert(value);
+    }
+
+    return n;
+}
+
+
 
 size_t
 idk::ECS2::Entity::serialize( std::ofstream &stream ) const
 {
-    std::vector<std::string> names;
-    std::vector<int>         cmp_ids;
-    std::vector<int>         child_ids;
-
-    for (auto &[key, cmp_id]: components)
-    {
-        std::string name = ECS2::getComponentArray(key)->getName();
-        names.push_back(name);
-        cmp_ids.push_back(cmp_id);
-    }
+    std::vector<int> child_ids;
 
     for (int child_id: children)
     {
@@ -27,8 +98,8 @@ idk::ECS2::Entity::serialize( std::ofstream &stream ) const
     n += idk::streamwrite(stream, name);
     n += idk::streamwrite(stream, parent);
     n += idk::streamwrite(stream, child_ids);
-    n += idk::streamwrite(stream, names);
-    n += idk::streamwrite(stream, cmp_ids);
+    n += idk_stdset_streamwrite(stream, this->component_names);
+    n += idk_stdmap_streamwrite(stream, this->components);
     return n;
 }
 
@@ -50,16 +121,8 @@ idk::ECS2::Entity::deserialize( std::ifstream &stream )
         children.insert(child_id);
     }
 
-    std::vector<std::string> names;
-    std::vector<int>         cmp_ids;
-    n += idk::streamread(stream, names);
-    n += idk::streamread(stream, cmp_ids);
-
-    for (int i=0; i<names.size(); i++)
-    {
-        size_t key = ECS2::getComponentKey(names[i]);
-        components[key] = cmp_ids[i];
-    }
+    n += idk_stdset_streamread(stream, this->component_names);
+    n += idk_stdmap_streamread(stream, this->components);
 
     return n;
 }

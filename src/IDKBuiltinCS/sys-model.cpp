@@ -114,8 +114,12 @@ idk::ModelSys::update( idk::EngineAPI &api )
 void
 idk::ModelSys::assignModel( int obj_id, const std::string &filepath )
 {
-    auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
+    if (ECS2::hasComponent<ModelCmp>(obj_id) == false)
+    {
+        ECS2::giveComponent<ModelCmp>(obj_id);
+    }
 
+    auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
     int model_id = api_ptr->getRenderer().loadModel(filepath);
 
     cmp.obj_id   = obj_id;

@@ -115,8 +115,6 @@ idk::PhysicsSys::addForce( int obj_id, const glm::vec3 &force )
 bool
 idk::PhysicsSys::raycast( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit )
 {
-    
-
     float nearest_dist = INFINITY;
     glm::vec3 nearest_hit = glm::vec3(0.0f);
 
@@ -220,6 +218,61 @@ idk::PhysicsSys::kinematicCapsule_staticRect( float timestep, KinematicCapsuleCm
     s_cmp.grounded = (s_cmp.airtime < 1.0f / 30.0f);
 
 }
+
+
+
+
+
+
+
+void
+idk::PhysicsSys::bakeHeightmap( idk::TextureWrapper &wrapper )
+{
+    m_heightmaps.push_back(wrapper);
+}
+
+
+float
+idk::PhysicsSys::queryHeightmap( const glm::vec3 &position, const glm::vec3 &scale )
+{
+    float xmin = -0.5f * scale.x;
+    float xmax = +0.5f * scale.x;
+
+    float zmin = -0.5f * scale.z;
+    float zmax = +0.5f * scale.z;
+
+    float xpos = glm::clamp(position.x, xmin, xmax);
+    float zpos = glm::clamp(position.z, zmin, zmax);
+
+    if (xpos != position.x || zpos != position.z)
+    {
+        return -1.0f;
+    }
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

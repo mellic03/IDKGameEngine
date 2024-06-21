@@ -18,7 +18,14 @@ EditorUI_MD::_tab_buffers( idk::EngineAPI &api )
 
     {
         int w = int(ImGui::GetContentRegionAvail().x);
-    
+
+        ImGui::Image(
+            *(ImTextureID *)(void *)(&(ren.getUIFrameBuffer().attachments[0])),
+            ImVec2(w, w/ratio),
+            ImVec2(0.0f, 1.0f),
+            ImVec2(1.0f, 0.0f)
+        );
+
         ImGui::Image(
             *(ImTextureID *)(void *)(&(ren.m_mip_scratchbuffer.attachments[0])),
             ImVec2(w, w/ratio),

@@ -44,8 +44,7 @@ private:
     static void _load();
 
     inline static
-    std::map<size_t, iComponentArray*> m_component_arrays;
-
+    std::map<size_t, std::unique_ptr<iComponentArray>> m_component_arrays;
     inline static
     std::map<std::string, size_t>      m_component_keys;
 
@@ -75,6 +74,9 @@ private:
     inline static
     idk::Allocator<Entity> m_entities;
 
+    inline static
+    std::vector<int> m_delete_list;
+
 
     template <typename T>
     static size_t getkey()
@@ -95,6 +97,7 @@ public:
 
     static int                  createGameObject ( const std::string &name = "Empty", bool persistent = true );
     static int                  copyGameObject   ( int obj_id, bool deep=false );
+    static void                 _deleteGameObject ( int obj_id, bool deep=true );
     static void                 deleteGameObject ( int obj_id, bool deep=true );
 
     static void                 createPrefab     ( int obj_id, const std::string &filepath );
@@ -145,7 +148,7 @@ public:
 
     static iComponentArray *getComponentArray( size_t key )
     {
-        return m_component_arrays[key];
+        return m_component_arrays[key].get();
     }
 
     static iComponentArray *getComponentArray( const std::string &name )
@@ -154,7 +157,7 @@ public:
         return getComponentArray(key);
     }
 
-    static std::map<size_t, iComponentArray*> &getComponentArrays()
+    static std::map<size_t, std::unique_ptr<iComponentArray>> &getComponentArrays()
     {
         return m_component_arrays;
     }
