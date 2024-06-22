@@ -40,12 +40,14 @@ idk::ECS2::update( idk::EngineAPI &api )
     {
         count = 0;
 
-        for (System *system: m_systems)
-        {
-            LOG_INFO()
-                << "[ECS2::update] Avg. execution " << system->m_avg_time
-                << " ms --> \"" << system->m_name << "\"";
-        }
+        // for (System *system: m_systems)
+        // {
+        //     LOG_INFO()
+        //         << "[ECS2::update] Avg. execution " << system->m_avg_time
+        //         << " ms --> \"" << system->m_name << "\"";
+        // }
+
+        // LOG_INFO() << "";
     }
 
 
@@ -471,6 +473,7 @@ idk::ECS2::_load()
     // Read entities
     // --------------------------------------------------
     std::cout << "Reading entities ---------------------\n";
+    m_entities.clear();
     m_entities.deserialize(stream);
     // --------------------------------------------------
 

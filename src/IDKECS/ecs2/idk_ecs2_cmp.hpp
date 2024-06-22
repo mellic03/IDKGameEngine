@@ -67,6 +67,8 @@ public:
 
     virtual size_t deserialize( std::ifstream &stream )
     {
+        m_data.clear();
+
         size_t n = 0;
         n += idk::streamread(stream, m_name);
         n += idk::streamread(stream, m_data);
