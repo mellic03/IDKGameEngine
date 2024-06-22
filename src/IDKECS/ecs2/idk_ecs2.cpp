@@ -2,7 +2,6 @@
 #include "IDKBuiltinCS/sys-transform.hpp"
 
 
-
 void
 idk::ECS2::init( idk::EngineAPI &api )
 {
@@ -18,10 +17,39 @@ idk::ECS2::init( idk::EngineAPI &api )
 void
 idk::ECS2::update( idk::EngineAPI &api )
 {
+    const double A = 1023.0 / 1024.0;
+    const double B = 1.0 / 1024.0;
+
+    static int count = 0;
+    count += 1;
+
     for (System *system: m_systems)
     {
+        auto start = std::chrono::high_resolution_clock::now();
+
         system->update(api);
+
+        auto finish  = std::chrono::high_resolution_clock::now();
+        auto elapsed = std::chrono::duration<double>(finish-start).count();
+
+        system->m_avg_time = A*system->m_avg_time + B*static_cast<double>(elapsed);
     }
+
+
+    if (count == 1024)
+    {
+        count = 0;
+
+        for (System *system: m_systems)
+        {
+            LOG_INFO()
+                << "[ECS2::update] Avg. execution " << system->m_avg_time
+                << " ms --> \"" << system->m_name << "\"";
+        }
+    }
+
+
+
 
     if (m_readfile)
     {

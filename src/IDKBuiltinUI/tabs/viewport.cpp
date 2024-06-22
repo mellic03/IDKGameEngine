@@ -25,8 +25,8 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
     float h = ImGui::GetWindowHeight();
     ImGuizmo::SetRect(x, y, w, h);
 
-    glm::mat4 view = camera.V();
-    glm::mat4 proj = camera.P();
+    glm::mat4 view = camera.V;
+    glm::mat4 proj = camera.P;
 
     ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
 

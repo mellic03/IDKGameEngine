@@ -9,7 +9,7 @@
 
 
 // void
-// idk::ui::transform_component( idk::EngineAPI &api, idk::Camera &camera, idk::Hierarchy_CS &CS,
+// idk::ui::transform_component( idk::EngineAPI &api, IDK_Camera &camera, idk::Hierarchy_CS &CS,
 //                               glm::mat4 &model, glm::mat4 parent, float tsnap, float rsnap )
 // {
 //     auto &engine   = api.getEngine();
@@ -71,7 +71,7 @@
 
 
 // void
-// idk::ui::transform_component2( idk::EngineAPI &api, idk::Camera &camera, idk::Hierarchy_CS &CS,
+// idk::ui::transform_component2( idk::EngineAPI &api, IDK_Camera &camera, idk::Hierarchy_CS &CS,
 //                                glm::mat4 &model, glm::mat4 transform, glm::mat4 parent )
 // {
 //     auto &engine   = api.getEngine();

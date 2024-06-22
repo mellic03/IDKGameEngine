@@ -8,6 +8,9 @@
 #include <set>
 #include <map>
 
+#include <cxxabi.h>
+
+
 
 namespace idk
 {
@@ -27,6 +30,11 @@ public:
 
     class System
     {
+    private:
+        friend class idk::ECS2;
+        std::string m_name = "default";
+        double m_avg_time = 0.0;
+
     public:
         virtual void init     ( idk::EngineAPI& ) = 0;
         virtual void update   ( idk::EngineAPI& ) = 0;
@@ -183,6 +191,14 @@ public:
     static void registerSystem()
     {
         m_systems.push_back(dynamic_cast<System *>(new T));
+
+        int status;
+        char *demangled = abi::__cxa_demangle(typeid(T).name(), NULL, NULL, &status);
+
+        if (status == 0)
+        {
+            m_systems.back()->m_name = std::string(demangled);
+        }
     }
 
 

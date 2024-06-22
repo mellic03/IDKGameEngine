@@ -191,13 +191,9 @@ EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
     
     auto &cmp = idk::ECS2::getComponent<idk::CameraCmp>(obj_id);
 
-    ImGui::DragFloat("Bloom", &cmp.bloom, 0.01f, 0.0f, 1.0f);
-    ImGui::DragFloat("FOV",   &cmp.fov,   0.1f, 60.0f, 120.0f);
+    ImGui::DragFloat("Bloom", &cmp.camera.bloom, 0.01f, 0.0f, 1.0f);
+    // ImGui::DragFloat("FOV",   &cmp.camera.fov,   0.1f, 60.0f, 120.0f);
 
-    ImGui::DragFloat2("Chromatic R",         &cmp.chromatic_r[0],   -1.0f, +1.0f, 0.05f);
-    ImGui::DragFloat2("Chromatic G",         &cmp.chromatic_g[0],   -1.0f, +1.0f, 0.05f);
-    ImGui::DragFloat2("Chromatic B",         &cmp.chromatic_b[0],   -1.0f, +1.0f, 0.05f);
-    ImGui::DragFloat3("Chromatic strength",  &cmp.chromatic_strength[0], 0.0f, 4.0f, 0.05f);
 
     // Camera drag-drop
     // -----------------------------------------------------------------------------------------
@@ -295,20 +291,20 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::SpotlightCmp>( idk::EngineAPI &api, int obj_id )
 {
-    auto &ren = api.getRenderer();
+    // auto &ren = api.getRenderer();
     
-    auto &cmp = idk::ECS2::getComponent<idk::SpotlightCmp>(obj_id);
+    // auto &cmp = idk::ECS2::getComponent<idk::SpotlightCmp>(obj_id);
 
-    if (cmp.light_id == -1)
-    {
-        return;
-    }
+    // if (cmp.light_id == -1)
+    // {
+    //     return;
+    // }
 
-    ImGui::ColorEdit3("Diffuse",      &cmp.diffuse[0]);
-    ImGui::DragFloat("Specular",      &cmp.diffuse[3], 0.05f, 0.0f, 1.0f);
-    ImGui::DragFloat("Radius",        &cmp.radius,     0.01f, 0.5f, 64.0f);
-    ImGui::InputFloat("Inner cutoff", &cmp.angle[0]);
-    ImGui::InputFloat("Outer cutoff", &cmp.angle[1]);
+    // ImGui::ColorEdit3("Diffuse",      &cmp.diffuse[0]);
+    // ImGui::DragFloat("Specular",      &cmp.diffuse[3], 0.05f, 0.0f, 1.0f);
+    // ImGui::DragFloat("Radius",        &cmp.radius,     0.01f, 0.5f, 64.0f);
+    // ImGui::InputFloat("Inner cutoff", &cmp.angle[0]);
+    // ImGui::InputFloat("Outer cutoff", &cmp.angle[1]);
 
 }
 
@@ -327,8 +323,8 @@ EditorUI_MD::drawComponent<idk::DirlightCmp>( idk::EngineAPI &api, int obj_id )
         return;
     }
 
-    ImGui::ColorEdit4("Diffuse",      &cmp.diffuse[0]);
-    ImGui::ColorEdit4("Ambient",      &cmp.ambient[0]);
+    ImGui::ColorEdit4("Diffuse",      &cmp.light.diffuse[0]);
+    ImGui::ColorEdit4("Ambient",      &cmp.light.ambient[0]);
 
 }
 
@@ -338,19 +334,18 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::PointlightCmp>( idk::EngineAPI &api, int obj_id )
 {
-    auto &ren = api.getRenderer();
+    // auto &ren = api.getRenderer();
     
-    auto &cmp = idk::ECS2::getComponent<idk::PointlightCmp>(obj_id);
+    // auto &cmp = idk::ECS2::getComponent<idk::PointlightCmp>(obj_id);
 
-    if (cmp.light_id == -1)
-    {
-        return;
-    }
+    // if (cmp.light_id == -1)
+    // {
+    //     return;
+    // }
 
-    ImGui::ColorEdit3("Diffuse",      &cmp.diffuse[0]);
-    ImGui::DragFloat("Specular",      &cmp.diffuse[3], 0.05f, 0.0f, 1.0f);
-    ImGui::DragFloat("Radius",        &cmp.radius,     0.01f, 0.5f, 64.0f);
-
+    // ImGui::ColorEdit3("Diffuse",      &cmp.diffuse[0]);
+    // ImGui::DragFloat("Specular",      &cmp.diffuse[3], 0.05f, 0.0f, 1.0f);
+    // ImGui::DragFloat("Radius",        &cmp.radius,     0.01f, 0.5f, 64.0f);
 }
 
 

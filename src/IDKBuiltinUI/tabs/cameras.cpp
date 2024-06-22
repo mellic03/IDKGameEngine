@@ -2,7 +2,7 @@
 
 
 
-static void callback( idk::Camera &cam )
+static void callback( IDK_Camera &cam )
 {
     static glm::vec3 offset(0.5f, 1.0f, 1.0f);
     // idkgui::dragVec3("Offset", &offset[0], -2.0f, 2.0f, 0.1f, "%.1f", 0.0f);
@@ -28,68 +28,68 @@ EditorTab::cameras( idk::EngineAPI &api )
     {
         int n = 0;
 
-        for (idk::Camera &cam: ren.getCameras())
-        {
-            std::string label = std::to_string(n);
+        // for (IDK_Camera &cam: ren.getCameras())
+        // {
+        //     std::string label = std::to_string(n);
 
 
-            if (ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_Leaf))
-            {
-                if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
-                {
-                    ImGui::SetDragDropPayload("CAMERA_DRAG_DROP",
-                        (const void *)(&n),
-                        sizeof(int)
-                    );
+        //     if (ImGui::TreeNodeEx(label.c_str(), ImGuiTreeNodeFlags_Leaf))
+        //     {
+        //         if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+        //         {
+        //             ImGui::SetDragDropPayload("CAMERA_DRAG_DROP",
+        //                 (const void *)(&n),
+        //                 sizeof(int)
+        //             );
 
-                    if (ImGui::IsDragDropActive())
-                    {
-                        ImGui::Text(label.c_str());
-                    }
-                    ImGui::EndDragDropSource();
-                }
-                ImGui::TreePop();
-            }
+        //             if (ImGui::IsDragDropActive())
+        //             {
+        //                 ImGui::Text(label.c_str());
+        //             }
+        //             ImGui::EndDragDropSource();
+        //         }
+        //         ImGui::TreePop();
+        //     }
 
-            if (ImGui::Selectable(label.c_str(), selected == n))
-            {
-                selected = n;
-            }
+        //     if (ImGui::Selectable(label.c_str(), selected == n))
+        //     {
+        //         selected = n;
+        //     }
      
-            n += 1;
-        }
+        //     n += 1;
+        // }
 
         idkImGui::splitWindow_split();
 
-        if (selected != -1)
-        {
-            idk::Camera &cam = ren.getCamera(selected);
+        // if (selected != -1)
+        // {
+        //     IDK_Camera &cam = ren.getCamera(selected);
 
-            if (ImGui::Button("Switch to"))
-            {
-                ren.useCamera(selected);
-            }
+        //     if (ImGui::Button("Switch to"))
+        //     {
+        //         ren.useCamera(selected);
+        //     }
 
-            ImGui::Spacing();
+        //     ImGui::Spacing();
 
-            // ImGui::SliderFloat("Strength", &cam.m_abr_str, 0.0f, 0.1f, "%.4f");
-            // ImGui::SliderFloat2("R",  &cam.m_r_abr.x,  -1.0f, 1.0f, "%.0f");
-            // ImGui::SameLine();
-            // if (ImGui::Button("RReset"))
-            //     cam.m_r_abr = glm::vec2(0.0f);
+        //     // ImGui::SliderFloat("Strength", &cam.m_abr_str, 0.0f, 0.1f, "%.4f");
+        //     // ImGui::SliderFloat2("R",  &cam.m_r_abr.x,  -1.0f, 1.0f, "%.0f");
+        //     // ImGui::SameLine();
+        //     // if (ImGui::Button("RReset"))
+        //     //     cam.m_r_abr = glm::vec2(0.0f);
 
-            // ImGui::SliderFloat2("G",  &cam.m_g_abr.x,  -1.0f, 1.0f, "%.1f");
-            // ImGui::SameLine();
-            // if (ImGui::Button("GReset"))
-            //     cam.m_g_abr = glm::vec2(0.0f);
+        //     // ImGui::SliderFloat2("G",  &cam.m_g_abr.x,  -1.0f, 1.0f, "%.1f");
+        //     // ImGui::SameLine();
+        //     // if (ImGui::Button("GReset"))
+        //     //     cam.m_g_abr = glm::vec2(0.0f);
 
-            // ImGui::SliderFloat2("B",  &cam.m_b_abr.x,  -1.0f, 1.0f, "%.1f");
-            // ImGui::SameLine();
-            // if (ImGui::Button("BReset"))
-            //     cam.m_b_abr = glm::vec2(0.0f);
+        //     // ImGui::SliderFloat2("B",  &cam.m_b_abr.x,  -1.0f, 1.0f, "%.1f");
+        //     // ImGui::SameLine();
+        //     // if (ImGui::Button("BReset"))
+        //     //     cam.m_b_abr = glm::vec2(0.0f);
 
-            // ImGui::Spacing();
-        }
+        //     // ImGui::Spacing();
+        // }
 
         idkImGui::splitWindow_end();
     }
