@@ -1,6 +1,6 @@
 #include "sys-model.hpp"
-
 #include "sys-transform.hpp"
+
 static idk::EngineAPI *api_ptr;
 
 
@@ -10,7 +10,6 @@ idk::ModelSys::init( idk::EngineAPI &api )
     api_ptr = &api;
     auto &ren = api.getRenderer();
 
-
     ren.createProgram(
         "ModelSys-terrain", "assets/shaders/", "terrain-gpass.vs", "terrain-gpass.fs"
     );
@@ -19,8 +18,13 @@ idk::ModelSys::init( idk::EngineAPI &api )
         "ModelSys-terrain-shadow", "assets/shaders/", "terrain-shadow.vs", "terrain-shadow.fs"
     );
 
-    m_heightmap_RQ = ren.createRenderQueue("ModelSys-terrain");
-    m_shadow_RQ    = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
+    ren.createProgram(
+        "ModelSys-gpass-alpha-cutoff", "IDKGE/shaders/deferred/", "gpass-alpha-cutoff.vs", "gpass-alpha-cutoff.fs"
+    );
+
+    m_heightmap_RQ    = ren.createRenderQueue("ModelSys-terrain");
+    m_shadow_RQ       = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
+    m_alpha_cutoff_RQ = ren.createRenderQueue("ModelSys-gpass-alpha-cutoff", {false});
 
     for (auto &cmp: ECS2::getComponentArray<idk::ModelCmp>())
     {
@@ -48,12 +52,36 @@ idk::ModelSys::update( idk::EngineAPI &api )
 
         glm::mat4 transform = TransformSys::getModelMatrix(cmp.obj_id);
 
-        ren.drawModel(cmp.model_id, transform);
+        if (cmp.custom_RQ != -1)
+        {
+            ren.drawModelRQ(cmp.custom_RQ, cmp.model_id, transform);
+        }
+
+        else if (cmp.alpha_cutoff)
+        {
+            ren.drawModelRQ(m_alpha_cutoff_RQ, cmp.model_id, transform);
+        }
+
+        else if (cmp.viewspace)
+        {
+            // ren.drawModelRQ(m_viewspace_RQ, cmp.model_id, transform);
+        }
+
+        else
+        {
+            ren.drawModel(cmp.model_id, transform);
+        }
+
+        if (cmp.environment)
+        {
+            ren.drawEnvironmental(cmp.model_id, transform);
+        }
 
         if (cmp.shadowcast)
         {
             ren.drawShadowCaster(cmp.model_id, transform);
         }
+
     }
 
 
@@ -116,6 +144,21 @@ idk::ModelSys::assignModel( int obj_id, const std::string &filepath )
     cmp.obj_id   = obj_id;
     cmp.model_id = model_id;
     cmp.filepath = filepath;
+}
+
+
+void
+idk::ModelSys::assignModelLOD( int obj_id, int level, const std::string &filepath )
+{
+    auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
+    api_ptr->getRenderer().loadModelLOD(cmp.model_id, level, filepath);
+}
+
+void
+idk::ModelSys::assignCustomRQ( int obj_id, int RQ )
+{
+    auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
+    cmp.custom_RQ = RQ;
 }
 
 
@@ -199,6 +242,87 @@ idk::StaticHeightmapCmp::onObjectCopy( int src_obj, int dst_obj )
     auto &dst = idk::ECS2::getComponent<StaticHeightmapCmp>(dst_obj);
 
 };
+
+
+
+
+
+
+
+
+
+size_t
+idk::ModelCmp::serialize( std::ofstream &stream ) const
+{
+    size_t n = 0;
+    n += idk::streamwrite(stream, obj_id);
+    n += idk::streamwrite(stream, model_id);
+    n += idk::streamwrite(stream, visible);
+    n += idk::streamwrite(stream, shadowcast);
+    n += idk::streamwrite(stream, environment);
+    n += idk::streamwrite(stream, alpha_cutoff);
+    n += idk::streamwrite(stream, viewspace);
+    n += idk::streamwrite(stream, filepath);
+    n += idk::streamwrite(stream, shader_enabled);
+    n += idk::streamwrite(stream, render_queue);
+    n += idk::streamwrite(stream, shader_name);
+    return n;
+}
+
+
+size_t
+idk::ModelCmp::deserialize( std::ifstream &stream )
+{
+    size_t n = 0;
+    n += idk::streamread(stream, obj_id);
+    n += idk::streamread(stream, model_id);
+    n += idk::streamread(stream, visible);
+    n += idk::streamread(stream, shadowcast);
+    n += idk::streamread(stream, environment);
+    n += idk::streamread(stream, alpha_cutoff);
+    n += idk::streamread(stream, viewspace);
+    n += idk::streamread(stream, filepath);
+    n += idk::streamread(stream, shader_enabled);
+    n += idk::streamread(stream, render_queue);
+    n += idk::streamread(stream, shader_name);
+
+    model_id = -1;
+
+    return n;
+}
+
+
+void
+idk::ModelCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+{
+    ModelCmp &cmp = idk::ECS2::getComponent<ModelCmp>(obj_id);
+
+    if (cmp.model_id == -1 && cmp.filepath != "")
+    {
+        cmp.model_id = api.getRenderer().loadModel(cmp.filepath);
+    }
+}
+
+
+void
+idk::ModelCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+{
+
+}
+
+
+void
+idk::ModelCmp::onObjectCopy( int src_obj, int dst_obj )
+{
+    ModelCmp &src = idk::ECS2::getComponent<ModelCmp>(src_obj);
+    ModelCmp &dst = idk::ECS2::getComponent<ModelCmp>(dst_obj);
+    
+    dst.model_id    = src.model_id;
+    dst.visible     = src.visible;
+    dst.shadowcast  = src.shadowcast;
+    dst.viewspace   = src.viewspace;
+    dst.filepath    = src.filepath;
+}
 
 
 

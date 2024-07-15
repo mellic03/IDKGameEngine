@@ -10,6 +10,7 @@
 #include "sys-physics.hpp"
 #include "sys-rendersetting.hpp"
 #include "sys-transform.hpp"
+#include "sys-trigger.hpp"
 
 
 namespace idk

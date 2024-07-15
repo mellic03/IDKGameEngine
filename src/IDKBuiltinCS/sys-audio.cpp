@@ -26,15 +26,9 @@ idk::AudioSys::init( idk::EngineAPI &api )
             continue;
         }
 
-        std::cout << filepath << "\n";
-
-        std::cout << "A\n";
         int sound = loadSound(filepath);
-        std::cout << "B\n";
         emitter_id = audio.createEmitter(idk::AudioSystem::Emitter(sound));
-        std::cout << "C\n";
         audio.getEmitter(emitter_id).id = emitter_id;
-        std::cout << "D\n";
     }
 
 }
@@ -100,7 +94,6 @@ void
 idk::AudioSys::assignSound( int obj_id, int sound )
 {
     auto &api   = getAPI();
-    
     auto &audio = api.getAudioSys();
 
     auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
@@ -143,9 +136,7 @@ void
 idk::AudioSys::playSound( int obj_id, bool loop )
 {
     auto &api   = getAPI();
-    
     auto &audio = api.getAudioSys();
-
     auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
     audio.playSound(cmp.emitter_id, loop);
 }

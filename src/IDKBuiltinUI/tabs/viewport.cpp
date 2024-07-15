@@ -5,7 +5,7 @@
 
 
 static void
-transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, float rsnap = 10.0f )
+transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsnap, float ssnap )
 {
     auto &engine = api.getEngine();
     
@@ -32,8 +32,7 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
 
     glm::vec3 tsnp = glm::vec3(tsnap);
     glm::vec3 rsnp = glm::vec3(rsnap);
-    float *ts      = &tsnp[0];
-    float *rs      = &rsnp[0];
+    glm::vec3 ssnp = glm::vec3(ssnap);
 
     static ImGuizmo::OPERATION op = ImGuizmo::TRANSLATE;
 
@@ -62,11 +61,30 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
         op = ImGuizmo::OPERATION::BOUNDS;
     }
 
-    auto &component = idk::ECS2::getComponent<idk::TransformCmp>(obj_id);
-    int parent_id = idk::ECS2::getParent(obj_id);
+    glm::vec3 snap;
 
-    glm::mat4 world = idk::TransformSys::getModelMatrix(obj_id);
-    glm::mat4 delta;
+    if (op == ImGuizmo::OPERATION::TRANSLATE)
+    {
+        snap = glm::vec3(tsnap);
+    }
+
+    else if (op == ImGuizmo::OPERATION::ROTATE)
+    {
+        snap = glm::vec3(rsnap);
+    }
+
+    else
+    {
+        snap = glm::vec3(ssnap);
+    }
+
+    glm::mat4 world = idk::TransformSys::getWorldMatrix(obj_id);
+    glm::mat4 model = idk::TransformSys::getModelMatrix(obj_id);
+
+    if (view == glm::inverse(model))
+    {
+        return;
+    }
 
     static float bounds[] = { -0.5f, -0.5f, -0.5f, +0.5f, +0.5f, +0.5f };
 
@@ -75,56 +93,15 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap = 1.0f, fl
         glm::value_ptr(proj),
         op,
         mode,
-        glm::value_ptr(world),
-        glm::value_ptr(delta),
-        (op & ImGuizmo::OPERATION::TRANSLATE) ? ts : rs,
-        op & ImGuizmo::OPERATION::BOUNDS ? bounds : nullptr
+        glm::value_ptr(model),
+        nullptr,
+        &(snap[0]),
+        (op & ImGuizmo::OPERATION::BOUNDS) ? bounds : nullptr
     );
 
 
-    if (op == ImGuizmo::OPERATION::ROTATE)
-    {
-        glm::mat4 Mw = idk::TransformSys::getWorldMatrix(obj_id);
-        glm::mat4 Ml = idk::TransformSys::getLocalMatrix(obj_id, false);
-
-        glm::quat &Q = idk::TransformSys::getData(obj_id).rotation;
-
-        glm::mat4 R = Mw * glm::mat4_cast(Q);
-                  R = delta * R;
-                  R = glm::inverse(Mw) * R;
-
-        Q = glm::normalize(glm::quat_cast(R));
-    }
-
-    else if (op == ImGuizmo::OPERATION::TRANSLATE)
-    {
-        glm::vec3 dpos = delta[3];
-        idk::TransformSys::translateWorldspace(obj_id, dpos);
-    }
-
-    else if (op == ImGuizmo::OPERATION::BOUNDS)
-    {
-        glm::vec3 &scale = idk::TransformSys::getData(obj_id).scale3;
-
-        scale = glm::vec3(
-            glm::length(glm::vec3(world[0])),
-            glm::length(glm::vec3(world[1])),
-            glm::length(glm::vec3(world[2]))
-        );
-    }
-
-
-    // float &scale = component.scale;
-    // scale = glm::length(glm::vec3(model[0]));
-
-    // model[0] /= scale;
-    // model[1] /= scale;
-    // model[2] /= scale;
-
-    // glm::vec3 &pos = component.position;
-    // pos = glm::vec3(model[3]);
-
-    // component.rotation = glm::quat_cast(model);
+    glm::mat4 local = glm::inverse(world) * model;
+    idk::TransformSys::getTransform(obj_id) = idk::Transform::fromGLM(local);
 
 }
 
@@ -138,7 +115,6 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
-
 
     ImVec2 cornerA = ImGui::GetWindowContentRegionMin();
     ImVec2 cornerB = ImGui::GetWindowPos();
@@ -170,32 +146,8 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
     );
 
 
-    // GLuint texture = ren.m_vxgi_buffer.attachments[0];
-
-    // ImGui::Image(
-    //     *(ImTextureID *)(void *)(&texture),
-    //     ImVec2(512, 512),
-    //     ImVec2(0.0f, 1.0f),
-    //     ImVec2(1.0f, 0.0f)
-    // );
-
-
-    if (ImGui::IsItemClicked(1))
-    {
-        ImGui::OpenPopup("Pop-out");
-    }
-
-    if (ImGui::BeginPopup("Pop-out"))
-    {
-        if (ImGui::MenuItem("Pop out"))
-        {
-            std::cout << "Yeetus\n";
-        }
-        ImGui::EndPopup();
-    }
-
-
     int obj_id = idk::ECS2::getSelectedGameObject();
+
     if (obj_id == -1)
     {
         return;
@@ -203,7 +155,7 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
 
     if (idk::ECS2::hasComponent<idk::TransformCmp>(obj_id))
     {
-        transform_component_ecs(api, obj_id, m_tsnap, m_rsnap);
+        transform_component_ecs(api, obj_id, m_tsnap, m_rsnap, m_ssnap);
     }
 }
 

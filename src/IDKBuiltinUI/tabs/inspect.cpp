@@ -30,18 +30,33 @@ idk_AddComponentPopup( int obj_id )
     ImGui::Text("Add Component");
     ImGui::Separator();
 
-    for (auto &[key, C]: idk::ECS2::getComponentArrays())
-    {
-        if (idk::ECS2::hasComponent(obj_id, key) == false)
-        {
-            std::string name = (C.get())->getName();
 
-            if (ImGui::MenuItem(name.c_str()))
+    auto &categories = idk::ECS2::getComponentCategories();
+
+    ImGui::BeginTable("Add Component Table", categories.size());
+    ImGui::TableNextRow();
+
+    for (auto &[category, keys]: categories)
+    {
+        ImGui::TableNextColumn();
+
+        ImGui::Text(category.c_str());
+        ImGui::Separator();
+
+        for (auto &[name, C]: idk::ECS2::getComponentArraysByCategory(category))
+        {
+            if (idk::ECS2::hasComponent(obj_id, C->getKey()) == false)
             {
-                idk::ECS2::giveComponent(obj_id, key);
+                if (ImGui::MenuItem(name.c_str()))
+                {
+                    idk::ECS2::giveComponent(obj_id, C->getKey());
+                }
             }
         }
+
     }
+    ImGui::EndTable();
+
 }
 
 

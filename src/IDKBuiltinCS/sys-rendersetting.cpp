@@ -19,10 +19,7 @@ void
 idk::RenderSettingSys::init( idk::EngineAPI &api )
 {
     LOG_INFO() << "idk::RenderSettingSys::init";
-
     api_ptr = &api;
-    
-
 }
 
 
@@ -80,6 +77,10 @@ idk::RenderSettingCmp::deserialize( std::ifstream &stream )
     size_t n = 0;
     n += idk::streamread(stream, obj_id);
     n += idk::streamread(stream, filepath);
+
+    // this->skybox = api_ptr->getRenderer().loadSkybox(filepath);
+    // api_ptr->getRenderer().useSkybox(this->skybox);
+
     return n;
 };
 

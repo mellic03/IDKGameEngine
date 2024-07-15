@@ -25,7 +25,8 @@ private:
     // Editor Tabs
     // -----------------------------------------------------------------------------------------
     float       m_tsnap = 0.0f;
-    float       m_rsnap = 0.0f;
+    float       m_rsnap = 1.0f;
+    float       m_ssnap = 0.1f;
 
     void        _tab_viewport( idk::EngineAPI & );
 

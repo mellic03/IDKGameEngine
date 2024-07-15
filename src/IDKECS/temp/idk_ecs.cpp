@@ -548,7 +548,7 @@ idk::ecs::ECS::giveChild( int parent_id, int child_id )
         Ml = TransformSys::getLocalMatrix(child_id, false);
         R  = glm::inverse(Mw*Ml) * R;
         glm::quat Q = glm::normalize(glm::quat_cast(R));
-        TransformSys::getData(child_id).rotation = Q;
+        TransformSys::getLocalRotation(child_id) = Q;
 
     }
 }
@@ -574,7 +574,7 @@ idk::ecs::ECS::removeChild( int parent_id, int child_id )
         Ml = TransformSys::getLocalMatrix(child_id, false);
         R  = glm::inverse(Mw*Ml) * R;
         glm::quat Q = glm::normalize(glm::quat_cast(R));
-        TransformSys::getData(child_id).rotation = Q;
+        TransformSys::getLocalRotation(child_id) = Q;
     }
 }
 

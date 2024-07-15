@@ -46,6 +46,20 @@ idk::ECS2::getComponent( int obj_id )
 
 
 template <typename T>
+void
+idk::ECS2::copyComponent( int src_obj, int dst_obj )
+{
+    auto &src = getComponent<T>(src_obj);
+    auto &dst = getComponent<T>(dst_obj);
+
+    dst = src;
+    dst.obj_id = dst_obj;
+}
+
+
+
+
+template <typename T>
 idk::ECS2::ComponentArray<T>&
 idk::ECS2::getComponentArray()
 {
@@ -59,12 +73,14 @@ idk::ECS2::getComponentArray()
 
 template <typename T>
 void
-idk::ECS2::registerComponent( const std::string &name )
+idk::ECS2::registerComponent( const std::string &name, const std::string &category )
 {
     size_t key = getkey<ComponentArray<T>>();
  
-    m_component_arrays[key] = std::make_unique<ComponentArray<T>>(name);
+    m_component_arrays[key] = std::make_unique<ComponentArray<T>>(name, key);
     m_component_keys[name] = key;
+
+    m_component_categories[category].push_back(key);
 }
 
 

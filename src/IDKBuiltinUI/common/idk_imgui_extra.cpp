@@ -1,7 +1,11 @@
 #include "idk_imgui_extra.hpp"
 #include <idk_icons/idk_Icons.hpp>
 
+#include <set>
 #include <filesystem>
+
+namespace fs = std::filesystem;
+
 
 void
 EditorUI::dragVec3( std::string name, float *data, float min, float max,
@@ -49,10 +53,85 @@ EditorUI::dragVec3( std::string name, float *data, float min, float max,
 
 
 
-static void
-file_select( const std::string &path, std::string &selection )
+static void file_select( const std::string&, std::string& );
+
+
+static bool
+FileSelect_ShowDirectories( std::set<fs::directory_entry> &folder_entries,
+                            std::string &selection, int dir_flags )
 {
-    using namespace std::filesystem;
+    bool result = true;
+    bool running = true;
+
+    for (auto &dir_entry: folder_entries)
+    {
+        std::string entry_path = dir_entry.path().string();
+        std::string entry_name = dir_entry.path().filename().string();
+        std::string label = ICON_FA_FOLDER " " + entry_name;
+
+        int flags = dir_flags;
+
+        if (entry_path == selection)
+        {
+            flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        bool node_open = ImGui::TreeNodeEx(label.c_str(), flags);
+        if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+        {
+            selection = entry_path;
+        }
+
+        if (node_open)
+        {
+            file_select(entry_path, selection);
+            ImGui::TreePop();
+        }
+    }
+
+    return result;
+}
+
+
+static void
+FileSelect_ShowFiles( std::set<fs::directory_entry> &file_entries,
+                      std::string &selection, int file_flags )
+{
+    for (auto &dir_entry: file_entries)
+    {
+        std::string entry_path = dir_entry.path().string();
+        std::string entry_name = dir_entry.path().filename().string();
+        std::string label = ICON_FA_FILE " " + entry_name;
+
+        int flags = file_flags;
+
+        if (entry_path == selection)
+        {
+            flags |= ImGuiTreeNodeFlags_Selected;
+        }
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        if (ImGui::TreeNodeEx(label.c_str(), flags))
+        {
+            if (ImGui::IsItemClicked())
+                selection = entry_path;
+
+            ImGui::TreePop();
+        }
+    }
+}
+
+
+
+static void
+file_select( const std::string &entry_path, std::string &selection )
+{
+    namespace fs = std::filesystem;
 
     static int tree_flags  = 0
                            | ImGuiTreeNodeFlags_OpenOnArrow
@@ -63,68 +142,29 @@ file_select( const std::string &path, std::string &selection )
     static const auto dir_flags  = tree_flags | ImGuiTreeNodeFlags_OpenOnArrow;
     static const auto file_flags = tree_flags | ImGuiTreeNodeFlags_Leaf;
 
-    for (auto &dir_entry: directory_iterator(path))
+
+    // Sort directory entries
+    // -----------------------------------------------------------------------------------------
+    std::set<fs::directory_entry> folders;
+    std::set<fs::directory_entry> files;
+
+    for (auto dir_iter: fs::directory_iterator(entry_path))
     {
-        if (dir_entry.is_directory())
+        if (dir_iter.is_directory())
         {
-            std::string entry_path = dir_entry.path();
-            std::string entry_name = dir_entry.path().filename();
-            std::string label = ICON_FA_FOLDER " " + entry_name;
+            folders.emplace(dir_iter);
+        }
 
-            int flags = dir_flags;
-
-            if (entry_path == selection)
-            {
-                flags |= ImGuiTreeNodeFlags_Selected;
-            }
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-
-            bool node_open = ImGui::TreeNodeEx(label.c_str(), flags);
-            if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
-            {
-                selection = entry_path;
-            }
-
-            if (node_open)
-            {
-                file_select(entry_path, selection);
-                ImGui::TreePop();
-            }
-
+        else
+        {
+            files.emplace(dir_iter);
         }
     }
+    // -----------------------------------------------------------------------------------------
 
+    FileSelect_ShowDirectories(folders, selection, dir_flags);
+    FileSelect_ShowFiles(files, selection, file_flags);
 
-    for (auto &dir_entry: directory_iterator(path))
-    {
-        std::string entry_path = dir_entry.path();
-        std::string entry_name = dir_entry.path().filename();
-        std::string label = ICON_FA_FILE " " + entry_name;
-
-        if (dir_entry.is_directory() == false)
-        {
-            int flags = file_flags;
-
-            if (entry_path == selection)
-            {
-                flags |= ImGuiTreeNodeFlags_Selected;
-            }
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-
-            if (ImGui::TreeNodeEx(label.c_str(), flags))
-            {
-                if (ImGui::IsItemClicked())
-                    selection = entry_path;
-
-                ImGui::TreePop();
-            }
-
-        }
-    }
 }
 
 

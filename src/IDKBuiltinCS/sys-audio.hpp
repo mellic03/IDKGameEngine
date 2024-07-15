@@ -32,7 +32,5 @@ public:
     static bool         isPlaying( int obj_id );
 
 
-
-
 };
 

@@ -47,6 +47,8 @@ idk::AudioSystem::playSound( int emitter_id, bool loop )
     // Already playing
     if (emitter.channel != -1)
     {
+        stopSound(emitter_id);
+        playSound(emitter_id, loop);
         return;
     }
 
@@ -126,10 +128,10 @@ idk::AudioSystem::update( const glm::vec3 &listener_pos, const glm::vec3 &listen
     {
         glm::vec3 dir  = glm::normalize(emitter.pos - listener_pos);
         float     dist = glm::distance(emitter.pos, listener_pos);
-        float     mag  = 0.0f;
-                  mag += 1.0f / (0.25f * dist*dist);
-                  mag += 0.25f * (glm::dot(dir, listener_front) * 0.5 + 0.5);
-                  mag  = glm::clamp(mag, 0.01f, 1.0f);
+
+        float mag = glm::dot(listener_front, dir) * 0.5f + 0.5f;
+              mag /= (0.1f * dist);
+              mag = glm::clamp(mag, 0.0f, 1.0f);
 
         Mix_Volume(emitter.channel, mag*SDL_MIX_MAXVOLUME);
 

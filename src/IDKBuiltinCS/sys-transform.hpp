@@ -1,40 +1,15 @@
 #pragma once
 
+#include <libidk/idk_transform.hpp> 
 #include "idk_components.hpp"
+
 
 
 namespace idk
 {
     class TransformSys;
 
-    struct TransformCmp
-    {
-        int        obj_id   = -1;
-        glm::vec3  position = glm::vec3(0.0f);
-        glm::vec3  delta    = glm::vec3(0.0f);
-        glm::quat  rotation = glm::quat(glm::vec3(0.0f));
-        float      pitch    = 0.0f;
-        float      yaw      = 0.0f;
-        float      roll     = 0.0f;
-        glm::vec3  up       = glm::vec3(0.0f, 1.0f, 0.0f);
-        glm::vec3  front    = glm::vec3(0.0f, 0.0f, -1.0f);
-        glm::vec3  right    = glm::vec3(1.0f, 0.0f, 0.0f);
-
-        float      scale    = 1.0f;
-        glm::vec3  scale3   = glm::vec3(1.0f);
-        bool       roll_lock = false;
-
-        glm::mat4  world = glm::mat4(0.0f);
-        glm::mat4  local = glm::mat4(0.0f);
-        glm::mat4  model = glm::mat4(0.0f);
-
-        size_t  serialize( std::ofstream &stream ) const;
-        size_t  deserialize( std::ifstream &stream );
-        static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
-        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-        static void onObjectCopy( int src_obj, int dst_obj );
-    };
-
+    struct TransformCmp;
 
     struct IKCmp
     {
@@ -49,6 +24,7 @@ namespace idk
         static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
         static void onObjectCopy( int src_obj, int dst_obj );
     };
+
 
     struct LookTowardCmp
     {
@@ -77,11 +53,26 @@ namespace idk
         static void onObjectCopy( int src_obj, int dst_obj );
     };
 
+
     struct SmoothFollowCmp
     {
         int obj_id    = -1;
         int anchor_id = -1;
         float speed   = 1.0f;
+
+        size_t  serialize( std::ofstream &stream ) const;
+        size_t  deserialize( std::ifstream &stream );
+        static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+        static void onObjectCopy( int src_obj, int dst_obj );
+    };
+
+
+    struct RotateCmp
+    {
+        int       obj_id    = -1;
+        float     magnitude = 0.0f;
+        glm::vec3 axis      = glm::vec3(0.0f, 1.0f, 0.0f);
 
         size_t  serialize( std::ofstream &stream ) const;
         size_t  deserialize( std::ifstream &stream );
@@ -122,8 +113,6 @@ public:
     virtual void        update ( idk::EngineAPI & ) final;
 
     
-    static idk::TransformCmp &getData( int obj_id );
-
     static void         FABRIK( int objA, int objB, int objC, glm::vec3 end_pos,
                                 float dAB, float dBC, const glm::vec3& );
 
@@ -138,11 +127,6 @@ public:
     static void         FABRIK( int chain_length, int end_obj,
                                 const std::vector<float> &distances,
                                 const glm::vec3 &pole_target );
-
-
-    static void         rotateX( int obj_id, float f );
-    static void         rotateY( int obj_id, float f );
-    static void         rotateZ( int obj_id, float f );
 
     static void         pitch ( int obj_id, float f );
     static void         yaw   ( int obj_id, float f );
@@ -162,19 +146,28 @@ public:
     static void         translateWorldspace( int obj_id, const glm::vec3 & );
     static void         translateLocalspace( int obj_id, const glm::vec3 & );
 
+
+    static TransformCmp &getTransformCmp( int obj_id );
+    static Transform    &getTransform   ( int obj_id );
+
     static glm::vec3    getPositionWorldspace( int obj_id );
     static glm::vec3    getPositionLocalspace( int obj_id );
+
+    static glm::vec3   &getLocalPosition( int obj_id );
+    static glm::quat   &getLocalRotation( int obj_id );
+    static glm::vec4   &getScale( int obj_id );
+    static glm::vec3   &getXYZScale( int obj_id );
+    static float       &getUniformScale( int obj_id );
+
+    static glm::vec3    getWorldPosition( int obj_id );
+    static glm::quat    getWorldRotation( int obj_id );
+
     static void         setPositionWorldspace( int obj_id, const glm::vec3 & );
     static void         setPositionLocalspace( int obj_id, const glm::vec3 & );
 
     static glm::vec3    getUp            ( int obj_id );
     static glm::vec3    getRight         ( int obj_id );
     static glm::vec3    getFront         ( int obj_id );
-
-    static void         setSurfaceUp     ( int obj_id, const glm::vec3 &, float alpha );
-    static glm::vec3    getSurfaceUp     ( int obj_id );
-    static glm::vec3    getSurfaceRight  ( int obj_id );
-    static glm::vec3    getSurfaceFront  ( int obj_id );
 
     static glm::mat4    getLocalMatrix   ( int obj_id, bool scale = true );
     static glm::mat4    getWorldMatrix   ( int obj_id );
@@ -190,9 +183,40 @@ public:
     static void moveUp    ( int obj_id, float f );
     static void moveRight ( int obj_id, float f );
     static void moveFront ( int obj_id, float f );
-
-    static void moveSurfaceUp    ( int obj_id, float f );
-    static void moveSurfaceRight ( int obj_id, float f );
-    static void moveSurfaceFront ( int obj_id, float f );
     // -----------------------------------------------------------------------------------------
+};
+
+
+
+
+struct idk::TransformCmp
+{
+    int obj_id = -1;
+    idk::Transform transform;
+
+    float pitch = 0.0f;
+    float yaw   = 0.0f;
+    float roll  = 0.0f;
+
+    // Runtime data, not saved to disk
+    // -----------------------------------------------------------------------------------------
+    bool       is_dirty = true;
+
+    glm::mat4  world = glm::mat4(0.0f);
+    glm::mat4  local = glm::mat4(0.0f);
+    glm::mat4  model = glm::mat4(0.0f);
+
+    glm::vec3  up       = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3  right    = glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3  front    = glm::vec3(0.0f, 0.0f, -1.0f);
+
+    glm::quat  world_rotation = glm::quat(glm::vec3(0.0f));
+
+    // -----------------------------------------------------------------------------------------
+
+    size_t  serialize( std::ofstream &stream ) const;
+    size_t  deserialize( std::ifstream &stream );
+    static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
+    static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
+    static void onObjectCopy( int src_obj, int dst_obj );
 };

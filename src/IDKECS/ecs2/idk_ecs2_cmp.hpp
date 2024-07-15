@@ -6,20 +6,29 @@
 #include <functional>
 
 
+/*
+    TODO:
+        - Don't write directly to stream, first write to a buffer instead.
+*/
+
+
 class idk::ECS2::iComponentArray
 {
 protected:
     using callback_type = std::function<void(idk::EngineAPI&, int)>;
     std::string m_name;
+    size_t      m_key;
 
 public:
-    iComponentArray( const std::string &name, callback_type callback )
-    :   m_name(name)
+    iComponentArray( const std::string &name, size_t key, callback_type callback )
+    :   m_name (name),
+        m_key  (key)
     {
         userCallback = callback;
     }
 
     virtual const std::string &getName() const { return m_name; };
+    virtual const size_t       getKey () const { return m_key; };
 
     virtual int  createComponent( int ) = 0;
     virtual void destroyComponent( int ) = 0;
@@ -47,9 +56,8 @@ private:
 
 public:
 
-    ComponentArray( const std::string &name )
-    :   iComponentArray(name,
-        ECS2::userCallback<T>)
+    ComponentArray( const std::string &name, size_t key )
+    :   iComponentArray(name, key, ECS2::userCallback<T>)
     {
 
     }
@@ -67,6 +75,11 @@ public:
 
     virtual size_t deserialize( std::ifstream &stream )
     {
+        for (auto &cmp: m_data)
+        {
+            onObjectDeassignment(*m_api_ptr, cmp.obj_id);
+        }
+
         m_data.clear();
 
         size_t n = 0;

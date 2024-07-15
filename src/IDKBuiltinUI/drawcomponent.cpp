@@ -1,74 +1,40 @@
 #include "drawcomponent.hpp"
 
+
+
 template <>
 void
 EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
 {
-    auto &engine = api.getEngine();
-    
+    auto &pcmp = idk::TransformSys::getTransformCmp(obj_id);
+    auto &cmp = idk::TransformSys::getTransform(obj_id);
 
-    auto &data   = idk::TransformSys::getData(obj_id);
-
-
-    ImGui::InputFloat3("Tr", &data.position[0], "%0.2f");
+    ImGui::InputFloat3("Tr", &cmp.position[0], "%0.2f");
     ImGui::SameLine();
     if (ImGui::Button("Reset Tr"))
     {
-        data.position = glm::vec3(0.0f);
+        cmp.position = glm::vec3(0.0f);
     }
 
-
-    ImGui::InputFloat3("Rt", &data.rotation[0], "%0.2f");
+    ImGui::InputFloat4("Rt", &cmp.rotation[0], "%0.2f");
     ImGui::SameLine();
     if (ImGui::Button("Reset Rt"))
     {
-        data.rotation = glm::quat(glm::vec3(0.0f));
+        cmp.rotation = glm::quat(glm::vec3(0.0f));
     }
 
-    ImGui::DragFloat("Pitch", &data.pitch, 0.025f);
-    ImGui::DragFloat("Yaw",   &data.yaw,   0.025f);
-    ImGui::DragFloat("Roll",  &data.roll,  0.025f);
-    ImGui::SameLine();
-    ImGui::Checkbox("Lock", &data.roll_lock);
 
-    ImGui::InputFloat("Sc", &data.scale, 0.1f);
+    ImGui::DragFloat("Pitch", &pcmp.pitch, 0.025f);
+    ImGui::DragFloat("Yaw",   &pcmp.yaw,   0.025f);
+    ImGui::DragFloat("Roll",  &pcmp.roll,  0.025f);
+
+
+    ImGui::InputFloat4("Scale", &cmp.scale[0], "%0.2f");
     ImGui::SameLine();
-    if (ImGui::Button("Reset Sc"))
+    if (ImGui::Button("Reset Scale"))
     {
-        data.scale = 1.0f;
+        cmp.scale = glm::vec4(1.0f);
     }
-
-    ImGui::InputFloat3("Sc3", &data.scale3[0], "%0.2f");
-    ImGui::SameLine();
-    if (ImGui::Button("Reset Sc3"))
-    {
-        data.scale3 = glm::vec3(1.0f);
-    }
-
-
-
-    // Surface up/right/front
-    ImGui::InputFloat3("Surface Up", &data.up[0], "%0.2f");
-    ImGui::SameLine();
-    if (ImGui::Button("Reset Surface Up"))
-    {
-        data.up = glm::vec3(0.0f, 1.0f, 0.0f);
-    }
-
-    ImGui::InputFloat3("Surface Right", &data.right[0], "%0.2f");
-    ImGui::SameLine();
-    if (ImGui::Button("Reset Surface Right"))
-    {
-        data.right = glm::vec3(1.0f, 0.0f, 0.0f);
-    }
-
-    ImGui::InputFloat3("Surface Front", &data.front[0], "%0.2f");
-    ImGui::SameLine();
-    if (ImGui::Button("Reset Surface Front"))
-    {
-        data.front = glm::vec3(0.0f, 0.0f, -1.0f);
-    }
-
 
 }
 
@@ -182,6 +148,17 @@ EditorUI_MD::drawComponent<idk::LookTowardCmp>( idk::EngineAPI &api, int obj_id 
 
 
 
+template <>
+void
+EditorUI_MD::drawComponent<idk::RotateCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &engine = api.getEngine();
+    auto &cmp    = idk::ECS2::getComponent<idk::RotateCmp>(obj_id);
+
+    ImGui::InputFloat("Magnitude", &(cmp.magnitude));
+    ImGui::DragFloat3("Axis", &(cmp.axis[0]), 0.05f, -1.0f, +1.0f);
+}
+
 
 template <>
 void
@@ -291,20 +268,15 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::SpotlightCmp>( idk::EngineAPI &api, int obj_id )
 {
-    // auto &ren = api.getRenderer();
+    auto &ren = api.getRenderer();
     
-    // auto &cmp = idk::ECS2::getComponent<idk::SpotlightCmp>(obj_id);
+    auto &cmp   = idk::ECS2::getComponent<idk::SpotlightCmp>(obj_id);
+    auto &light = cmp.light;
 
-    // if (cmp.light_id == -1)
-    // {
-    //     return;
-    // }
-
-    // ImGui::ColorEdit3("Diffuse",      &cmp.diffuse[0]);
-    // ImGui::DragFloat("Specular",      &cmp.diffuse[3], 0.05f, 0.0f, 1.0f);
-    // ImGui::DragFloat("Radius",        &cmp.radius,     0.01f, 0.5f, 64.0f);
-    // ImGui::InputFloat("Inner cutoff", &cmp.angle[0]);
-    // ImGui::InputFloat("Outer cutoff", &cmp.angle[1]);
+    ImGui::ColorEdit4("Diffuse",      &light.diffuse[0]);
+    ImGui::DragFloat("Radius",        &light.radius, 0.01f, 0.5f, 64.0f);
+    ImGui::InputFloat("Inner cutoff", &light.angle[0]);
+    ImGui::InputFloat("Outer cutoff", &light.angle[1]);
 
 }
 
@@ -334,18 +306,14 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::PointlightCmp>( idk::EngineAPI &api, int obj_id )
 {
-    // auto &ren = api.getRenderer();
+    auto &ren = api.getRenderer();
     
-    // auto &cmp = idk::ECS2::getComponent<idk::PointlightCmp>(obj_id);
+    auto &cmp = idk::ECS2::getComponent<idk::PointlightCmp>(obj_id);
+    auto &light = cmp.light;
 
-    // if (cmp.light_id == -1)
-    // {
-    //     return;
-    // }
-
-    // ImGui::ColorEdit3("Diffuse",      &cmp.diffuse[0]);
-    // ImGui::DragFloat("Specular",      &cmp.diffuse[3], 0.05f, 0.0f, 1.0f);
-    // ImGui::DragFloat("Radius",        &cmp.radius,     0.01f, 0.5f, 64.0f);
+    ImGui::ColorEdit3("Diffuse",      &light.diffuse[0]);
+    ImGui::DragFloat("Specular",      &light.diffuse[3], 0.05f, 0.0f, 1.0f);
+    ImGui::DragFloat("Radius",        &light.radius,     0.01f, 0.5f, 64.0f);
 }
 
 
@@ -355,9 +323,7 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, int obj_id )
 {
-    
     auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
-
 
     ImGui::Text("Model ID: %d", cmp.model_id);
     ImGui::Separator();
@@ -365,30 +331,74 @@ EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, int obj_id )
 
     // Model drag-drop
     // -----------------------------------------------------------------------------------------
-    std::string label = "Model " ICON_FA_DOWNLOAD;
-    if (cmp.model_id != -1)
     {
-        label = fs::path(cmp.filepath).filename();
+        std::string label = "Model " ICON_FA_DOWNLOAD;
+        if (cmp.model_id != -1)
+        {
+            label = fs::path(cmp.filepath).filename();
+        }
+
+        ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_DRAG_DROP"))
+            {
+                std::string filepath(reinterpret_cast<char *>(payload->Data));
+            
+                if (fs::path(filepath).extension().string() == ".idkvi")
+                {
+                    idk::ModelSys::assignModel(obj_id, filepath);
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
     }
 
-    ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
-
-    if (ImGui::BeginDragDropTarget())
     {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MODEL_DRAG_DROP"))
-        {
-            IM_ASSERT(payload->DataSize == sizeof(int));
+        std::string label = "LOD 1" ICON_FA_DOWNLOAD;
+        ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
 
-            int model_id = *reinterpret_cast<int *>(payload->Data);
-            // idk::ModelSys::assignModel(obj_id, model_id);
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_DRAG_DROP"))
+            {
+                std::string filepath(reinterpret_cast<char *>(payload->Data));
+            
+                if (fs::path(filepath).extension().string() == ".idkvi")
+                {
+                    idk::ModelSys::assignModelLOD(obj_id, 1, filepath);
+                }
+            }
+            ImGui::EndDragDropTarget();
         }
-        ImGui::EndDragDropTarget();
+    }
+
+    {
+        std::string label = "LOD 2" ICON_FA_DOWNLOAD;
+        ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
+
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_DRAG_DROP"))
+            {
+                std::string filepath(reinterpret_cast<char *>(payload->Data));
+            
+                if (fs::path(filepath).extension().string() == ".idkvi")
+                {
+                    idk::ModelSys::assignModelLOD(obj_id, 2, filepath);
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
     }
     // -----------------------------------------------------------------------------------------
 
-    ImGui::Checkbox("Visible",     &cmp.visible);
-    ImGui::Checkbox("Shadow",      &cmp.shadowcast);
-    ImGui::Checkbox("Viewspace",   &cmp.viewspace);
+    ImGui::Checkbox("Visible",      &cmp.visible);
+    ImGui::Checkbox("Shadow",       &cmp.shadowcast);
+    ImGui::Checkbox("GI",           &cmp.environment);
+    ImGui::Checkbox("Alpha cutoff", &cmp.alpha_cutoff);
+    ImGui::Checkbox("Viewspace",    &cmp.viewspace);
 }
 
 
@@ -753,11 +763,15 @@ void
 EditorUI_MD::drawComponent<idk::PhysicsCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
-    
     auto &cmp    = idk::ECS2::getComponent<idk::PhysicsCmp>(obj_id);
 
-    ImGui::InputFloat3("Linear",  &cmp.linear[0], "%0.2f");
-    ImGui::InputFloat3("Angular", &cmp.angular[0], "%0.2f");
+    if (ImGui::Button("Bake mesh"))
+    {
+        idk::PhysicsSys::bakeMeshCollider(obj_id);
+    }
+
+    // ImGui::InputFloat3("Linear",  &cmp.linear[0], "%0.2f");
+    // ImGui::InputFloat3("Angular", &cmp.angular[0], "%0.2f");
 }
 
 
@@ -843,11 +857,13 @@ EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
     ECS_COMPONENT_CALLBACK(idk::LookTowardCmp);
     ECS_COMPONENT_CALLBACK(idk::SmoothFollowCmp);
     ECS_COMPONENT_CALLBACK(idk::AnchorCmp);
+    ECS_COMPONENT_CALLBACK(idk::RotateCmp);
 
     ECS_COMPONENT_CALLBACK(idk::ModelCmp);
     ECS_COMPONENT_CALLBACK(idk::StaticHeightmapCmp);
     ECS_COMPONENT_CALLBACK(idk::CameraCmp);
 
+    ECS_COMPONENT_CALLBACK(idk::PhysicsCmp);
     ECS_COMPONENT_CALLBACK(idk::StaticRectCmp);
     ECS_COMPONENT_CALLBACK(idk::KinematicRectCmp);
     ECS_COMPONENT_CALLBACK(idk::KinematicCapsuleCmp);

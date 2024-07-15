@@ -3,6 +3,8 @@
 #include "idk_components.hpp"
 #include <IDKECS/IDKECS.hpp>
 
+#include <libidk/idk_geometry.hpp>
+
 
 namespace idk
 {
@@ -26,7 +28,13 @@ namespace idk
 class idk::PhysicsSys: public idk::ECS2::System
 {
 private:
-    static void kinematicCapsule_staticRect( float timestep, KinematicCapsuleCmp &s_cmp, StaticRectCmp &r_cmp );
+
+    static void kinematicCapsule_staticRect( float dt, KinematicCapsuleCmp&, StaticRectCmp& );
+
+    static void kinematicCapsule_triangle( float dt, KinematicCapsuleCmp&, idk::geometry::Triangle& );
+    static void kinematicCapsule_triangleGrid( float dt, KinematicCapsuleCmp& );
+    static void _insert_triangle( const idk::geometry::Triangle& );
+
     static void _integrate ( idk::EngineAPI &api, float dt );
 
     inline static std::vector<idk::TextureWrapper> m_heightmaps;
@@ -38,7 +46,11 @@ public:
     virtual void update ( idk::EngineAPI & ) final;
 
     static void addForce( int obj_id, const glm::vec3& );
+    static void addImpulse( int obj_id, const glm::vec3& );
+    static void jump( int obj_id, float force );
     static bool raycast ( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit );
+
+    static void bakeMeshCollider( int obj_id );
 
     static void bakeHeightmap( idk::TextureWrapper &wrapper );
     static float queryHeightmap( TextureWrapper &wrapper, const glm::vec3 &position, const glm::vec3 &scale );
@@ -53,8 +65,8 @@ struct idk::PhysicsCmp
     glm::vec3 linear  = glm::vec3(0.0f);
     glm::vec3 angular = glm::vec3(0.0f);
 
-    size_t  serialize            ( std::ofstream &stream ) const;
-    size_t  deserialize          ( std::ifstream &stream );
+    size_t      serialize            ( std::ofstream &stream ) const;
+    size_t      deserialize          ( std::ifstream &stream );
     static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
     static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
     static void onObjectCopy         ( int src_obj, int dst_obj );
@@ -67,8 +79,8 @@ struct idk::StaticRectCmp
     int  obj_id    = -1;
     bool visualise = false;
 
-    size_t  serialize            ( std::ofstream &stream ) const;
-    size_t  deserialize          ( std::ifstream &stream );
+    size_t      serialize            ( std::ofstream &stream ) const;
+    size_t      deserialize          ( std::ifstream &stream );
     static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
     static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
     static void onObjectCopy         ( int src_obj, int dst_obj );
@@ -80,8 +92,8 @@ struct idk::KinematicRectCmp
     int  obj_id    = -1;
     bool visualise = false;
 
-    size_t  serialize            ( std::ofstream &stream ) const;
-    size_t  deserialize          ( std::ifstream &stream );
+    size_t      serialize            ( std::ofstream &stream ) const;
+    size_t      deserialize          ( std::ifstream &stream );
     static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
     static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
     static void onObjectCopy         ( int src_obj, int dst_obj );
@@ -97,14 +109,22 @@ struct idk::KinematicCapsuleCmp
     float radius   = 0.24f;
     float bottom   = 0.75f;
     float top      = 0.25f;
-    
+
+    bool  crouch = false;
     bool  grounded = false;
     float airtime  = 0.0f;
 
-
     glm::vec3 prev_pos = glm::vec3(0.0f);
     glm::vec3 curr_pos = glm::vec3(0.0f);
-    glm::vec3 force = glm::vec3(0.0f);
+
+    glm::vec3 force    = glm::vec3(0.0f);
+    glm::vec3 impulse  = glm::vec3(0.0f);
+
+
+    float     gravity  = -PhysicsConstants::G;
+    glm::vec3 acc      = glm::vec3(0.0f);
+    glm::vec3 vel      = glm::vec3(0.0f);
+
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );

@@ -20,6 +20,7 @@ idk::LightSys::update( idk::EngineAPI &api )
 
     for (auto &cmp: ECS2::getComponentArray<DirlightCmp>())
     {
+        cmp.light.transform = TransformSys::getModelMatrix(cmp.obj_id);
         cmp.light.direction = glm::vec4(TransformSys::getFront(cmp.obj_id), 0.0f);
         ren.getDirlight(cmp.light_id) = cmp.light;
     }
@@ -27,12 +28,16 @@ idk::LightSys::update( idk::EngineAPI &api )
 
     for (auto &cmp: ECS2::getComponentArray<PointlightCmp>())
     {
+        cmp.light.position = glm::vec4(TransformSys::getPositionWorldspace(cmp.obj_id), 1.0f);
         ren.getPointlight(cmp.light_id) = cmp.light;
     }
 
 
     for (auto &cmp: ECS2::getComponentArray<SpotlightCmp>())
     {
+        cmp.light.direction = glm::vec4(TransformSys::getFront(cmp.obj_id), 0.0f);
+        cmp.light.position  = glm::vec4(TransformSys::getPositionWorldspace(cmp.obj_id), 1.0f);
+
         ren.getSpotlight(cmp.light_id) = cmp.light;
     }
 
@@ -79,7 +84,8 @@ idk::DirlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 void
 idk::DirlightCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-    
+    auto &cmp = ECS2::getComponent<DirlightCmp>(obj_id);
+    api.getRenderer().destroyDirlight(cmp.light_id);
 }
 
 
@@ -132,7 +138,8 @@ idk::PointlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 void
 idk::PointlightCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-    
+    auto &cmp = ECS2::getComponent<PointlightCmp>(obj_id);
+    api_ptr->getRenderer().destroyPointlight(cmp.light_id);
 }
 
 
@@ -185,7 +192,8 @@ idk::SpotlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 void
 idk::SpotlightCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
-    
+    auto &cmp = ECS2::getComponent<SpotlightCmp>(obj_id);
+    api_ptr->getRenderer().destroySpotlight(cmp.light_id);
 }
 
 

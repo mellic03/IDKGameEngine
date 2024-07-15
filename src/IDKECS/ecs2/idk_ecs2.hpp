@@ -8,6 +8,8 @@
 #include <set>
 #include <map>
 
+#include <functional>
+
 #include <cxxabi.h>
 
 
@@ -49,12 +51,18 @@ private:
     inline static bool m_readfile = false;
     inline static std::string m_filepath;
 
+    inline static std::vector<std::function<void()>> m_callbacks;
+
     static void _load();
 
     inline static
     std::map<size_t, std::unique_ptr<iComponentArray>> m_component_arrays;
+
     inline static
-    std::map<std::string, size_t>      m_component_keys;
+    std::map<std::string, size_t> m_component_keys;
+
+    inline static
+    std::map<std::string, std::vector<size_t>> m_component_categories;
 
     inline static
     std::vector<System*> m_systems;
@@ -69,7 +77,6 @@ private:
 
         int parent = -1;
         std::set<int> children;
-
 
         std::map<size_t, int> components;
         std::set<std::string> component_names;
@@ -130,6 +137,12 @@ public:
     static bool                 hasParent( int obj_id );
     static const std::set<int> &getChildren( int obj_id );
 
+    static void registerPrefab             ( const std::string &name, std::function<int()> );
+    static int  createGameObjectFromPrefab ( const std::string &name );
+    static const std::map<std::string, std::function<int()>> &getPrefabs();
+
+
+
 
     template <typename T>
     static void giveComponent( int obj_id );
@@ -152,23 +165,22 @@ public:
     static void removeComponent( int obj_id, size_t key );
 
     template <typename T>
+    static void copyComponent( int src_obj, int dst_obj );
+
+    template <typename T>
     static ComponentArray<T> &getComponentArray();
 
-    static iComponentArray *getComponentArray( size_t key )
-    {
-        return m_component_arrays[key].get();
-    }
+    static iComponentArray *getComponentArray( size_t key );
+    static iComponentArray *getComponentArray( const std::string &name );
 
-    static iComponentArray *getComponentArray( const std::string &name )
-    {
-        size_t key = m_component_keys[name];
-        return getComponentArray(key);
-    }
+    static std::map<size_t, std::unique_ptr<iComponentArray>> &getComponentArrays();
+    static std::map<std::string, iComponentArray*> getComponentArraysSorted();
+    static std::map<std::string, iComponentArray*> getComponentArraysByCategory( const std::string& );
 
-    static std::map<size_t, std::unique_ptr<iComponentArray>> &getComponentArrays()
+    static const auto &getComponentCategories()
     {
-        return m_component_arrays;
-    }
+        return m_component_categories;
+    };
 
 
     template <typename T>
@@ -184,7 +196,9 @@ public:
     }
 
     template <typename T>
-    static void registerComponent( const std::string &name );
+    static void registerComponent( const std::string &name, const std::string &category = "Builtin" );
+
+    static bool isRegisteredComponent( const std::string &name ); 
 
 
     template <typename T>
@@ -199,11 +213,23 @@ public:
         {
             m_systems.back()->m_name = std::string(demangled);
         }
+
+        if (demangled)
+        {
+            std::free(demangled);
+        }
     }
 
 
     static void save( const std::string &filepath );
     static void load( const std::string &filepath );
+
+    static void onSceneLoad( std::function<void()> callback )
+    {
+        m_callbacks.push_back(callback);
+    }
+
+    static const std::string &getCurrentScene() { return m_filepath; };
 
 };
 

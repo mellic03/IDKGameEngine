@@ -1,7 +1,9 @@
 #pragma once
 
-#include <functional>
+#include <cstddef>
+#include <cstdint>
 
+#include <functional>
 
 
 namespace idk::ThreadPool
@@ -9,6 +11,8 @@ namespace idk::ThreadPool
     using fn_type = std::function<void()>;
 
     void createTask( fn_type work, fn_type callback );
+    void init( size_t threads );
+    void update();
 
 };
 

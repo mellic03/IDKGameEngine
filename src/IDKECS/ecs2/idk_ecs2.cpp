@@ -1,6 +1,13 @@
 #include "idk_ecs2.hpp"
 #include "IDKBuiltinCS/sys-transform.hpp"
 
+namespace
+{
+    std::map<std::string, std::function<int()>> m_prefabs;
+}
+
+
+
 
 void
 idk::ECS2::init( idk::EngineAPI &api )
@@ -17,41 +24,46 @@ idk::ECS2::init( idk::EngineAPI &api )
 void
 idk::ECS2::update( idk::EngineAPI &api )
 {
-    const double A = 1023.0 / 1024.0;
-    const double B = 1.0 / 1024.0;
+    // const double A = 1023.0 / 1024.0;
+    // const double B = 1.0 / 1024.0;
 
-    static int count = 0;
-    count += 1;
+    // static int count = 0;
+    // count += 1;
 
     for (System *system: m_systems)
     {
-        auto start = std::chrono::high_resolution_clock::now();
+        // auto start = std::chrono::high_resolution_clock::now();
 
         system->update(api);
 
-        auto finish  = std::chrono::high_resolution_clock::now();
-        auto elapsed = std::chrono::duration<double>(finish-start).count();
+        // auto finish  = std::chrono::high_resolution_clock::now();
+        // auto elapsed = std::chrono::duration<double>(finish-start).count();
 
-        system->m_avg_time = A*system->m_avg_time + B*static_cast<double>(elapsed);
+        // system->m_avg_time = A*system->m_avg_time + B*static_cast<double>(elapsed);
     }
 
+    // std::cout << "Objects: ";
 
-    if (count == 1024)
-    {
-        count = 0;
-
-        // for (System *system: m_systems)
-        // {
-        //     LOG_INFO()
-        //         << "[ECS2::update] Avg. execution " << system->m_avg_time
-        //         << " ms --> \"" << system->m_name << "\"";
-        // }
-
-        // LOG_INFO() << "";
-    }
+    // for (Entity &e: m_entities)
+    // {
+    //     std::cout << e.id << " ";
+    // }
+    // std::cout << std::endl;
 
 
+    // if (count == 1024)
+    // {
+    //     count = 0;
 
+    //     // for (System *system: m_systems)
+    //     // {
+    //     //     LOG_INFO()
+    //     //         << "[ECS2::update] Avg. execution " << system->m_avg_time
+    //     //         << " ms --> \"" << system->m_name << "\"";
+    //     // }
+
+    //     // LOG_INFO() << "";
+    // }
 
     if (m_readfile)
     {
@@ -82,6 +94,23 @@ idk::ECS2::shutdown( idk::EngineAPI &api )
 
 
 
+bool
+idk::ECS2::isRegisteredComponent( const std::string &name )
+{
+    for (auto &[key, ptr]: m_component_arrays)
+    {
+        if ((ptr.get())->getName() == name)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+
+
 
 void
 idk::ECS2::removeComponent( int obj_id, size_t key )
@@ -104,6 +133,63 @@ idk::ECS2::removeComponent( int obj_id, size_t key )
 
     e.components.erase(key);
 }
+
+
+
+idk::ECS2::iComponentArray *
+idk::ECS2::getComponentArray( size_t key )
+{
+    return m_component_arrays[key].get();
+}
+
+
+idk::ECS2::iComponentArray *
+idk::ECS2::getComponentArray( const std::string &name )
+{
+    size_t key = m_component_keys[name];
+    return getComponentArray(key);
+}
+
+
+std::map<size_t, std::unique_ptr<idk::ECS2::iComponentArray>> &
+idk::ECS2::getComponentArrays()
+{
+    return m_component_arrays;
+}
+
+
+std::map<std::string, idk::ECS2::iComponentArray*>
+idk::ECS2::getComponentArraysSorted()
+{
+    std::map<std::string, iComponentArray*> arrays;
+
+    for (auto &[key, ptr]: m_component_arrays)
+    {
+        arrays[ptr.get()->getName()] = ptr.get();
+    }
+
+    return arrays;
+}
+
+
+
+std::map<std::string, idk::ECS2::iComponentArray*>
+idk::ECS2::getComponentArraysByCategory( const std::string &category )
+{
+    std::map<std::string, iComponentArray*> arrays;
+
+    for (size_t key: m_component_categories[category])
+    {
+        iComponentArray *C = getComponentArray(key);
+        arrays[C->getName()] = C;
+    }
+
+    return arrays;
+}
+
+
+
+
 
 
 
@@ -131,24 +217,35 @@ idk::ECS2::createGameObject( const std::string &name, bool persistent )
 
 
 int
-idk::ECS2::copyGameObject( int obj_id, bool deep )
+idk::ECS2::copyGameObject( int src_obj, bool deep )
 {
-    int new_obj = createGameObject();
+    int dst_obj = createGameObject();
 
-    auto &src = m_entities.get(obj_id);
-    auto &dst = m_entities.get(new_obj);
+    auto &src = m_entities.get(src_obj);
+    auto &dst = m_entities.get(dst_obj);
 
-    dst.name = src.name;
-    dst.parent = src.parent;
-    dst.component_names = src.component_names;
+    dst.id     = dst_obj;
+    dst.name   = src.name;
+    dst.persistent = src.persistent;
 
     for (auto &[key, cmp]: src.components)
     {
-        giveComponent(new_obj, key);
-        getComponentArray(key)->onObjectCopy(obj_id, new_obj);
+        giveComponent(dst_obj, key);
+        getComponentArray(key)->onObjectCopy(src_obj, dst_obj);
     }
 
-    return new_obj;
+    for (int src_child: src.children)
+    {
+        int dst_child = copyGameObject(src_child, true);
+        giveChild(dst_obj, dst_child);
+    }
+
+    if (hasParent(src_obj))
+    {
+        giveChild(getParent(src_obj), dst_obj);
+    }
+
+    return dst_obj;
 }
 
 
@@ -371,7 +468,7 @@ idk::ECS2::giveChild( int parent_id, int child_id )
         Ml = TransformSys::getLocalMatrix(child_id, false);
         R  = glm::inverse(Mw*Ml) * R;
         glm::quat Q = glm::normalize(glm::quat_cast(R));
-        TransformSys::getData(child_id).rotation = Q;
+        TransformSys::getLocalRotation(child_id) = Q;
     }
 }
 
@@ -379,10 +476,10 @@ idk::ECS2::giveChild( int parent_id, int child_id )
 void
 idk::ECS2::removeChild( int parent_id, int child_id )
 {
-    // glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
-    // glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
-    // glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
-    // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+    glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
+    glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
+    glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
+    glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
 
     if (parent_id != -1)
     {
@@ -390,22 +487,40 @@ idk::ECS2::removeChild( int parent_id, int child_id )
         m_entities.get(child_id).parent = -1;
     }
 
-    // if (m_readfile == false)
-    // {
-    //     TransformSys::recomputeTransformMatrices(child_id);
-    //     TransformSys::setPositionWorldspace(child_id, child_pos);
+    if (m_readfile == false)
+    {
+        TransformSys::recomputeTransformMatrices(child_id);
+        TransformSys::setPositionWorldspace(child_id, child_pos);
 
-    //     Mw = TransformSys::getWorldMatrix(child_id);
-    //     Ml = TransformSys::getLocalMatrix(child_id, false);
-    //     R  = glm::inverse(Mw*Ml) * R;
-    //     glm::quat Q = glm::normalize(glm::quat_cast(R));
-    //     TransformSys::getData(child_id).rotation = Q;
-    // }
+        Mw = TransformSys::getWorldMatrix(child_id);
+        Ml = TransformSys::getLocalMatrix(child_id, false);
+        R  = glm::inverse(glm::mat4(glm::mat3(Mw*Ml))) * R;
+        glm::quat Q = glm::normalize(glm::quat_cast(R));
+
+        TransformSys::getLocalRotation(child_id) = Q;
+    }
 }
 
 
 
 
+void
+idk::ECS2::registerPrefab( const std::string &name, std::function<int()> ctor )
+{
+    m_prefabs[name] = ctor;
+}
+
+int
+idk::ECS2::createGameObjectFromPrefab( const std::string &name )
+{
+    return m_prefabs[name]();
+}
+
+const std::map<std::string, std::function<int()>>&
+idk::ECS2::getPrefabs()
+{
+    return m_prefabs;
+}
 
 
 
@@ -447,6 +562,13 @@ idk::ECS2::save( const std::string &filepath )
 void
 idk::ECS2::_load()
 {
+    ECS2::update(*m_api_ptr);
+
+    for (System *S: m_systems)
+    {
+        S->shutdown(*m_api_ptr);
+    }
+
     std::ifstream stream(m_filepath, std::ios::binary);
 
     // Read list of component names
@@ -460,11 +582,18 @@ idk::ECS2::_load()
     std::cout << "Reading components -------------------\n";
     for (std::string name: names)
     {
+        std::cout << "Reading component array: " << name << "\n";
+
+        if (isRegisteredComponent(name) == false)
+        {
+            LOG_ERROR() << "Component \"" << name << "\" not registered, ignoring";
+            continue;
+        }
+
         auto *C = getComponentArray(name);
 
         if (C)
         {
-            std::cout << "Reading component array: " << name << "\n";
             C->deserialize(stream);
         }
     }
@@ -473,7 +602,6 @@ idk::ECS2::_load()
     // Read entities
     // --------------------------------------------------
     std::cout << "Reading entities ---------------------\n";
-    m_entities.clear();
     m_entities.deserialize(stream);
     // --------------------------------------------------
 
@@ -505,7 +633,12 @@ idk::ECS2::_load()
     }
     // --------------------------------------------------
 
+    update(*m_api_ptr);
 
+    for (auto &callback: m_callbacks)
+    {
+        callback();
+    }
 }
 
 

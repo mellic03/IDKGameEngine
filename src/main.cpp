@@ -84,15 +84,20 @@ int main( int argc, char **argv )
 {
     // Parse command-line arguments
     // -----------------------------------------------------------------------------------------
+    std::vector<std::string> args;
+
     bool arg_load_modules = false;
     bool arg_load_idksc   = false;
     bool arg_load_game    = false;
+    size_t arg_threads    = 2;
 
     std::string arg_idksc = "";
     std::string arg_game  = "";
 
     for (int i=1; i<argc; i++)
     {
+        args.push_back(argv[i]);
+
         std::string arg = std::string(argv[i]);
 
         if (arg == "-lm" || arg == "--load-modules")
@@ -110,6 +115,11 @@ int main( int argc, char **argv )
         {
             arg_load_game = true;
             arg_game = std::string(argv[i+1]);
+        }
+
+        else if (arg == "--threads")
+        {
+            arg_threads = std::stoul(argv[i+1]);
         }
     }
     // -----------------------------------------------------------------------------------------
@@ -133,16 +143,19 @@ int main( int argc, char **argv )
     auto &audiosys   = api.getAudioSys();
     auto &engine     = api.getEngine();
     auto &ren        = api.getRenderer();
-    // auto &threadpool = api.getThreadPool();
+
+    idk::ThreadPool::init(arg_threads);
     // -----------------------------------------------------------------------------------------
 
-    glDebugMessageControl(
-        GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE
-    );
+    IDK_GLCALL(
+        glDebugMessageControl(
+            GL_DONT_CARE, GL_DONT_CARE, GL_DEBUG_SEVERITY_NOTIFICATION, 0, nullptr, GL_FALSE
+        );
+    )
 
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(message_callback, nullptr);
+    idk::gl::enable(GL_DEBUG_OUTPUT);
+    idk::gl::enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    IDK_GLCALL( glDebugMessageCallback(message_callback, nullptr); )
 
 
 
@@ -210,7 +223,7 @@ int main( int argc, char **argv )
     idk::ECS2::update(api);
 
 
-    game->setup(api);
+    game->setup(args, api);
     // -----------------------------------------------------------------------------------------
 
 
@@ -239,10 +252,13 @@ int main( int argc, char **argv )
         eventsys.update();
 
         idk::ECS2::update(api);
+        idk::Events::update();
 
         engine.beginFrame(api, dt);
         game->mainloop(api);
         engine.endFrame(api);
+    
+        idk::ThreadPool::update();
 
         idk::Logger::print();
         b = a;

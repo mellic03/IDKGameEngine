@@ -166,7 +166,6 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
     {
         if (ImGui::BeginPopupContextWindow("Object Context"))
         {
-            // auto icon = api.getEngine().getCS<idk::Icon_CS>().getIcon(id);
             std::string label = idk::ECS2::getSelectedGameObjectName();
                         label = icon + " " + label;
 
@@ -185,14 +184,8 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
             ImGui::EndPopup();
         }
-
-
-        // float width = ImGui::GetContentRegionAvail().x;
-        // ImGui::SameLine(width - 1);
-        // ImGui::Text(ICON_FA_BARS);
     
         idk_scene_treenode_drag_drop( id);
-        // idk_scene_drag_drop_CS(id, engine);
 
         for (int child_id: idk::ECS2::getChildren(id))
         {
@@ -207,14 +200,33 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
 
 
+void prefab_popup( idk::EngineAPI &api )
+{
+    if (ImGui::BeginPopup("Instantiate Prefab"))
+    {
+        std::string label = "Instantiate Prefab";
+        ImGui::Text(label.c_str());
+        ImGui::Separator();
+
+        for (auto &[name, callback]: idk::ECS2::getPrefabs())
+        {
+            if (ImGui::MenuItem(name.c_str()))
+            {
+                idk::ECS2::createGameObjectFromPrefab(name);
+            }
+        }
+
+        ImGui::EndPopup();
+    }
+}
+
+
 void
 EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
-    
-
-    int  obj_id   = 0;
+    int  obj_id  = 0;
 
     int flags  = ImGuiTreeNodeFlags_DefaultOpen;
         flags |= ImGuiTreeNodeFlags_OpenOnArrow;
@@ -230,50 +242,68 @@ EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 
     ImGui::Begin("Scene Hierarchy");
 
-        if (ImGui::BeginTable("Hierarchy Table", 1, table_flags, ImVec2(0, -ImGui::GetFrameHeightWithSpacing())))
+
+    if (ImGui::BeginTable("Hierarchy Table", 1, table_flags, ImVec2(0, -ImGui::GetFrameHeightWithSpacing())))
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        bool row_clicked = ImGui::IsItemClicked() && ImGui::IsMouseReleased(ImGuiMouseButton_Left);
+        bool node_open = ImGui::TreeNodeEx("root", flags);
+
+        if (row_clicked && !ImGui::IsItemToggledOpen())
         {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
+            idk::ECS2::setSelectedGameObject(obj_id);
+        }
 
-            bool row_clicked = ImGui::IsItemClicked() && ImGui::IsMouseReleased(ImGuiMouseButton_Left);
-            bool node_open = ImGui::TreeNodeEx("root", flags);
+        if (node_open)
+        {
+            idk_scene_treenode_drag_drop_deparent( obj_id);
 
-            if (row_clicked && !ImGui::IsItemToggledOpen())
+            for (auto &e: idk::ECS2::getEntities())
             {
-                idk::ECS2::setSelectedGameObject(obj_id);
-            }
+                int id = e.id;
 
-            if (node_open)
-            {
-                idk_scene_treenode_drag_drop_deparent( obj_id);
-
-                for (auto &e: idk::ECS2::getEntities())
+                if (idk::ECS2::hasParent(id) == false)
                 {
-                    int id = e.id;
-
-                    if (idk::ECS2::hasParent(id) == false)
-                    {
-                        _tab_scene_treenode(api, id);
-                    }
+                    _tab_scene_treenode(api, id);
                 }
-
-                ImGui::TreePop();
             }
-            ImGui::EndTable();
+
+            ImGui::TreePop();
         }
+        ImGui::EndTable();
+    }
 
 
-        if (ImGui::Button(ICON_FA_PLUS " Create"))
-        {
-            idk::ECS2::createGameObject("Empty");
-        }
+    if (ImGui::Button(ICON_FA_PLUS " Create"))
+    {
+        idk::ECS2::createGameObject("Empty");
+    }
 
-        ImGui::SameLine();
+    ImGui::SameLine();
 
-        if (ImGui::Button(ICON_FA_TRASH_CAN " delete"))
-        {
-            idk::ECS2::deleteSelectedGameObject();
-        }
+    // bool prefab_popup_open = true;
+    if (ImGui::Button(ICON_FA_PLUS " Prefab"))
+    {
+        ImGui::OpenPopup("Instantiate Prefab");
+        // prefab_popup_open = true;
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button(ICON_FA_TRASH_CAN " delete"))
+    {
+        idk::ECS2::deleteSelectedGameObject();
+    }
+
+
+    // if (prefab_popup_open)
+    {
+        prefab_popup(api);
+    }
+
+
 
     ImGui::End();
 

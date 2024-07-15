@@ -1,4 +1,5 @@
 #include "sys-particle.hpp"
+#include "sys-model.hpp"
 
 
 
@@ -26,10 +27,10 @@ idk::ParticleSys::update( idk::EngineAPI &api )
         auto &emitter = ren.getParticleEmitter(cmp.emitter_id);
 
         emitter.origin    = position;
-        emitter.velocity  = TransformSys::getData(cmp.obj_id).delta;
+        emitter.velocity  = glm::vec3(0.0f); // TransformSys::getData(cmp.obj_id).delta;
         emitter.direction = TransformSys::getFront(cmp.obj_id);
         emitter.model_id  = model;
-        emitter.scale     = TransformSys::getData(cmp.src_id).scale;
+        emitter.scale     = 1.0f; // TransformSys::getData(cmp.src_id).scale;
         emitter.m_desc    = cmp.desc;
 
     }

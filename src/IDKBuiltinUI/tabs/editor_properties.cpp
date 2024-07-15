@@ -1,5 +1,8 @@
 #include "../EditorUI.hpp"
 
+#include <IDKGraphics/idk_render_settings.hpp>
+
+
 
 void
 EditorUI_MD::_tab_editor_properties( idk::EngineAPI &api )
@@ -16,34 +19,49 @@ EditorUI_MD::_tab_editor_properties( idk::EngineAPI &api )
     ImGui::Text("Rotation snapping");
     ImGui::InputFloat("##B", &m_rsnap, 10.0f, 5.0f, "%.2f", ImGuiInputTextFlags_None);
 
+    ImGui::Text("Scale snapping");
+    ImGui::InputFloat("##C", &m_ssnap, 0.0f, 2.0f, "%.2f", ImGuiInputTextFlags_None);
 
-    static bool flags[32];
-    static bool first = true;
 
-    if (first)
     {
-        for (int i=0; i<32; i++)
-        {
-            flags[i] = ren.getRenderSetting(static_cast<idk::RenderSetting>(1 << i));
-        }
+        ImGui::Text("Environment Mapping");
 
-        first = false;
+        auto settings = ren.getRenderSettings();
+        auto &config = settings.envprobe;
+
+        ImGui::Checkbox("Enable",    &config.enabled);
+        ImGui::Checkbox("Visualize", &config.visualize);
+
+        ImGui::InputInt3   ("Grid size",  &(config.grid_size[0]));
+        ImGui::InputFloat3 ("Probe size", &(config.cell_size[0]));
+
+        ren.applyRenderSettings(settings);
+
+        // static bool probe_vis = false;
+        // ImGui::Checkbox("Visualize light probes", &probe_vis);
+        // ren.setRenderSetting(idk::RenderSetting::LIGHTPROBE_VIS, probe_vis);
     }
 
-    for (int i=0; i<32; i++)
-    {
-        std::string label = std::to_string(i);
-        ImGui::Checkbox(label.c_str(), &flags[i]);
-        ren.setRenderSetting(static_cast<idk::RenderSetting>(1 << i), flags[i]);
 
-        if (i % 5 != 0)
-        {
-            ImGui::SameLine();
-        }
+    {
+        // auto &settings = ren.getRenderSettings();
+        // auto &config = settings.envprobe;
+
+        // ImGui::Text("SSAO");
+
+        // ImGui::Separator();
+        // ImGui::Checkbox("Enable SSAO", &settings.enabled);
+        // ImGui::InputFloat("Intensity", &settings.intensity);
+        // ImGui::InputFloat("Factor",    &settings.factor);
+
+
+        // ImGui::InputInt("Samples",   &settings.samples);
+        // ImGui::InputFloat("Radius",  &settings.radius);
+        // ImGui::InputFloat("Bias",    &settings.bias);
     }
 
-    ImGui::Spacing();
-    ImGui::Checkbox("VXGI Debug", &api.getRenderer().m_vxgi_debug);
+    // ImGui::Spacing();
+    // ImGui::Checkbox("VXGI Debug", &api.getRenderer().m_vxgi_debug);
 
     ImGui::End();
 }
