@@ -5,6 +5,7 @@
 #include <libidk/idk_string.hpp>
 #include <libidk/idk_print.hpp>
 #include <libidk/idk_log.hpp>
+#include <libidk/idk_random.hpp>
 
 #include <IDKGameEngine/IDKengine.hpp>
 #include <IDKECS/IDKECS.hpp>
@@ -18,9 +19,10 @@
 #include <IDKThreading/IDKThreading.hpp>
 
 #include <IDKGraphics/UI/idk_ui.hpp>
-
+#include <IDKGraphics/terrain/terrain.hpp>
 
 #include <filesystem>
+#include <iomanip>
 
 
 
@@ -80,8 +82,52 @@ message_callback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsize
 
 
 
+void do_test( int width )
+{
+    int bins = 9;
+    int samples = 1000000;
+
+    std::vector<int> results(bins, 0);
+    float amin = +10000.0f;
+    float amax = -10000.0f;
+
+    for (int i=0; i<samples; i++)
+    {
+        float a = idk::randf_guassian(1.0f, width);
+
+        amin = std::min(a, amin);
+        amax = std::max(a, amax);
+
+        int n = glm::clamp(int(bins * a) + (bins/2), 0, bins-1);
+        results[n] += 1;
+    }
+
+    std::cout << "Results (" << width << "): " << std::fixed << std::setprecision(2);
+
+    for (int n: results)
+    {
+        std::cout << float(n) / float(samples) << "   ";
+    }
+
+    std::cout << "       " << amin << ", " << amax << "\n";
+}
+
+
+
 int main( int argc, char **argv )
 {
+    srand(clock());
+
+    // for (int i=1; i<32; i++)
+    // {
+    //     do_test(i);
+    // }
+
+    // return 0;
+
+
+
+
     // Parse command-line arguments
     // -----------------------------------------------------------------------------------------
     std::vector<std::string> args;
@@ -140,10 +186,10 @@ int main( int argc, char **argv )
     api.init(game->getName(), 4, 6);
 
     auto &eventsys   = api.getEventSys();
-    auto &audiosys   = api.getAudioSys();
     auto &engine     = api.getEngine();
     auto &ren        = api.getRenderer();
 
+    idk::AudioSystem::init();
     idk::ThreadPool::init(arg_threads);
     // -----------------------------------------------------------------------------------------
 
@@ -161,18 +207,18 @@ int main( int argc, char **argv )
 
     // Setup resize and exit callbacks
     // -----------------------------------------------------------------------------------------
-    auto resize_lambda = [&ren, &eventsys]()
-    {
-        auto winsize = eventsys.windowSize();
-        ren.resize(winsize.x, winsize.y);
-    };
+    // auto resize_lambda = [&ren, &eventsys]()
+    // {
+    //     auto winsize = eventsys.windowSize();
+    //     ren.resize(1920, 1080);
+    // };
 
     auto exit_lambda = [&engine]()
     {
         engine.shutdown();
     };
 
-    eventsys.onWindowEvent(idk::WindowEvent::RESIZE, resize_lambda);
+    // eventsys.onWindowEvent(idk::WindowEvent::RESIZE, resize_lambda);
     eventsys.onWindowEvent(idk::WindowEvent::EXIT,   exit_lambda);
     // -----------------------------------------------------------------------------------------
 
@@ -253,6 +299,7 @@ int main( int argc, char **argv )
 
         idk::ECS2::update(api);
         idk::Events::update();
+        // idk::AudioSystem::update()
 
         engine.beginFrame(api, dt);
         game->mainloop(api);

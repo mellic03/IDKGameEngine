@@ -92,6 +92,7 @@ private:
     static glm::mat4    _computeLocalMatrix( int obj_id, bool scale = true );
     static glm::mat4    _computeWorldMatrix( int obj_id );
     static glm::mat4    _computeModelMatrix( int obj_id );
+    static void         _computeTransform( int obj_id, const glm::mat4 &parent );
 
     struct TransformCallback
     {
@@ -124,6 +125,9 @@ public:
                                 const std::vector<float> &distances,
                                 const glm::vec3 &pole_target );
 
+    static void         FABRIK( std::vector<glm::vec3> &positions,
+                                const std::vector<float> &distances );
+
     static void         FABRIK( int chain_length, int end_obj,
                                 const std::vector<float> &distances,
                                 const glm::vec3 &pole_target );
@@ -151,7 +155,6 @@ public:
     static Transform    &getTransform   ( int obj_id );
 
     static glm::vec3    getPositionWorldspace( int obj_id );
-    static glm::vec3    getPositionLocalspace( int obj_id );
 
     static glm::vec3   &getLocalPosition( int obj_id );
     static glm::quat   &getLocalRotation( int obj_id );
@@ -162,7 +165,7 @@ public:
     static glm::vec3    getWorldPosition( int obj_id );
     static glm::quat    getWorldRotation( int obj_id );
 
-    static void         setPositionWorldspace( int obj_id, const glm::vec3 & );
+    static void         setWorldPosition( int obj_id, const glm::vec3 & );
     static void         setPositionLocalspace( int obj_id, const glm::vec3 & );
 
     static glm::vec3    getUp            ( int obj_id );

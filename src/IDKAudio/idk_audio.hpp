@@ -32,26 +32,28 @@ public:
 
 
 private:
-
-    std::stack<int>             m_channels;
-    idk::Allocator<Mix_Chunk>   m_chunks;
-    idk::Allocator<Emitter>     m_emitters;
-
+    static int createChunk( const Mix_Chunk& );
+    static Mix_Chunk &getChunk( int );
 
 public:
-                AudioSystem();
+                // AudioSystem();
 
-    void        update( const glm::vec3 &, const glm::vec3 & );
-    int         loadWav( const std::string & );
+    static void init();
+    static void update( const glm::vec3&, const glm::vec3 & );
+    static int  loadWav( const std::string & );
 
-    IDK_ALLOCATOR_ACCESS(Emitter, Emitter,   m_emitters)
-    IDK_ALLOCATOR_ACCESS(Chunk,   Mix_Chunk, m_chunks)
+    static int createEmitter();
+    static int createEmitter( const Emitter& );
+    static Emitter &getEmitter( int );
 
-    void        playSound( int emitter_id, bool loop );
-    void        stopSound( int emitter_id );
+    // IDK_ALLOCATOR_ACCESS(Emitter, Emitter,   m_emitters)
+    // IDK_ALLOCATOR_ACCESS(Chunk,   Mix_Chunk, m_chunks)
 
-    void        resumeSound( int emitter_id );
-    void        pauseSound( int emitter_id );
+    static void playSound( int emitter_id, bool loop );
+    static void stopSound( int emitter_id );
+
+    static void resumeSound( int emitter_id );
+    static void pauseSound( int emitter_id );
 
 };
 

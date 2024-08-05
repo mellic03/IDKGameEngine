@@ -40,6 +40,52 @@ EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
 
 
 
+template <>
+void
+EditorUI_MD::drawComponent<idk::TerrainCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &cmp = idk::ECS2::getComponent<idk::TerrainCmp>(obj_id);
+
+    ImGui::SeparatorText("Terrain");
+
+    auto &desc = idk::TerrainRenderer::getTerrain(cmp.terrain_id);
+
+    glm::vec4 &scale = desc.scale;
+    glm::vec4 &aa    = desc.slope_blend;
+    glm::vec4 &bb    = desc.height_blend;
+    glm::vec4 &tex   = desc.texscale[0];
+
+    ImGui::DragFloat("Height scale", &(scale[1]), 0.05f);
+    ImGui::DragFloat("Normal scale", &(scale[3]), 0.05f);
+    ImGui::Spacing();
+
+    ImGui::DragFloat("Displacement", &(scale[2]), 0.001f, 0.0f, 1.0f);
+    ImGui::Spacing();
+
+    ImGui::DragFloat("slope min", &(aa[0]), 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat("slope max", &(aa[1]), 0.001f, 0.0f, 1.0f);
+    ImGui::Spacing();
+
+    ImGui::DragFloat("height min", &(bb[0]), 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat("height max", &(bb[1]), 0.001f, 0.0f, 1.0f);
+    ImGui::Spacing();
+
+    ImGui::DragFloat("texscale 0", &(tex[0]), 0.01f, 0.0f, 2.0f);
+    ImGui::DragFloat("texscale 1", &(tex[1]), 0.01f, 0.0f, 2.0f);
+    ImGui::DragFloat("texscale 2", &(tex[2]), 0.01f, 0.0f, 2.0f);
+    ImGui::DragFloat("texscale 3", &(tex[3]), 0.01f, 0.0f, 2.0f);
+    ImGui::Spacing();
+
+
+    if (ImGui::Button("Generate grass"))
+    {
+        idk::TerrainRenderer::generateGrass(cmp.terrain_id);
+    }
+
+
+}
+
+
 
 void drag_drop_thing( std::string label, const std::string &payloadname, int &obj_id )
 {
@@ -860,6 +906,7 @@ EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
     ECS_COMPONENT_CALLBACK(idk::RotateCmp);
 
     ECS_COMPONENT_CALLBACK(idk::ModelCmp);
+    ECS_COMPONENT_CALLBACK(idk::TerrainCmp);
     ECS_COMPONENT_CALLBACK(idk::StaticHeightmapCmp);
     ECS_COMPONENT_CALLBACK(idk::CameraCmp);
 
@@ -871,6 +918,8 @@ EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
     ECS_COMPONENT_CALLBACK(idk::DirlightCmp);
     ECS_COMPONENT_CALLBACK(idk::PointlightCmp);
     ECS_COMPONENT_CALLBACK(idk::SpotlightCmp);
+
+    ECS_COMPONENT_CALLBACK(idk::AudioEmitterCmp);
 
     ECS_COMPONENT_CALLBACK(idk::RenderSettingCmp);
     ECS_COMPONENT_CALLBACK(idk::ParticleCmp);

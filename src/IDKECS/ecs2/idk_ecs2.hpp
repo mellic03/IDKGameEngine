@@ -134,8 +134,9 @@ public:
     static void                 removeChild( int parent_id, int child_id );
     
     static int                  getParent( int obj_id );
-    static bool                 hasParent( int obj_id );
     static const std::set<int> &getChildren( int obj_id );
+    static bool                 hasParent( int obj_id );
+    static bool                 hasChildren( int obj_id );
 
     static void registerPrefab             ( const std::string &name, std::function<int()> );
     static int  createGameObjectFromPrefab ( const std::string &name );

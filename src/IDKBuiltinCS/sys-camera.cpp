@@ -33,9 +33,7 @@ idk::CameraSys::update( idk::EngineAPI &api )
         int obj_id = cmp.obj_id;
         int cam_id = cmp.cam_id;
 
-        cmp.camera.V = glm::inverse(TransformSys::getModelMatrix(cmp.obj_id));
-        cmp.camera.position = glm::vec4(TransformSys::getWorldPosition(cmp.obj_id), 1.0f);
-
+        cmp.camera.setTransform(TransformSys::getModelMatrix(cmp.obj_id)); 
         ren.getCamera(cam_id) = cmp.camera;
 
     }
@@ -52,8 +50,6 @@ idk::CameraSys::in_frustum( int subject, int target )
 
     return false;
 }
-
-
 
 
 
@@ -79,6 +75,7 @@ idk::CameraCmp::deserialize( std::ifstream &stream )
 
     camera.near = 1.0f;
     camera.far  = 16.0f;
+    camera.fov_offset = 0.0f;
 
     cam_id = api_ptr->getRenderer().activeCamera();
     return n;

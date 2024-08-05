@@ -542,7 +542,7 @@ idk::ecs::ECS::giveChild( int parent_id, int child_id )
     if (file_read_mode == false)
     {
         TransformSys::recomputeTransformMatrices(child_id);
-        TransformSys::setPositionWorldspace(child_id, child_pos);
+        TransformSys::setWorldPosition(child_id, child_pos);
 
         Mw = TransformSys::getWorldMatrix(child_id);
         Ml = TransformSys::getLocalMatrix(child_id, false);
@@ -568,7 +568,7 @@ idk::ecs::ECS::removeChild( int parent_id, int child_id )
     if (file_read_mode == false)
     {
         TransformSys::recomputeTransformMatrices(child_id);
-        TransformSys::setPositionWorldspace(child_id, child_pos);
+        TransformSys::setWorldPosition(child_id, child_pos);
 
         Mw = TransformSys::getWorldMatrix(child_id);
         Ml = TransformSys::getLocalMatrix(child_id, false);

@@ -1,13 +1,29 @@
 #include "idk_audio.hpp"
 
+#include <libidk/idk_log.hpp>
+
 #include <filesystem>
+#include <map>
 
 
-idk::AudioSystem::AudioSystem()
+namespace
 {
-    static constexpr int AUDIOENGINE_NUM_CHANNELS = 8;
+    std::stack<int>                           m_channels;
+    std::map<std::string, int>                m_wav_cache;
 
-    for (int i=0; i<AUDIOENGINE_NUM_CHANNELS; i++)
+    idk::Allocator<Mix_Chunk>                 m_chunks;
+    idk::Allocator<idk::AudioSystem::Emitter> m_emitters;
+
+};
+
+
+
+void
+idk::AudioSystem::init()
+{
+    static constexpr int NUM_CHANNELS = 8;
+
+    for (int i=0; i<NUM_CHANNELS; i++)
     {
         m_channels.push(i);
     }
@@ -18,10 +34,50 @@ idk::AudioSystem::AudioSystem()
 
     IDK_ASSERT(
         "Error initialising SDL2 audio",
-        Mix_OpenAudio(audio_rate, audio_format, AUDIOENGINE_NUM_CHANNELS, audio_buffers) == 0
+        Mix_OpenAudio(audio_rate, audio_format, NUM_CHANNELS, audio_buffers) == 0
     );
-
 }
+
+
+
+int
+idk::AudioSystem::createEmitter()
+{
+    return m_emitters.create();
+}
+
+
+int
+idk::AudioSystem::createEmitter( const Emitter &emitter )
+{
+    int id = m_emitters.create(emitter);
+    AudioSystem::getEmitter(id).id = id;
+    return id;
+}
+
+
+idk::AudioSystem::Emitter&
+idk::AudioSystem::getEmitter( int id )
+{
+    return m_emitters.get(id);
+}
+
+
+int
+idk::AudioSystem::createChunk( const Mix_Chunk &chunk )
+{
+    return m_chunks.create(chunk);
+}
+
+
+Mix_Chunk&
+idk::AudioSystem::getChunk( int id )
+{
+    return m_chunks.get(id);
+}
+
+
+
 
 
 int
@@ -29,12 +85,23 @@ idk::AudioSystem::loadWav( const std::string &filepath )
 {
     std::string path = std::filesystem::absolute(filepath);
 
+    if (m_wav_cache.contains(path))
+    {
+        LOG_INFO() << "[AudioSystem] .wav file already cached :" << filepath;
+        return m_wav_cache[path];
+    }
+
     Mix_Chunk *mc = Mix_LoadWAV(path.c_str());
-    IDK_ASSERT("Could not load .wav file", mc != nullptr);
 
-    idk_printvalue(mc);
+    std::string msg  = "[idk::AudioSystem]";
+                msg += " Could not load file \"" + filepath + "\"";
 
-    return createChunk(*mc);
+    IDK_ASSERT(msg.c_str(), mc != nullptr);
+
+    int id = createChunk(*mc);
+    m_wav_cache[path] = id;
+
+    return id;
 }
 
 
@@ -47,6 +114,11 @@ idk::AudioSystem::playSound( int emitter_id, bool loop )
     // Already playing
     if (emitter.channel != -1)
     {
+        if (loop == true)
+        {
+            return;
+        }
+
         stopSound(emitter_id);
         playSound(emitter_id, loop);
         return;

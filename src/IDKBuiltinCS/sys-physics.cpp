@@ -49,9 +49,7 @@ idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
             continue;
         }
 
-        cmp.curr_pos += cmp.force;
         cmp.curr_pos += dt*cmp.impulse;
-        cmp.force    *= 0.0f;
         cmp.impulse  *= 0.5f;
     
         if (cmp.crouch && cmp.bottom > 0.5f)
@@ -69,7 +67,52 @@ idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
         {
             kinematicCapsule_staticRect(dt, cmp, r_cmp);
         }
-    
+
+
+        for (auto &tcmp: ECS2::getComponentArray<idk::TerrainCmp>())
+        {
+            glm::vec3 origin = cmp.curr_pos - glm::vec3(0.0f, cmp.bottom+cmp.radius, 0.0f);
+        
+            float terrain_y = TerrainRenderer::heightQuery(tcmp.terrain_id, origin.x, origin.z);
+            float overlap   = terrain_y - origin.y;
+        
+            bool grounded = false;
+
+            if (overlap > 0.0f)
+            {
+                if (cmp.force.y < 0.0f)
+                {
+                    cmp.force.y = 0.0f;
+                }
+
+                if (cmp.vel.y < 0.0f)
+                {
+                    cmp.vel.y = 0.0f;
+                }
+
+                cmp.curr_pos += 0.75f * glm::vec3(0.0f, overlap, 0.0f);
+
+                grounded = true;
+            }
+
+
+            if (grounded)
+            {
+                cmp.airtime = 0.0f;
+            }
+
+            else
+            {
+                cmp.airtime += dt;
+            }
+            
+            cmp.grounded = (cmp.airtime < 1.0f / 2.0f);
+        }
+
+
+        cmp.curr_pos += cmp.force;
+        cmp.force    *= 0.0f;
+
 
         cmp.acc.y = -PhysicsConstants::G;
 
@@ -148,7 +191,7 @@ idk::PhysicsSys::update( idk::EngineAPI &api )
             position = s_cmp.curr_pos;
         }
 
-        TransformSys::setPositionWorldspace(s_cmp.obj_id, position);
+        TransformSys::setWorldPosition(s_cmp.obj_id, position);
 
         if (s_cmp.visualise)
         {
@@ -314,7 +357,7 @@ idk::PhysicsSys::kinematicCapsule_staticRect( float timestep, KinematicCapsuleCm
 
             else
             {
-                s_cmp.curr_pos += 1.0f * res;
+                s_cmp.force += 1.0f * res;
             }
         }
     }

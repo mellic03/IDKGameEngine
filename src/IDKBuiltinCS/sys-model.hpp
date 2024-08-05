@@ -3,10 +3,15 @@
 #include "idk_components.hpp"
 #include <IDKECS/IDKECS.hpp>
 
+#include <IDKGraphics/terrain/terrain.hpp>
+
+
 
 namespace idk
 {
     struct StaticHeightmapCmp;
+    struct TerrainCmp;
+
     struct ModelCmp;
     class  ModelSys;
 }
@@ -17,10 +22,10 @@ namespace idk
 class idk::ModelSys: public idk::ECS2::System
 {
 private:
-    inline static   int m_heightmap_program = -1;
-    inline static   int m_heightmap_RQ = -1;
-    inline static   int m_shadow_RQ = -1;
-    inline static   int m_alpha_cutoff_RQ = -1;
+    inline static int m_heightmap_program = -1;
+    inline static int m_heightmap_RQ = -1;
+    inline static int m_shadow_RQ = -1;
+    inline static int m_alpha_cutoff_RQ = -1;
 
 
 public:
@@ -73,6 +78,21 @@ struct idk::StaticHeightmapCmp
     idk::TextureWrapper      heightmap;
     std::vector<std::string> textures;
     std::vector<uint32_t>    texture_ids;
+
+    size_t  serialize            ( std::ofstream &stream ) const;
+    size_t  deserialize          ( std::ifstream &stream );
+    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
+    static void onObjectCopy         ( int src_obj, int dst_obj );
+};
+
+
+
+struct idk::TerrainCmp
+{
+    int obj_id = -1;
+    int terrain_id = -1;
+    TerrainRenderer::TerrainDesc desc;
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );

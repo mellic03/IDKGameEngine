@@ -15,9 +15,8 @@ idk::AudioSys::init( idk::EngineAPI &api )
 {
     api_ptr = &api;
     
-    auto &audio = api.getAudioSys();
 
-    for (auto &[obj_id, emitter_id, volume, filepath]: idk::ECS2::getComponentArray<AudioEmitterCmp>())
+    for (auto &[obj_id, emitter_id, volume, filepath]: ECS2::getComponentArray<AudioEmitterCmp>())
     {
         glm::vec3 pos = idk::TransformSys::getPositionWorldspace(obj_id);
 
@@ -27,8 +26,8 @@ idk::AudioSys::init( idk::EngineAPI &api )
         }
 
         int sound = loadSound(filepath);
-        emitter_id = audio.createEmitter(idk::AudioSystem::Emitter(sound));
-        audio.getEmitter(emitter_id).id = emitter_id;
+        emitter_id = AudioSystem::createEmitter(idk::AudioSystem::Emitter(sound));
+        AudioSystem::getEmitter(emitter_id).id = emitter_id;
     }
 
 }
@@ -37,9 +36,6 @@ idk::AudioSys::init( idk::EngineAPI &api )
 void
 idk::AudioSys::update( idk::EngineAPI &api )
 {
-    
-    auto &audio = getAPI().getAudioSys();
-
     static std::set<int> finished_callbacks;
     finished_callbacks.clear();
 
@@ -58,16 +54,16 @@ idk::AudioSys::update( idk::EngineAPI &api )
     }
 
 
-    for (auto &[obj_id]: idk::ECS2::getComponentArray<AudioListenerCmp>())
+    for (auto &[obj_id]: ECS2::getComponentArray<AudioListenerCmp>())
     {
         glm::vec3 pos = idk::TransformSys::getPositionWorldspace(obj_id);
         glm::vec3 dir = idk::TransformSys::getFront(obj_id);
 
-        audio.update(pos, dir);
+        AudioSystem::update(pos, dir);
     }
 
 
-    for (auto &[obj_id, emitter_id, volume, filepath]: idk::ECS2::getComponentArray<AudioEmitterCmp>())
+    for (auto &[obj_id, emitter_id, volume, filepath]: ECS2::getComponentArray<AudioEmitterCmp>())
     {
         glm::vec3 pos = idk::TransformSys::getPositionWorldspace(obj_id);
 
@@ -76,7 +72,7 @@ idk::AudioSys::update( idk::EngineAPI &api )
             continue;
         }
 
-        audio.getEmitter(emitter_id).pos = pos;
+        AudioSystem::getEmitter(emitter_id).pos = pos;
     }
 
 }
@@ -86,34 +82,25 @@ idk::AudioSys::update( idk::EngineAPI &api )
 int
 idk::AudioSys::loadSound( const std::string &filepath )
 {
-    return getAPI().getAudioSys().loadWav(filepath);
+    return AudioSystem::loadWav(filepath);
 }
 
 
 void
 idk::AudioSys::assignSound( int obj_id, int sound )
 {
-    auto &api   = getAPI();
-    auto &audio = api.getAudioSys();
-
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    cmp.emitter_id = audio.createEmitter(idk::AudioSystem::Emitter(sound));
-    audio.getEmitter(cmp.emitter_id).id = cmp.emitter_id;
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    cmp.emitter_id = AudioSystem::createEmitter(idk::AudioSystem::Emitter(sound));
 
 }
 
 void
 idk::AudioSys::assignSound( int obj_id, const std::string &filepath )
 {
-    auto &api   = getAPI();
-    
-    auto &audio = api.getAudioSys();
-
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
 
     int sound = loadSound(filepath);
-    cmp.emitter_id = audio.createEmitter(idk::AudioSystem::Emitter(sound));
-    audio.getEmitter(cmp.emitter_id).id = cmp.emitter_id;
+    cmp.emitter_id = AudioSystem::createEmitter(idk::AudioSystem::Emitter(sound));
     cmp.filepath = filepath;
 }
 
@@ -121,72 +108,49 @@ idk::AudioSys::assignSound( int obj_id, const std::string &filepath )
 void
 idk::AudioSys::playSoundCallback( int obj_id, std::function<void()> callback )
 {
-    auto &api   = getAPI();
-    
-    auto &audio = api.getAudioSys();
-
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
-
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
     m_callbacks[obj_id] = callback;
-    audio.playSound(cmp.emitter_id, false);
+    AudioSystem::playSound(cmp.emitter_id, false);
 }
 
 
 void
 idk::AudioSys::playSound( int obj_id, bool loop )
 {
-    auto &api   = getAPI();
-    auto &audio = api.getAudioSys();
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    audio.playSound(cmp.emitter_id, loop);
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    AudioSystem::playSound(cmp.emitter_id, loop);
 }
 
 
 void
 idk::AudioSys::stopSound( int obj_id )
 {
-    auto &api   = getAPI();
-    
-    auto &audio = api.getAudioSys();
-
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    audio.stopSound(cmp.emitter_id);
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    AudioSystem::stopSound(cmp.emitter_id);
 }
 
 
 void
 idk::AudioSys::resumeSound( int obj_id )
 {
-    auto &api   = getAPI();
-    
-    auto &audio = api.getAudioSys();
-
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    audio.resumeSound(cmp.emitter_id);
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    AudioSystem::resumeSound(cmp.emitter_id);
 }
 
 
 void
 idk::AudioSys::pauseSound( int obj_id )
 {
-    auto &api   = getAPI();
-    
-    auto &audio = api.getAudioSys();
-
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    audio.pauseSound(cmp.emitter_id);
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    AudioSystem::pauseSound(cmp.emitter_id);
 }
 
 
 bool
 idk::AudioSys::isFinished( int obj_id )
 {
-    auto &api   = getAPI();
-    
-    auto &audio = api.getAudioSys();
-
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    auto &emm = audio.getEmitter(cmp.emitter_id);
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    auto &emm = AudioSystem::getEmitter(cmp.emitter_id);
 
     return emm.channel == -1;
 }
@@ -195,10 +159,6 @@ idk::AudioSys::isFinished( int obj_id )
 bool
 idk::AudioSys::isPlaying( int obj_id )
 {
-    auto &api   = getAPI();
-    
-    auto &audio = api.getAudioSys();
-
-    auto &cmp = idk::ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    return audio.getEmitter(cmp.emitter_id).channel != -1;
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    return AudioSystem::getEmitter(cmp.emitter_id).channel != -1;
 }

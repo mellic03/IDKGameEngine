@@ -3,10 +3,14 @@
 #include "idk_components.hpp"
 #include "sys-transform.hpp"
 
+#include <IDKGraphics/render/particle.hpp>
+
 
 namespace idk
 {
     struct ParticleCmp;
+    struct TempParticle;
+
     class  ParticleSys;
 };
 
@@ -33,10 +37,9 @@ class idk::ParticleSys: public idk::ECS2::System
 {
 private:
 
-
 public:
 
-    virtual void init   ( idk::EngineAPI& ) {  };
+    virtual void init   ( idk::EngineAPI& );
     virtual void update ( idk::EngineAPI& ) final;
 
 

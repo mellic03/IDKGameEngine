@@ -20,6 +20,8 @@ idk::registerComponents()
     ECS2::registerComponent<PhysicsCmp>             ("Physics");
 
     ECS2::registerComponent<ModelCmp>               ("Model");
+    ECS2::registerComponent<TerrainCmp>             ("Terrain");
+
     ECS2::registerComponent<StaticHeightmapCmp>     ("Heightmap");
     ECS2::registerComponent<CameraCmp>              ("Camera");
     ECS2::registerComponent<DirlightCmp>            ("Dirlight");

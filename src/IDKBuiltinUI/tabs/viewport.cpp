@@ -2,6 +2,8 @@
 #include <IDKEvents/IDKEvents.hpp>
 #include "../../external/include/idk_imgui/imguizmo.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_decompose.hpp>
 
 
 static void
@@ -101,13 +103,42 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
 
 
     glm::mat4 local = glm::inverse(world) * model;
-    idk::TransformSys::getTransform(obj_id) = idk::Transform::fromGLM(local);
+    auto &T = idk::TransformSys::getTransform(obj_id);
+    // T = idk::Transform::fromGLM(local, T.scale.w);
+
+    glm::vec3 scale1;
+    glm::vec3 scale2;
+    glm::quat rotation1;
+    glm::quat rotation2;
+    glm::vec3 position;
+    glm::vec3 skew;
+    glm::vec4 persp;
+    glm::decompose(local, scale1, rotation1, position, skew, persp);
+    glm::decompose(world, scale2, rotation2, position, skew, persp);
+
+
+
+    T.position = glm::vec3(local[3]);
+    T.rotation = rotation1;
+    T.scale    = glm::vec4(scale2, T.scale.w);
+
 
 }
 
 
 
 
+
+static void
+display_texture( float w, float h, uint32_t texture )
+{
+    ImGui::Image(
+        *(ImTextureID *)(void *)(&(texture)),
+        ImVec2(w, h),
+        ImVec2(0.0f, 1.0f),
+        ImVec2(1.0f, 0.0f)
+    );
+}
 
 
 void
@@ -122,28 +153,39 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
     api.getEventSys().setMouseOffset(glm::vec2(corner.x, corner.y));
 
 
-    int w = int(ImGui::GetContentRegionAvail().x);
-    int h = int(ImGui::GetContentRegionAvail().y);
+    float ratio = float(ren.width()) / ren.height();
+    float w = ImGui::GetContentRegionAvail().x;
+    float h = w / ratio;
 
-    w = 8*(w/8);
-    h = 8*(h/8);
-
-    glm::ivec2 size = ren.resolution();
-
-    if (size.x != w || size.y != h)
+    if (h > ImGui::GetContentRegionAvail().y);
     {
-        ren.resize(w, h);
+        h = ImGui::GetContentRegionAvail().y;
+        w = h * ratio;
     }
 
+    display_texture(w, h, ren.getFinalImage());
 
-    GLuint texture = ren.getFinalImage();
+    // int h = int(ImGui::GetContentRegionAvail().y);
 
-    ImGui::Image(
-        *(ImTextureID *)(void *)(&texture),
-        ImGui::GetContentRegionAvail(),
-        ImVec2(0.0f, 1.0f),
-        ImVec2(1.0f, 0.0f)
-    );
+    // w = 8*(w/8);
+    // h = 8*(h/8);
+
+    // glm::ivec2 size = ren.resolution();
+
+    // if (size.x != w || size.y != h)
+    // {
+    //     ren.resize(w, h);
+    // }
+
+
+    // GLuint texture = ren.getFinalImage();
+
+    // ImGui::Image(
+    //     *(ImTextureID *)(void *)(&texture),
+    //     ImGui::GetContentRegionAvail(),
+    //     ImVec2(0.0f, 1.0f),
+    //     ImVec2(1.0f, 0.0f)
+    // );
 
 
     int obj_id = idk::ECS2::getSelectedGameObject();

@@ -1,43 +1,66 @@
 #include "sys-particle.hpp"
 #include "sys-model.hpp"
 
+void
+idk::ParticleSys::init( idk::EngineAPI &api )
+{
+    auto &ren = api.getRenderer();
+    float dt  = api.getEngine().deltaTime();
+
+
+    // for (auto &cmp: ECS2::getComponentArray<ParticleCmp>())
+    // {
+    //     if (cmp.src_id == -1)
+    //     {
+    //         continue;
+    //     }
+
+    //     glm::vec3 position = TransformSys::getPositionWorldspace(cmp.obj_id);
+    //     int model = ECS2::getComponent<ModelCmp>(cmp.src_id).model_id;
+
+    //     idk::ParticleEmitter P(cmp.desc, position);
+    //     cmp.emitter_id = ren.createParticleEmitter(P, -1.0f);
+    // }
+}
 
 
 void
 idk::ParticleSys::update( idk::EngineAPI &api )
 {
     auto &ren = api.getRenderer();
+    float dt  = api.getEngine().deltaTime();
 
-    for (auto &cmp: ECS2::getComponentArray<ParticleCmp>())
-    {
-        if (cmp.src_id == -1)
-        {
-            continue;
-        }
+    // for (auto &cmp: ECS2::getComponentArray<ParticleCmp>())
+    // {
+    //     if (cmp.src_id == -1)
+    //     {
+    //         continue;
+    //     }
 
-        glm::vec3 position = TransformSys::getPositionWorldspace(cmp.obj_id);
-        int model = ECS2::getComponent<ModelCmp>(cmp.src_id).model_id;
+    //     glm::vec3 position = TransformSys::getPositionWorldspace(cmp.obj_id);
+    //     int model = ECS2::getComponent<ModelCmp>(cmp.src_id).model_id;
 
-        if (cmp.emitter_id == -1)
-        {
-            idk::ParticleEmitter P(cmp.desc, position);
-            cmp.emitter_id = ren.createParticleEmitter(P);
-        }
+    //     if (cmp.emitter_id == -1)
+    //     {
+    //         idk::ParticleEmitter P(cmp.desc, position);
+    //         cmp.emitter_id = ren.createParticleEmitter(P, -1.0f);
+    //     }
 
-        auto &emitter = ren.getParticleEmitter(cmp.emitter_id);
+    //     else
+    //     {
+    //         auto &emitter = ren.getParticleEmitter(cmp.emitter_id);
 
-        emitter.origin    = position;
-        emitter.velocity  = glm::vec3(0.0f); // TransformSys::getData(cmp.obj_id).delta;
-        emitter.direction = TransformSys::getFront(cmp.obj_id);
-        emitter.model_id  = model;
-        emitter.scale     = 1.0f; // TransformSys::getData(cmp.src_id).scale;
-        emitter.m_desc    = cmp.desc;
+    //         emitter.origin    = position;
+    //         emitter.velocity  = glm::vec3(0.0f); // TransformSys::getData(cmp.obj_id).delta;
+    //         emitter.direction = TransformSys::getFront(cmp.obj_id);
+    //         emitter.model_id  = model;
+    //         emitter.scale     = 1.0f; // TransformSys::getData(cmp.src_id).scale;
+    //         emitter.m_desc    = cmp.desc;
+    //     }
 
-    }
+    // }
 
 }
-
-
 
 
 
@@ -71,27 +94,27 @@ idk::ParticleCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
     auto &cmp = idk::ECS2::getComponent<ParticleCmp>(obj_id);
 
-    cmp.src_id = ECS2::createGameObject("source");
+    // cmp.src_id = ECS2::createGameObject("source");
 
-    int model = api.getRenderer().loadModel("assets/models/fire-sprite.idkvi");
-    ECS2::giveComponent<ModelCmp>(cmp.src_id);
-    ECS2::getComponent<ModelCmp>(cmp.src_id).model_id = model;
+    // int model = api.getRenderer().loadModel("assets/models/fire-sprite.idkvi");
+    // ECS2::giveComponent<ModelCmp>(cmp.src_id);
+    // ECS2::getComponent<ModelCmp>(cmp.src_id).model_id = model;
 
-    cmp.desc = {
-        .model_id            = model,
-        .count               = 32,
-        .velocity            = glm::vec3(0.0f, 0.0f, 15.0f),
-        .velocity_randomness = glm::vec3(1.0f, 1.0f, 1.0f),
-        .scale               = 1.0f,
-        .scale_randomness    = 0.0f,
-        .duration            = 1.0f,
-        .duration_randomness = 0.0f
-    };
+    // cmp.desc = {
+    //     .model_id            = model,
+    //     .count               = 32,
+    //     .velocity            = glm::vec3(0.0f, 0.0f, 15.0f),
+    //     .velocity_randomness = glm::vec3(1.0f, 1.0f, 1.0f),
+    //     .scale               = 1.0f,
+    //     .scale_randomness    = 0.0f,
+    //     .duration            = 1.0f,
+    //     .duration_randomness = 0.0f
+    // };
 
-    glm::vec3 position = TransformSys::getPositionWorldspace(cmp.obj_id);
+    // glm::vec3 position = TransformSys::getPositionWorldspace(cmp.obj_id);
 
-    idk::ParticleEmitter P(cmp.desc, position);
-    cmp.emitter_id = api.getRenderer().createParticleEmitter(P);
+    // idk::ParticleEmitter P(cmp.desc, position);
+    // cmp.emitter_id = api.getRenderer().createParticleEmitter(P);
 
 };
 
@@ -100,7 +123,7 @@ void
 idk::ParticleCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 {
     auto &cmp = idk::ECS2::getComponent<ParticleCmp>(obj_id);
-    api.getRenderer().destroyParticleEmitter(cmp.emitter_id);
+    // api.getRenderer().destroyParticleEmitter(cmp.emitter_id);
 };
 
 

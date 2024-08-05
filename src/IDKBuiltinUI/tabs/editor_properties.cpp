@@ -1,6 +1,7 @@
 #include "../EditorUI.hpp"
 
 #include <IDKGraphics/idk_render_settings.hpp>
+#include <IDKGraphics/terrain/terrain.hpp>
 
 
 
@@ -23,45 +24,69 @@ EditorUI_MD::_tab_editor_properties( idk::EngineAPI &api )
     ImGui::InputFloat("##C", &m_ssnap, 0.0f, 2.0f, "%.2f", ImGuiInputTextFlags_None);
 
 
-    {
-        ImGui::Text("Environment Mapping");
+    auto settings = ren.getRenderSettings();
 
-        auto settings = ren.getRenderSettings();
+
+    {
+        ImGui::Dummy({0, 10});
+        ImGui::SeparatorText("Water");
+
+        auto &temp = idk::TerrainRenderer::getWaterTemp();
+
+        ImGui::DragFloat("X scale", &temp.xscale, 0.1f, 0.0f, 5.0f);
+        ImGui::DragFloat("Y scale", &temp.yscale, 0.1f, 0.0f, 5.0f);
+        ImGui::DragFloat("t scale", &temp.tscale, 0.1f, 0.0f, 5.0f);
+        ImGui::DragFloat("Amp factor", &temp.amp_factor, 0.01f, 0.0f, 5.0f);
+        ImGui::DragFloat("Wav factor", &temp.wav_factor, 0.01f, 0.0f, 5.0f);
+        ImGui::DragFloat("Hoz scale",  &temp.hoz_scale,  0.01f, 0.0f, 5.0f);
+        ImGui::DragFloat4("Mul factors", &temp.mul_factors[0], 0.1f, -5.0f, 5.0f);
+        ImGui::InputInt("Waves", &temp.waves);
+
+    }
+
+    {
+        ImGui::Dummy({0, 10});
+        ImGui::SeparatorText("SSAO");
+
+        auto &config = settings.ssao;
+
+        ImGui::Checkbox("Enable ##SSAO", &config.enabled);
+    
+        ImGui::InputFloat("Factor",    &config.factor);
+        ImGui::InputFloat("Intensity", &config.intensity);
+        ImGui::InputFloat("Radius",    &config.radius);
+        ImGui::InputFloat("Bias",      &config.bias);
+
+    }
+
+    {
+        ImGui::Dummy({0, 10});
+        ImGui::SeparatorText("Volumetrics");
+    
+        auto &config = settings.volumetrics;
+
+        ImGui::Checkbox("Enable ##VOL", &config.enabled);
+        ImGui::InputFloat("Factor ##VOL", &config.factor);
+        ImGui::InputFloat("Attenuation ##VOL", &config.attenuation);
+        ImGui::InputFloat("Intensity ##VOL", &config.intensity);
+        ImGui::InputFloat("Samples ##VOL", &config.samples);
+    }
+
+    {
+        ImGui::Dummy({0, 10});
+        ImGui::SeparatorText("Environment Mapping");
+    
         auto &config = settings.envprobe;
 
-        ImGui::Checkbox("Enable",    &config.enabled);
+        ImGui::Checkbox("Enable ##ENV",    &config.enabled);
         ImGui::Checkbox("Visualize", &config.visualize);
 
         ImGui::InputInt3   ("Grid size",  &(config.grid_size[0]));
         ImGui::InputFloat3 ("Probe size", &(config.cell_size[0]));
-
-        ren.applyRenderSettings(settings);
-
-        // static bool probe_vis = false;
-        // ImGui::Checkbox("Visualize light probes", &probe_vis);
-        // ren.setRenderSetting(idk::RenderSetting::LIGHTPROBE_VIS, probe_vis);
     }
 
+    ren.applyRenderSettings(settings);
 
-    {
-        // auto &settings = ren.getRenderSettings();
-        // auto &config = settings.envprobe;
-
-        // ImGui::Text("SSAO");
-
-        // ImGui::Separator();
-        // ImGui::Checkbox("Enable SSAO", &settings.enabled);
-        // ImGui::InputFloat("Intensity", &settings.intensity);
-        // ImGui::InputFloat("Factor",    &settings.factor);
-
-
-        // ImGui::InputInt("Samples",   &settings.samples);
-        // ImGui::InputFloat("Radius",  &settings.radius);
-        // ImGui::InputFloat("Bias",    &settings.bias);
-    }
-
-    // ImGui::Spacing();
-    // ImGui::Checkbox("VXGI Debug", &api.getRenderer().m_vxgi_debug);
 
     ImGui::End();
 }

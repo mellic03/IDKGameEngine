@@ -22,7 +22,6 @@ idk::TransformSys::init( idk::EngineAPI &api )
 void
 idk::TransformSys::update( idk::EngineAPI &api )
 {
-    auto &audio = api.getAudioSys();
     float dtime = api.getEngine().deltaTime();
 
     for (auto &cmp: idk::ECS2::getComponentArray<idk::TransformCmp>())
@@ -30,23 +29,25 @@ idk::TransformSys::update( idk::EngineAPI &api )
         if (cmp.transform.position != cmp.transform.position)
         {
             cmp.transform = idk::Transform::fromGLM(glm::mat4(1.0f));
-            // cmp.position = glm::vec3(0.0f);
-            // cmp.position.x += (rand() % 100) / 100.0f;
-            // cmp.position.y += (rand() % 100) / 100.0f;
-            // cmp.position.z += (rand() % 100) / 100.0f;
         }
-
 
         cmp.pitch = fmod(cmp.pitch, 2.0*M_PI);
         cmp.roll  = fmod(cmp.roll, 2.0*M_PI);
         cmp.yaw   = fmod(cmp.yaw, 2.0*M_PI);
 
+        // if (cmp.is_dirty && ECS2::hasParent(cmp.obj_id) == false)
+        if (ECS2::hasParent(cmp.obj_id) == false)
+        {
+            _computeTransform(cmp.obj_id, glm::mat4(1.0f));
+        }
+
         // if (cmp.is_dirty)
         {
-            recomputeTransformMatrices(cmp.obj_id);
+            // recomputeTransformMatrices(cmp.obj_id);
             // cmp.is_dirty = false;
         }
     }
+
 
 
     for (auto &cmp: ECS2::getComponentArray<IKCmp>())
@@ -126,6 +127,30 @@ idk::TransformSys::update( idk::EngineAPI &api )
 
 }
 
+void
+idk::TransformSys::_computeTransform( int obj_id, const glm::mat4 &parent )
+{
+    auto &cmp = getTransformCmp(obj_id);
+
+    idk::Transform T = cmp.transform;
+
+    glm::mat4 current = parent * Transform::toGLM_noscale(T, cmp.pitch, cmp.roll, cmp.yaw);
+
+    cmp.world = parent;
+    cmp.local = current;
+    cmp.model = parent * Transform::toGLM(T, cmp.pitch, cmp.roll, cmp.yaw);
+
+    cmp.up    = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 1.0f, 0.0f));
+    cmp.right = glm::normalize(glm::mat3(cmp.model) * glm::vec3(1.0f, 0.0f, 0.0f));
+    cmp.front = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 0.0f, -1.0f));
+
+    for (int child_id: ECS2::getChildren(obj_id))
+    {
+        _computeTransform(child_id, current);
+    }
+
+    cmp.is_dirty = false;
+}
 
 
 void
@@ -309,24 +334,17 @@ idk::TransformSys::getWorldRotation( int obj_id )
 
 
 glm::vec3
-idk::TransformSys::getPositionLocalspace( int obj_id )
-{
-    return idk::ECS2::getComponent<idk::TransformCmp>(obj_id).transform.position;
-}
-
-
-
-glm::vec3
 idk::TransformSys::getPositionWorldspace( int obj_id )
 {
-    return glm::vec3(getModelMatrix(obj_id)[3]);
+    return ECS2::getComponent<TransformCmp>(obj_id).model[3];
+    // return glm::vec3(getModelMatrix(obj_id)[3]);
 }
 
 
 void
-idk::TransformSys::setPositionWorldspace( int obj_id, const glm::vec3 &v )
+idk::TransformSys::setWorldPosition( int obj_id, const glm::vec3 &v )
 {
-    glm::vec3 delta = v - getPositionWorldspace(obj_id);
+    glm::vec3 delta = v - getWorldPosition(obj_id);
     translateWorldspace(obj_id, delta);
 }
 
@@ -678,6 +696,59 @@ idk::TransformSys::FABRIK( std::vector<glm::vec3> &positions,
     }
 }
 
+void
+idk::TransformSys::FABRIK( std::vector<glm::vec3> &positions,
+                           const std::vector<float> &distances )
+{
+    glm::vec3 root_pos = positions[0];
+    glm::vec3 end_pos  = positions.back();
+
+
+    float total_length = 0.0f;
+    for (float d: distances)
+    {
+        total_length += d;
+    }
+
+    // if (glm::distance(root_pos, end_pos) > total_length)
+    // {
+    //     positions.back() = root_pos + total_length*glm::normalize(root_pos - end_pos);
+    //     end_pos = positions.back();
+    // }
+
+    glm::vec3 dir;
+
+    for (int j=0; j<3; j++)
+    {
+        // Backward pass
+        // -----------------------------------------------------
+        for (int i=positions.size()-2; i>=0; i--)
+        {
+            glm::vec3 &left  = positions[i];
+            glm::vec3 &right = positions[i+1];
+            glm::vec3 mid    = 0.5f * (left + right);
+        
+            dir  = glm::normalize(left - right);
+            left = right + distances[i]*dir;
+        }
+        // -----------------------------------------------------
+
+        positions[0] = root_pos;
+
+        // Forward pass
+        // -----------------------------------------------------
+        for (int i=0; i<positions.size()-1; i++)
+        {
+            glm::vec3 &left  = positions[i];
+            glm::vec3 &right = positions[i+1];
+
+            dir  = glm::normalize(right - left);
+            right = left + distances[i]*dir;
+        }
+        // -----------------------------------------------------
+    }
+}
+
 
 
 
@@ -774,9 +845,9 @@ idk::TransformSys::FABRIK( int objA, int objB, int objC, glm::vec3 end_pos,
         // -----------------------------------------------------
     }
 
-    setPositionWorldspace(objC, posC);
-    setPositionWorldspace(objB, posB);
-    setPositionWorldspace(objA, posA);
+    setWorldPosition(objC, posC);
+    setWorldPosition(objB, posB);
+    setWorldPosition(objA, posA);
 }
 
 

@@ -1,6 +1,10 @@
 
 # IDK Game Engine
 
+## Gallery
+Various video snippets can be found on my [youtube channel](https://www.youtube.com/channel/UCGAz01HMhGKtGDcwpWRQNbg)
+
+
 | | |
 |-|-|
 |<img src="img0.png">|<img src="img1.png">|

@@ -425,16 +425,6 @@ idk::ECS2::getParent( int obj_id )
 }
 
 
-bool
-idk::ECS2::hasParent( int obj_id )
-{
-    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
-    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
-
-    return m_entities.get(obj_id).parent != -1;
-}
-
-
 const std::set<int>&
 idk::ECS2::getChildren( int obj_id )
 {
@@ -446,13 +436,34 @@ idk::ECS2::getChildren( int obj_id )
 
 
 
+bool
+idk::ECS2::hasParent( int obj_id )
+{
+    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
+    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
+
+    return m_entities.get(obj_id).parent != -1;
+}
+
+
+bool
+idk::ECS2::hasChildren( int obj_id )
+{
+    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
+    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
+
+    return m_entities.get(obj_id).children.size() > 0;
+}
+
+
 void
 idk::ECS2::giveChild( int parent_id, int child_id )
 {
-    glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
-    glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
-    glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
-    glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+    // glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
+    // glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
+    // glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
+    // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+    glm::vec3 child_pos = TransformSys::getWorldPosition(child_id);
 
     removeChild(getParent(child_id), child_id);
 
@@ -462,13 +473,13 @@ idk::ECS2::giveChild( int parent_id, int child_id )
     if (m_readfile == false)
     {
         TransformSys::recomputeTransformMatrices(child_id);
-        TransformSys::setPositionWorldspace(child_id, child_pos);
+        TransformSys::setWorldPosition(child_id, child_pos);
 
-        Mw = TransformSys::getWorldMatrix(child_id);
-        Ml = TransformSys::getLocalMatrix(child_id, false);
-        R  = glm::inverse(Mw*Ml) * R;
-        glm::quat Q = glm::normalize(glm::quat_cast(R));
-        TransformSys::getLocalRotation(child_id) = Q;
+        // Mw = TransformSys::getWorldMatrix(child_id);
+        // Ml = TransformSys::getLocalMatrix(child_id, false);
+        // R  = glm::inverse(Mw*Ml) * R;
+        // glm::quat Q = glm::normalize(glm::quat_cast(R));
+        // TransformSys::getLocalRotation(child_id) = Q;
     }
 }
 
@@ -476,10 +487,11 @@ idk::ECS2::giveChild( int parent_id, int child_id )
 void
 idk::ECS2::removeChild( int parent_id, int child_id )
 {
-    glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
-    glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
-    glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
-    glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+    // glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
+    // glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
+    // glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
+    // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+    glm::vec3 child_pos = TransformSys::getWorldPosition(child_id);
 
     if (parent_id != -1)
     {
@@ -490,14 +502,14 @@ idk::ECS2::removeChild( int parent_id, int child_id )
     if (m_readfile == false)
     {
         TransformSys::recomputeTransformMatrices(child_id);
-        TransformSys::setPositionWorldspace(child_id, child_pos);
+        TransformSys::setWorldPosition(child_id, child_pos);
 
-        Mw = TransformSys::getWorldMatrix(child_id);
-        Ml = TransformSys::getLocalMatrix(child_id, false);
-        R  = glm::inverse(glm::mat4(glm::mat3(Mw*Ml))) * R;
-        glm::quat Q = glm::normalize(glm::quat_cast(R));
+        // Mw = TransformSys::getWorldMatrix(child_id);
+        // Ml = TransformSys::getLocalMatrix(child_id, false);
+        // R  = glm::inverse(glm::mat4(glm::mat3(Mw*Ml))) * R;
+        // glm::quat Q = glm::normalize(glm::quat_cast(R));
 
-        TransformSys::getLocalRotation(child_id) = Q;
+        // TransformSys::getLocalRotation(child_id) = Q;
     }
 }
 
