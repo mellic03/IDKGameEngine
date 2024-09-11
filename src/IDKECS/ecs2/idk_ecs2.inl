@@ -16,6 +16,17 @@ idk::ECS2::giveComponent( int obj_id )
 }
 
 
+
+// template <typename T, typename... Args>
+// void
+// idk::ECS2::giveComponents( int obj_id )
+// {
+//     giveComponent<T>(obj_id);
+//     giveComponents<Args...>(obj_id);
+// }
+
+
+
 template <typename T>
 bool
 idk::ECS2::hasComponent( int obj_id )

@@ -136,6 +136,10 @@ idk::TransformSys::_computeTransform( int obj_id, const glm::mat4 &parent )
 
     glm::mat4 current = parent * Transform::toGLM_noscale(T, cmp.pitch, cmp.roll, cmp.yaw);
 
+    cmp.prev_world = cmp.world;
+    cmp.prev_local = cmp.local;
+    cmp.prev_model = cmp.model;
+
     cmp.world = parent;
     cmp.local = current;
     cmp.model = parent * Transform::toGLM(T, cmp.pitch, cmp.roll, cmp.yaw);
@@ -278,6 +282,14 @@ idk::TransformSys::getLocalPosition( int obj_id )
 }
 
 
+glm::vec3
+idk::TransformSys::getLocalPositionDelta( int obj_id )
+{
+    auto &cmp = getTransformCmp(obj_id);
+    return cmp.local[3] - cmp.prev_local[3];
+}
+
+
 glm::quat&
 idk::TransformSys::getLocalRotation( int obj_id )
 {
@@ -313,6 +325,14 @@ glm::vec3
 idk::TransformSys::getWorldPosition( int obj_id )
 {
     return getTransformCmp(obj_id).model[3];
+}
+
+
+glm::vec3
+idk::TransformSys::getWorldPositionDelta( int obj_id )
+{
+    auto &cmp = getTransformCmp(obj_id);
+    return cmp.model[3] - cmp.prev_model[3];
 }
 
 
@@ -376,6 +396,20 @@ idk::TransformSys::getFront( int obj_id )
 {
     return getTransformCmp(obj_id).front;
 }
+
+
+void
+idk::TransformSys::setFront( int obj_id, const glm::vec3 &front )
+{
+    glm::vec3 dir = glm::inverse(glm::mat3(getModelMatrix(obj_id))) * front;
+
+    glm::mat4 R = glm::lookAt(glm::vec3(0.0f), dir, glm::vec3(0.0f, 1.0f, 0.0f));
+              R = glm::mat4(glm::mat3(R));
+              R = glm::inverse(R);
+
+    getTransform(obj_id).rotation = glm::normalize(glm::quat_cast(R));
+}
+
 
 
 glm::mat4
@@ -695,6 +729,7 @@ idk::TransformSys::FABRIK( std::vector<glm::vec3> &positions,
         // -----------------------------------------------------
     }
 }
+
 
 void
 idk::TransformSys::FABRIK( std::vector<glm::vec3> &positions,

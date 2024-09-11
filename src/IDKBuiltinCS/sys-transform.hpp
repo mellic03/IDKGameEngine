@@ -157,12 +157,14 @@ public:
     static glm::vec3    getPositionWorldspace( int obj_id );
 
     static glm::vec3   &getLocalPosition( int obj_id );
+    static glm::vec3    getLocalPositionDelta( int obj_id );
     static glm::quat   &getLocalRotation( int obj_id );
     static glm::vec4   &getScale( int obj_id );
     static glm::vec3   &getXYZScale( int obj_id );
     static float       &getUniformScale( int obj_id );
 
     static glm::vec3    getWorldPosition( int obj_id );
+    static glm::vec3    getWorldPositionDelta( int obj_id );
     static glm::quat    getWorldRotation( int obj_id );
 
     static void         setWorldPosition( int obj_id, const glm::vec3 & );
@@ -171,6 +173,7 @@ public:
     static glm::vec3    getUp            ( int obj_id );
     static glm::vec3    getRight         ( int obj_id );
     static glm::vec3    getFront         ( int obj_id );
+    static void         setFront         ( int obj_id, const glm::vec3& );
 
     static glm::mat4    getLocalMatrix   ( int obj_id, bool scale = true );
     static glm::mat4    getWorldMatrix   ( int obj_id );
@@ -195,6 +198,7 @@ public:
 struct idk::TransformCmp
 {
     int obj_id = -1;
+
     idk::Transform transform;
 
     float pitch = 0.0f;
@@ -208,6 +212,11 @@ struct idk::TransformCmp
     glm::mat4  world = glm::mat4(0.0f);
     glm::mat4  local = glm::mat4(0.0f);
     glm::mat4  model = glm::mat4(0.0f);
+
+    glm::mat4  prev_world = glm::mat4(1.0f);
+    glm::mat4  prev_local = glm::mat4(1.0f);
+    glm::mat4  prev_model = glm::mat4(1.0f);
+
 
     glm::vec3  up       = glm::vec3(0.0f, 1.0f, 0.0f);
     glm::vec3  right    = glm::vec3(1.0f, 0.0f, 0.0f);

@@ -1,6 +1,10 @@
 #include "sys-model.hpp"
 #include "sys-transform.hpp"
 
+#include <IDKGraphics/terrain/desc.hpp>
+
+
+
 static idk::EngineAPI *api_ptr;
 
 
@@ -10,20 +14,20 @@ idk::ModelSys::init( idk::EngineAPI &api )
     api_ptr = &api;
     auto &ren = api.getRenderer();
 
-    ren.createProgram(
-        "ModelSys-terrain", "assets/shaders/", "terrain-gpass.vs", "terrain-gpass.fs"
-    );
+    // ren.createProgram(
+    //     "ModelSys-terrain", "assets/shaders/", "terrain-gpass.vs", "terrain-gpass.fs"
+    // );
 
-    ren.createProgram(
-        "ModelSys-terrain-shadow", "assets/shaders/", "terrain-shadow.vs", "terrain-shadow.fs"
-    );
+    // ren.createProgram(
+    //     "ModelSys-terrain-shadow", "assets/shaders/", "terrain-shadow.vs", "terrain-shadow.fs"
+    // );
 
     ren.createProgram(
         "ModelSys-gpass-alpha-cutoff", "IDKGE/shaders/deferred/", "gpass-alpha-cutoff.vs", "gpass-alpha-cutoff.fs"
     );
 
-    m_heightmap_RQ    = ren.createRenderQueue("ModelSys-terrain");
-    m_shadow_RQ       = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
+    // m_heightmap_RQ    = ren.createRenderQueue("ModelSys-terrain");
+    // m_shadow_RQ       = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
     m_alpha_cutoff_RQ = ren.createRenderQueue("ModelSys-gpass-alpha-cutoff", {false});
 
     for (auto &cmp: ECS2::getComponentArray<idk::ModelCmp>())
@@ -44,13 +48,13 @@ idk::ModelSys::update( idk::EngineAPI &api )
     
     for (auto &cmp: ECS2::getComponentArray<TerrainCmp>())
     {
-        if (cmp.terrain_id == -1)
-        {
-            TerrainCmp::onObjectAssignment(api, cmp.obj_id);
-        }
+        // if (cmp.terrain_id == -1)
+        // {
+        //     TerrainCmp::onObjectAssignment(api, cmp.obj_id);
+        // }
 
         glm::mat4 M = TransformSys::getModelMatrix(cmp.obj_id);
-        TerrainRenderer::getTerrain(cmp.terrain_id).transform = M;
+        TerrainRenderer::setTerrainTransform(M);
     }
 
 
@@ -71,11 +75,6 @@ idk::ModelSys::update( idk::EngineAPI &api )
         else if (cmp.alpha_cutoff)
         {
             ren.drawModelRQ(m_alpha_cutoff_RQ, cmp.model_id, transform);
-        }
-
-        else if (cmp.viewspace)
-        {
-            ren.drawModelViewspace(cmp.model_id, transform);
         }
 
         else
@@ -107,36 +106,36 @@ idk::ModelSys::update( idk::EngineAPI &api )
         .genmipmap      = GL_TRUE
     };
 
-    if (m_heightmap_RQ == -1)
-    {
-        m_heightmap_RQ = ren.createRenderQueue("ModelSys-terrain");
-    }
+    // if (m_heightmap_RQ == -1)
+    // {
+    //     m_heightmap_RQ = ren.createRenderQueue("ModelSys-terrain");
+    // }
 
-    if (m_shadow_RQ == -1)
-    {
-        m_shadow_RQ = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
-    }
+    // if (m_shadow_RQ == -1)
+    // {
+    //     m_shadow_RQ = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
+    // }
 
 
-    for (auto &cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
-    {
-        if (cmp.textures.empty() == false && cmp.textures[0] != "")
-        {
-            if (cmp.textures.back() == "")
-            {
-                cmp.textures.pop_back();
-            }
+    // for (auto &cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
+    // {
+    //     if (cmp.textures.empty() == false && cmp.textures[0] != "")
+    //     {
+    //         if (cmp.textures.back() == "")
+    //         {
+    //             cmp.textures.pop_back();
+    //         }
         
-            if (cmp.textures.empty() == false)
-            {
-                ren.modelAllocator().addUserMaterials(cmp.model, cmp.textures, config);
-            }
-        }
+    //         if (cmp.textures.empty() == false)
+    //         {
+    //             ren.modelAllocator().addUserMaterials(cmp.model, cmp.textures, config);
+    //         }
+    //     }
 
-        glm::mat4 M = TransformSys::getModelMatrix(cmp.obj_id);
-        ren.drawModelRQ(m_heightmap_RQ, cmp.model, M);
-        ren.drawShadowCasterRQ(m_shadow_RQ, cmp.model, M);
-    }
+    //     glm::mat4 M = TransformSys::getModelMatrix(cmp.obj_id);
+    //     ren.drawModelRQ(m_heightmap_RQ, cmp.model, M);
+    //     ren.drawShadowCasterRQ(m_shadow_RQ, cmp.model, M);
+    // }
 
 }
 
@@ -352,17 +351,8 @@ idk::TerrainCmp::serialize( std::ofstream &stream ) const
     size_t n = 0;
     n += idk::streamwrite(stream, obj_id);
 
-    // for (int i=0; i<4; i++)
-    // {
-    //     n += idk::streamwrite(stream, desc.height[i]);
-    //     n += idk::streamwrite(stream, desc.albedo[i]);
-    //     n += idk::streamwrite(stream, desc.normal[i]);
-    //     n += idk::streamwrite(stream, desc.ao_r_m[i]);
-    // }
-
-    auto &t = idk::TerrainRenderer::getTerrain(terrain_id);
-    // n += idk::streamwrite(stream, t.position);
-    n += idk::streamwrite(stream, t.scale);
+    auto &desc = idk::TerrainRenderer::getTerrainDesc();
+    n += idk::streamwrite(stream, desc);
 
     return n;
 }
@@ -374,48 +364,10 @@ idk::TerrainCmp::deserialize( std::ifstream &stream )
     size_t n = 0;
     n += idk::streamread(stream, obj_id);
 
-    // for (int i=0; i<4; i++)
-    // {
-    //     n += idk::streamread(stream, desc.height[i]);
-    //     n += idk::streamread(stream, desc.albedo[i]);
-    //     n += idk::streamread(stream, desc.normal[i]);
-    //     n += idk::streamread(stream, desc.ao_r_m[i]);
-    // }
+    auto &desc = idk::TerrainRenderer::getTerrainDesc();
+    n += idk::streamread(stream, desc);
 
-    desc = {
-        .height = {
-            "IDKGE/resources/terrain/heightmap.jpg",
-            "",
-            "",
-            ""
-        },
-
-        .albedo = {
-            "assets/terrain-textures/Ground037_1K-JPG_Color.jpg",
-            "assets/terrain-textures/rocks_ground_06_diff_1k.jpg",
-            "assets/terrain-textures/Ground037_1K-JPG_AmbientOcclusion.jpg",
-            ""
-        },
-
-        .normal = {
-            "assets/terrain-textures/Ground037_1K-JPG_NormalGL.jpg",
-            "assets/terrain-textures/rocks_ground_06_nor_gl_1k.jpg",
-            "assets/terrain-textures/rocks_ground_06_nor_gl_1k.jpg",
-            ""
-        },
-
-        .ao_r_m = {
-            "assets/terrain-textures/Ground037_1K-JPG_Roughness.jpg",
-            "assets/terrain-textures/rocks_ground_06_arm_1k.jpg",
-            "assets/terrain-textures/rocks_ground_06_arm_1k.jpg",
-            ""
-        },
-    };
-
-    terrain_id = idk::TerrainRenderer::createTerrain(desc);
-    auto &t = idk::TerrainRenderer::getTerrain(terrain_id);
-    n += idk::streamread(stream, t.scale);
-
+    idk::TerrainRenderer::generateTerrain();
 
     return n;
 }
@@ -424,40 +376,40 @@ idk::TerrainCmp::deserialize( std::ifstream &stream )
 void
 idk::TerrainCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    TerrainCmp &cmp = ECS2::getComponent<TerrainCmp>(obj_id);
+    // TerrainCmp &cmp = ECS2::getComponent<TerrainCmp>(obj_id);
 
-    cmp.desc = {
-        .height = {
-            "IDKGE/resources/terrain/heightmap.jpg",
-            "",
-            "",
-            ""
-        },
+    // cmp.desc = {
+    //     .height = {
+    //         "IDKGE/resources/terrain/heightmap.jpg",
+    //         "",
+    //         "",
+    //         ""
+    //     },
 
-        .albedo = {
-            "assets/terrain-textures/Ground037_1K-JPG_Color.jpg",
-            "assets/terrain-textures/rocks_ground_06_diff_1k.jpg",
-            "assets/terrain-textures/Ground037_1K-JPG_AmbientOcclusion.jpg",
-            ""
-        },
+    //     .albedo = {
+    //         "assets/terrain-textures/Ground037_1K-JPG_Color.jpg",
+    //         "assets/terrain-textures/rocks_ground_06_diff_1k.jpg",
+    //         "assets/terrain-textures/Ground037_1K-JPG_AmbientOcclusion.jpg",
+    //         ""
+    //     },
 
-        .normal = {
-            "assets/terrain-textures/Ground037_1K-JPG_NormalGL.jpg",
-            "assets/terrain-textures/rocks_ground_06_nor_gl_1k.jpg",
-            "assets/terrain-textures/rocks_ground_06_nor_gl_1k.jpg",
-            ""
-        },
+    //     .normal = {
+    //         "assets/terrain-textures/Ground037_1K-JPG_NormalGL.jpg",
+    //         "assets/terrain-textures/rocks_ground_06_nor_gl_1k.jpg",
+    //         "assets/terrain-textures/rocks_ground_06_nor_gl_1k.jpg",
+    //         ""
+    //     },
 
-        .ao_r_m = {
-            "assets/terrain-textures/Ground037_1K-JPG_Roughness.jpg",
-            "assets/terrain-textures/rocks_ground_06_arm_1k.jpg",
-            "assets/terrain-textures/rocks_ground_06_arm_1k.jpg",
-            ""
-        },
+    //     .ao_r_m = {
+    //         "assets/terrain-textures/Ground037_1K-JPG_Roughness.jpg",
+    //         "assets/terrain-textures/rocks_ground_06_arm_1k.jpg",
+    //         "assets/terrain-textures/rocks_ground_06_arm_1k.jpg",
+    //         ""
+    //     },
 
-    };
+    // };
 
-    cmp.terrain_id = TerrainRenderer::createTerrain(cmp.desc);
+    // cmp.terrain_id = TerrainRenderer::createTerrain(cmp.desc);
 }
 
 
@@ -471,8 +423,6 @@ idk::TerrainCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::TerrainCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    ModelCmp &src = idk::ECS2::getComponent<ModelCmp>(src_obj);
-    ModelCmp &dst = idk::ECS2::getComponent<ModelCmp>(dst_obj);
 
 }
 

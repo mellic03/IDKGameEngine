@@ -574,6 +574,12 @@ idk::ECS2::save( const std::string &filepath )
 void
 idk::ECS2::_load()
 {
+    for (auto &callback: m_pre_callbacks)
+    {
+        callback();
+    }
+
+
     ECS2::update(*m_api_ptr);
 
     for (System *S: m_systems)
@@ -619,8 +625,8 @@ idk::ECS2::_load()
 
     stream.close();
 
-    init(*m_api_ptr);
-    update(*m_api_ptr);
+    // init(*m_api_ptr);
+    // update(*m_api_ptr);
 
     // Absolutely terrible way to handle persistency.
     // --------------------------------------------------

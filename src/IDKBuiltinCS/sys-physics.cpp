@@ -52,14 +52,14 @@ idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
         cmp.curr_pos += dt*cmp.impulse;
         cmp.impulse  *= 0.5f;
     
-        if (cmp.crouch && cmp.bottom > 0.5f)
+        if (cmp.crouch && cmp.bottom > 0.2f)
         {
-            cmp.bottom -= 0.01f;
+            cmp.bottom -= 0.1f;
         }
     
         else if (cmp.bottom < 0.75f)
         {
-            cmp.bottom += 0.01f;
+            cmp.bottom += 0.1f;
         }
 
 
@@ -73,7 +73,7 @@ idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
         {
             glm::vec3 origin = cmp.curr_pos - glm::vec3(0.0f, cmp.bottom+cmp.radius, 0.0f);
         
-            float terrain_y = TerrainRenderer::heightQuery(tcmp.terrain_id, origin.x, origin.z);
+            float terrain_y = TerrainRenderer::heightQuery(origin.x, origin.z);
             float overlap   = terrain_y - origin.y;
         
             bool grounded = false;

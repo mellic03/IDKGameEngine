@@ -14,6 +14,12 @@ EditorUI_MD::_tab_editor_properties( idk::EngineAPI &api )
 
     ImGui::Begin("Editor Properties");
 
+    if (ImGui::Button("Recompile shaders"))
+    {
+        ren.recompileShaders();
+    }
+
+
     ImGui::Text("Translation snapping");
     ImGui::InputFloat("##A", &m_tsnap, 0.25f, 0.25f, "%.2f", ImGuiInputTextFlags_None);
 
@@ -41,7 +47,6 @@ EditorUI_MD::_tab_editor_properties( idk::EngineAPI &api )
         ImGui::DragFloat("Hoz scale",  &temp.hoz_scale,  0.01f, 0.0f, 5.0f);
         ImGui::DragFloat4("Mul factors", &temp.mul_factors[0], 0.1f, -5.0f, 5.0f);
         ImGui::InputInt("Waves", &temp.waves);
-
     }
 
     {

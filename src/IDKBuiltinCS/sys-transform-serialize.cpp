@@ -278,6 +278,8 @@ idk::SmoothFollowCmp::deserialize( std::ifstream &stream )
 void
 idk::SmoothFollowCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
+    auto &cmp = idk::ECS2::getComponent<SmoothFollowCmp>(obj_id);
+    cmp.anchor_id = obj_id;
 
 };
 

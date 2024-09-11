@@ -52,6 +52,7 @@ private:
     inline static std::string m_filepath;
 
     inline static std::vector<std::function<void()>> m_callbacks;
+    inline static std::vector<std::function<void()>> m_pre_callbacks;
 
     static void _load();
 
@@ -144,9 +145,14 @@ public:
 
 
 
+    // static void giveComponents( int obj_id ) {  };
+
+    // template <typename T, typename... Args>
+    // static void giveComponents( int obj_id );
 
     template <typename T>
     static void giveComponent( int obj_id );
+
     static void giveComponent( int obj_id, size_t key );
 
     template <typename T>
@@ -224,6 +230,11 @@ public:
 
     static void save( const std::string &filepath );
     static void load( const std::string &filepath );
+
+    static void preSceneLoad( std::function<void()> callback )
+    {
+        m_pre_callbacks.push_back(callback);
+    }
 
     static void onSceneLoad( std::function<void()> callback )
     {

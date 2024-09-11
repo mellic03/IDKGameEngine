@@ -2,7 +2,8 @@
 # IDK Game Engine
 
 ## Gallery
-Various video snippets can be found on my [youtube channel](https://www.youtube.com/channel/UCGAz01HMhGKtGDcwpWRQNbg)
+Various video snippets showcasing this project can be found on my [youtube channel](https://www.youtube.com/channel/UCGAz01HMhGKtGDcwpWRQNbg).
+
 
 
 | | |
@@ -11,6 +12,18 @@ Various video snippets can be found on my [youtube channel](https://www.youtube.
 |<img src="img2.png">|<img src="img3.png">|
 
 
+
+## Features
+- ECS architecture based on template metaprogramming.
+- Many functionalities are provided through the ECS such as the transformation system and physics.
+- ECS serialisation. Any valid ECS component which does not contain pointers can be serialized/unserialized without issue.
+- Various noise generation algorithms.
+- Various geometric queries such as primitive-primitive intersections.
+- Custom memory allocators optimised for data locality.
+- Generic multi-threaded task system.
+- Concurrent asset loading
+- Modules can be hot-reloaded at runtime.
+- Logging functionality.
 
 
 ##  Dependencies

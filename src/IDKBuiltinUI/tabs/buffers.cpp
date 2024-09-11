@@ -1,5 +1,6 @@
 #include "../EditorUI.hpp"
 #include <IDKGraphics/terrain/terrain.hpp>
+#include <IDKGraphics/noise/noise.hpp>
 
 
 static int   w     = 512.0f;
@@ -36,7 +37,12 @@ EditorUI_MD::_tab_buffers( idk::EngineAPI &api )
         ratio = float(ren.width()) / ren.height();
         w = int(ImGui::GetContentRegionAvail().x);
 
+
+        display_texture("BRDF LUT",    ren.BRDF_LUT, 1.0f);
+        display_texture("Volumetrics", ren.m_volumetrics_buffers[0]->attachments[0]);
+
         display_texture("Terrain Normal", idk::TerrainRenderer::getNormalMap(), 1.0f);
+
         display_texture("SSAO",     ren.m_SSAO_buffers[0].attachments[0]);
         display_texture("UI",       ren.getUIFrameBuffer().attachments[0]);
 

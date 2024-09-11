@@ -91,8 +91,6 @@ struct idk::StaticHeightmapCmp
 struct idk::TerrainCmp
 {
     int obj_id = -1;
-    int terrain_id = -1;
-    TerrainRenderer::TerrainDesc desc;
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );

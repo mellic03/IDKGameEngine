@@ -1,4 +1,5 @@
 #include "drawcomponent.hpp"
+#include <IDKGraphics/terrain/desc.hpp>
 
 
 
@@ -40,26 +41,73 @@ EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
 
 
 
+
+static void
+drawNFThing( const std::string &name, idk::TerrainRenderer::NoiseFactor &NF)
+{
+    ImGui::SeparatorText(name.c_str());
+
+    std::string labels[4] = { "Amp", "Wav", "Warp", "Octaves" };
+
+    for (int i=0; i<4; i++)
+    {
+        labels[i] = labels[i] + "##" + name;
+    }
+
+    if (name == "Water")
+    {
+        static bool water_enabled = true;
+        ImGui::Checkbox("Enabled ##Water", &water_enabled);
+        idk::TerrainRenderer::setWaterActive(water_enabled);
+    }
+
+    ImGui::DragFloat(labels[0].c_str(),  &NF.amp,     0.01f, -1.0f, +1.0f);
+    ImGui::DragFloat(labels[1].c_str(),  &NF.wav,     0.01f,  1.0f, +8.0f);
+    ImGui::DragFloat(labels[2].c_str(),  &NF.warp,    0.01f,  0.0f, +8.0f);
+    ImGui::DragFloat(labels[3].c_str(),  &NF.octaves, 0.01f,  0.0f, +8.0f);
+}
+
+
+
 template <>
 void
 EditorUI_MD::drawComponent<idk::TerrainCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &cmp = idk::ECS2::getComponent<idk::TerrainCmp>(obj_id);
 
-    ImGui::SeparatorText("Terrain");
 
-    auto &desc = idk::TerrainRenderer::getTerrain(cmp.terrain_id);
+    auto &desc = idk::TerrainRenderer::getTerrainDesc();
 
     glm::vec4 &scale = desc.scale;
     glm::vec4 &aa    = desc.slope_blend;
     glm::vec4 &bb    = desc.height_blend;
     glm::vec4 &tex   = desc.texscale[0];
 
+
+    ImGui::SeparatorText("Terrain");
+    ImGui::Spacing();
+    ImGui::DragFloat("Clip scale", &(desc.clipmap_size[0]), 1.0f, 8.0f, 128.0f);
+    ImGui::DragFloat("No. clips",  &(desc.clipmap_size[1]), 1.0f, 1.0f, 6.0f);
+
+
     ImGui::DragFloat("Height scale", &(scale[1]), 0.05f);
-    ImGui::DragFloat("Normal scale", &(scale[3]), 0.05f);
+    ImGui::DragFloat("Width scale",  &(scale[0]), 0.05f);
+    ImGui::DragFloat("Gradient k",   &(scale[2]), 0.05f, -1.0f, +8.0f);
     ImGui::Spacing();
 
-    ImGui::DragFloat("Displacement", &(scale[2]), 0.001f, 0.0f, 1.0f);
+    ImGui::DragFloat3("Origin", &(desc.origin[0]), 0.01f);
+    ImGui::Spacing();
+
+    ImGui::DragFloat("Min height", &(desc.clamp_bounds[0]), 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("Max height", &(desc.clamp_bounds[1]), 0.01f, 0.0f, 1.0f);
+
+    ImGui::Spacing();
+
+    drawNFThing("Perlin",  desc.perlin);
+    drawNFThing("Vein",    desc.vein);
+    drawNFThing("Voronoi", desc.voronoi);
+    drawNFThing("Domain Warping", desc.domainwarp);
+    ImGui::Spacing();
     ImGui::Spacing();
 
     ImGui::DragFloat("slope min", &(aa[0]), 0.001f, 0.0f, 1.0f);
@@ -75,13 +123,53 @@ EditorUI_MD::drawComponent<idk::TerrainCmp>( idk::EngineAPI &api, int obj_id )
     ImGui::DragFloat("texscale 2", &(tex[2]), 0.01f, 0.0f, 2.0f);
     ImGui::DragFloat("texscale 3", &(tex[3]), 0.01f, 0.0f, 2.0f);
     ImGui::Spacing();
+    ImGui::Spacing();
 
+
+
+
+    drawNFThing("Water", desc.water);
+
+    ImGui::Spacing();
+    ImGui::ColorEdit4("shallow color ##water", &(desc.water_color[0][0]));
+    ImGui::ColorEdit4("deep color    ##water", &(desc.water_color[1][0]));
+    ImGui::ColorEdit4("color 3       ##water", &(desc.water_color[2][0]));
+    ImGui::ColorEdit4("PBR           ##water", &(desc.water_color[3][0]));
+
+    ImGui::Spacing();
+    ImGui::DragFloat("tscale  ##water", &(desc.water_scale[2]), 0.01f,   0.0f, +8.0f);
+    ImGui::DragFloat("wscale  ##water", &(desc.water_scale[3]), 1.0f);
+
+    ImGui::Spacing();
+    ImGui::DragFloat("xscale  ##water", &(desc.water_scale[0]), 0.002f, -2.0f, +2.0f);
+    ImGui::DragFloat("yscale  ##water", &(desc.water_scale[1]), 0.002f,  0.0f, +1.0f);
+
+    ImGui::DragFloat("water level ##water", &desc.water_pos.y, 0.001f, 0.0f, 1.0f);
+    ImGui::Spacing();
+
+
+
+
+    static bool gen_terrain = true;
+    static bool wf_terrain  = false;
+    static bool wf_water    = false;
+
+    ImGui::Checkbox("Generate terrain",  &gen_terrain);
+    ImGui::Checkbox("Terrain wireframe", &wf_terrain);
+    ImGui::Checkbox("Water wireframe",   &wf_water);
+
+    if (gen_terrain)
+    {
+        idk::TerrainRenderer::generateTerrain();
+    }
+
+    idk::TerrainRenderer::setTerrainWireframe(wf_terrain);
+    idk::TerrainRenderer::setWaterWireframe(wf_water);
 
     if (ImGui::Button("Generate grass"))
     {
-        idk::TerrainRenderer::generateGrass(cmp.terrain_id);
+        idk::TerrainRenderer::generateGrass();
     }
-
 
 }
 

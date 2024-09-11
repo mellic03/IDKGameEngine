@@ -280,6 +280,11 @@ int main( int argc, char **argv )
     uint64_t b = SDL_GetTicks64();
     uint64_t delta;
 
+
+    ren.beginFrame();
+    ren.endFrame(0.0001);
+    idk::TerrainRenderer::generateTerrain();
+
     while (engine.running())
     {
         a = SDL_GetTicks64();
