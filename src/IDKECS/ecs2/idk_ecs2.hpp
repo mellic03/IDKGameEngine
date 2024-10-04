@@ -51,8 +51,8 @@ private:
     inline static bool m_readfile = false;
     inline static std::string m_filepath;
 
-    inline static std::vector<std::function<void()>> m_callbacks;
-    inline static std::vector<std::function<void()>> m_pre_callbacks;
+    inline static std::function<void()> m_post_callback = []() {  };
+    inline static std::function<void()> m_pre_callback  = []() {  };
 
     static void _load();
 
@@ -139,7 +139,7 @@ public:
     static bool                 hasParent( int obj_id );
     static bool                 hasChildren( int obj_id );
 
-    static void registerPrefab             ( const std::string &name, std::function<int()> );
+    static void registerPrefab             ( const std::string &name, const std::function<int()>& );
     static int  createGameObjectFromPrefab ( const std::string &name );
     static const std::map<std::string, std::function<int()>> &getPrefabs();
 
@@ -204,7 +204,6 @@ public:
 
     template <typename T>
     static void registerComponent( const std::string &name, const std::string &category = "Builtin" );
-
     static bool isRegisteredComponent( const std::string &name ); 
 
 
@@ -212,33 +211,21 @@ public:
     static void registerSystem()
     {
         m_systems.push_back(dynamic_cast<System *>(new T));
-
-        int status;
-        char *demangled = abi::__cxa_demangle(typeid(T).name(), NULL, NULL, &status);
-
-        if (status == 0)
-        {
-            m_systems.back()->m_name = std::string(demangled);
-        }
-
-        if (demangled)
-        {
-            std::free(demangled);
-        }
     }
 
 
     static void save( const std::string &filepath );
     static void load( const std::string &filepath );
 
-    static void preSceneLoad( std::function<void()> callback )
+
+    static void preSceneLoad( const std::function<void()> &callback )
     {
-        m_pre_callbacks.push_back(callback);
+        m_pre_callback = callback;
     }
 
-    static void onSceneLoad( std::function<void()> callback )
+    static void postSceneLoad( const std::function<void()> &callback )
     {
-        m_callbacks.push_back(callback);
+        m_post_callback = callback;
     }
 
     static const std::string &getCurrentScene() { return m_filepath; };

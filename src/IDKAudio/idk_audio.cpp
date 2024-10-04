@@ -8,11 +8,14 @@
 
 namespace
 {
-    std::stack<int>                           m_channels;
-    std::map<std::string, int>                m_wav_cache;
+    static constexpr int NUM_CHANNELS = 32;
+    // static int m_curr_channel = 0;
 
-    idk::Allocator<Mix_Chunk>                 m_chunks;
-    idk::Allocator<idk::AudioSystem::Emitter> m_emitters;
+    static std::stack<int>                           m_channels;
+    static std::map<std::string, int>                m_wav_cache;
+
+    static idk::Allocator<Mix_Chunk>                 m_chunks;
+    static idk::Allocator<idk::AudioSystem::Emitter> m_emitters;
 
 };
 
@@ -21,20 +24,24 @@ namespace
 void
 idk::AudioSystem::init()
 {
-    static constexpr int NUM_CHANNELS = 8;
-
-    for (int i=0; i<NUM_CHANNELS; i++)
-    {
-        m_channels.push(i);
-    }
+    // for (int i=0; i<NUM_CHANNELS; i++)
+    // {
+    //     m_channels.push(i);
+    // }
 
     int    audio_rate    = 44100;
-    Uint16 audio_format  = AUDIO_S16SYS;
-    int    audio_buffers = 4096;
+    Uint16 audio_format  = MIX_DEFAULT_FORMAT; // AUDIO_S16SYS;
+    int    audio_buffers = 2048;
+
 
     IDK_ASSERT(
         "Error initialising SDL2 audio",
-        Mix_OpenAudio(audio_rate, audio_format, NUM_CHANNELS, audio_buffers) == 0
+        Mix_OpenAudio(audio_rate, audio_format, 1, audio_buffers) == 0
+    );
+
+    IDK_ASSERT(
+        "Error on Mix_AllocateChannels",
+        Mix_AllocateChannels(NUM_CHANNELS) == NUM_CHANNELS
     );
 }
 
@@ -56,11 +63,36 @@ idk::AudioSystem::createEmitter( const Emitter &emitter )
 }
 
 
+int
+idk::AudioSystem::createEmitter( const std::string &filepath )
+{
+    int sound = loadWav(filepath);
+    int id = m_emitters.create(Emitter(sound));
+    auto &em = AudioSystem::getEmitter(id);
+    em.id  = id;
+    em.att = glm::vec4(1, 0, 0, 0);
+
+    return id;
+}
+
+
+
 idk::AudioSystem::Emitter&
 idk::AudioSystem::getEmitter( int id )
 {
     return m_emitters.get(id);
 }
+
+
+void
+idk::AudioSystem::destroyEmitter( int id )
+{
+    if (m_emitters.contains(id))
+    {
+        m_emitters.destroy(id);
+    }
+}
+
 
 
 int
@@ -111,6 +143,11 @@ idk::AudioSystem::playSound( int emitter_id, bool loop )
     auto &emitter = getEmitter(emitter_id);
     emitter.looping = loop;
 
+    if (emitter.chunk == -1)
+    {
+        return;
+    }
+
     // Already playing
     if (emitter.channel != -1)
     {
@@ -125,18 +162,22 @@ idk::AudioSystem::playSound( int emitter_id, bool loop )
     }
 
 
-    IDK_ASSERT("m_channels is empty", m_channels.empty() == false);
+    // IDK_ASSERT("m_channels is empty", m_channels.empty() == false);
 
-    if (m_channels.empty())
-    {
-        return;
-    }
+    // if (m_channels.empty())
+    // {
+    //     return;
+    // }
 
-    emitter.channel = m_channels.top();
-                      m_channels.pop();
+    // m_curr_channel = (m_curr_channel + 1) % NUM_CHANNELS;
+    // emitter.channel = m_curr_channel;
+
+    // emitter.channel = m_channels.top();
+    //                   m_channels.pop();
 
     Mix_Chunk &chunk = getChunk(emitter.chunk);
-    Mix_PlayChannel(emitter.channel, &chunk, (loop) ? -1 : 0);
+    emitter.channel = Mix_PlayChannel(-1, &chunk, (loop) ? -1 : 0);
+    std::cout << "channel: " << emitter.channel << "\n";
 }
 
 
@@ -152,7 +193,8 @@ idk::AudioSystem::stopSound( int emitter_id )
     }
 
     Mix_HaltChannel(emitter.channel);
-    m_channels.push(emitter.channel);
+    // m_channels.push(emitter.channel);
+
     emitter.channel = -1;
 }
 
@@ -198,20 +240,27 @@ idk::AudioSystem::update( const glm::vec3 &listener_pos, const glm::vec3 &listen
 {
     for (Emitter &emitter: m_emitters)
     {
-        glm::vec3 dir  = glm::normalize(emitter.pos - listener_pos);
-        float     dist = glm::distance(emitter.pos, listener_pos);
+        float dist2 = glm::distance2(emitter.pos, listener_pos);
 
-        float mag = glm::dot(listener_front, dir) * 0.5f + 0.5f;
-              mag /= (0.1f * dist);
-              mag = glm::clamp(mag, 0.0f, 1.0f);
+        float mag  = 1.0f / (1.0f + emitter.att[1]*sqrt(dist2) + emitter.att[2]*dist2);
+              mag *= emitter.volume;
+              mag  = glm::clamp(mag, 0.0f, 1.0f);
 
-        Mix_Volume(emitter.channel, mag*SDL_MIX_MAXVOLUME);
+        int volume = int(mag * float(SDL_MIX_MAXVOLUME));
+            volume = glm::clamp(volume, 0, SDL_MIX_MAXVOLUME);
 
-        if (emitter.looping == false && Mix_Playing(emitter.channel) == 0)
+        // idk_printvalue(sqrt(dist2));
+        // idk_printvalue(volume);
+        // idk_printvalue(emitter.channel);
+        // std::cout << "\n";
+
+        Mix_Volume(emitter.channel, volume);
+
+        if (Mix_Playing(emitter.channel) == 0)
         {
             stopSound(emitter.id);
         }
-
     }
+    // std::cout << "\n";
 
 }

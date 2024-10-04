@@ -3,6 +3,7 @@
 #include "idk_components.hpp"
 #include "sys-transform.hpp"
 
+#include <IDKGraphics/particle/particle_system.hpp>
 #include <IDKGraphics/render/particle.hpp>
 
 

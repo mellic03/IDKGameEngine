@@ -14,10 +14,12 @@ namespace idk
 class idk::CameraSys: public idk::ECS2::System
 {
 public:
-    virtual void    init   ( idk::EngineAPI & ) final;
-    virtual void    update ( idk::EngineAPI & ) final;
+    virtual void init   ( idk::EngineAPI & ) final;
+    virtual void update ( idk::EngineAPI & ) final;
 
-    static bool     in_frustum ( int subject, int target );
+    static float &getFov       ( int obj_id );
+    static float &getFovOffset ( int obj_id );
+    static bool  in_frustum    ( int subject, int target );
 };
 
 

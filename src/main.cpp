@@ -11,14 +11,13 @@
 #include <IDKECS/IDKECS.hpp>
 
 #include <IDKEvents/IDKEvents.hpp>
+#include <IDKIO/IDKIO.hpp>
 
 #include <IDKBuiltinCS/IDKBuiltinCS.hpp>
 #include <IDKBuiltinUI/EditorUI.hpp>
 
 #include <IDKGameEngine/idk_engine_api.hpp>
 #include <IDKThreading/IDKThreading.hpp>
-
-#include <IDKGraphics/UI/idk_ui.hpp>
 #include <IDKGraphics/terrain/terrain.hpp>
 
 #include <filesystem>
@@ -82,51 +81,9 @@ message_callback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsize
 
 
 
-void do_test( int width )
-{
-    int bins = 9;
-    int samples = 1000000;
-
-    std::vector<int> results(bins, 0);
-    float amin = +10000.0f;
-    float amax = -10000.0f;
-
-    for (int i=0; i<samples; i++)
-    {
-        float a = idk::randf_guassian(1.0f, width);
-
-        amin = std::min(a, amin);
-        amax = std::max(a, amax);
-
-        int n = glm::clamp(int(bins * a) + (bins/2), 0, bins-1);
-        results[n] += 1;
-    }
-
-    std::cout << "Results (" << width << "): " << std::fixed << std::setprecision(2);
-
-    for (int n: results)
-    {
-        std::cout << float(n) / float(samples) << "   ";
-    }
-
-    std::cout << "       " << amin << ", " << amax << "\n";
-}
-
-
-
 int main( int argc, char **argv )
 {
     srand(clock());
-
-    // for (int i=1; i<32; i++)
-    // {
-    //     do_test(i);
-    // }
-
-    // return 0;
-
-
-
 
     // Parse command-line arguments
     // -----------------------------------------------------------------------------------------
@@ -185,7 +142,6 @@ int main( int argc, char **argv )
     idk::EngineAPI api;
     api.init(game->getName(), 4, 6);
 
-    auto &eventsys   = api.getEventSys();
     auto &engine     = api.getEngine();
     auto &ren        = api.getRenderer();
 
@@ -213,13 +169,10 @@ int main( int argc, char **argv )
     //     ren.resize(1920, 1080);
     // };
 
-    auto exit_lambda = [&engine]()
-    {
-        engine.shutdown();
-    };
-
     // eventsys.onWindowEvent(idk::WindowEvent::RESIZE, resize_lambda);
-    eventsys.onWindowEvent(idk::WindowEvent::EXIT,   exit_lambda);
+    // eventsys.onWindowEvent(idk::WindowEvent::EXIT,   exit_lambda);
+
+    // idkio::onWindowEvent(idkio::WIN_EXIT, std::bind(&idk::Engine::shutdown, &engine));
     // -----------------------------------------------------------------------------------------
 
 
@@ -257,17 +210,15 @@ int main( int argc, char **argv )
     // Setup
     // -----------------------------------------------------------------------------------------
     game->registerModules(api);
-
-    idk::ECS2::init(api);
     engine.initModules(api);
 
+    idk::ECS2::init(api);
     if (arg_load_idksc)
     {
         idk::ECS2::load(arg_idksc);
-        idk::ECS2::init(api);
+        idk::ECS2::update(api);
     }
-    idk::ECS2::update(api);
-
+    idk::ECS2::init(api);
 
     game->setup(args, api);
     // -----------------------------------------------------------------------------------------
@@ -279,6 +230,7 @@ int main( int argc, char **argv )
     uint64_t a = SDL_GetTicks64();
     uint64_t b = SDL_GetTicks64();
     uint64_t delta;
+    float    dt;
 
 
     ren.beginFrame();
@@ -290,18 +242,18 @@ int main( int argc, char **argv )
         a = SDL_GetTicks64();
         delta = a - b;
 
-        float dt = float(double(delta) / 1000.0);
-              dt = glm::clamp(dt, 0.0001f, 1.0f/30.0f);
+        float dt = float(delta) / 1000.0f;
+              dt = glm::clamp(dt, 0.0001f, 1.0f);
 
         // if (dt < 1.0f / 60.0f)
         // {
         //     continue;
         // }
 
-        eventsys.processKeyInput();
-        eventsys.processMouseInput();
-        eventsys.update();
 
+        api.update(dt);
+
+        idk::IO::update(dt);
         idk::ECS2::update(api);
         idk::Events::update();
         // idk::AudioSystem::update()
@@ -314,6 +266,12 @@ int main( int argc, char **argv )
 
         idk::Logger::print();
         b = a;
+
+
+        if (idkio::windowEvent(idkio::WIN_EXIT))
+        {
+            engine.shutdown();
+        }
     }
     // -----------------------------------------------------------------------------------------
 

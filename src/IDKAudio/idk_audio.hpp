@@ -19,12 +19,14 @@ public:
 
     struct Emitter
     {
-        int  id       = -1;
-        int  channel  = -1;
-        int  chunk    = -1;
-        bool looping  = false;
-        int  next     = -1;
+        int   id       = -1;
+        int   channel  = -1;
+        int   chunk    = -1;
+        bool  looping  = false;
+        float volume   = 1.0f;
+        int   next     = -1;
         glm::vec3 pos = glm::vec3(0.0f);
+        glm::vec3 att = glm::vec3(1.0f, 0.01f, 0.0f);
 
         Emitter() {  };
         Emitter( int chunk_id ): chunk(chunk_id) {  };
@@ -44,7 +46,9 @@ public:
 
     static int createEmitter();
     static int createEmitter( const Emitter& );
+    static int createEmitter( const std::string& );
     static Emitter &getEmitter( int );
+    static void destroyEmitter( int );
 
     // IDK_ALLOCATOR_ACCESS(Emitter, Emitter,   m_emitters)
     // IDK_ALLOCATOR_ACCESS(Chunk,   Mix_Chunk, m_chunks)

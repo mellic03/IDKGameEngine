@@ -28,7 +28,7 @@ void
 idk::RenderSettingSys::update( idk::EngineAPI &api )
 {
     auto  &ren  = api.getRenderer();
-    float dtime = api.getEngine().deltaTime();
+    float dtime = api.dtime();
 
     static std::string current_filepath = "assets/cubemaps/skybox5/";
 
@@ -46,6 +46,8 @@ idk::RenderSettingSys::update( idk::EngineAPI &api )
             ren.useSkybox(cmp.skybox);
             current_filepath = cmp.filepath;
         }
+
+        // ren.applyRenderSettings(cmp.settings, false);
     }
 
 }
@@ -64,19 +66,28 @@ idk::RenderSettingSys::shutdown( idk::EngineAPI &api )
 size_t
 idk::RenderSettingCmp::serialize( std::ofstream &stream ) const
 {
+    auto config = api_ptr->getRenderer().getRenderSettings();
+
     size_t n = 0;
     n += idk::streamwrite(stream, obj_id);
     n += idk::streamwrite(stream, filepath);
+    n += idk::streamwrite(stream, config);
+
     return n;
 };
+
 
 
 size_t
 idk::RenderSettingCmp::deserialize( std::ifstream &stream )
 {
     size_t n = 0;
+
     n += idk::streamread(stream, obj_id);
     n += idk::streamread(stream, filepath);
+    n += idk::streamread(stream, settings);
+
+    api_ptr->getRenderer().applyRenderSettings(settings);
 
     // this->skybox = api_ptr->getRenderer().loadSkybox(filepath);
     // api_ptr->getRenderer().useSkybox(this->skybox);

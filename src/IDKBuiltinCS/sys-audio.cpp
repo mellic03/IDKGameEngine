@@ -15,66 +15,60 @@ idk::AudioSys::init( idk::EngineAPI &api )
 {
     api_ptr = &api;
     
+    // for (auto &[obj_id, emitter_id, volume, filepath]: ECS2::getComponentArray<AudioEmitterCmp>())
+    // {
+    //     glm::vec3 pos = idk::TransformSys::getPositionWorldspace(obj_id);
 
-    for (auto &[obj_id, emitter_id, volume, filepath]: ECS2::getComponentArray<AudioEmitterCmp>())
-    {
-        glm::vec3 pos = idk::TransformSys::getPositionWorldspace(obj_id);
+    //     if (obj_id == -1 || emitter_id == -1)
+    //     {
+    //         continue;
+    //     }
 
-        if (obj_id == -1 || emitter_id == -1)
-        {
-            continue;
-        }
-
-        int sound = loadSound(filepath);
-        emitter_id = AudioSystem::createEmitter(idk::AudioSystem::Emitter(sound));
-        AudioSystem::getEmitter(emitter_id).id = emitter_id;
-    }
-
+    //     int sound = loadSound(filepath);
+    //     emitter_id = AudioSystem::createEmitter(idk::AudioSystem::Emitter(sound));
+    //     AudioSystem::getEmitter(emitter_id).id = emitter_id;
+    // }
 }
 
 
 void
 idk::AudioSys::update( idk::EngineAPI &api )
 {
-    static std::set<int> finished_callbacks;
-    finished_callbacks.clear();
+    // static std::set<int> finished_callbacks;
+    // finished_callbacks.clear();
 
-    for (auto &[obj_id, callback]: m_callbacks)
+    // for (auto &[obj_id, callback]: m_callbacks)
+    // {
+    //     if (isFinished(obj_id))
+    //     {
+    //         callback();
+    //         finished_callbacks.insert(obj_id);
+    //     }
+    // }
+
+    // for (int obj_id: finished_callbacks)
+    // {
+    //     m_callbacks.erase(obj_id);
+    // }
+
+    for (auto &cmp: ECS2::getComponentArray<AudioEmitterCmp>())
     {
-        if (isFinished(obj_id))
-        {
-            callback();
-            finished_callbacks.insert(obj_id);
-        }
+        glm::vec3 pos = idk::TransformSys::getWorldPosition(cmp.obj_id);
+        AudioSystem::getEmitter(cmp.emitter_id).pos = pos;
     }
 
-    for (int obj_id: finished_callbacks)
-    {
-        m_callbacks.erase(obj_id);
-    }
 
 
     for (auto &[obj_id]: ECS2::getComponentArray<AudioListenerCmp>())
     {
-        glm::vec3 pos = idk::TransformSys::getPositionWorldspace(obj_id);
+        glm::vec3 pos = idk::TransformSys::getWorldPosition(obj_id);
         glm::vec3 dir = idk::TransformSys::getFront(obj_id);
+        // std::cout << pos.x << ", " << pos.y << ", " << pos.z << "\n";
 
         AudioSystem::update(pos, dir);
     }
 
-
-    for (auto &[obj_id, emitter_id, volume, filepath]: ECS2::getComponentArray<AudioEmitterCmp>())
-    {
-        glm::vec3 pos = idk::TransformSys::getPositionWorldspace(obj_id);
-
-        if (obj_id == -1 || emitter_id == -1)
-        {
-            continue;
-        }
-
-        AudioSystem::getEmitter(emitter_id).pos = pos;
-    }
-
+    // std::cout << "\n";
 }
 
 
@@ -90,28 +84,40 @@ void
 idk::AudioSys::assignSound( int obj_id, int sound )
 {
     auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    cmp.emitter_id = AudioSystem::createEmitter(idk::AudioSystem::Emitter(sound));
+
+    if (cmp.emitter_id != -1)
+    {
+        auto &emm = AudioSystem::getEmitter(cmp.emitter_id);
+        emm.chunk = sound;
+    }
+
+    else
+    {
+        cmp.emitter_id = AudioSystem::createEmitter(sound);
+    }
 
 }
 
 void
 idk::AudioSys::assignSound( int obj_id, const std::string &filepath )
 {
-    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
-
     int sound = loadSound(filepath);
-    cmp.emitter_id = AudioSystem::createEmitter(idk::AudioSystem::Emitter(sound));
+
+    assignSound(obj_id, sound);
+
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    // cmp.emitter_id = AudioSystem::createEmitter(idk::AudioSystem::Emitter(sound));
     cmp.filepath = filepath;
 }
 
 
-void
-idk::AudioSys::playSoundCallback( int obj_id, std::function<void()> callback )
-{
-    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    m_callbacks[obj_id] = callback;
-    AudioSystem::playSound(cmp.emitter_id, false);
-}
+// void
+// idk::AudioSys::playSoundCallback( int obj_id, std::function<void()> callback )
+// {
+//     auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+//     m_callbacks[obj_id] = callback;
+//     AudioSystem::playSound(cmp.emitter_id, false);
+// }
 
 
 void
@@ -144,6 +150,17 @@ idk::AudioSys::pauseSound( int obj_id )
     auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
     AudioSystem::pauseSound(cmp.emitter_id);
 }
+
+
+void
+idk::AudioSys::setVolume( int obj_id, float volume )
+{
+    auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    auto &emm = AudioSystem::getEmitter(cmp.emitter_id);
+    emm.volume = volume;
+}
+
+
 
 
 bool

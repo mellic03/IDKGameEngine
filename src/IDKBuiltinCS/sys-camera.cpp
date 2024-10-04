@@ -22,21 +22,30 @@ idk::CameraSys::init( idk::EngineAPI &api )
 void
 idk::CameraSys::update( idk::EngineAPI &api )
 {
-    auto &engine = api.getEngine();
-    auto &events = api.getEventSys();
-    auto &ren    = api.getRenderer();
-
-    float dtime = engine.deltaTime();
+    auto &ren = api.getRenderer();
 
     for (auto &cmp: ECS2::getComponentArray<CameraCmp>())
     {
         int obj_id = cmp.obj_id;
         int cam_id = cmp.cam_id;
-
-        cmp.camera.setTransform(TransformSys::getModelMatrix(cmp.obj_id)); 
-        ren.getCamera(cam_id) = cmp.camera;
-
+        ren.getCamera(cam_id).setTransform(TransformSys::getModelMatrix(obj_id));
     }
+}
+
+
+float&
+idk::CameraSys::getFov( int obj_id )
+{
+    auto &cmp = ECS2::getComponent<CameraCmp>(obj_id);
+    return api_ptr->getRenderer().getCamera(cmp.cam_id).fov;
+}
+
+
+float&
+idk::CameraSys::getFovOffset( int obj_id )
+{
+    auto &cmp = ECS2::getComponent<CameraCmp>(obj_id);
+    return api_ptr->getRenderer().getCamera(cmp.cam_id).fov_offset;
 }
 
 
@@ -50,9 +59,6 @@ idk::CameraSys::in_frustum( int subject, int target )
 
     return false;
 }
-
-
-
 
 
 
@@ -72,11 +78,6 @@ idk::CameraCmp::deserialize( std::ifstream &stream )
     size_t n = 0;
     n += idk::streamread(stream, obj_id);
     n += idk::streamread(stream, camera);
-
-    camera.near = 1.0f;
-    camera.far  = 16.0f;
-    camera.fov_offset = 0.0f;
-
     cam_id = api_ptr->getRenderer().activeCamera();
     return n;
 }

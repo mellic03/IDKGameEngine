@@ -35,22 +35,22 @@
 //     float *ts      = nullptr;
 //     float *rs      = nullptr;
 
-//     if (eventsys.keylog().keyDown(idk::Keycode::LSHIFT))
+//     if (idk::IO::keyDown(idk::Keycode::LSHIFT))
 //     {
 //         mode = ImGuizmo::MODE::WORLD;
 //     }
 
-//     if (eventsys.keylog().keyDown(idk::Keycode::S))
+//     if (idk::IO::keyDown(idk::Keycode::S))
 //     {
 //         op = ImGuizmo::OPERATION::SCALEU;
 //     }
 
-//     if (eventsys.keylog().keyDown(idk::Keycode::R))
+//     if (idk::IO::keyDown(idk::Keycode::R))
 //     {
 //         op = ImGuizmo::OPERATION::ROTATE;
 //     }
 
-//     if (eventsys.keylog().keyDown(idk::Keycode::LALT))
+//     if (idk::IO::keyDown(idk::Keycode::LALT))
 //     {
 //         ts = &tsnp[0];
 //         rs = &rsnp[0];
@@ -94,7 +94,7 @@
 
 //     ImGuizmo::MODE mode = ImGuizmo::MODE::LOCAL;
 
-//     if (eventsys.keylog().keyDown(idk::Keycode::LSHIFT))
+//     if (idk::IO::keyDown(idk::Keycode::LSHIFT))
 //     {
 //         mode = ImGuizmo::MODE::WORLD;
 //     }

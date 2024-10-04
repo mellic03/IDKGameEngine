@@ -1,7 +1,7 @@
 #include "../EditorUI.hpp"
 #include "../common/idk_imgui_extra.hpp"
 
-#include <IDKEvents/IDKEvents.hpp>
+#include <IDKIO/IDKIO.hpp>
 
 
 
@@ -21,7 +21,7 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
 
-    if (api.getEventSys().keylog().keyTapped(idk::Keycode::F5))
+    if (idkio::keyTapped(idk::Keycode::F5))
     {
         engine.reloadModules();
     }

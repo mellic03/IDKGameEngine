@@ -79,11 +79,20 @@ namespace idk
 
         static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
         {
+            // auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+            // cmp.emitter_id = AudioSystem::createEmitter();
             // this->obj_id = obj_id;
         };
     
         static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
         {
+            auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+        
+            if (cmp.emitter_id != -1)
+            {
+                AudioSystem::destroyEmitter(cmp.emitter_id);
+                cmp.emitter_id = -1;
+            }
         };
 
         static void onObjectCopy( int src_obj, int dst_obj )
@@ -107,7 +116,11 @@ namespace idk
             // this->obj_id = obj_id;
         };
 
-        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
+        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+        {
+
+        };
+
         static void onObjectCopy( int src_obj, int dst_obj ) {  };
 
     };

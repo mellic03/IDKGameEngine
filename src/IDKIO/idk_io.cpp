@@ -1,12 +1,259 @@
 #include "idk_io.hpp"
+#include <SDL2/SDL.h>
+#include <vector>
+#include <array>
+
+#include <libidk/idk_wallocator.hpp>
+
+
+using namespace idk;
+
+namespace
+{
+    bool m_Mcaptured   = false;
+
+    glm::vec2  m_Moff   = glm::vec2(0.0f);
+    glm::vec2  m_Mpos   = glm::vec2(0.0f);
+    glm::vec2  m_Mdelta = glm::vec2(0.0f);
+
+    std::array<bool, 3> m_mousebutton_up;
+    std::array<bool, 3> m_mousebutton_down;
+    std::array<bool, 3> m_mousebutton_clicked;
+    float               m_mousewheel_delta = 0.0f;
+
+    std::function<void(SDL_Event*)> m_poll_callback = [](SDL_Event*){};
+
+    std::array<bool, 2>    m_windowevents     = { false, false };
+    std::function<void()>  m_win_callbacks[2] = { [](){}, [](){} };
+
+
+    idk::WAllocator<std::function<void(int, int)>> m_mousedrag_callbacks[3];
+    idk::WAllocator<std::function<void(int, int)>> m_mouseclick_callbacks[3];
+
+
+
+    idk::Keylog m_keylog;
+}
 
 
 
 void
-idk::IO::update()
+IO::onPollEvent( std::function<void(SDL_Event*)> callback )
 {
-    
+    m_poll_callback = callback;
 }
+
+
+// void
+// IO::onWindowEvent( uint32_t event, std::function<void()> callback )
+// {
+//     event = (event % 2);
+//     m_win_callbacks[event] = callback;
+// }
+
+
+bool
+IO::windowEvent( uint32_t event )
+{
+    return m_windowevents[event];
+}
+
+
+
+static void processEvent( SDL_Event &e )
+{
+    if (e.type == SDL_QUIT)
+    {
+        // m_win_callbacks[IO::WIN_EXIT]();
+        m_windowevents[IO::WIN_EXIT] = true;
+    }
+
+    else if (e.type == SDL_DROPFILE)
+    {
+        // m_dropfile_event = true;
+        // m_dropfile_path  = e.drop.file;
+        // {
+        //     std::string extension = fs::path(m_dropfile_path).extension();
+
+        //     if (m_dropfile_set[extension])
+        //     {
+        //         m_dropfile_callbacks[extension](e.drop.file);
+        //     }
+        // }
+    }
+
+    else if (e.type == SDL_WINDOWEVENT)
+    {
+        if (e.window.event == SDL_WINDOWEVENT_CLOSE)
+        {
+            m_windowevents[IO::WIN_EXIT] = true;
+        }
+
+        else if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            m_windowevents[IO::WIN_RESIZE] = true;
+        }
+    }
+
+    else if (e.type == SDL_MOUSEBUTTONDOWN)
+    {
+        // Good for callbacks?
+        // x = e.button.x;
+        // y = e.button.y;
+
+        m_mousebutton_down[e.button.button - 1] = true;
+        m_mousebutton_up[e.button.button - 1] = false;
+    }
+
+    else if (e.type == SDL_MOUSEBUTTONUP)
+    {
+        bool prev_down = m_mousebutton_down[e.button.button - 1];
+        bool prev_up   = m_mousebutton_up[e.button.button - 1];
+
+        m_mousebutton_down[e.button.button - 1] = false;
+        m_mousebutton_up[e.button.button - 1] = true;
+
+        bool curr_down = m_mousebutton_down[e.button.button - 1];
+        bool curr_up   = m_mousebutton_up[e.button.button - 1];
+
+        m_mousebutton_clicked[e.button.button-1] = (prev_down == true && curr_down == false);
+    }
+
+    else if (e.type == SDL_MOUSEWHEEL)
+    {
+        m_mousewheel_delta = e.wheel.y;
+    }
+
+    m_poll_callback(&e);
+}
+
+
+static void pollEvents()
+{
+    SDL_Event e;
+
+    while (SDL_PollEvent(&e))
+    {
+        processEvent(e);
+    }
+}
+
+
+
+void
+idk::IO::update( float dt )
+{
+    const Uint8 *state = SDL_GetKeyboardState(NULL);
+    m_keylog.log(state);
+
+    {
+        int x, y;
+
+        SDL_GetMouseState(&x, &y);
+        m_Mpos = glm::vec2(x+0.5f, y+0.5f) - m_Moff;
+
+        SDL_GetRelativeMouseState(&x, &y);
+        m_Mdelta = glm::vec2(x, y);
+
+        m_Mcaptured = (SDL_GetRelativeMouseMode() == SDL_TRUE);
+    }
+
+
+    {
+        m_windowevents[IO::WIN_EXIT]   = false;
+        m_windowevents[IO::WIN_RESIZE] = false;
+
+        m_mousewheel_delta = 0.0f;
+        m_mousebutton_clicked[0] = false;
+        m_mousebutton_clicked[1] = false;
+        m_mousebutton_clicked[2] = false;
+
+        pollEvents();
+    }
+
+    if (fabs(m_Mdelta.x) > 0.0f || fabs(m_Mdelta.y) > 0.0f)
+    {
+        for (uint32_t i=0; i<3; i++)
+        {
+            if (mouseDown(i))
+            {
+                for (auto &[id, callback]: m_mousedrag_callbacks[i])
+                {
+                    callback(m_Mdelta.x, m_Mdelta.y);
+                }
+            }
+
+            if (mouseClicked(i))
+            {
+                for (auto &[id, callback]: m_mouseclick_callbacks[i])
+                {
+                    callback(m_Mdelta.x, m_Mdelta.y);
+                }
+            }
+        }
+    }
+
+    // for (int i=0; i<2; i++)
+    // {
+    //     if (m_windowevents[i] == true)
+    //     {
+    //         m_win_callbacks[i]();
+    //     }
+    // }
+}
+
+
+
+int
+IO::onMouseClick( uint32_t mouse, const std::function<void(int, int)> &callback )
+{
+    return m_mouseclick_callbacks[mouse].create(callback);
+}
+
+
+void
+IO::removeMouseClickCallback( uint32_t mouse, int id )
+{
+    m_mouseclick_callbacks[mouse].destroy(id);
+}
+
+
+
+int
+IO::onMouseDrag( uint32_t mouse, const std::function<void(int, int)> &callback )
+{
+    return m_mousedrag_callbacks[mouse].create(callback);
+}
+
+
+void
+IO::removeMouseDragCallback( uint32_t mouse, int id )
+{
+    m_mousedrag_callbacks[mouse].destroy(id);
+}
+
+
+
+
+void      IO::setViewportOffset( int x, int y ) { m_Moff = glm::vec2(x, y); }
+
+void      IO::mouseCapture( bool b ) { SDL_SetRelativeMouseMode((b) ? SDL_FALSE: SDL_TRUE); }
+bool      IO::mouseCaptured()        { return m_Mcaptured;     }
+glm::vec2 IO::mousePosition()        { return m_Mpos; }
+glm::vec2 IO::mouseDelta()           { return m_Mdelta;        }
+
+bool      IO::mouseUp         ( uint32_t b )  { return m_mousebutton_up[b];      }
+bool      IO::mouseDown       ( uint32_t b )  { return m_mousebutton_down[b];    }
+bool      IO::mouseClicked    ( uint32_t b )  { return m_mousebutton_clicked[b]; }
+float     IO::mouseWheelDelta (            )  { return m_mousewheel_delta;       }
+
+
+
+bool      IO::keyDown   ( idk::Keycode key ) { return m_keylog.keyDown(key);   }
+bool      IO::keyUp     ( idk::Keycode key ) { return m_keylog.keyUp(key);     }
+bool      IO::keyTapped ( idk::Keycode key ) { return m_keylog.keyTapped(key); }
+
+
 
 
 

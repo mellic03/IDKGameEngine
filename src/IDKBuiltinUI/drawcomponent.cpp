@@ -1,5 +1,7 @@
 #include "drawcomponent.hpp"
 #include <IDKGraphics/terrain/desc.hpp>
+#include <IDKGraphics/idk_render_settings.hpp>
+#include "common/idk_imgui_settingsfield.hpp"
 
 
 
@@ -43,7 +45,7 @@ EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
 
 
 static void
-drawNFThing( const std::string &name, idk::TerrainRenderer::NoiseFactor &NF)
+drawNFThing( const std::string &name, idk::TerrainRenderer::NoiseFactor &NF )
 {
     ImGui::SeparatorText(name.c_str());
 
@@ -54,15 +56,8 @@ drawNFThing( const std::string &name, idk::TerrainRenderer::NoiseFactor &NF)
         labels[i] = labels[i] + "##" + name;
     }
 
-    if (name == "Water")
-    {
-        static bool water_enabled = true;
-        ImGui::Checkbox("Enabled ##Water", &water_enabled);
-        idk::TerrainRenderer::setWaterActive(water_enabled);
-    }
-
-    ImGui::DragFloat(labels[0].c_str(),  &NF.amp,     0.01f, -1.0f, +1.0f);
-    ImGui::DragFloat(labels[1].c_str(),  &NF.wav,     0.01f,  1.0f, +8.0f);
+    ImGui::DragFloat(labels[0].c_str(),  &NF.amp,     0.0001f, -1.0f, +1.0f);
+    ImGui::DragFloat(labels[1].c_str(),  &NF.wav,     0.0001f,  1.0f, +8.0f);
     ImGui::DragFloat(labels[2].c_str(),  &NF.warp,    0.01f,  0.0f, +8.0f);
     ImGui::DragFloat(labels[3].c_str(),  &NF.octaves, 0.01f,  0.0f, +8.0f);
 }
@@ -83,93 +78,117 @@ EditorUI_MD::drawComponent<idk::TerrainCmp>( idk::EngineAPI &api, int obj_id )
     glm::vec4 &bb    = desc.height_blend;
     glm::vec4 &tex   = desc.texscale[0];
 
-
-    ImGui::SeparatorText("Terrain");
-    ImGui::Spacing();
-    ImGui::DragFloat("Clip scale", &(desc.clipmap_size[0]), 1.0f, 8.0f, 128.0f);
-    ImGui::DragFloat("No. clips",  &(desc.clipmap_size[1]), 1.0f, 1.0f, 6.0f);
-
-
-    ImGui::DragFloat("Height scale", &(scale[1]), 0.05f);
-    ImGui::DragFloat("Width scale",  &(scale[0]), 0.05f);
-    ImGui::DragFloat("Gradient k",   &(scale[2]), 0.05f, -1.0f, +8.0f);
-    ImGui::Spacing();
-
-    ImGui::DragFloat3("Origin", &(desc.origin[0]), 0.01f);
-    ImGui::Spacing();
-
-    ImGui::DragFloat("Min height", &(desc.clamp_bounds[0]), 0.01f, 0.0f, 1.0f);
-    ImGui::DragFloat("Max height", &(desc.clamp_bounds[1]), 0.01f, 0.0f, 1.0f);
-
-    ImGui::Spacing();
-
-    drawNFThing("Perlin",  desc.perlin);
-    drawNFThing("Vein",    desc.vein);
-    drawNFThing("Voronoi", desc.voronoi);
-    drawNFThing("Domain Warping", desc.domainwarp);
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-    ImGui::DragFloat("slope min", &(aa[0]), 0.001f, 0.0f, 1.0f);
-    ImGui::DragFloat("slope max", &(aa[1]), 0.001f, 0.0f, 1.0f);
-    ImGui::Spacing();
-
-    ImGui::DragFloat("height min", &(bb[0]), 0.001f, 0.0f, 1.0f);
-    ImGui::DragFloat("height max", &(bb[1]), 0.001f, 0.0f, 1.0f);
-    ImGui::Spacing();
-
-    ImGui::DragFloat("texscale 0", &(tex[0]), 0.01f, 0.0f, 2.0f);
-    ImGui::DragFloat("texscale 1", &(tex[1]), 0.01f, 0.0f, 2.0f);
-    ImGui::DragFloat("texscale 2", &(tex[2]), 0.01f, 0.0f, 2.0f);
-    ImGui::DragFloat("texscale 3", &(tex[3]), 0.01f, 0.0f, 2.0f);
-    ImGui::Spacing();
-    ImGui::Spacing();
-
-
-
-
-    drawNFThing("Water", desc.water);
-
-    ImGui::Spacing();
-    ImGui::ColorEdit4("shallow color ##water", &(desc.water_color[0][0]));
-    ImGui::ColorEdit4("deep color    ##water", &(desc.water_color[1][0]));
-    ImGui::ColorEdit4("color 3       ##water", &(desc.water_color[2][0]));
-    ImGui::ColorEdit4("PBR           ##water", &(desc.water_color[3][0]));
-
-    ImGui::Spacing();
-    ImGui::DragFloat("tscale  ##water", &(desc.water_scale[2]), 0.01f,   0.0f, +8.0f);
-    ImGui::DragFloat("wscale  ##water", &(desc.water_scale[3]), 1.0f);
-
-    ImGui::Spacing();
-    ImGui::DragFloat("xscale  ##water", &(desc.water_scale[0]), 0.002f, -2.0f, +2.0f);
-    ImGui::DragFloat("yscale  ##water", &(desc.water_scale[1]), 0.002f,  0.0f, +1.0f);
-
-    ImGui::DragFloat("water level ##water", &desc.water_pos.y, 0.001f, 0.0f, 1.0f);
-    ImGui::Spacing();
-
-
-
-
-    static bool gen_terrain = true;
-    static bool wf_terrain  = false;
-    static bool wf_water    = false;
-
-    ImGui::Checkbox("Generate terrain",  &gen_terrain);
-    ImGui::Checkbox("Terrain wireframe", &wf_terrain);
-    ImGui::Checkbox("Water wireframe",   &wf_water);
-
-    if (gen_terrain)
+    if (ImGui::BeginTabBar("Terrain", ImGuiTabBarFlags_None))
     {
-        idk::TerrainRenderer::generateTerrain();
+        if (ImGui::BeginTabItem("Terrain"))
+        {
+            static bool generate = true;
+            static bool wireframe = false;
+            ImGui::Checkbox("Generate", &generate);
+            ImGui::Checkbox("Wireframe", &wireframe);
+            if (generate)
+            {
+                idk::TerrainRenderer::generateTerrain();
+            }
+            idk::TerrainRenderer::setTerrainWireframe(wireframe);
+
+            ImGui::Spacing();
+            ImGui::DragFloat("Clip scale", &(desc.clipmap_size[0]), 1.0f, 8.0f, 128.0f);
+            ImGui::DragFloat("No. clips",  &(desc.clipmap_size[1]), 1.0f, 1.0f, 6.0f);
+
+            ImGui::DragFloat("Height scale", &(scale[1]), 0.05f);
+            ImGui::DragFloat("Width scale",  &(scale[0]), 0.05f);
+            ImGui::DragFloat("Gradient k",   &(scale[2]), 0.05f, -1.0f, +8.0f);
+            ImGui::Spacing();
+
+            ImGui::DragFloat3("Origin", &(desc.origin[0]), 0.01f);
+            ImGui::Spacing();
+
+            ImGui::DragFloat("Min height", &(desc.clamp_bounds[0]), 0.01f, 0.0f, 1.0f);
+            ImGui::DragFloat("Max height", &(desc.clamp_bounds[1]), 0.01f, 0.0f, 1.0f);
+            ImGui::Spacing();
+
+            drawNFThing("Perlin",  desc.perlin);
+            drawNFThing("Vein",    desc.vein);
+            drawNFThing("Voronoi", desc.voronoi);
+            drawNFThing("Domain Warping", desc.domainwarp);
+            ImGui::Spacing();
+            ImGui::Spacing();
+
+            ImGui::DragFloat("slope min", &(aa[0]), 0.001f, 0.0f, 1.0f);
+            ImGui::DragFloat("slope max", &(aa[1]), 0.001f, 0.0f, 1.0f);
+            ImGui::Spacing();
+
+            ImGui::DragFloat("height min", &(bb[0]), 0.001f, 0.0f, 1.0f);
+            ImGui::DragFloat("height max", &(bb[1]), 0.001f, 0.0f, 1.0f);
+            ImGui::Spacing();
+
+            ImGui::DragFloat("texscale 0", &(tex[0]), 0.01f, 0.0f, 2.0f);
+            ImGui::DragFloat("texscale 1", &(tex[1]), 0.01f, 0.0f, 2.0f);
+            ImGui::DragFloat("texscale 2", &(tex[2]), 0.01f, 0.0f, 2.0f);
+            ImGui::DragFloat("texscale 3", &(tex[3]), 0.01f, 0.0f, 2.0f);
+
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Water"))
+        {
+            static bool enabled   = true;
+            static bool wireframe = false;
+            ImGui::Checkbox("Enable", &enabled);
+            ImGui::Checkbox("Wireframe", &wireframe);
+            idk::TerrainRenderer::setWaterActive(enabled);
+            idk::TerrainRenderer::setWaterWireframe(wireframe);
+            ImGui::Spacing();
+
+            drawNFThing("Water", desc.water);
+
+            ImGui::Spacing();
+            ImGui::ColorEdit4("shallow color ##water", &(desc.water_color[0][0]));
+            ImGui::ColorEdit4("deep color    ##water", &(desc.water_color[1][0]));
+            ImGui::ColorEdit4("color 3       ##water", &(desc.water_color[2][0]));
+            ImGui::ColorEdit4("PBR           ##water", &(desc.water_color[3][0]));
+
+            ImGui::Spacing();
+            ImGui::DragFloat("tscale  ##water", &(desc.water_scale[2]), 0.01f,   0.0f, +8.0f);
+            ImGui::DragFloat("wscale  ##water", &(desc.water_scale[3]), 1.0f);
+
+            ImGui::Spacing();
+            ImGui::DragFloat("xscale  ##water", &(desc.water_scale[0]), 0.002f, -2.0f, +2.0f);
+            ImGui::DragFloat("yscale  ##water", &(desc.water_scale[1]), 0.002f,  0.0f, +1.0f);
+
+            ImGui::DragFloat("water level ##water", &desc.water_pos.y, 0.001f, 0.0f, 1.0f);
+            ImGui::Spacing();
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Foliage"))
+        {
+            if (ImGui::Button("Generate grass"))
+            {
+                idk::TerrainRenderer::generateGrass();
+            }
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
     }
 
-    idk::TerrainRenderer::setTerrainWireframe(wf_terrain);
-    idk::TerrainRenderer::setWaterWireframe(wf_water);
 
-    if (ImGui::Button("Generate grass"))
-    {
-        idk::TerrainRenderer::generateGrass();
-    }
+    // static bool gen_terrain = true;
+    // static bool wf_terrain  = false;
+    // static bool wf_water    = false;
+
+    // ImGui::Checkbox("Generate terrain",  &gen_terrain);
+    // ImGui::Checkbox("Terrain wireframe", &wf_terrain);
+    // ImGui::Checkbox("Water wireframe",   &wf_water);
+
+    // if (gen_terrain)
+    // {
+    //     idk::TerrainRenderer::generateTerrain();
+    // }
+
+    // idk::TerrainRenderer::setTerrainWireframe(wf_terrain);
+    // idk::TerrainRenderer::setWaterWireframe(wf_water);
 
 }
 
@@ -226,19 +245,19 @@ EditorUI_MD::drawComponent<idk::ParticleCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &engine = api.getEngine();
     auto &cmp    = idk::ECS2::getComponent<idk::ParticleCmp>(obj_id);
-    auto &desc   = cmp.desc;
+    // auto &desc   = cmp.desc;
 
     drag_drop_thing("Source Object", "SCENE_HIERARCHY", cmp.src_id);
 
-    ImGui::InputInt("Particles", &desc.count);
-    ImGui::InputFloat("Duration", &desc.duration);
-    ImGui::InputFloat("Scale", &desc.scale);
+    // ImGui::InputInt("Particles", &desc.count);
+    // ImGui::InputFloat("Duration", &desc.duration);
+    // ImGui::InputFloat("Scale", &desc.scale);
 
-    ImGui::Separator();
+    // ImGui::Separator();
 
-    ImGui::InputFloat3("Velocity", &(desc.velocity[0]));
-    ImGui::InputFloat3("Velocity bias", &(desc.velocity_bias[0]));
-    ImGui::InputFloat3("Velocity randomness", &(desc.velocity_randomness[0]));
+    // ImGui::InputFloat3("Velocity", &(desc.velocity[0]));
+    // ImGui::InputFloat3("Velocity bias", &(desc.velocity_bias[0]));
+    // ImGui::InputFloat3("Velocity randomness", &(desc.velocity_randomness[0]));
 
 }
 
@@ -303,6 +322,8 @@ EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
     auto &cmp = idk::ECS2::getComponent<idk::CameraCmp>(obj_id);
 
     ImGui::DragFloat("Bloom", &cmp.camera.bloom, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("near",  &cmp.camera.near,  0.001f, 0.01f, 2.0f);
+    ImGui::DragFloat("far",   &cmp.camera.far,   1.0f, 128.0f, 2048.0f);
     // ImGui::DragFloat("FOV",   &cmp.camera.fov,   0.1f, 60.0f, 120.0f);
 
 
@@ -330,45 +351,6 @@ EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
     // -----------------------------------------------------------------------------------------
 }
 
-
-// template <>
-// void
-// EditorUI_MD::drawComponent<idk::SunCmp>( idk::EngineAPI &api, int obj_id )
-// {
-
-// }
-
-
-// template <>
-// void
-// EditorUI_MD::drawComponent<idk::PlanetCmp>( idk::EngineAPI &api, int obj_id )
-// {
-//     auto &ren = api.getRenderer();
-    
-//     auto &cmp = idk::ECS2::getComponent<idk::PlanetCmp>(obj_id);
-
-//     ImGui::DragFloat("Gravity", &cmp.gravity, 0.01f, 0.1f, 10.0f);
-//     ImGui::DragFloat("SOI",     &cmp.SOI,     0.1f, 128.0f);
-
-//     ImGui::Separator();
-
-//     ImGui::DragFloat3("Orbital Origin", &cmp.orbital_origin[0], 1.0f, 100.0f, 10000.0f);
-//     ImGui::DragFloat3("Orbital Radii",  &cmp.orbital_radii[0], 1.0f, 100.0f, 10000.0f);
-//     ImGui::DragFloat3("Orbital Speed",  &cmp.orbital_speed[0], 0.01f, -1.0f, 1.0f);
-
-// }
-
-
-// template <>
-// void
-// EditorUI_MD::drawComponent<idk::PlanetActorCmp>( idk::EngineAPI &api, int obj_id )
-// {
-    
-//     auto &cmp = idk::ECS2::getComponent<idk::PlanetActorCmp>(obj_id);
-
-//     ImGui::Checkbox("Enabled", &cmp.enabled);
-
-// }
 
 
 // template <>
@@ -429,8 +411,10 @@ EditorUI_MD::drawComponent<idk::DirlightCmp>( idk::EngineAPI &api, int obj_id )
         return;
     }
 
-    ImGui::ColorEdit4("Diffuse",      &cmp.light.diffuse[0]);
-    ImGui::ColorEdit4("Ambient",      &cmp.light.ambient[0]);
+    ImGui::ColorEdit4("Diffuse",  &cmp.light.diffuse[0]);
+    ImGui::ColorEdit4("Ambient",  &cmp.light.ambient[0]);
+    ImGui::DragFloat4("Cascades", &cmp.light.cascades[0]);
+    ImGui::DragFloat4("xyzmult",  &cmp.light.cascade_zmult[0]);
 
 }
 
@@ -770,7 +754,13 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::AudioEmitterCmp>( idk::EngineAPI &api, int obj_id )
 {
-    std::string label = idk::ECS2::getComponent<idk::AudioEmitterCmp>(obj_id).filepath;
+    auto &cmp = idk::ECS2::getComponent<idk::AudioEmitterCmp>(obj_id);
+    std::string label = cmp.filepath;
+
+    auto &em = idk::AudioSystem::getEmitter(cmp.emitter_id);
+    ImGui::InputFloat("Linear",    &em.att[1]);
+    ImGui::InputFloat("Quadratic", &em.att[2]);
+
 
     if (label == "")
     {
@@ -913,11 +903,9 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::KinematicRectCmp>( idk::EngineAPI &api, int obj_id )
 {
-    auto &engine = api.getEngine();
-    
-    auto &cmp    = idk::ECS2::getComponent<idk::KinematicRectCmp>(obj_id);
-
+    auto &cmp = idk::ECS2::getComponent<idk::KinematicRectCmp>(obj_id);
     ImGui::Checkbox("Visualise", &cmp.visualise);
+
 }
 
 
@@ -931,6 +919,11 @@ EditorUI_MD::drawComponent<idk::KinematicCapsuleCmp>( idk::EngineAPI &api, int o
 
     ImGui::Checkbox("Enable",    &cmp.enabled);
     ImGui::Checkbox("Visualise", &cmp.visualise);
+
+    ImGui::DragFloat("radius", &cmp.radius, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("bottom", &cmp.bottom, 0.01f, 0.0f, 1.0f);
+    ImGui::DragFloat("top",    &cmp.top,    0.01f, 0.0f, 1.0f);
+
 }
 
 
@@ -952,21 +945,121 @@ template <>
 void
 EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_id )
 {
-    auto &engine = api.getEngine();
-    
-    auto &ren    = api.getRenderer();
-    auto &cmp    = idk::ECS2::getComponent<idk::RenderSettingCmp>(obj_id);
+    auto &engine   = api.getEngine();
+    auto &ren      = api.getRenderer();
+    auto &cmp      = idk::ECS2::getComponent<idk::RenderSettingCmp>(obj_id);
+    auto settings  = ren.getRenderSettings();
 
     std::string filepath = cmp.filepath;
 
-    if (ImGui::InputText("Skybox", &filepath, ImGuiInputTextFlags_EnterReturnsTrue))
+    // auto &config = ren.getRenderConfig();
+
+    bool B = false;
+
+    if (ImGui::BeginTabBar("Render Settings", ImGuiTabBarFlags_None))
     {
-        if (filepath != cmp.filepath)
+        // for (auto &[group_name, group]: config.groups)
+        // {
+        //     if (ImGui::BeginTabItem(group_name.c_str()))
+        //     {
+        //         for (auto &[field_name, field]: group)
+        //         {
+        //             group.changed |= idkImGui::InputSettingsField(field_name.c_str(), field);
+        //         }
+        //         ImGui::EndTabItem();
+        //     }
+        // }
+
+
+        // if (ImGui::Button("Test serialization"))
+        // {
+        //     std::ofstream stream("test.bin", std::ios::binary);
+        //     LOG_INFO() << "Wrote " << config.serialize(stream) << " bytes\n";
+        //     stream.close();
+        // }
+
+        // if (ImGui::Button("Test deserialization"))
+        // {
+        //     std::ifstream stream("test.bin", std::ios::binary);
+        //     LOG_INFO() << "Read " << config.deserialize(stream) << " bytes\n";
+        //     stream.close();
+        // }
+
+
+        if (ImGui::BeginTabItem("Volumetrics"))
         {
-            cmp.filepath = filepath;
-            // idk::RenderSettingSys::loadSkybox(filepath);
+            auto &config = settings.volumetrics;
+            B |= ImGui::Checkbox("Enable", &config.enabled);
+
+            B |= ImGui::InputInt   ("View samples", &config.samples);
+            B |= ImGui::InputInt   ("Sun samples",  &config.samples_sun);
+            B |= ImGui::SliderInt  ("Res divisor",  &config.res_divisor, 1, 8);
+            B |= ImGui::SliderInt  ("Blend mode",   &config.blend_mode, 0, 2);
+            B |= ImGui::SliderFloat("Intensity",    &config.intensity, 0.0f, 2.0f);
+
+            B |= ImGui::DragFloat("Height offset",  &config.height_offset,  0.01f,  0.01f);
+            B |= ImGui::DragFloat("Height falloff", &config.height_falloff, 0.001f, 0.0f);
+            B |= ImGui::DragFloat("Scatter coeff",  &config.scatter_coeff, 0.01f, 0.0f, 10.0f);
+            B |= ImGui::DragFloat("Absorb coeff",   &config.absorb_coeff, 0.01f, 0.0f, 10.0f);
+
+            B |= ImGui::DragFloat("Worley amp", &config.worley_amp, 0.01f, 0.01f, +1.0f);
+            B |= ImGui::DragFloat("Worley Wav", &config.worley_wav, 0.01f, 0.01f, +1.0f);
+
+            ImGui::EndTabItem();
         }
+
+        if (ImGui::BeginTabItem("SSAO"))
+        {
+            auto &config = settings.ssao;
+            B |= ImGui::Checkbox("Enable", &config.enabled);
+            B |= ImGui::InputInt("Gaussian passes", &config.iterations);
+            B |= ImGui::InputInt("Unsharp  passes", &config.unsharp);
+            B |= ImGui::InputInt("Samples",     &config.samples);
+            B |= ImGui::InputFloat("Intensity", &config.intensity);
+            B |= ImGui::InputFloat("Radius",    &config.radius);
+            B |= ImGui::InputFloat("Bias",      &config.bias);
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("SSR"))
+        {
+            auto &config = settings.ssr;
+            B |= ImGui::Checkbox("Enable",      &config.enabled);
+            B |= ImGui::InputInt("Blend mode",  &config.blend_mode);
+            B |= ImGui::InputInt("Samples",     &config.samples);
+            B |= ImGui::InputInt("Downsamples", &config.downsamples);
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("TAA"))
+        {
+            auto &config = settings.taa;
+            B |= ImGui::Checkbox("Enable", &config.enabled);
+            B |= ImGui::InputInt("Factor",  &config.factor);
+            B |= ImGui::InputFloat("Scale", &config.scale);
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("Skybox"))
+        {
+            if (ImGui::InputText("Skybox", &filepath, ImGuiInputTextFlags_EnterReturnsTrue))
+            {
+                if (filepath != cmp.filepath)
+                {
+                    cmp.filepath = filepath;
+                    // idk::RenderSettingSys::loadSkybox(filepath);
+                }
+            }
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
     }
+
+    // if (B)
+    // {
+        ren.applyRenderSettings(settings);
+    // }
 
 }
 

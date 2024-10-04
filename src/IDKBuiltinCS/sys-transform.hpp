@@ -147,8 +147,11 @@ public:
 
     static void         recomputeTransformMatrices( int obj_id );
 
-    static void         translateWorldspace( int obj_id, const glm::vec3 & );
-    static void         translateLocalspace( int obj_id, const glm::vec3 & );
+    static void         translateWorldspace( int obj_id, const glm::vec3& );
+    static void         translateLocalspace( int obj_id, const glm::vec3& );
+
+    static void         rotateLocalAxis( int obj_id, const glm::vec3&, float );
+    static void         rotateWorldAxis( int obj_id, const glm::vec3&, float );
 
 
     static TransformCmp &getTransformCmp( int obj_id );

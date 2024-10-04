@@ -42,6 +42,7 @@ public:
         LOG_WARN() << "Default userCallback";
     };
 
+    virtual size_t nbytes_serialized () = 0;
     virtual size_t serialize   ( std::ofstream& ) = 0;
     virtual size_t deserialize ( std::ifstream& ) = 0;
 };
@@ -125,6 +126,16 @@ public:
     };
 
     size_t size() const { return m_data.size(); };
+
+    virtual size_t nbytes_serialized()
+    {
+        std::ofstream stream("tmp.bin", std::ios::binary);
+        size_t nbytes = serialize(stream);
+        stream.close();
+
+        return nbytes;
+    };
+
 
     idk::Allocator<T> &getData() { return m_data; };
 

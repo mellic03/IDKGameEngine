@@ -8,6 +8,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/imnodes-0.5)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKAudio/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKEvents/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKIO/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKThreading/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinCS/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinUI/)
@@ -59,6 +60,7 @@ target_link_libraries(
 
     IDKAudio
     IDKEvents
+    IDKIO
     IDKBuiltinCS
     IDKThreading
     IDKECS

@@ -66,6 +66,7 @@ idk::ModelSys::update( idk::EngineAPI &api )
         }
 
         glm::mat4 transform = TransformSys::getModelMatrix(cmp.obj_id);
+        glm::mat4 prev_T    = TransformSys::getTransformCmp(cmp.obj_id).prev_model;
 
         if (cmp.custom_RQ != -1)
         {
@@ -79,7 +80,7 @@ idk::ModelSys::update( idk::EngineAPI &api )
 
         else
         {
-            ren.drawModel(cmp.model_id, transform);
+            ren.drawModel(cmp.model_id, transform, prev_T);
         }
 
         if (cmp.environment)
@@ -296,7 +297,7 @@ idk::ModelCmp::deserialize( std::ifstream &stream )
     n += idk::streamread(stream, render_queue);
     n += idk::streamread(stream, shader_name);
 
-    model_id = -1;
+    model_id = api_ptr->getRenderer().loadModel(filepath);
 
     return n;
 }
@@ -368,6 +369,7 @@ idk::TerrainCmp::deserialize( std::ifstream &stream )
     n += idk::streamread(stream, desc);
 
     idk::TerrainRenderer::generateTerrain();
+    idk::TerrainRenderer::generateGrass();
 
     return n;
 }

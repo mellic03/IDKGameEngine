@@ -1,6 +1,6 @@
 #include "EditorUI.hpp"
 
-#include <IDKEvents/IDKEvents.hpp>
+#include <IDKIO/IDKIO.hpp>
 
 #include <idk_imgui/imgui.hpp>
 #include <idk_imgui/imguizmo.hpp>
@@ -36,32 +36,16 @@ ImGui_SDL2_OpenGL_init( ImGuiContext *ctx, SDL_Window *win, SDL_GLContext gl )
 }
 
 
-
-
-void
-EditorUI_MD::deinit()
-{
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
-    ImGui::DestroyContext();
-}
-
-
 static ImGuiContext *main_ctx;
 static ImGuiContext *popout_ctx;
 static SDL_Window   *popout_win;
-
-
 
 
 void
 EditorUI_MD::init( idk::EngineAPI &api )
 {
     auto &engine   = api.getEngine();
-    
     auto &ren      = api.getRenderer();
-    auto &eventsys = api.getEventSys();
-
 
     this->registerDrawComponents(api);
 
@@ -69,18 +53,10 @@ EditorUI_MD::init( idk::EngineAPI &api )
     main_ctx = ImGui::CreateContext();
     ImGui_SDL2_OpenGL_init(main_ctx, ren.getWindow(), ren.getGLContext());
 
-
-    // popout_ctx = ImGui::CreateContext();
-    // popout_win = SDL_CreateWindow("Pop out", 0, 0, 512, 512, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    // SDL_GL_SetSwapInterval(0);
-    // ImGui_SDL2_OpenGL_init(popout_ctx, ren.getWindow(), ren.getGLContext());
-
-
     ImGui::SetCurrentContext(main_ctx);
     ImGuiIO& io = ImGui::GetIO();
 
-
-    eventsys.onSDLPollEvent(
+    idkio::onPollEvent(
         [](SDL_Event *event)
         {
             ImGui::SetCurrentContext(main_ctx);
@@ -121,13 +97,25 @@ EditorUI_MD::init( idk::EngineAPI &api )
 }
 
 
+void
+EditorUI_MD::deinit()
+{
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL2_Shutdown();
+    ImGui::DestroyContext();
+}
+
+
+
+
+
+
 
 void
 EditorUI_MD::stage_B( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
-
 
 
     ImGuiWindowFlags windowflags = ImGuiWindowFlags_NoResize
@@ -139,58 +127,11 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
                                  | ImGuiWindowFlags_NoTitleBar
                                  | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-
-
-
-    // static bool pop_out = false;
-
-    // if (api.getEventSys().keylog().keyTapped(idk::Keycode::F11))
-    // {
-    //     pop_out = !pop_out;
-    // }
-
-    // if (pop_out)
-    // {
-    //     SDL_GL_MakeCurrent(popout_win, ren.getGLContext());
-    //     ImGui::SetCurrentContext(popout_ctx);
-
-
-    //     int w, h;
-    //     SDL_GetWindowSize(popout_win, &w, &h);
-    //     ImGui::SetNextWindowPos({0, 0});
-    //     ImGui::SetNextWindowSize(ImVec2(float(w), float(h)));
-    
-    //     ImGui_ImplOpenGL3_NewFrame();
-    //     ImGui_ImplSDL2_NewFrame();
-    //     ImGui::NewFrame();
-    //     ImGuizmo::BeginFrame();
-
-    //     // ImGui::Begin("Root", nullptr, windowflags);
-    //     this->_tab_viewport(api);
-    //     // ImGui::End();
-
-    //     ImGui::Render();
-    //     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    //     SDL_GL_SwapWindow(popout_win);
-    //     SDL_GL_MakeCurrent(ren.getWindow(), ren.getGLContext());
-    //     ImGui::SetCurrentContext(main_ctx);
-    // }
-
-
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
-
-    api.getEventSys().onDropFile(".idkvi", [&api](const char *path)
-    {
-        auto &ren = api.getRenderer();
-        ren.loadModel(path);
-    });
-
-    // engine.getCS<idk::Icon_CS>().setDefaultIcon(ICON_FA_BOX_OPEN);
 
     if (m_show_ImGui_demo)
     {
@@ -203,7 +144,6 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
     ImGui::Begin("Root", nullptr, windowflags);
     ImGui::DockSpace(ImGui::GetID("Root-Dockspace"));
 
-
     this->_menubar(api);
 
     // if (pop_out == false)
@@ -213,33 +153,7 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
         ImGui::End();
     }
 
-    // {
-    //     ImGui::Begin("VXGI");
-
-    //     GLuint texture = ren.m_vxgi_buffer.attachments[0];
-    //     ImGui::Image(
-    //         *(ImTextureID *)(void *)(&texture),
-    //         ImVec2(256, 256),
-    //         ImVec2(0.0f, 1.0f),
-    //         ImVec2(1.0f, 0.0f)
-    //     );
-
-    //     texture = ren.m_vxgi_buffer.depth_attachment;
-    //     ImGui::Image(
-    //         *(ImTextureID *)(void *)(&texture),
-    //         ImVec2(256, 256),
-    //         ImVec2(0.0f, 1.0f),
-    //         ImVec2(1.0f, 0.0f)
-    //     );
-
-    //     ImGui::End();
-    // }
-
-
     this->_tab(api);
-
-    static bool open = true;
-    static std::string selection = "";
 
 
     constexpr int NUM_ASSET_BROWSERS = 2;
@@ -252,19 +166,10 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
 
 
     ImGui::End();
-
-    // idk_NodeEditor(api);
-
     ImGui::Render();
 
-    // if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    // {
-        // ImGui::UpdatePlatformWindows();
-    //     ImGui::RenderPlatformWindowsDefault();
-    // }
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-
 
 #undef ECS_REGISTER_COMPONENT

@@ -53,6 +53,7 @@ struct idk::ModelCmp
     int         custom_RQ    = -1;
     bool        viewspace    = false;
 
+    glm::mat4   prev_T = glm::mat4(1.0f);
     std::string filepath = "";
 
 

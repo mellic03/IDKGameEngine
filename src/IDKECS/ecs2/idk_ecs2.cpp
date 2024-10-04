@@ -8,7 +8,6 @@ namespace
 
 
 
-
 void
 idk::ECS2::init( idk::EngineAPI &api )
 {
@@ -24,46 +23,10 @@ idk::ECS2::init( idk::EngineAPI &api )
 void
 idk::ECS2::update( idk::EngineAPI &api )
 {
-    // const double A = 1023.0 / 1024.0;
-    // const double B = 1.0 / 1024.0;
-
-    // static int count = 0;
-    // count += 1;
-
     for (System *system: m_systems)
     {
-        // auto start = std::chrono::high_resolution_clock::now();
-
         system->update(api);
-
-        // auto finish  = std::chrono::high_resolution_clock::now();
-        // auto elapsed = std::chrono::duration<double>(finish-start).count();
-
-        // system->m_avg_time = A*system->m_avg_time + B*static_cast<double>(elapsed);
     }
-
-    // std::cout << "Objects: ";
-
-    // for (Entity &e: m_entities)
-    // {
-    //     std::cout << e.id << " ";
-    // }
-    // std::cout << std::endl;
-
-
-    // if (count == 1024)
-    // {
-    //     count = 0;
-
-    //     // for (System *system: m_systems)
-    //     // {
-    //     //     LOG_INFO()
-    //     //         << "[ECS2::update] Avg. execution " << system->m_avg_time
-    //     //         << " ms --> \"" << system->m_name << "\"";
-    //     // }
-
-    //     // LOG_INFO() << "";
-    // }
 
     if (m_readfile)
     {
@@ -71,13 +34,12 @@ idk::ECS2::update( idk::EngineAPI &api )
         _load();
     }
 
-
     for (int obj_id: m_delete_list)
     {
         _deleteGameObject(obj_id, true);
     }
-    m_delete_list.clear();
 
+    m_delete_list.clear();
 }
 
 
@@ -465,13 +427,17 @@ idk::ECS2::giveChild( int parent_id, int child_id )
     // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
     glm::vec3 child_pos = TransformSys::getWorldPosition(child_id);
 
-    removeChild(getParent(child_id), child_id);
+    if (hasParent(child_id))
+    {
+        removeChild(getParent(child_id), child_id);
+    }
 
     m_entities.get(parent_id).children.insert(child_id);
     m_entities.get(child_id).parent = parent_id;
 
     if (m_readfile == false)
     {
+        glm::mat4 M = TransformSys::getModelMatrix(parent_id);
         TransformSys::recomputeTransformMatrices(child_id);
         TransformSys::setWorldPosition(child_id, child_pos);
 
@@ -501,7 +467,15 @@ idk::ECS2::removeChild( int parent_id, int child_id )
 
     if (m_readfile == false)
     {
-        TransformSys::recomputeTransformMatrices(child_id);
+        // int grandparent = getParent(parent_id);
+
+        // if (grandparent != -1)
+        {
+            // glm::mat4 M = TransformSys::getModelMatrix(grandparent);
+            TransformSys::recomputeTransformMatrices(parent_id);
+            TransformSys::recomputeTransformMatrices(child_id);
+        }
+
         TransformSys::setWorldPosition(child_id, child_pos);
 
         // Mw = TransformSys::getWorldMatrix(child_id);
@@ -517,7 +491,7 @@ idk::ECS2::removeChild( int parent_id, int child_id )
 
 
 void
-idk::ECS2::registerPrefab( const std::string &name, std::function<int()> ctor )
+idk::ECS2::registerPrefab( const std::string &name, const std::function<int()> &ctor )
 {
     m_prefabs[name] = ctor;
 }
@@ -545,19 +519,27 @@ idk::ECS2::save( const std::string &filepath )
     // Write list of component names
     // --------------------------------------------------
     std::vector<std::string> names;
+    std::vector<uint32_t>    sizes;
 
     for (auto &[key, C]: m_component_arrays)
     {
         names.push_back((C.get())->getName());
+        sizes.push_back((C.get())->nbytes_serialized());
     }
 
     idk::streamwrite(stream, names);
+    idk::streamwrite(stream, sizes);
     // --------------------------------------------------
 
     // Write components
     // --------------------------------------------------
     for (auto &[key, C]: m_component_arrays)
     {
+        std::cout << "Writing component array: "
+                  << (C.get())->getName()
+                  << " (" << (C.get())->nbytes_serialized() << " bytes)\n";
+
+
         (C.get())->serialize(stream);
     }
     // --------------------------------------------------
@@ -574,13 +556,7 @@ idk::ECS2::save( const std::string &filepath )
 void
 idk::ECS2::_load()
 {
-    for (auto &callback: m_pre_callbacks)
-    {
-        callback();
-    }
-
-
-    ECS2::update(*m_api_ptr);
+    m_pre_callback();
 
     for (System *S: m_systems)
     {
@@ -592,19 +568,24 @@ idk::ECS2::_load()
     // Read list of component names
     // --------------------------------------------------
     std::vector<std::string> names;
+    std::vector<uint32_t>    sizes;
     idk::streamread(stream, names);
+    idk::streamread(stream, sizes);
     // --------------------------------------------------
 
     // Read components
     // --------------------------------------------------
     std::cout << "Reading components -------------------\n";
-    for (std::string name: names)
+    for (int i=0; i<names.size(); i++)
     {
-        std::cout << "Reading component array: " << name << "\n";
+        const auto &name = names[i];
+        std::cout << "Reading component array: " << name << " (" << sizes[i] << " bytes)\n";
 
         if (isRegisteredComponent(name) == false)
         {
+            std::cout << "Component \"" << name << "\" not registered, ignoring" << std::endl;
             LOG_ERROR() << "Component \"" << name << "\" not registered, ignoring";
+            stream.ignore(sizes[i]);
             continue;
         }
 
@@ -651,18 +632,21 @@ idk::ECS2::_load()
     }
     // --------------------------------------------------
 
-    update(*m_api_ptr);
+    // update(*m_api_ptr);
 
-    for (auto &callback: m_callbacks)
-    {
-        callback();
-    }
+    m_post_callback();
 }
 
 
 void
 idk::ECS2::load( const std::string &filepath )
 {
+    std::filesystem::path fpath(filepath);
+    if (std::filesystem::exists(fpath) == false)
+    {
+        LOG_ERROR() << "[idk::ECS::load] Cannot open file \"" << filepath << "\"";
+    }
+
     m_readfile = true;
     m_filepath = filepath;
 }

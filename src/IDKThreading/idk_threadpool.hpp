@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include <functional>
+#include <atomic>
 
 
 namespace idk::ThreadPool

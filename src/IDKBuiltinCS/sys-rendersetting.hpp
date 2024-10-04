@@ -2,6 +2,7 @@
 
 #include "idk_components.hpp"
 #include <IDKECS/IDKECS.hpp>
+#include <IDKGraphics/idk_render_settings.hpp>
 
 
 namespace idk
@@ -31,6 +32,7 @@ struct idk::RenderSettingCmp
     int obj_id = -1;
     int skybox = -1;
     std::string filepath = "";
+    idk::RenderSettings settings;
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );

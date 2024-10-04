@@ -186,14 +186,16 @@ idk::TransformSys::_computeLocalMatrix( int obj_id, bool scale )
 
     auto &cmp = getTransformCmp(obj_id);
 
-    idk::Transform T = cmp.transform;
-
-    if (scale == false)
+    if (scale == true)
     {
-        T.scale = glm::vec4(1.0f);
+        return idk::Transform::toGLM(cmp.transform, cmp.pitch, cmp.roll, cmp.yaw);
     }
 
-    return idk::Transform::toGLM(T, cmp.pitch, cmp.roll, cmp.yaw);
+    else
+    {
+        return idk::Transform::toGLM_noscale(cmp.transform, cmp.pitch, cmp.roll, cmp.yaw);
+    }
+
 
     // cmp.up    = glm::normalize(cmp.up);
     // cmp.right = glm::normalize(glm::cross(cmp.front, cmp.up));
@@ -253,8 +255,29 @@ idk::TransformSys::translateWorldspace( int obj_id, const glm::vec3 &v )
 void
 idk::TransformSys::translateLocalspace( int obj_id, const glm::vec3 &v )
 {
-    getLocalPosition(obj_id) += v;
+    glm::mat3 R = glm::mat3(getModelMatrix(obj_id));
+
+    getLocalPosition(obj_id) += R * v;
 }
+
+
+void
+idk::TransformSys::rotateLocalAxis( int obj_id, const glm::vec3 &axis, float theta )
+{
+    auto &T = getTransform(obj_id);
+    auto  R = glm::angleAxis(theta, axis);
+
+    T.rotation = glm::normalize(R * T.rotation);
+}
+
+
+void
+idk::TransformSys::rotateWorldAxis( int obj_id, const glm::vec3 &axis, float theta )
+{
+    glm::mat3 R = glm::inverse(glm::mat3(getModelMatrix(obj_id)));
+    rotateLocalAxis(obj_id, R*axis, theta);
+}
+
 
 
 

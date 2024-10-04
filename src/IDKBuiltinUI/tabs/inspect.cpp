@@ -85,6 +85,13 @@ EditorUI_MD::_tab_inspect( idk::EngineAPI &api, int obj_id )
     {
         idk::ECS2::setGameObjectName(obj_id, name);
     }
+    ImGui::SameLine();
+
+    ImGui::Text(("Object ID: " + std::to_string(obj_id)).c_str());
+    // ImGui::Text("REE");
+    ImGui::SameLine();
+    ImGui::Checkbox("Persistent", idk::ECS2::getGameObjectPersistency(obj_id));
+    ImGui::Separator();
 
 
     if (idkImGui::splitWindow_begin("Inspect Object"))
@@ -142,17 +149,9 @@ EditorUI_MD::_tab_inspect( idk::EngineAPI &api, int obj_id )
         idkImGui::splitWindow_split();
 
 
-
         if (idk::ECS2::hasComponent(obj_id, component))
         {
             ImGui::BeginChild("Component");
-
-            std::string label = "Object ID: " + std::to_string(obj_id);
-            ImGui::Text(label.c_str());
-            ImGui::Separator();
-            ImGui::Checkbox("Persistent", idk::ECS2::getGameObjectPersistency(obj_id));
-            ImGui::Spacing();
-            ImGui::Separator();
 
             auto *CA = idk::ECS2::getComponentArray(component);
             CA->userCallback(api, obj_id);

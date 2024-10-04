@@ -62,7 +62,7 @@ void
 idk::TransformCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
     auto &cmp = ECS2::getComponent<TransformCmp>(obj_id);
-    cmp.transform.position = glm::vec3(1.0f); // = idk::Transform::fromGLM(glm::mat4(1.0f));
+    // cmp.transform.position = glm::vec3(0.0f); // = idk::Transform::fromGLM(glm::mat4(1.0f));
     // this->obj_id = obj_id;
 };
 

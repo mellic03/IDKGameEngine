@@ -22,21 +22,17 @@ class IDK_VISIBLE idk::EngineAPI
 {
 private:
     std::string         m_name;
+    float               m_dtime = 0.001f;
 
 public:
-    idk::EventSystem    *eventsys_ptr   = nullptr;
-    // idk::AudioSystem    *audiosys_ptr   = nullptr;
     idk::Engine         *engine_ptr     = nullptr;
     idk::RenderEngine   *renderer_ptr   = nullptr;
-    // idk::ThreadPool     *threadpool_ptr = nullptr;
 
     void                 init( const std::string &, int, int );
-
-    idk::EventSystem    &getEventSys()   { return *eventsys_ptr;   };
-    // idk::AudioSystem    &getAudioSys()   { return *audiosys_ptr;   };
+    void                 update( float dt) { m_dtime = dt; };
+    float                dtime() { return m_dtime; };
 
     idk::Engine         &getEngine()     { return *engine_ptr;     };
     idk::RenderEngine   &getRenderer()   { return *renderer_ptr;   };
-    // idk::ThreadPool     &getThreadPool() { return *threadpool_ptr; };
 
 };

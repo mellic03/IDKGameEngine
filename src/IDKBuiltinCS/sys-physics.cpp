@@ -49,6 +49,12 @@ idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
             continue;
         }
 
+        if (cmp.curr_pos != cmp.curr_pos)
+        {
+            cmp.curr_pos = TransformSys::getLocalPosition(cmp.obj_id);
+            cmp.prev_pos = cmp.curr_pos - glm::vec3(0.01f, 1.0f, 0.01f);
+        }
+
         cmp.curr_pos += dt*cmp.impulse;
         cmp.impulse  *= 0.5f;
     
@@ -90,7 +96,7 @@ idk::PhysicsSys::_integrate( idk::EngineAPI &api, float dt )
                     cmp.vel.y = 0.0f;
                 }
 
-                cmp.curr_pos += 0.75f * glm::vec3(0.0f, overlap, 0.0f);
+                cmp.curr_pos += 0.5f * glm::vec3(0.0f, overlap, 0.0f);
 
                 grounded = true;
             }
@@ -142,7 +148,7 @@ void
 idk::PhysicsSys::update( idk::EngineAPI &api )
 {
     auto  &ren  = api.getRenderer();
-    float dt = api.getEngine().deltaTime();
+    float dt = api.dtime();
 
     m_accumulator += dt;
     const float step = 1.0f / 60.0f;
@@ -153,15 +159,15 @@ idk::PhysicsSys::update( idk::EngineAPI &api )
         {
             cmp.prev_pos = cmp.curr_pos;
 
-            if (cmp.prev_pos != cmp.prev_pos)
-            {
-                cmp.prev_pos = TransformSys::getPositionWorldspace(cmp.obj_id);
-            }
+            // if (cmp.prev_pos != cmp.prev_pos)
+            // {
+            //     cmp.prev_pos = TransformSys::getPositionWorldspace(cmp.obj_id);
+            // }
 
-            if (cmp.curr_pos != cmp.curr_pos)
-            {
-                cmp.curr_pos = TransformSys::getPositionWorldspace(cmp.obj_id);
-            }
+            // if (cmp.curr_pos != cmp.curr_pos)
+            // {
+            //     cmp.curr_pos = TransformSys::getPositionWorldspace(cmp.obj_id);
+            // }
         }
 
         while (m_accumulator > step)
@@ -179,24 +185,27 @@ idk::PhysicsSys::update( idk::EngineAPI &api )
             continue;
         }
 
-        float alpha = glm::clamp(m_accumulator / step, 0.0f, 1.0f);
+        // float alpha = glm::clamp(m_accumulator / step, 0.0f, 1.0f);
+        // glm::vec3 position = glm::mix(s_cmp.prev_pos, s_cmp.curr_pos, alpha);
 
-        glm::vec3 position = glm::mix(s_cmp.prev_pos, s_cmp.curr_pos, alpha);
+        // if (position != position)
+        // {
+        //     s_cmp.prev_pos = TransformSys::getPositionWorldspace(s_cmp.obj_id);
+        //     s_cmp.curr_pos = s_cmp.prev_pos;
 
-        if (position != position)
-        {
-            s_cmp.prev_pos = TransformSys::getPositionWorldspace(s_cmp.obj_id);
-            s_cmp.curr_pos = s_cmp.prev_pos;
+        //     position = s_cmp.curr_pos;
+        // }
 
-            position = s_cmp.curr_pos;
-        }
 
-        TransformSys::setWorldPosition(s_cmp.obj_id, position);
+        glm::vec3 prev_world = TransformSys::getWorldPosition(s_cmp.obj_id);
+        glm::vec3 curr_world = glm::mix(prev_world, s_cmp.curr_pos, 0.95f);
+
+        TransformSys::setWorldPosition(s_cmp.obj_id, curr_world);
 
         if (s_cmp.visualise)
         {
-            glm::vec3 top = position + glm::vec3(0.0f, s_cmp.top, 0.0f);
-            glm::vec3 bot = position - glm::vec3(0.0f, s_cmp.bottom, 0.0f);
+            glm::vec3 top = curr_world + glm::vec3(0.0f, s_cmp.top, 0.0f);
+            glm::vec3 bot = curr_world - glm::vec3(0.0f, s_cmp.bottom, 0.0f);
 
             ren.drawCapsule(top, bot, s_cmp.radius);
         }
@@ -217,14 +226,14 @@ idk::PhysicsSys::update( idk::EngineAPI &api )
 void
 idk::PhysicsSys::addForce( int obj_id, const glm::vec3 &force )
 {
-    float dt = api_ptr->getEngine().deltaTime();
+    float dt = api_ptr->dtime();
     ECS2::getComponent<KinematicCapsuleCmp>(obj_id).force += dt*force;
 }
 
 void
 idk::PhysicsSys::addImpulse( int obj_id, const glm::vec3 &impulse )
 {
-    float dt = api_ptr->getEngine().deltaTime();
+    float dt = api_ptr->dtime();
     ECS2::getComponent<KinematicCapsuleCmp>(obj_id).impulse += impulse;
 }
 
@@ -289,26 +298,7 @@ idk::PhysicsSys::raycast( const glm::vec3 &origin, const glm::vec3 &dir, glm::ve
         }
     }
 
-
     hit = nearest_hit;
-
-    // for (auto &cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
-    // {
-    //     auto &heightmap = cmp.heightmap;
-    
-    //     float height = queryHeightmap(
-    //         heightmap, 
-    //         origin,
-    //         TransformSys::getData(cmp.obj_id).scale * TransformSys::getData(cmp.obj_id).scale3
-    //     );
-
-    //     if (height < glm::distance(hit, origin))
-    //     {
-    //         hit = origin - glm::vec3(0.0f, height, 0.0f);
-    //         return true;
-    //     }
-    // }
-
 
     return nearest_dist < INFINITY;
 }

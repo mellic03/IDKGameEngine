@@ -1,5 +1,6 @@
 #include "../EditorUI.hpp"
 #include <IDKEvents/IDKEvents.hpp>
+#include <IDKIO/IDKIO.hpp>
 #include "../../external/include/idk_imgui/imguizmo.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -10,10 +11,7 @@ static void
 transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsnap, float ssnap )
 {
     auto &engine = api.getEngine();
-    
     auto &ren    = api.getRenderer();
-    auto &eventsys = api.getEventSys();
-
     auto &camera = ren.getCamera();
 
 
@@ -38,27 +36,27 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
 
     static ImGuizmo::OPERATION op = ImGuizmo::TRANSLATE;
 
-    if (eventsys.keylog().keyDown(idk::Keycode::LSHIFT))
+    if (idk::IO::keyDown(idk::Keycode::LSHIFT))
     {
         mode = ImGuizmo::MODE::WORLD;
     }
 
-    if (eventsys.keylog().keyDown(idk::Keycode::Z))
+    if (idk::IO::keyDown(idk::Keycode::Z))
     {
         op = ImGuizmo::OPERATION::TRANSLATE;
     }
 
-    if (eventsys.keylog().keyDown(idk::Keycode::X))
+    if (idk::IO::keyDown(idk::Keycode::X))
     {
         op = ImGuizmo::OPERATION::SCALEU;
     }
 
-    if (eventsys.keylog().keyDown(idk::Keycode::C))
+    if (idk::IO::keyDown(idk::Keycode::C))
     {
         op = ImGuizmo::OPERATION::ROTATE;
     }
 
-    if (eventsys.keylog().keyDown(idk::Keycode::V))
+    if (idk::IO::keyDown(idk::Keycode::V))
     {
         op = ImGuizmo::OPERATION::BOUNDS;
     }
@@ -103,7 +101,8 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
 
 
     glm::mat4 local = glm::inverse(world) * model;
-    auto &T = idk::TransformSys::getTransform(obj_id);
+    auto &cmp = idk::TransformSys::getTransformCmp(obj_id);
+    auto &T   = idk::TransformSys::getTransform(obj_id);
     // T = idk::Transform::fromGLM(local, T.scale.w);
 
     glm::vec3 scale1;
@@ -117,10 +116,13 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
     glm::decompose(world, scale2, rotation2, position, skew, persp);
 
 
+    idk::Transform T1; T1.position = glm::vec3(0.0f);
+    glm::mat4 invR = idk::Transform::toGLM(T1, cmp.pitch, cmp.roll, cmp.yaw);
+              invR = glm::mat4(glm::inverse(glm::mat3(invR)));
 
     T.position = glm::vec3(local[3]);
-    T.rotation = rotation1;
-    T.scale    = glm::vec4(scale2, T.scale.w);
+    T.rotation = glm::normalize(glm::quat_cast(glm::mat4_cast(rotation1) * invR));
+    T.scale    = glm::vec4(scale1, T.scale.w);
 
 
 }
@@ -132,8 +134,11 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
 static void
 display_texture( float w, float h, uint32_t texture )
 {
+    uint64_t img0 = texture;
+    void *img1 = (void *)(&img0);
+
     ImGui::Image(
-        *(ImTextureID *)(void *)(&(texture)),
+        *((ImTextureID *)img1),
         ImVec2(w, h),
         ImVec2(0.0f, 1.0f),
         ImVec2(1.0f, 0.0f)
@@ -150,7 +155,8 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
     ImVec2 cornerA = ImGui::GetWindowContentRegionMin();
     ImVec2 cornerB = ImGui::GetWindowPos();
     ImVec2 corner = cornerA + cornerB;
-    api.getEventSys().setMouseOffset(glm::vec2(corner.x, corner.y));
+
+    idk::IO::setViewportOffset(corner.x, corner.y);
 
 
     float ratio = float(ren.width()) / ren.height();
