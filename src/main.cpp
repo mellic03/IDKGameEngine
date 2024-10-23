@@ -202,8 +202,8 @@ int main( int argc, char **argv )
 
     // idk::RenderOverlay test
     // -----------------------------------------------------------------------------------------
-    ren.pushRenderOverlayFill(glm::vec3(0.0f), 0.0f, 6.25f, 0.25f);
-    ren.pushRenderOverlay("IDKGE/resources/logo.jpg", 0.5f, 2.0f, 0.5f);
+    // ren.pushRenderOverlayFill(glm::vec3(0.0f), 0.0f, 6.25f, 0.25f);
+    // ren.pushRenderOverlay("IDKGE/resources/logo.jpg", 0.5f, 2.0f, 0.5f);
     // -----------------------------------------------------------------------------------------
 
 

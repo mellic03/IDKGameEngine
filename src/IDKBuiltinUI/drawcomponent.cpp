@@ -879,6 +879,15 @@ EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, int obj_
 
 
 
+template <>
+void
+EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
+{
+    auto &cmp = idk::ECS2::getComponent<idk::ScriptCmp>(obj_id);
+    ImGui::Text("Script path: \"%s\"", cmp.filepath.c_str());
+}
+
+
 
 
 
@@ -1103,6 +1112,7 @@ EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
     ECS_COMPONENT_CALLBACK(idk::AudioEmitterCmp);
 
     ECS_COMPONENT_CALLBACK(idk::RenderSettingCmp);
+    ECS_COMPONENT_CALLBACK(idk::ScriptCmp);
     ECS_COMPONENT_CALLBACK(idk::ParticleCmp);
 
 }

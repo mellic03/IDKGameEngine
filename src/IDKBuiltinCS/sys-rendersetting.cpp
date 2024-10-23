@@ -1,5 +1,6 @@
 #include "sys-rendersetting.hpp"
 #include "sys-transform.hpp"
+#include "sys-lightsource.hpp"
 
 #include <libidk/idk_geometry.hpp>
 #include <libidk/idk_log.hpp>
@@ -99,6 +100,7 @@ idk::RenderSettingCmp::deserialize( std::ifstream &stream )
 void
 idk::RenderSettingCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
+    ECS2::giveComponent<DirlightCmp>(obj_id);
     // this->obj_id = obj_id;
 };
 

@@ -23,6 +23,7 @@ idk::registerComponents()
     ECS2::registerComponent<TerrainCmp>             ("Terrain");
 
     ECS2::registerComponent<StaticHeightmapCmp>     ("Heightmap");
+
     ECS2::registerComponent<CameraCmp>              ("Camera");
     ECS2::registerComponent<DirlightCmp>            ("Dirlight");
     ECS2::registerComponent<PointlightCmp>          ("Pointlight");
@@ -31,6 +32,7 @@ idk::registerComponents()
     ECS2::registerComponent<KinematicRectCmp>       ("KinematicRect");
     ECS2::registerComponent<KinematicCapsuleCmp>    ("KinematicCapsule");
     ECS2::registerComponent<RenderSettingCmp>       ("RenderSetting");
+    ECS2::registerComponent<ScriptCmp>              ("Script");
     ECS2::registerComponent<ParticleCmp>            ("ParticleEmitter");
 
 }
@@ -49,6 +51,7 @@ idk::registerSystems()
     ECS2::registerSystem<LightSys>();
     ECS2::registerSystem<PhysicsSys>();
     ECS2::registerSystem<RenderSettingSys>();
+    ECS2::registerSystem<ScriptSys>();
     ECS2::registerSystem<ParticleSys>();
 
 }

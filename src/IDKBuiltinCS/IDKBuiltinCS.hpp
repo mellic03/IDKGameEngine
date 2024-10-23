@@ -9,6 +9,7 @@
 #include "sys-particle.hpp"
 #include "sys-physics.hpp"
 #include "sys-rendersetting.hpp"
+#include "sys-script.hpp"
 #include "sys-transform.hpp"
 #include "sys-trigger.hpp"
 
