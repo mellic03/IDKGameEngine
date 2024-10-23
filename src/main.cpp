@@ -187,7 +187,7 @@ int main( int argc, char **argv )
     // -----------------------------------------------------------------------------------------
     if (arg_load_modules)
     {
-        std::filesystem::directory_iterator d_iter("IDKGE/runtime/modules/");
+        std::filesystem::directory_iterator d_iter("IDKGE/modules/");
 
         for (auto dir: d_iter)
         {

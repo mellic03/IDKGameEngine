@@ -20,6 +20,13 @@ set_target_properties(
     POSITION_INDEPENDENT_CODE ON
 )
 
+set_target_properties(
+    ${PROJECT_NAME} PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${IDK_OUTPUT_DIRECTORY}/IDKGE/modules/
+)
+
+
+
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/../../external/include/
