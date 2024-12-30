@@ -32,6 +32,7 @@ private:
 
     void        _tab_scene_treenode( idk::EngineAPI &, int );
     void        _tab_scene_hierarchy( idk::EngineAPI & );
+    void        _tab_render_hierarchy( idk::EngineAPI & );
     void        _tab_inspect( idk::EngineAPI &, int object_id );
     void        _tab_editor_properties( idk::EngineAPI & );
     void        _tab_scripts( idk::EngineAPI & );

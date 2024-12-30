@@ -241,6 +241,11 @@ int main( int argc, char **argv )
 
     while (engine.running())
     {
+        if (api.flag == true)
+        {
+            api.actuallyReloadRenderer();
+        }
+
         a = SDL_GetTicks64();
         delta = a - b;
 

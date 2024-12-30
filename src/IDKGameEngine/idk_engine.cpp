@@ -95,7 +95,7 @@ idk::Engine::endFrame( idk::EngineAPI &api )
 
     ren.endFrame(deltaTime());
     _idk_modules_stage_B(api);
-    ren.swapWindow();
+    api.getWindow().swapWindow();
     _idk_modules_stage_C(api);
 
     if (m_reload)

@@ -51,7 +51,7 @@ EditorUI_MD::init( idk::EngineAPI &api )
 
     IMGUI_CHECKVERSION();
     main_ctx = ImGui::CreateContext();
-    ImGui_SDL2_OpenGL_init(main_ctx, ren.getWindow(), ren.getGLContext());
+    ImGui_SDL2_OpenGL_init(main_ctx, api.getWindow().sdl_win, api.getGL().sdl_ctx);
 
     ImGui::SetCurrentContext(main_ctx);
     ImGuiIO& io = ImGui::GetIO();

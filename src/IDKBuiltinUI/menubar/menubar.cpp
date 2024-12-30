@@ -16,6 +16,61 @@ menubar_save( idk::EngineAPI &api )
 }
 
 
+static void
+menubar_file( idk::EngineAPI &api, bool &popup_save, bool &popup_load )
+{
+    if (ImGui::BeginMenu("File"))
+    {
+        if (ImGui::MenuItem("New", "CTRL + N"))
+        {
+            
+        }
+
+        if (ImGui::MenuItem("Save As " ICON_FA_FILE_EXPORT, "CTRL + SHFT + S"))
+        {
+            popup_save = true;
+        }
+
+        if (ImGui::MenuItem("Load " ICON_FA_FILE_IMPORT, "CTRL + L"))
+        {
+            popup_load = true;
+        }
+
+        if (ImGui::BeginMenu("Project"))
+        {
+            if (ImGui::MenuItem("Build"))
+            {
+                api.getPackager().build();
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::MenuItem("Reload Modules", "F5"))
+        {
+            api.getEngine().reloadModules();
+        }
+
+        ImGui::Separator();
+        ImGui::EndMenu();
+    }
+}
+
+
+static void
+menubar_engine( idk::EngineAPI &api )
+{
+    if (ImGui::BeginMenu("Engine"))
+    {
+        if (ImGui::MenuItem("Reload renderer"))
+        {
+            api.reloadRenderer();
+        }
+        ImGui::EndMenu();
+    }
+}
+
+
+
 void
 EditorUI_MD::_menubar( idk::EngineAPI &api )
 {
@@ -32,43 +87,9 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
 
     if (ImGui::BeginMainMenuBar())
     {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("New", "CTRL + N"))
-            {
-                
-            }
-
-            if (ImGui::MenuItem("Save As " ICON_FA_FILE_EXPORT, "CTRL + SHFT + S"))
-            {
-                popup_save = true;
-            }
-
-            if (ImGui::MenuItem("Load " ICON_FA_FILE_IMPORT, "CTRL + L"))
-            {
-                popup_load = true;
-            }
-
-            if (ImGui::BeginMenu("Project"))
-            {
-                if (ImGui::MenuItem("Build"))
-                {
-                    api.getPackager().build();
-                }
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::MenuItem("Reload Modules", "F5"))
-            {
-                engine.reloadModules();
-            }
-
-            ImGui::Separator();
-            ImGui::EndMenu();
-        }
-
+        menubar_file(api, popup_save, popup_load);
         _menubar_settings(api);
-
+        menubar_engine(api);
 
         float fps = ImGui::GetIO().Framerate;
         ImGui::Text("Framerate: %f", fps);
