@@ -11,7 +11,8 @@ static idk::EngineAPI *api_ptr;
 
 static idk::RenderSettingCmp &getCmp()
 {
-    return *(idk::ECS2::getComponentArray<idk::RenderSettingCmp>().begin());
+    auto &ecs = api_ptr->getECS();
+    return *(ecs.getComponentArray<idk::RenderSettingCmp>().begin());
 }
 
 
@@ -28,6 +29,7 @@ idk::RenderSettingSys::init( idk::EngineAPI &api )
 void
 idk::RenderSettingSys::update( idk::EngineAPI &api )
 {
+    auto  &ecs  = api.getECS();
     auto  &ren  = api.getRenderer();
     float dtime = api.dtime();
 
@@ -35,11 +37,11 @@ idk::RenderSettingSys::update( idk::EngineAPI &api )
 
     if (m_obj == -1)
     {
-        m_obj = idk::ECS2::createGameObject("RenderSetting");
-        idk::ECS2::giveComponent<idk::RenderSettingCmp>(m_obj);
+        m_obj = ecs.createGameObject("RenderSetting");
+        ecs.giveComponent<idk::RenderSettingCmp>(m_obj);
     }
 
-    for (auto &cmp: idk::ECS2::getComponentArray<idk::RenderSettingCmp>())
+    for (auto &cmp: ecs.getComponentArray<idk::RenderSettingCmp>())
     {
         if (cmp.filepath != "" && cmp.filepath != current_filepath)
         {
@@ -100,7 +102,8 @@ idk::RenderSettingCmp::deserialize( std::ifstream &stream )
 void
 idk::RenderSettingCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    ECS2::giveComponent<DirlightCmp>(obj_id);
+    auto &ecs = api.getECS();
+    ecs.giveComponent<DirlightCmp>(obj_id);
     // this->obj_id = obj_id;
 };
 
@@ -115,8 +118,8 @@ idk::RenderSettingCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::RenderSettingCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    // auto &src = idk::ECS2::getComponent<RenderSettingCmp>(src_obj);
-    // auto &dst = idk::ECS2::getComponent<RenderSettingCmp>(dst_obj);
+    // auto &src = ecs.getComponent<RenderSettingCmp>(src_obj);
+    // auto &dst = ecs.getComponent<RenderSettingCmp>(dst_obj);
     // dst.visualise = src.visualise;
 };
 

@@ -45,6 +45,7 @@ void
 EditorUI_MD::init( idk::EngineAPI &api )
 {
     auto &engine   = api.getEngine();
+    auto &IO       = api.getIO();
     auto &ren      = api.getRenderer();
 
     this->registerDrawComponents(api);
@@ -56,7 +57,7 @@ EditorUI_MD::init( idk::EngineAPI &api )
     ImGui::SetCurrentContext(main_ctx);
     ImGuiIO& io = ImGui::GetIO();
 
-    idkio::onPollEvent(
+    IO.onPollEvent(
         [](SDL_Event *event)
         {
             ImGui::SetCurrentContext(main_ctx);

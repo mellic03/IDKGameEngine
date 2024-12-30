@@ -85,7 +85,7 @@ namespace idk
 
 
 
-class idk::TransformSys: public idk::ECS2::System
+class idk::TransformSys: public idk::ECS::System
 {
 private:
 

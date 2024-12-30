@@ -16,6 +16,8 @@
 
 namespace idk
 {
-    void registerComponents();
-    void registerSystems();
+    class ECS;
+
+    void registerComponents( idk::ECS& );
+    void registerSystems( idk::ECS& );
 };

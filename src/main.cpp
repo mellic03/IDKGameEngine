@@ -10,7 +10,8 @@
 
 #include <IDKGameEngine/IDKengine.hpp>
 #include <IDKGameEngine/packager.hpp>
-#include <IDKECS/IDKECS.hpp>
+// #include <IDKECS/IDKECS.hpp>
+#include <IDKECS/ecs1/idk_ecs.hpp>
 
 #include <IDKEvents/IDKEvents.hpp>
 #include <IDKIO/IDKIO.hpp>
@@ -140,12 +141,7 @@ int main( int argc, char **argv )
 
     // Load engine code
     // // -----------------------------------------------------------------------------------------
-    idk::EngineAPI api;
-    api.init(game->getName(), 4, 6);
-
-    auto &engine = api.getEngine();
-    auto &ren    = api.getRenderer();
-    auto &pkg    = api.getPackager();
+    idk::EngineAPI api(args, game, 4, 6);
 
     idk::AudioSystem::init();
     idk::ThreadPool::init(arg_threads);
@@ -160,30 +156,6 @@ int main( int argc, char **argv )
     idk::gl::enable(GL_DEBUG_OUTPUT);
     idk::gl::enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     IDK_GLCALL( glDebugMessageCallback(message_callback, nullptr); )
-
-
-
-    // Setup resize and exit callbacks
-    // -----------------------------------------------------------------------------------------
-    // auto resize_lambda = [&ren, &eventsys]()
-    // {
-    //     auto winsize = eventsys.windowSize();
-    //     ren.resize(1920, 1080);
-    // };
-
-    // eventsys.onWindowEvent(idk::WindowEvent::RESIZE, resize_lambda);
-    // eventsys.onWindowEvent(idk::WindowEvent::EXIT,   exit_lambda);
-
-    // idkio::onWindowEvent(idkio::WIN_EXIT, std::bind(&idk::Engine::shutdown, &engine));
-    // -----------------------------------------------------------------------------------------
-
-
-    // Load built-in components + systems
-    // -----------------------------------------------------------------------------------------
-    idk::registerComponents();
-    idk::registerSystems();
-    // -----------------------------------------------------------------------------------------
-
 
     // // Load modules from IDKGE/runtime/modules/
     // // -----------------------------------------------------------------------------------------
@@ -211,18 +183,10 @@ int main( int argc, char **argv )
     // Setup
     // -----------------------------------------------------------------------------------------
     game->registerModules(api);
-    engine.initModules(api);
-
-    idk::ECS2::init(api);
-    if (arg_load_idksc)
-    {
-        idk::ECS2::load(arg_idksc);
-        idk::ECS2::update(api);
-    }
-    idk::ECS2::init(api);
-
+    api.getEngine().initModules(api);
+    api.getECS().init(api);
     game->setup(args, api);
-    pkg.onBuild([game](){ game->build(); });
+    api.getPackager().onBuild([game](){ game->build(); });
     // -----------------------------------------------------------------------------------------
 
 
@@ -234,18 +198,12 @@ int main( int argc, char **argv )
     uint64_t delta;
     float    dt;
 
-
-    ren.beginFrame();
-    ren.endFrame(0.0001);
+    api.getRenderer().beginFrame();
+    api.getRenderer().endFrame(0.0001);
     idk::TerrainRenderer::generateTerrain();
 
-    while (engine.running())
+    while (api.running())
     {
-        if (api.flag == true)
-        {
-            api.actuallyReloadRenderer();
-        }
-
         a = SDL_GetTicks64();
         delta = a - b;
 
@@ -257,13 +215,17 @@ int main( int argc, char **argv )
         //     continue;
         // }
 
-
         api.update(dt);
 
-        idk::IO::update(dt);
-        idk::ECS2::update(api);
+        auto &engine = api.getEngine();
+        auto &io     = api.getIO();
+        auto &ecs    = api.getECS();
+        auto &ren    = api.getRenderer();
+
+        // idk::idkio->update(dt);
+        io.update(dt);
+        ecs.update(api);
         idk::Events::update();
-        // idk::AudioSystem::update()
 
         engine.beginFrame(api, dt);
         game->mainloop(api);
@@ -275,7 +237,7 @@ int main( int argc, char **argv )
         b = a;
 
 
-        if (idkio::windowEvent(idkio::WIN_EXIT))
+        if (io.windowEvent(idk::IO::WIN_EXIT))
         {
             engine.shutdown();
         }

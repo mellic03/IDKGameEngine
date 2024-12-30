@@ -25,7 +25,7 @@ namespace idk
 
 
 
-class idk::PhysicsSys: public idk::ECS2::System
+class idk::PhysicsSys: public idk::ECS::System
 {
 private:
 

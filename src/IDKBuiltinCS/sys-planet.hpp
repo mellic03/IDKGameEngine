@@ -11,7 +11,7 @@ namespace idk
 };
 
 
-class idk::PlanetSys: public idk::ECS2::System
+class idk::PlanetSys: public idk::ECS::System
 {
 private:
 

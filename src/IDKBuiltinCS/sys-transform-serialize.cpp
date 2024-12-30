@@ -58,10 +58,15 @@ idk::TransformCmp::deserialize( std::ifstream &stream )
 };
 
 
+
+static idk::EngineAPI *api_ptr = nullptr;
+
 void
 idk::TransformCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    auto &cmp = ECS2::getComponent<TransformCmp>(obj_id);
+    api_ptr = &api;
+    auto &ecs = api_ptr->getECS();
+    auto &cmp = ecs.getComponent<TransformCmp>(obj_id);
     // cmp.transform.position = glm::vec3(0.0f); // = idk::Transform::fromGLM(glm::mat4(1.0f));
     // this->obj_id = obj_id;
 };
@@ -77,8 +82,9 @@ idk::TransformCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::TransformCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<TransformCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<TransformCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    auto &src = ecs.getComponent<TransformCmp>(src_obj);
+    auto &dst = ecs.getComponent<TransformCmp>(dst_obj);
     dst.obj_id = dst_obj;
 };
 
@@ -132,8 +138,9 @@ idk::IKCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::IKCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<TransformCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<TransformCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    auto &src = ecs.getComponent<TransformCmp>(src_obj);
+    auto &dst = ecs.getComponent<TransformCmp>(dst_obj);
     dst.obj_id = dst_obj;
 };
 
@@ -187,8 +194,9 @@ idk::LookTowardCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::LookTowardCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<LookTowardCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<LookTowardCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    auto &src = ecs.getComponent<LookTowardCmp>(src_obj);
+    auto &dst = ecs.getComponent<LookTowardCmp>(dst_obj);
     dst.obj_id = dst_obj;
 };
 
@@ -241,8 +249,9 @@ idk::AnchorCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::AnchorCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<AnchorCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<AnchorCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    auto &src = ecs.getComponent<AnchorCmp>(src_obj);
+    auto &dst = ecs.getComponent<AnchorCmp>(dst_obj);
     dst.obj_id = dst_obj;
 };
 
@@ -278,7 +287,8 @@ idk::SmoothFollowCmp::deserialize( std::ifstream &stream )
 void
 idk::SmoothFollowCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    auto &cmp = idk::ECS2::getComponent<SmoothFollowCmp>(obj_id);
+    auto &ecs = api_ptr->getECS();
+    auto &cmp = ecs.getComponent<SmoothFollowCmp>(obj_id);
     cmp.anchor_id = obj_id;
 
 };
@@ -294,8 +304,9 @@ idk::SmoothFollowCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::SmoothFollowCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<SmoothFollowCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<SmoothFollowCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    auto &src = ecs.getComponent<SmoothFollowCmp>(src_obj);
+    auto &dst = ecs.getComponent<SmoothFollowCmp>(dst_obj);
     dst.obj_id = dst_obj;
 };
 
@@ -347,8 +358,9 @@ idk::RotateCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::RotateCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<SmoothFollowCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<SmoothFollowCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    auto &src = ecs.getComponent<SmoothFollowCmp>(src_obj);
+    auto &dst = ecs.getComponent<SmoothFollowCmp>(dst_obj);
     dst.obj_id = dst_obj;
 };
 

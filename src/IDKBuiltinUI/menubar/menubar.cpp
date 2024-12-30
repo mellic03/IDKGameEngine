@@ -61,10 +61,10 @@ menubar_engine( idk::EngineAPI &api )
 {
     if (ImGui::BeginMenu("Engine"))
     {
-        if (ImGui::MenuItem("Reload renderer"))
-        {
-            api.reloadRenderer();
-        }
+        if (ImGui::MenuItem("Reload game"))     api.reloadGame();
+        if (ImGui::MenuItem("Reload ECS"))      api.reloadECS();
+        if (ImGui::MenuItem("Reload renderer")) api.reloadRenderer();
+
         ImGui::EndMenu();
     }
 }
@@ -75,9 +75,10 @@ void
 EditorUI_MD::_menubar( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
+    auto &io     = api.getIO();
     auto &ren    = api.getRenderer();
 
-    if (idkio::keyTapped(idk::Keycode::F5))
+    if (io.keyTapped(idk::Keycode::F5))
     {
         engine.reloadModules();
     }

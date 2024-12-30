@@ -11,6 +11,8 @@ static void
 transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsnap, float ssnap )
 {
     auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &IO     = api.getIO();
     auto &ren    = api.getRenderer();
     auto &camera = ren.getCamera();
 
@@ -36,27 +38,27 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
 
     static ImGuizmo::OPERATION op = ImGuizmo::TRANSLATE;
 
-    if (idk::IO::keyDown(idk::Keycode::LSHIFT))
+    if (IO.keyDown(idk::Keycode::LSHIFT))
     {
         mode = ImGuizmo::MODE::WORLD;
     }
 
-    if (idk::IO::keyDown(idk::Keycode::Z))
+    if (IO.keyDown(idk::Keycode::Z))
     {
         op = ImGuizmo::OPERATION::TRANSLATE;
     }
 
-    if (idk::IO::keyDown(idk::Keycode::X))
+    if (IO.keyDown(idk::Keycode::X))
     {
         op = ImGuizmo::OPERATION::SCALEU;
     }
 
-    if (idk::IO::keyDown(idk::Keycode::C))
+    if (IO.keyDown(idk::Keycode::C))
     {
         op = ImGuizmo::OPERATION::ROTATE;
     }
 
-    if (idk::IO::keyDown(idk::Keycode::V))
+    if (IO.keyDown(idk::Keycode::V))
     {
         op = ImGuizmo::OPERATION::BOUNDS;
     }
@@ -150,13 +152,15 @@ void
 EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
+    auto &IO     = api.getIO();
     auto &ren    = api.getRenderer();
 
     ImVec2 cornerA = ImGui::GetWindowContentRegionMin();
     ImVec2 cornerB = ImGui::GetWindowPos();
     ImVec2 corner = cornerA + cornerB;
 
-    idk::IO::setViewportOffset(corner.x, corner.y);
+    IO.setViewportOffset(corner.x, corner.y);
 
 
     float ratio = float(ren.width()) / ren.height();
@@ -194,14 +198,14 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
     // );
 
 
-    int obj_id = idk::ECS2::getSelectedGameObject();
+    int obj_id = ecs.getSelectedGameObject();
 
     if (obj_id == -1)
     {
         return;
     }
 
-    if (idk::ECS2::hasComponent<idk::TransformCmp>(obj_id))
+    if (ecs.hasComponent<idk::TransformCmp>(obj_id))
     {
         transform_component_ecs(api, obj_id, m_tsnap, m_rsnap, m_ssnap);
     }

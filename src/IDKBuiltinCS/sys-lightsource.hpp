@@ -16,7 +16,7 @@ namespace idk
 
 
 
-class idk::LightSys: public idk::ECS2::System
+class idk::LightSys: public idk::ECS::System
 {
 public:
     virtual void init   ( idk::EngineAPI & ) final;

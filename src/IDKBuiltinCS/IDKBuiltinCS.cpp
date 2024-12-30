@@ -1,39 +1,39 @@
 #include "IDKBuiltinCS.hpp"
-
+#include <IDKECS/ecs1/idk_ecs.hpp>
 
 void
-idk::registerComponents()
+idk::registerComponents( idk::ECS &ecs )
 {
-    ECS2::registerComponent<IconCmp>                ("Icon");
+    ecs.registerComponent<IconCmp>                ("Icon");
 
-    ECS2::registerComponent<TransformCmp>           ("Transform");
-    ECS2::registerComponent<IKCmp>                  ("IK");
-    ECS2::registerComponent<AnchorCmp>              ("Anchor");
-    ECS2::registerComponent<SmoothFollowCmp>        ("SmoothFollow");
-    ECS2::registerComponent<LookTowardCmp>          ("LookToward");
-    ECS2::registerComponent<RotateCmp>              ("Rotate");
+    ecs.registerComponent<TransformCmp>           ("Transform");
+    ecs.registerComponent<IKCmp>                  ("IK");
+    ecs.registerComponent<AnchorCmp>              ("Anchor");
+    ecs.registerComponent<SmoothFollowCmp>        ("SmoothFollow");
+    ecs.registerComponent<LookTowardCmp>          ("LookToward");
+    ecs.registerComponent<RotateCmp>              ("Rotate");
 
-    ECS2::registerComponent<TriggerCmp>             ("Trigger");
+    // ecs.registerComponent<TriggerCmp>             ("Trigger");
 
-    ECS2::registerComponent<AudioEmitterCmp>        ("AudioEmitter");
-    ECS2::registerComponent<AudioListenerCmp>       ("AudioListener");
-    ECS2::registerComponent<PhysicsCmp>             ("Physics");
+    ecs.registerComponent<AudioEmitterCmp>        ("AudioEmitter");
+    ecs.registerComponent<AudioListenerCmp>       ("AudioListener");
+    // ecs.registerComponent<PhysicsCmp>             ("Physics");
 
-    ECS2::registerComponent<ModelCmp>               ("Model");
-    ECS2::registerComponent<TerrainCmp>             ("Terrain");
+    ecs.registerComponent<ModelCmp>               ("Model");
+    ecs.registerComponent<TerrainCmp>             ("Terrain");
 
-    ECS2::registerComponent<StaticHeightmapCmp>     ("Heightmap");
+    // ecs.registerComponent<StaticHeightmapCmp>     ("Heightmap");
 
-    ECS2::registerComponent<CameraCmp>              ("Camera");
-    ECS2::registerComponent<DirlightCmp>            ("Dirlight");
-    ECS2::registerComponent<PointlightCmp>          ("Pointlight");
-    ECS2::registerComponent<SpotlightCmp>           ("Spotlight");
-    ECS2::registerComponent<StaticRectCmp>          ("StaticRect");
-    ECS2::registerComponent<KinematicRectCmp>       ("KinematicRect");
-    ECS2::registerComponent<KinematicCapsuleCmp>    ("KinematicCapsule");
-    ECS2::registerComponent<RenderSettingCmp>       ("RenderSetting");
-    ECS2::registerComponent<ScriptCmp>              ("Script");
-    ECS2::registerComponent<ParticleCmp>            ("ParticleEmitter");
+    ecs.registerComponent<CameraCmp>              ("Camera");
+    ecs.registerComponent<DirlightCmp>            ("Dirlight");
+    ecs.registerComponent<PointlightCmp>          ("Pointlight");
+    ecs.registerComponent<SpotlightCmp>           ("Spotlight");
+    // ecs.registerComponent<StaticRectCmp>          ("StaticRect");
+    // ecs.registerComponent<KinematicRectCmp>       ("KinematicRect");
+    // ecs.registerComponent<KinematicCapsuleCmp>    ("KinematicCapsule");
+    ecs.registerComponent<RenderSettingCmp>       ("RenderSetting");
+    ecs.registerComponent<ScriptCmp>              ("Script");
+    ecs.registerComponent<ParticleCmp>            ("ParticleEmitter");
 
 }
 
@@ -41,17 +41,17 @@ idk::registerComponents()
 
 
 void
-idk::registerSystems()
+idk::registerSystems( idk::ECS &ecs )
 {
-    ECS2::registerSystem<TransformSys>();
-    ECS2::registerSystem<TriggerSys>();
-    ECS2::registerSystem<AudioSys>();
-    ECS2::registerSystem<ModelSys>();
-    ECS2::registerSystem<CameraSys>();
-    ECS2::registerSystem<LightSys>();
-    ECS2::registerSystem<PhysicsSys>();
-    ECS2::registerSystem<RenderSettingSys>();
-    ECS2::registerSystem<ScriptSys>();
-    ECS2::registerSystem<ParticleSys>();
+    ecs.registerSystem<TransformSys>();
+    // ecs.registerSystem<TriggerSys>();
+    ecs.registerSystem<AudioSys>();
+    ecs.registerSystem<ModelSys>();
+    ecs.registerSystem<CameraSys>();
+    ecs.registerSystem<LightSys>();
+    // ecs.registerSystem<PhysicsSys>();
+    ecs.registerSystem<RenderSettingSys>();
+    ecs.registerSystem<ScriptSys>();
+    ecs.registerSystem<ParticleSys>();
 
 }

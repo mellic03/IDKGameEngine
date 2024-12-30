@@ -1,4 +1,5 @@
 #include "../EditorUI.hpp"
+#include <IDKECS/ecs1/idk_ecs.hpp>
 #include "EditorUI-tabs.hpp"
 
 #include <filesystem>
@@ -45,8 +46,10 @@ void idk_file_ree( const std::string &filepath, int obj_id )
 
 
 static void
-idk_scene_treenode_drag_drop( int obj_id )
+idk_scene_treenode_drag_drop( idk::EngineAPI &api, int obj_id )
 {
+    auto &ecs = api.getECS();
+
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
         ImGui::SetDragDropPayload(
@@ -73,7 +76,7 @@ idk_scene_treenode_drag_drop( int obj_id )
         {
             IM_ASSERT(payload->DataSize == sizeof(int));
             int child_id = *reinterpret_cast<int *>(payload->Data);
-            idk::ECS2::giveChild(obj_id, child_id);
+            ecs.giveChild(obj_id, child_id);
         }
     
         ImGui::EndDragDropTarget();
@@ -82,8 +85,10 @@ idk_scene_treenode_drag_drop( int obj_id )
 
 
 static void
-idk_scene_treenode_drag_drop_deparent( int obj_id )
+idk_scene_treenode_drag_drop_deparent( idk::EngineAPI &api, int obj_id )
 {
+    auto &ecs = api.getECS();
+
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
         ImGui::SetDragDropPayload(
@@ -105,10 +110,10 @@ idk_scene_treenode_drag_drop_deparent( int obj_id )
             IM_ASSERT(payload->DataSize == sizeof(int));
             int child_id = *reinterpret_cast<int *>(payload->Data);
             
-            int parent = idk::ECS2::getParent(child_id);
+            int parent = ecs.getParent(child_id);
             if (parent != -1)
             {
-                idk::ECS2::removeChild(parent, child_id);
+                ecs.removeChild(parent, child_id);
             }
         }
         ImGui::EndDragDropTarget();
@@ -125,24 +130,24 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
         return;
     }
 
-    auto &engine  = api.getEngine();
-    
+    auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
 
-    std::string icon = idk::ECS2::getComponent<idk::IconCmp>(id).icon;
+    std::string icon = ecs.getComponent<idk::IconCmp>(id).icon;
 
-    std::string name = idk::ECS2::getGameObjectName(id);
+    std::string name = ecs.getGameObjectName(id);
     std::string label = icon + std::string(" ") + name;
     int flags  = ImGuiTreeNodeFlags_DefaultOpen;
         flags |= ImGuiTreeNodeFlags_OpenOnArrow;
         flags |= ImGuiTreeNodeFlags_SpanFullWidth;
         flags |= ImGuiTreeNodeFlags_SpanAllColumns;
 
-    if (idk::ECS2::getChildren(id).size() == 0)
+    if (ecs.getChildren(id).size() == 0)
     {
         flags |= ImGuiTreeNodeFlags_Leaf;
     }
 
-    if (id == idk::ECS2::getSelectedGameObject())
+    if (id == ecs.getSelectedGameObject())
     {
         flags |= ImGuiTreeNodeFlags_Selected;
     }
@@ -159,14 +164,14 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
     if (row_clicked && !ImGui::IsItemToggledOpen())
     {
-        idk::ECS2::setSelectedGameObject(id);
+        ecs.setSelectedGameObject(id);
     }
 
     if (node_open)
     {
         if (ImGui::BeginPopupContextWindow("Object Context"))
         {
-            std::string label = idk::ECS2::getSelectedGameObjectName();
+            std::string label = ecs.getSelectedGameObjectName();
                         label = icon + " " + label;
 
             ImGui::Text(label.c_str());
@@ -174,20 +179,20 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
             if (ImGui::MenuItem("Copy"))
             {
-                idk::ECS2::copySelectedGameObject();
+                ecs.copySelectedGameObject();
             }
 
             if (ImGui::MenuItem("Delete"))
             {
-                idk::ECS2::deleteSelectedGameObject();
+                ecs.deleteSelectedGameObject();
             }
 
             ImGui::EndPopup();
         }
     
-        idk_scene_treenode_drag_drop( id);
+        idk_scene_treenode_drag_drop(api, id);
 
-        for (int child_id: idk::ECS2::getChildren(id))
+        for (int child_id: ecs.getChildren(id))
         {
             _tab_scene_treenode(api, child_id);
         }
@@ -202,17 +207,19 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
 void prefab_popup( idk::EngineAPI &api )
 {
+    auto &ecs = api.getECS();
+
     if (ImGui::BeginPopup("Instantiate Prefab"))
     {
         std::string label = "Instantiate Prefab";
         ImGui::Text(label.c_str());
         ImGui::Separator();
 
-        for (auto &[name, callback]: idk::ECS2::getPrefabs())
+        for (auto &[name, callback]: ecs.getPrefabs())
         {
             if (ImGui::MenuItem(name.c_str()))
             {
-                idk::ECS2::createGameObjectFromPrefab(name);
+                ecs.createGameObjectFromPrefab(name);
             }
         }
 
@@ -225,6 +232,7 @@ void
 EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
+    auto &ecs    = api.getECS();
     auto &ren    = api.getRenderer();
     int  obj_id  = 0;
 
@@ -253,18 +261,18 @@ EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 
         if (row_clicked && !ImGui::IsItemToggledOpen())
         {
-            idk::ECS2::setSelectedGameObject(obj_id);
+            ecs.setSelectedGameObject(obj_id);
         }
 
         if (node_open)
         {
-            idk_scene_treenode_drag_drop_deparent( obj_id);
+            idk_scene_treenode_drag_drop_deparent(api, obj_id);
 
-            for (auto &e: idk::ECS2::getEntities())
+            for (auto &e: ecs.getEntities())
             {
                 int id = e.id;
 
-                if (idk::ECS2::hasParent(id) == false)
+                if (ecs.hasParent(id) == false)
                 {
                     _tab_scene_treenode(api, id);
                 }
@@ -278,7 +286,7 @@ EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 
     if (ImGui::Button(ICON_FA_PLUS " Create"))
     {
-        idk::ECS2::createGameObject("Empty");
+        ecs.createGameObject("Empty");
     }
 
     ImGui::SameLine();
@@ -294,7 +302,7 @@ EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 
     if (ImGui::Button(ICON_FA_TRASH_CAN " delete"))
     {
-        idk::ECS2::deleteSelectedGameObject();
+        ecs.deleteSelectedGameObject();
     }
 
 

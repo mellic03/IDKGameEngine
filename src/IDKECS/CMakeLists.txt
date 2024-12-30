@@ -5,6 +5,7 @@ project(IDKECS)
 file(
     GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ecs1/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ecs2/*.cpp
 )
 

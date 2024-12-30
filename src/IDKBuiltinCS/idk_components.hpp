@@ -1,6 +1,8 @@
 #pragma once
 
 #include <IDKECS/IDKECS.hpp>
+#include <IDKECS/ecs1/idk_ecs.hpp>
+
 #include <IDKAudio/IDKAudio.hpp>
 #include <IDKGameEngine/IDKGameEngine.hpp>
 
@@ -87,7 +89,8 @@ namespace idk
     
         static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
         {
-            auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+            auto &ecs = api.getECS();
+            auto &cmp = ecs.getComponent<AudioEmitterCmp>(obj_id);
         
             if (cmp.emitter_id != -1)
             {

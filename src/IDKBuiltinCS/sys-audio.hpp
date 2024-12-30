@@ -10,7 +10,7 @@ namespace idk
 };
 
 
-class idk::AudioSys: public idk::ECS2::System
+class idk::AudioSys: public idk::ECS::System
 {
     // inline static std::unordered_map<int, std::function<void()>> m_callbacks;
 

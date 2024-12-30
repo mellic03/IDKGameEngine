@@ -19,7 +19,7 @@ namespace idk
 
 
 
-class idk::ModelSys: public idk::ECS2::System
+class idk::ModelSys: public idk::ECS::System
 {
 private:
     inline static int m_heightmap_program = -1;

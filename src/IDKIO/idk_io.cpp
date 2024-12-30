@@ -1,40 +1,7 @@
 #include "idk_io.hpp"
-#include <SDL2/SDL.h>
-#include <vector>
-#include <array>
-
-#include <libidk/idk_wallocator.hpp>
-
 
 using namespace idk;
-
-namespace
-{
-    bool m_Mcaptured   = false;
-
-    glm::vec2  m_Moff   = glm::vec2(0.0f);
-    glm::vec2  m_Mpos   = glm::vec2(0.0f);
-    glm::vec2  m_Mdelta = glm::vec2(0.0f);
-
-    std::array<bool, 3> m_mousebutton_up;
-    std::array<bool, 3> m_mousebutton_down;
-    std::array<bool, 3> m_mousebutton_clicked;
-    float               m_mousewheel_delta = 0.0f;
-
-    std::function<void(SDL_Event*)> m_poll_callback = [](SDL_Event*){};
-
-    std::array<bool, 2>    m_windowevents     = { false, false };
-    std::function<void()>  m_win_callbacks[2] = { [](){}, [](){} };
-
-
-    idk::WAllocator<std::function<void(int, int)>> m_mousedrag_callbacks[3];
-    idk::WAllocator<std::function<void(int, int)>> m_mouseclick_callbacks[3];
-
-
-
-    idk::Keylog m_keylog;
-}
-
+idk::IO *idk::idkio = new idk::IO();
 
 
 void
@@ -60,7 +27,8 @@ IO::windowEvent( uint32_t event )
 
 
 
-static void processEvent( SDL_Event &e )
+void
+IO::processEvent( SDL_Event &e )
 {
     if (e.type == SDL_QUIT)
     {
@@ -128,7 +96,8 @@ static void processEvent( SDL_Event &e )
 }
 
 
-static void pollEvents()
+void
+IO::pollEvents()
 {
     SDL_Event e;
 

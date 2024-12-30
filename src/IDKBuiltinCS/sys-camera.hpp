@@ -11,7 +11,7 @@ namespace idk
 };
 
 
-class idk::CameraSys: public idk::ECS2::System
+class idk::CameraSys: public idk::ECS::System
 {
 public:
     virtual void init   ( idk::EngineAPI & ) final;

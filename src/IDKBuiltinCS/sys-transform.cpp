@@ -22,9 +22,10 @@ idk::TransformSys::init( idk::EngineAPI &api )
 void
 idk::TransformSys::update( idk::EngineAPI &api )
 {
+    auto &ecs = api.getECS();
     float dtime = api.getEngine().deltaTime();
 
-    for (auto &cmp: idk::ECS2::getComponentArray<idk::TransformCmp>())
+    for (auto &cmp: ecs.getComponentArray<idk::TransformCmp>())
     {
         if (cmp.transform.position != cmp.transform.position)
         {
@@ -35,8 +36,8 @@ idk::TransformSys::update( idk::EngineAPI &api )
         cmp.roll  = fmod(cmp.roll, 2.0*M_PI);
         cmp.yaw   = fmod(cmp.yaw, 2.0*M_PI);
 
-        // if (cmp.is_dirty && ECS2::hasParent(cmp.obj_id) == false)
-        if (ECS2::hasParent(cmp.obj_id) == false)
+        // if (cmp.is_dirty && ecs.hasParent(cmp.obj_id) == false)
+        if (ecs.hasParent(cmp.obj_id) == false)
         {
             _computeTransform(cmp.obj_id, glm::mat4(1.0f));
         }
@@ -50,7 +51,7 @@ idk::TransformSys::update( idk::EngineAPI &api )
 
 
 
-    for (auto &cmp: ECS2::getComponentArray<IKCmp>())
+    for (auto &cmp: ecs.getComponentArray<IKCmp>())
     {
         if (cmp.obj_id == -1 || cmp.pole_target == -1)
         {
@@ -62,7 +63,7 @@ idk::TransformSys::update( idk::EngineAPI &api )
     }
 
 
-    for (auto &cmp: ECS2::getComponentArray<LookTowardCmp>())
+    for (auto &cmp: ecs.getComponentArray<LookTowardCmp>())
     {
         if (cmp.obj_id == -1 || cmp.target_id == -1)
         {
@@ -76,7 +77,7 @@ idk::TransformSys::update( idk::EngineAPI &api )
     }
 
 
-    for (auto &[obj_id, anchor_ids, distances]: idk::ECS2::getComponentArray<idk::AnchorCmp>())
+    for (auto &[obj_id, anchor_ids, distances]: ecs.getComponentArray<idk::AnchorCmp>())
     {
         if (anchor_ids.back() != -1)
         {
@@ -103,7 +104,7 @@ idk::TransformSys::update( idk::EngineAPI &api )
     }
 
 
-    for (auto &[obj_id, anchor_id, speed]: idk::ECS2::getComponentArray<idk::SmoothFollowCmp>())
+    for (auto &[obj_id, anchor_id, speed]: ecs.getComponentArray<idk::SmoothFollowCmp>())
     {
         glm::vec3 anchor_pos = getPositionWorldspace(anchor_id);
         glm::vec3 obj_pos    = getPositionWorldspace(obj_id);
@@ -114,7 +115,7 @@ idk::TransformSys::update( idk::EngineAPI &api )
     }
 
 
-    for (auto &[obj_id, magnitude, axis]: ECS2::getComponentArray<RotateCmp>())
+    for (auto &[obj_id, magnitude, axis]: ecs.getComponentArray<RotateCmp>())
     {
         axis = glm::normalize(axis);
         glm::quat delta = glm::angleAxis(magnitude, axis);
@@ -130,6 +131,7 @@ idk::TransformSys::update( idk::EngineAPI &api )
 void
 idk::TransformSys::_computeTransform( int obj_id, const glm::mat4 &parent )
 {
+    auto &ecs = api_ptr->getECS();
     auto &cmp = getTransformCmp(obj_id);
 
     idk::Transform T = cmp.transform;
@@ -148,7 +150,7 @@ idk::TransformSys::_computeTransform( int obj_id, const glm::mat4 &parent )
     cmp.right = glm::normalize(glm::mat3(cmp.model) * glm::vec3(1.0f, 0.0f, 0.0f));
     cmp.front = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 0.0f, -1.0f));
 
-    for (int child_id: ECS2::getChildren(obj_id))
+    for (int child_id: ecs.getChildren(obj_id))
     {
         _computeTransform(child_id, current);
     }
@@ -221,13 +223,14 @@ glm::mat4
 idk::TransformSys::_computeWorldMatrix( int obj_id )
 {
     static const glm::mat4 ident = glm::mat4(1.0f);
+    auto &ecs = api_ptr->getECS();
     
     if (obj_id == -1)
     {
         return ident;
     }
 
-    int parent_id = idk::ECS2::getParent(obj_id);
+    int parent_id = ecs.getParent(obj_id);
 
     return _computeWorldMatrix(parent_id) * _computeLocalMatrix(parent_id, false);
 }
@@ -284,7 +287,8 @@ idk::TransformSys::rotateWorldAxis( int obj_id, const glm::vec3 &axis, float the
 idk::TransformCmp&
 idk::TransformSys::getTransformCmp( int obj_id )
 {
-    auto &cmp = idk::ECS2::getComponent<TransformCmp>(obj_id);
+    auto &ecs = api_ptr->getECS();
+    auto &cmp = ecs.getComponent<TransformCmp>(obj_id);
           cmp.is_dirty = true;
 
     return cmp;
@@ -379,7 +383,8 @@ idk::TransformSys::getWorldRotation( int obj_id )
 glm::vec3
 idk::TransformSys::getPositionWorldspace( int obj_id )
 {
-    return ECS2::getComponent<TransformCmp>(obj_id).model[3];
+    auto &ecs = api_ptr->getECS();
+    return ecs.getComponent<TransformCmp>(obj_id).model[3];
     // return glm::vec3(getModelMatrix(obj_id)[3]);
 }
 
@@ -814,6 +819,7 @@ void
 idk::TransformSys::FABRIK( int chain_length, int end_obj, const std::vector<float> &distances,
                            const glm::vec3 &pole_target )
 {
+    auto &ecs = api_ptr->getECS();
     std::vector<glm::vec3> positions(chain_length);
 
     int current = end_obj;
@@ -821,7 +827,7 @@ idk::TransformSys::FABRIK( int chain_length, int end_obj, const std::vector<floa
     for (int i=0; i<chain_length; i++)
     {
         positions[chain_length-i-1] = getPositionWorldspace(current);
-        current = ECS2::getParent(current);
+        current = ecs.getParent(current);
     }
 
     FABRIK(positions, distances, pole_target);
@@ -833,7 +839,7 @@ idk::TransformSys::FABRIK( int chain_length, int end_obj, const std::vector<floa
     {
         glm::vec3 dir = positions[chain_length-i-1] - getPositionWorldspace(current);
         translateWorldspace(current, 0.25f*dir);
-        current = ECS2::getParent(current);
+        current = ecs.getParent(current);
     }
 
     for (int i=0; i<chain_length-1; i++)

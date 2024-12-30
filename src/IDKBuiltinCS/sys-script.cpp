@@ -8,7 +8,7 @@ idk::ScriptSys::init( idk::EngineAPI &api )
 {
     api_ptr = &api;
 
-    // for (auto &cmp: ECS2::getComponentArray<idk::ScriptCmp>())
+    // for (auto &cmp: ecs.getComponentArray<idk::ScriptCmp>())
     // {
     //     if (cmp.filepath[0] != '\0')
     //     {
@@ -22,10 +22,11 @@ idk::ScriptSys::init( idk::EngineAPI &api )
 void
 idk::ScriptSys::update( idk::EngineAPI &api )
 {
+    auto &ecs = api.getECS();
     auto &ren = api.getRenderer();
     float dt  = api.dtime();
     
-    for (auto &cmp: ECS2::getComponentArray<ScriptCmp>())
+    for (auto &cmp: ecs.getComponentArray<ScriptCmp>())
     {
         for (int i=0; i<cmp.scripts.size(); i++)
         {
@@ -52,7 +53,8 @@ idk::ScriptSys::update( idk::EngineAPI &api )
 void
 idk::ScriptSys::reserve( int obj_id, int count )
 {
-    auto &cmp = ECS2::getComponent<ScriptCmp>(obj_id);
+    auto &ecs = api_ptr->getECS();
+    auto &cmp = ecs.getComponent<ScriptCmp>(obj_id);
 
     cmp.data.resize(count, nullptr);
     cmp.scripts.resize(count);
@@ -74,10 +76,11 @@ void
 idk::ScriptSys::attachScript( int obj_id, int idx, const std::string &filename )
 {
     namespace fs = std::filesystem;
+    auto &ecs = api_ptr->getECS();
 
-    if (ECS2::hasComponent<ScriptCmp>(obj_id) == false)
+    if (ecs.hasComponent<ScriptCmp>(obj_id) == false)
     {
-        ECS2::giveComponent<ScriptCmp>(obj_id);
+        ecs.giveComponent<ScriptCmp>(obj_id);
     }
 
     if (m_scripts.contains(filename) == false)
@@ -86,7 +89,7 @@ idk::ScriptSys::attachScript( int obj_id, int idx, const std::string &filename )
         m_scripts[filename] = new idk::RuntimeScript(filename);
     }
 
-    auto &cmp = ECS2::getComponent<ScriptCmp>(obj_id);
+    auto &cmp = ecs.getComponent<ScriptCmp>(obj_id);
     cmp.scripts[idx] = filename;
 }
 
@@ -95,7 +98,8 @@ idk::ScriptSys::attachScript( int obj_id, int idx, const std::string &filename )
 void
 idk::ScriptSys::attachData( int obj_id, int idx, void *data )
 {
-    ECS2::getComponent<ScriptCmp>(obj_id).data[idx] = data;
+    auto &ecs = api_ptr->getECS();
+    ecs.getComponent<ScriptCmp>(obj_id).data[idx] = data;
 }
 
 
@@ -129,7 +133,8 @@ idk::ScriptCmp::deserialize( std::ifstream &stream )
 void
 idk::ScriptCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    ScriptCmp &cmp = ECS2::getComponent<ScriptCmp>(obj_id);
+    auto &ecs = api.getECS();
+    ScriptCmp &cmp = ecs.getComponent<ScriptCmp>(obj_id);
 
     // if (cmp.model_id == -1 && cmp.filepath != "")
     // {
@@ -148,8 +153,9 @@ idk::ScriptCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::ScriptCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    ScriptCmp &src = idk::ECS2::getComponent<ScriptCmp>(src_obj);
-    ScriptCmp &dst = idk::ECS2::getComponent<ScriptCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    ScriptCmp &src = ecs.getComponent<ScriptCmp>(src_obj);
+    ScriptCmp &dst = ecs.getComponent<ScriptCmp>(dst_obj);
     
     dst.data    = src.data;
     dst.scripts = src.scripts;

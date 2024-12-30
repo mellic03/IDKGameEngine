@@ -34,7 +34,7 @@ struct idk::ParticleCmp
 
 
 
-class idk::ParticleSys: public idk::ECS2::System
+class idk::ParticleSys: public idk::ECS::System
 {
 private:
 

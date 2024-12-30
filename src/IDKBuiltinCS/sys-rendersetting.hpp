@@ -13,7 +13,7 @@ namespace idk
 
 
 
-class idk::RenderSettingSys: public idk::ECS2::System
+class idk::RenderSettingSys: public idk::ECS::System
 {
 private:
     inline static int m_obj = -1;

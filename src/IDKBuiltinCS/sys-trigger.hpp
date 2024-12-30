@@ -11,7 +11,7 @@ namespace idk
 
 
 
-class idk::TriggerSys: public idk::ECS2::System
+class idk::TriggerSys: public idk::ECS::System
 {
 private:
 

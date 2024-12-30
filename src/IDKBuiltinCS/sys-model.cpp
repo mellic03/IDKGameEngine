@@ -12,6 +12,7 @@ void
 idk::ModelSys::init( idk::EngineAPI &api )
 {
     api_ptr = &api;
+    auto &ecs = api.getECS();
     auto &ren = api.getRenderer();
 
     // ren.createProgram(
@@ -30,7 +31,7 @@ idk::ModelSys::init( idk::EngineAPI &api )
     // m_shadow_RQ       = ren.createShadowCasterQueue("ModelSys-terrain-shadow");
     m_alpha_cutoff_RQ = ren.createRenderQueue("ModelSys-gpass-alpha-cutoff", {false});
 
-    for (auto &cmp: ECS2::getComponentArray<idk::ModelCmp>())
+    for (auto &cmp: ecs.getComponentArray<idk::ModelCmp>())
     {
         if (cmp.filepath[0] != '\0')
         {
@@ -44,9 +45,10 @@ idk::ModelSys::init( idk::EngineAPI &api )
 void
 idk::ModelSys::update( idk::EngineAPI &api )
 {
+    auto &ecs = api.getECS();
     auto &ren = api.getRenderer();
     
-    for (auto &cmp: ECS2::getComponentArray<TerrainCmp>())
+    for (auto &cmp: ecs.getComponentArray<TerrainCmp>())
     {
         // if (cmp.terrain_id == -1)
         // {
@@ -58,7 +60,7 @@ idk::ModelSys::update( idk::EngineAPI &api )
     }
 
 
-    for (auto &cmp: ECS2::getComponentArray<ModelCmp>())
+    for (auto &cmp: ecs.getComponentArray<ModelCmp>())
     {
         if (cmp.model_id == -1 || cmp.visible == false)
         {
@@ -118,7 +120,7 @@ idk::ModelSys::update( idk::EngineAPI &api )
     // }
 
 
-    // for (auto &cmp: ECS2::getComponentArray<StaticHeightmapCmp>())
+    // for (auto &cmp: ecs.getComponentArray<StaticHeightmapCmp>())
     // {
     //     if (cmp.textures.empty() == false && cmp.textures[0] != "")
     //     {
@@ -144,12 +146,14 @@ idk::ModelSys::update( idk::EngineAPI &api )
 void
 idk::ModelSys::assignModel( int obj_id, const std::string &filepath )
 {
-    if (ECS2::hasComponent<ModelCmp>(obj_id) == false)
+    auto &ecs = api_ptr->getECS();
+
+    if (ecs.hasComponent<ModelCmp>(obj_id) == false)
     {
-        ECS2::giveComponent<ModelCmp>(obj_id);
+        ecs.giveComponent<ModelCmp>(obj_id);
     }
 
-    auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
+    auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
     int model_id = api_ptr->getRenderer().loadModel(filepath);
 
     cmp.obj_id   = obj_id;
@@ -161,14 +165,16 @@ idk::ModelSys::assignModel( int obj_id, const std::string &filepath )
 void
 idk::ModelSys::assignModelLOD( int obj_id, int level, const std::string &filepath )
 {
-    auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
+    auto &ecs = api_ptr->getECS();
+    auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
     api_ptr->getRenderer().loadModelLOD(cmp.model_id, level, filepath);
 }
 
 void
 idk::ModelSys::assignCustomRQ( int obj_id, int RQ )
 {
-    auto &cmp = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
+    auto &ecs = api_ptr->getECS();
+    auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
     cmp.custom_RQ = RQ;
 }
 
@@ -176,7 +182,8 @@ idk::ModelSys::assignCustomRQ( int obj_id, int RQ )
 void
 idk::ModelSys::assignShader_gpass( int obj_id, const std::string &shader_name )
 {
-    auto &cmp  = idk::ECS2::getComponent<idk::ModelCmp>(obj_id);
+    auto &ecs = api_ptr->getECS();
+    auto &cmp  = ecs.getComponent<idk::ModelCmp>(obj_id);
     cmp.shader_name = shader_name;
 }
 
@@ -220,7 +227,8 @@ idk::StaticHeightmapCmp::deserialize( std::ifstream &stream )
 void
 idk::StaticHeightmapCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    auto &cmp = idk::ECS2::getComponent<StaticHeightmapCmp>(obj_id);
+    auto &ecs = api.getECS();
+    auto &cmp = ecs.getComponent<StaticHeightmapCmp>(obj_id);
 
     static const idk::glTextureConfig config = {
         .internalformat = GL_RGBA8,
@@ -249,8 +257,9 @@ idk::StaticHeightmapCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::StaticHeightmapCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<StaticHeightmapCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<StaticHeightmapCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    auto &src = ecs.getComponent<StaticHeightmapCmp>(src_obj);
+    auto &dst = ecs.getComponent<StaticHeightmapCmp>(dst_obj);
 
 };
 
@@ -306,7 +315,8 @@ idk::ModelCmp::deserialize( std::ifstream &stream )
 void
 idk::ModelCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    ModelCmp &cmp = idk::ECS2::getComponent<ModelCmp>(obj_id);
+    auto &ecs = api.getECS();
+    ModelCmp &cmp = ecs.getComponent<ModelCmp>(obj_id);
 
     if (cmp.model_id == -1 && cmp.filepath != "")
     {
@@ -325,8 +335,9 @@ idk::ModelCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
 void
 idk::ModelCmp::onObjectCopy( int src_obj, int dst_obj )
 {
-    ModelCmp &src = idk::ECS2::getComponent<ModelCmp>(src_obj);
-    ModelCmp &dst = idk::ECS2::getComponent<ModelCmp>(dst_obj);
+    auto &ecs = api_ptr->getECS();
+    ModelCmp &src = ecs.getComponent<ModelCmp>(src_obj);
+    ModelCmp &dst = ecs.getComponent<ModelCmp>(dst_obj);
     
     dst.model_id    = src.model_id;
     dst.visible     = src.visible;
@@ -378,7 +389,7 @@ idk::TerrainCmp::deserialize( std::ifstream &stream )
 void
 idk::TerrainCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 {
-    // TerrainCmp &cmp = ECS2::getComponent<TerrainCmp>(obj_id);
+    // TerrainCmp &cmp = ecs.getComponent<TerrainCmp>(obj_id);
 
     // cmp.desc = {
     //     .height = {

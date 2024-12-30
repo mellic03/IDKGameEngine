@@ -17,7 +17,7 @@ namespace idk
 
 
 
-class idk::ScriptSys: public idk::ECS2::System
+class idk::ScriptSys: public idk::ECS::System
 {
 private:
     inline static std::map<std::string, RuntimeScript*> m_scripts;
