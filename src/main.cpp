@@ -1,5 +1,6 @@
 #include <libidk/idk_platform.hpp>
 #include <libidk/idk_api_loader.hpp>
+#include <libidk/idk_threadpool.hpp>
 #include <libidk/idk_module.hpp>
 #include <libidk/idk_game.hpp>
 #include <libidk/idk_string.hpp>
@@ -8,6 +9,7 @@
 #include <libidk/idk_random.hpp>
 
 #include <IDKGameEngine/IDKengine.hpp>
+#include <IDKGameEngine/packager.hpp>
 #include <IDKECS/IDKECS.hpp>
 
 #include <IDKEvents/IDKEvents.hpp>
@@ -17,7 +19,6 @@
 #include <IDKBuiltinUI/EditorUI.hpp>
 
 #include <IDKGameEngine/idk_engine_api.hpp>
-#include <IDKThreading/IDKThreading.hpp>
 #include <IDKGraphics/terrain/terrain.hpp>
 
 #include <filesystem>
@@ -142,8 +143,9 @@ int main( int argc, char **argv )
     idk::EngineAPI api;
     api.init(game->getName(), 4, 6);
 
-    auto &engine     = api.getEngine();
-    auto &ren        = api.getRenderer();
+    auto &engine = api.getEngine();
+    auto &ren    = api.getRenderer();
+    auto &pkg    = api.getPackager();
 
     idk::AudioSystem::init();
     idk::ThreadPool::init(arg_threads);
@@ -183,21 +185,21 @@ int main( int argc, char **argv )
     // -----------------------------------------------------------------------------------------
 
 
-    // Load modules from IDKGE/runtime/modules/
-    // -----------------------------------------------------------------------------------------
-    if (arg_load_modules)
-    {
-        std::filesystem::directory_iterator d_iter("IDKGE/modules/");
+    // // Load modules from IDKGE/runtime/modules/
+    // // -----------------------------------------------------------------------------------------
+    // if (arg_load_modules)
+    // {
+    //     std::filesystem::directory_iterator d_iter("IDKGE/modules/");
 
-        for (auto dir: d_iter)
-        {
-            std::string name = dir.path().stem();
-            std::string path = dir.path();
+    //     for (auto dir: d_iter)
+    //     {
+    //         auto path = dir.path();
+    //         path.replace_extension("");
 
-            engine.registerModule(name, path);
-        }
-    }
-    // -----------------------------------------------------------------------------------------
+    //         engine.registerModule(path.string());
+    //     }
+    // }
+    // // -----------------------------------------------------------------------------------------
 
 
     // idk::RenderOverlay test
@@ -205,7 +207,6 @@ int main( int argc, char **argv )
     // ren.pushRenderOverlayFill(glm::vec3(0.0f), 0.0f, 6.25f, 0.25f);
     // ren.pushRenderOverlay("IDKGE/resources/logo.jpg", 0.5f, 2.0f, 0.5f);
     // -----------------------------------------------------------------------------------------
-
 
     // Setup
     // -----------------------------------------------------------------------------------------
@@ -221,6 +222,7 @@ int main( int argc, char **argv )
     idk::ECS2::init(api);
 
     game->setup(args, api);
+    pkg.onBuild([game](){ game->build(); });
     // -----------------------------------------------------------------------------------------
 
 

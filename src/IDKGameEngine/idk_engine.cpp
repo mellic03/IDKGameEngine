@@ -1,6 +1,7 @@
 #include "idk_engine.hpp"
 
 #include <libidk/idk_export.hpp>
+#include <libidk/idk_platform.hpp>
 #include <libidk/idk_scene_file.hpp>
 #include <libidk/idk_log.hpp>
 
@@ -118,13 +119,21 @@ idk::Engine::shutdown()
 }
 
 
+
 int
-idk::Engine::registerModule( const std::string &name, const std::string &filepath )
+idk::Engine::registerModule( const std::string &filename )
 {
     using ModuleLoader = idk::GenericLoader<idk::Module>;
+    namespace fs = std::filesystem;
 
-    m_modules.push_back(ModuleLoader(filepath));
-    LOG_INFO() << "Loaded module \"" << name << "\"";
+    #ifdef IDK_UNIX
+        std::string path = filename + ".so";
+    #elif defined(IDK_WINDOWS)
+        std::string path = filename + ".dll";
+    #endif
+
+    m_modules.push_back(ModuleLoader(path));
+    LOG_INFO() << "Loaded module \"" << path << "\"";
 
     return 0;
 }

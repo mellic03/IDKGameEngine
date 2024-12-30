@@ -13,10 +13,10 @@ tab_shader_program_edit( const std::string &name, idk::glShaderProgram &program 
         return;
     }
 
-    for (auto &[name, def]: program.getDefinitions())
-    {
-        ImGui::InputText(name.c_str(), &def.value);
-    }
+    // for (auto &[name, def]: program.getDefinitions())
+    // {
+    //     ImGui::InputText(name.c_str(), &def.value);
+    // }
 
     if (ImGui::Button("Recompile"))
     {

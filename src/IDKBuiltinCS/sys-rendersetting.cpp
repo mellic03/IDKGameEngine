@@ -31,7 +31,7 @@ idk::RenderSettingSys::update( idk::EngineAPI &api )
     auto  &ren  = api.getRenderer();
     float dtime = api.dtime();
 
-    static std::string current_filepath = "assets/cubemaps/skybox5/";
+    static std::string current_filepath = "assets/cubemaps/skybox8/";
 
     if (m_obj == -1)
     {

@@ -884,7 +884,71 @@ void
 EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
 {
     auto &cmp = idk::ECS2::getComponent<idk::ScriptCmp>(obj_id);
-    ImGui::Text("Script path: \"%s\"", cmp.filepath.c_str());
+
+    ImGui::BeginTable("Scripts", 4, ImGuiTableFlags_SizingStretchSame);
+    {
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::TableNextColumn();
+
+        if (ImGui::Button("Reload All"))
+        {
+            for (auto &name: cmp.scripts)
+            {
+                idk::ScriptSys::reloadScript(name);
+                // script.reload();
+            }
+        }
+
+        ImGui::TableNextRow();
+
+        for (int i=0; i<cmp.scripts.size(); i++)
+        {
+            ImGui::TableNextRow();
+        
+            ImGui::TableNextColumn();
+            ImGui::Text(cmp.scripts[i].c_str());
+        
+            ImGui::TableNextColumn();
+            if (ImGui::Button("Reload"))
+            {
+                idk::ScriptSys::reloadScript(cmp.scripts[i]);
+            }
+
+            ImGui::TableNextColumn();
+            if (ImGui::Button("Remove"))
+            {
+                std::swap(cmp.scripts[i], cmp.scripts.back());
+                std::swap(cmp.data[i],    cmp.data.back());
+
+                cmp.scripts.pop_back();
+                cmp.data.pop_back();
+
+                break;
+            }
+        }
+
+        ImGui::EndTable();
+    }
+
+
+    // ImGui::ButtonEx(ICON_FA_DOWNLOAD, ImVec2(250, 50), ImGuiButtonFlags_None);
+
+    // if (ImGui::BeginDragDropTarget())
+    // {
+    //     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_DRAG_DROP"))
+    //     {
+    //         std::string filepath(static_cast<char *>(payload->Data));
+        
+    //         if (fs::path(filepath).extension().string() == ".cpp")
+    //         {
+    //             cmp.scripts.push_back(idk::RuntimeScript(filepath));
+    //             cmp.data.push_back(nullptr);
+    //             cmp.timers.push_back(0);
+    //         }
+    //     }
+    //     ImGui::EndDragDropTarget();
+    // }
 }
 
 
@@ -967,34 +1031,6 @@ EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_
 
     if (ImGui::BeginTabBar("Render Settings", ImGuiTabBarFlags_None))
     {
-        // for (auto &[group_name, group]: config.groups)
-        // {
-        //     if (ImGui::BeginTabItem(group_name.c_str()))
-        //     {
-        //         for (auto &[field_name, field]: group)
-        //         {
-        //             group.changed |= idkImGui::InputSettingsField(field_name.c_str(), field);
-        //         }
-        //         ImGui::EndTabItem();
-        //     }
-        // }
-
-
-        // if (ImGui::Button("Test serialization"))
-        // {
-        //     std::ofstream stream("test.bin", std::ios::binary);
-        //     LOG_INFO() << "Wrote " << config.serialize(stream) << " bytes\n";
-        //     stream.close();
-        // }
-
-        // if (ImGui::Button("Test deserialization"))
-        // {
-        //     std::ifstream stream("test.bin", std::ios::binary);
-        //     LOG_INFO() << "Read " << config.deserialize(stream) << " bytes\n";
-        //     stream.close();
-        // }
-
-
         if (ImGui::BeginTabItem("Volumetrics"))
         {
             auto &config = settings.volumetrics;
@@ -1021,9 +1057,8 @@ EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_
         {
             auto &config = settings.ssao;
             B |= ImGui::Checkbox("Enable", &config.enabled);
-            B |= ImGui::InputInt("Gaussian passes", &config.iterations);
-            B |= ImGui::InputInt("Unsharp  passes", &config.unsharp);
             B |= ImGui::InputInt("Samples",     &config.samples);
+            B |= ImGui::InputFloat("Factor", &config.factor);
             B |= ImGui::InputFloat("Intensity", &config.intensity);
             B |= ImGui::InputFloat("Radius",    &config.radius);
             B |= ImGui::InputFloat("Bias",      &config.bias);
@@ -1035,8 +1070,15 @@ EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_
             auto &config = settings.ssr;
             B |= ImGui::Checkbox("Enable",      &config.enabled);
             B |= ImGui::InputInt("Blend mode",  &config.blend_mode);
-            B |= ImGui::InputInt("Samples",     &config.samples);
-            B |= ImGui::InputInt("Downsamples", &config.downsamples);
+            ImGui::EndTabItem();
+        }
+
+        if (ImGui::BeginTabItem("SSGI"))
+        {
+            auto &config = settings.ssgi;
+            B |= ImGui::Checkbox("Enable", &config.enabled);
+            B |= ImGui::InputInt("Factor", &config.factor);
+            B |= ImGui::InputFloat("Intensity", &config.intensity);
             ImGui::EndTabItem();
         }
 

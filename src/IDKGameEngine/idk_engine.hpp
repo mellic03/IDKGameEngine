@@ -55,8 +55,11 @@ public:
 
 
 
-    template <typename module_type> int         registerModule( const std::string &name );
-    int                                         registerModule( const std::string &name, const std::string &filepath );
+    /**
+     * @param filename filename excluding extension (.so/.dll)
+     */
+    // template <typename module_type> int         registerModule( const std::string &name );
+    int                                         registerModule( const std::string &filename );
 
 };
 

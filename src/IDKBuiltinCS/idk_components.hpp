@@ -4,7 +4,8 @@
 #include <IDKAudio/IDKAudio.hpp>
 #include <IDKGameEngine/IDKGameEngine.hpp>
 
-#include "../../external/include/idk_icons/idk_Icons.hpp"
+#include <idk_icons/idk_Icons.hpp>
+// #include "../../external/include/idk_icons/idk_Icons.hpp"
 #include <libidk/idk_serialize.hpp>
 
 

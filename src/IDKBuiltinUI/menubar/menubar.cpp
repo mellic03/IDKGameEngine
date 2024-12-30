@@ -1,6 +1,7 @@
 #include "../EditorUI.hpp"
 #include "../common/idk_imgui_extra.hpp"
 
+#include <IDKGameEngine/packager.hpp>
 #include <IDKIO/IDKIO.hpp>
 
 
@@ -35,19 +36,26 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
         {
             if (ImGui::MenuItem("New", "CTRL + N"))
             {
-
+                
             }
 
-            if (ImGui::MenuItem(ICON_FA_ID_CARD " Save As", "CTRL + SHFT + S"))
+            if (ImGui::MenuItem("Save As " ICON_FA_FILE_EXPORT, "CTRL + SHFT + S"))
             {
-                // idk::ECS2::writeFile("entry.idksc");
                 popup_save = true;
             }
 
-            if (ImGui::MenuItem("Load", "CTRL + L"))
+            if (ImGui::MenuItem("Load " ICON_FA_FILE_IMPORT, "CTRL + L"))
             {
-                // idk::ECS2::readFile("entry.idksc");
                 popup_load = true;
+            }
+
+            if (ImGui::BeginMenu("Project"))
+            {
+                if (ImGui::MenuItem("Build"))
+                {
+                    api.getPackager().build();
+                }
+                ImGui::EndMenu();
             }
 
             if (ImGui::MenuItem("Reload Modules", "F5"))
@@ -61,10 +69,6 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
 
         _menubar_settings(api);
 
-        if (ImGui::BeginMenu("Scene"))
-        {
-            ImGui::EndMenu();
-        }
 
         float fps = ImGui::GetIO().Framerate;
         ImGui::Text("Framerate: %f", fps);

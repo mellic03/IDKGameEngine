@@ -1,3 +1,1 @@
-#pragma once
-
-#include "idk_threadpool.hpp"
+#include <libidk/idk_threadpool.hpp>

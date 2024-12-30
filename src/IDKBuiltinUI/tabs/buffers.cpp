@@ -93,7 +93,8 @@ EditorUI_MD::_tab_buffers( idk::EngineAPI &api )
 
         if (ImGui::BeginTabItem("SSR"))
         {
-            display_textures(ren.m_mipbuffer[1].attachments, 3);
+            display_textures(ren.m_mipbuffer.attachments, 3);
+            display_textures(ren.m_SSGI_buffers[0]->attachments);
             ImGui::EndTabItem();
         }
 
@@ -105,7 +106,7 @@ EditorUI_MD::_tab_buffers( idk::EngineAPI &api )
 
         if (ImGui::BeginTabItem("SSAO"))
         {
-            display_textures(ren.m_SSAO_buffers[0].attachments);
+            display_textures(ren.m_SSAO_buffers[0]->attachments);
             ImGui::EndTabItem();
         }
     

@@ -34,8 +34,8 @@ struct idk::RenderSettingCmp
     std::string filepath = "";
     idk::RenderSettings settings;
 
-    size_t  serialize            ( std::ofstream &stream ) const;
-    size_t  deserialize          ( std::ifstream &stream );
+    size_t serialize   ( std::ofstream &stream ) const;
+    size_t deserialize ( std::ifstream &stream );
     static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
     static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
     static void onObjectCopy         ( int src_obj, int dst_obj );

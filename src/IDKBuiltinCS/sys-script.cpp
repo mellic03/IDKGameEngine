@@ -23,28 +23,79 @@ void
 idk::ScriptSys::update( idk::EngineAPI &api )
 {
     auto &ren = api.getRenderer();
+    float dt  = api.dtime();
     
     for (auto &cmp: ECS2::getComponentArray<ScriptCmp>())
     {
-        if (cmp.script.is_ready())
+        for (int i=0; i<cmp.scripts.size(); i++)
         {
-            cmp.script.execute(api, cmp.obj_id, cmp.obj_id);
+            if (cmp.scripts[i] == "")
+            {
+                continue;
+            }
+
+            cmp.timers[i] -= int(1000.0f * dt);
+
+            if (cmp.timers[i] <= 0)
+            {
+                void *data    = cmp.data[i];
+                auto *script  = m_scripts[cmp.scripts[i]];
+                cmp.timers[i] = script->execute(api, data);
+            }
         }
     }
 }
 
 
+
+
 void
-idk::ScriptSys::assignScript( int obj_id, const std::string &filepath )
+idk::ScriptSys::reserve( int obj_id, int count )
 {
+    auto &cmp = ECS2::getComponent<ScriptCmp>(obj_id);
+
+    cmp.data.resize(count, nullptr);
+    cmp.scripts.resize(count);
+    cmp.timers.resize(count, 0);
+}
+
+
+void
+idk::ScriptSys::reloadScript( const std::string &filename )
+{
+    if (m_scripts.contains(filename))
+    {
+        m_scripts[filename]->reload();
+    }
+}
+
+
+void
+idk::ScriptSys::attachScript( int obj_id, int idx, const std::string &filename )
+{
+    namespace fs = std::filesystem;
+
     if (ECS2::hasComponent<ScriptCmp>(obj_id) == false)
     {
         ECS2::giveComponent<ScriptCmp>(obj_id);
     }
 
+    if (m_scripts.contains(filename) == false)
+    {
+        std::cout << "New script: \"" << filename << "\"\n";
+        m_scripts[filename] = new idk::RuntimeScript(filename);
+    }
+
     auto &cmp = ECS2::getComponent<ScriptCmp>(obj_id);
-    cmp.filepath = filepath;
-    cmp.script   = idk::RuntimeScript(filepath);
+    cmp.scripts[idx] = filename;
+}
+
+
+
+void
+idk::ScriptSys::attachData( int obj_id, int idx, void *data )
+{
+    ECS2::getComponent<ScriptCmp>(obj_id).data[idx] = data;
 }
 
 
@@ -54,7 +105,7 @@ idk::ScriptCmp::serialize( std::ofstream &stream ) const
 {
     size_t n = 0;
     n += idk::streamwrite(stream, obj_id);
-    n += idk::streamwrite(stream, filepath);
+    n += idk::streamwrite(stream, scripts);
     return n;
 }
 
@@ -64,7 +115,13 @@ idk::ScriptCmp::deserialize( std::ifstream &stream )
 {
     size_t n = 0;
     n += idk::streamread(stream, obj_id);
-    n += idk::streamread(stream, filepath);
+    n += idk::streamread(stream, scripts);
+
+    for (auto &script: scripts)
+    {
+        script = "";
+    }
+
     return n;
 }
 
@@ -94,9 +151,8 @@ idk::ScriptCmp::onObjectCopy( int src_obj, int dst_obj )
     ScriptCmp &src = idk::ECS2::getComponent<ScriptCmp>(src_obj);
     ScriptCmp &dst = idk::ECS2::getComponent<ScriptCmp>(dst_obj);
     
-    // dst.model_id = src.model_id;
-    dst.filepath = src.filepath;
-    dst.script   = src.script;
+    dst.data    = src.data;
+    dst.scripts = src.scripts;
 }
 
 
