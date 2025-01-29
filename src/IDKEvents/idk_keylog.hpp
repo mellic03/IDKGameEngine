@@ -8,7 +8,11 @@
 
 namespace idk
 {
-    enum class KeyEvent { UP, DOWN, TAPPED };
+    namespace KeyEvent
+    {
+        enum key_event { UP=0, DOWN=1, PRESSED=2, RELEASED=3, TAPPED=4 };
+    }
+
     class Keylog;
 };
 
@@ -17,16 +21,21 @@ class IDK_VISIBLE idk::Keylog
 {
 private:
     std::vector<std::vector<bool>>   m_keys;
+    std::vector<uint64_t>            m_timers;
+    uint64_t msElapsed = 10;
 
 public:
 
             Keylog();
 
-    void    log       ( const Uint8 *state );
-    bool    get       ( idk::Keycode keycode, idk::KeyEvent event );
-    bool    keyDown   ( idk::Keycode keycode );
-    bool    keyUp     ( idk::Keycode keycode );
-    bool    keyTapped ( idk::Keycode keycode );
+    void    update      ( const Uint8 *state, uint64_t ms );
+    void    log         ( SDL_Keycode key, bool down );
+    bool    get         ( idk::Keycode keycode, idk::KeyEvent::key_event event );
+    bool    keyDown     ( idk::Keycode keycode );
+    bool    keyUp       ( idk::Keycode keycode );
+    bool    keyPressed  ( idk::Keycode keycode );
+    bool    keyReleased ( idk::Keycode keycode );
+    bool    keyTapped   ( idk::Keycode keycode );
 
 
     bool keysTapped( idk::Keycode first )

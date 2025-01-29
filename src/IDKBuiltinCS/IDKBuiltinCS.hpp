@@ -4,6 +4,7 @@
 
 #include "sys-audio.hpp"
 #include "sys-camera.hpp"
+#include "sys-gui.hpp"
 #include "sys-lightsource.hpp"
 #include "sys-model.hpp"
 #include "sys-particle.hpp"

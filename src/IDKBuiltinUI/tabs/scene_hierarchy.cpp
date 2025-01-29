@@ -6,13 +6,13 @@
 namespace fs = std::filesystem;
 
 template <typename T>
-void idk_file_ree2( const std::string &filepath, int obj_id );
+void idk_file_ree2( idk::ECS &ecs, const std::string &filepath, int obj_id );
 
 
 
 template <>
 void
-idk_file_ree2<idk::AudioEmitterCmp>( const std::string &filepath, int obj_id )
+idk_file_ree2<idk::AudioEmitterCmp>( idk::ECS &ecs, const std::string &filepath, int obj_id )
 {
     idk::AudioSys::assignSound(obj_id, filepath);
 }
@@ -20,25 +20,26 @@ idk_file_ree2<idk::AudioEmitterCmp>( const std::string &filepath, int obj_id )
 
 template <>
 void
-idk_file_ree2<idk::ModelCmp>( const std::string &filepath, int obj_id )
+idk_file_ree2<idk::ModelCmp>( idk::ECS &ecs, const std::string &filepath, int obj_id )
 {
-    idk::ModelSys::assignModel(obj_id, filepath);
+    auto &msys = ecs.getSystem<idk::ModelSys>();
+    msys.assignModel(obj_id, filepath.c_str());
 }
 
 
 
-void idk_file_ree( const std::string &filepath, int obj_id )
+void idk_file_ree( idk::ECS &ecs, const std::string &filepath, int obj_id )
 {
     std::string ext = fs::path(filepath).extension().string();
 
     if (ext == ".wav" || ext == ".mp3")
     {
-        idk_file_ree2<idk::AudioEmitterCmp>(filepath, obj_id);
+        idk_file_ree2<idk::AudioEmitterCmp>(ecs, filepath, obj_id);
     }
 
     else if (ext == ".idkvi")
     {
-        idk_file_ree2<idk::ModelCmp>(filepath, obj_id);
+        idk_file_ree2<idk::ModelCmp>(ecs, filepath, obj_id);
     }
 }
 
@@ -46,10 +47,8 @@ void idk_file_ree( const std::string &filepath, int obj_id )
 
 
 static void
-idk_scene_treenode_drag_drop( idk::EngineAPI &api, int obj_id )
+idk_scene_treenode_drag_drop( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
-
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
         ImGui::SetDragDropPayload(
@@ -69,7 +68,7 @@ idk_scene_treenode_drag_drop( idk::EngineAPI &api, int obj_id )
         if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_DRAG_DROP"))
         {
             std::string filepath(reinterpret_cast<char *>(payload->Data));
-            idk_file_ree(filepath, obj_id);
+            idk_file_ree(ecs, filepath, obj_id);
         }
 
         else if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_HIERARCHY"))
@@ -85,10 +84,8 @@ idk_scene_treenode_drag_drop( idk::EngineAPI &api, int obj_id )
 
 
 static void
-idk_scene_treenode_drag_drop_deparent( idk::EngineAPI &api, int obj_id )
+idk_scene_treenode_drag_drop_deparent( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
-
     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
     {
         ImGui::SetDragDropPayload(
@@ -123,7 +120,7 @@ idk_scene_treenode_drag_drop_deparent( idk::EngineAPI &api, int obj_id )
 
 
 void
-EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
+EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, idk::ECS &ecs, int id )
 {
     if (id == -1)
     {
@@ -131,7 +128,6 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
     }
 
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
 
     std::string icon = ecs.getComponent<idk::IconCmp>(id).icon;
 
@@ -190,11 +186,11 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
             ImGui::EndPopup();
         }
     
-        idk_scene_treenode_drag_drop(api, id);
+        idk_scene_treenode_drag_drop(api, ecs, id);
 
         for (int child_id: ecs.getChildren(id))
         {
-            _tab_scene_treenode(api, child_id);
+            _tab_scene_treenode(api, ecs, child_id);
         }
     
         ImGui::TreePop();
@@ -205,10 +201,8 @@ EditorUI_MD::_tab_scene_treenode( idk::EngineAPI &api, int id )
 
 
 
-void prefab_popup( idk::EngineAPI &api )
+void prefab_popup( idk::EngineAPI &api, idk::ECS &ecs )
 {
-    auto &ecs = api.getECS();
-
     if (ImGui::BeginPopup("Instantiate Prefab"))
     {
         std::string label = "Instantiate Prefab";
@@ -229,10 +223,9 @@ void prefab_popup( idk::EngineAPI &api )
 
 
 void
-EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
+EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api, idk::ECS &ecs )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &ren    = api.getRenderer();
     int  obj_id  = 0;
 
@@ -257,7 +250,7 @@ EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
         ImGui::TableNextColumn();
 
         bool row_clicked = ImGui::IsItemClicked() && ImGui::IsMouseReleased(ImGuiMouseButton_Left);
-        bool node_open = ImGui::TreeNodeEx("root", flags);
+        bool node_open = ImGui::TreeNodeEx(ecs.name.c_str(), flags);
 
         if (row_clicked && !ImGui::IsItemToggledOpen())
         {
@@ -266,7 +259,7 @@ EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 
         if (node_open)
         {
-            idk_scene_treenode_drag_drop_deparent(api, obj_id);
+            idk_scene_treenode_drag_drop_deparent(api, ecs, obj_id);
 
             for (auto &e: ecs.getEntities())
             {
@@ -274,7 +267,7 @@ EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 
                 if (ecs.hasParent(id) == false)
                 {
-                    _tab_scene_treenode(api, id);
+                    _tab_scene_treenode(api, ecs, id);
                 }
             }
 
@@ -308,7 +301,7 @@ EditorUI_MD::_tab_scene_hierarchy( idk::EngineAPI &api )
 
     // if (prefab_popup_open)
     {
-        prefab_popup(api);
+        prefab_popup(api, ecs);
     }
 
 

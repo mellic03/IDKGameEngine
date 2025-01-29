@@ -8,21 +8,26 @@ namespace
 
 
 
-void
-idk::ECS::init( idk::EngineAPI &api )
-{
-    m_api_ptr = &api;
+// void
+// idk::ECS::init( idk::EngineAPI &api )
+// {
+//     m_api_ptr = &api;
 
-    for (System *system: m_systems)
-    {
-        system->init(api);
-    }
-}
+//     for (System *system: m_systems)
+//     {
+//         system->init(api);
+//     }
+// }
 
 
 void
 idk::ECS::update( idk::EngineAPI &api )
 {
+    // if (m_api_ptr == nullptr)
+    // {
+    //     init(api);
+    // }
+
     for (System *system: m_systems)
     {
         system->update(api);
@@ -151,6 +156,17 @@ idk::ECS::getComponentArraysByCategory( const std::string &category )
 
 
 
+std::function<void(idk::EngineAPI&, idk::ECS&, int)>
+idk::ECS::getUserCallback( size_t key )
+{
+    if (m_user_callbacks.contains(key) == false)
+    {
+        LOG_WARN() << "[ECS::getUserCallback] m_user_callbacks does not contain \"" << key << "\"";
+
+        return m_default_userfn;
+    }
+    return m_user_callbacks[key];
+}
 
 
 
@@ -262,7 +278,6 @@ void
 idk::ECS::deleteGameObject( int obj_id, bool deep )
 {
     LOG_DEBUG() << "[ECS::deleteGameObject] obj_id " << obj_id;
-
     m_delete_list.push_back(obj_id);
 }
 
@@ -421,11 +436,11 @@ idk::ECS::hasChildren( int obj_id )
 void
 idk::ECS::giveChild( int parent_id, int child_id )
 {
-    // glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
-    // glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
-    // glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
-    // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
-    glm::vec3 child_pos = TransformSys::getWorldPosition(child_id);
+    // // glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
+    // // glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
+    // // glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
+    // // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+    // glm::vec3 child_pos = TransformSys::getWorldPosition(child_id);
 
     if (hasParent(child_id))
     {
@@ -437,15 +452,15 @@ idk::ECS::giveChild( int parent_id, int child_id )
 
     if (m_readfile == false)
     {
-        glm::mat4 M = TransformSys::getModelMatrix(parent_id);
-        TransformSys::recomputeTransformMatrices(child_id);
-        TransformSys::setWorldPosition(child_id, child_pos);
+        // glm::mat4 M = TransformSys::getModelMatrix(parent_id);
+        // TransformSys::recomputeTransformMatrices(child_id);
+        // TransformSys::setWorldPosition(child_id, child_pos);
 
-        // Mw = TransformSys::getWorldMatrix(child_id);
-        // Ml = TransformSys::getLocalMatrix(child_id, false);
-        // R  = glm::inverse(Mw*Ml) * R;
-        // glm::quat Q = glm::normalize(glm::quat_cast(R));
-        // TransformSys::getLocalRotation(child_id) = Q;
+        // // Mw = TransformSys::getWorldMatrix(child_id);
+        // // Ml = TransformSys::getLocalMatrix(child_id, false);
+        // // R  = glm::inverse(Mw*Ml) * R;
+        // // glm::quat Q = glm::normalize(glm::quat_cast(R));
+        // // TransformSys::getLocalRotation(child_id) = Q;
     }
 }
 
@@ -453,11 +468,11 @@ idk::ECS::giveChild( int parent_id, int child_id )
 void
 idk::ECS::removeChild( int parent_id, int child_id )
 {
-    // glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
-    // glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
-    // glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
-    // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
-    glm::vec3 child_pos = TransformSys::getWorldPosition(child_id);
+    // // glm::mat4 Mw = TransformSys::getWorldMatrix(child_id);
+    // // glm::mat4 Ml = TransformSys::getLocalMatrix(child_id, false);
+    // // glm::mat4 R  = glm::mat4(glm::mat3(Mw*Ml));
+    // // glm::vec3 child_pos = TransformSys::getPositionWorldspace(child_id);
+    // glm::vec3 child_pos = TransformSys::getWorldPosition(child_id);
 
     if (parent_id != -1)
     {
@@ -467,23 +482,23 @@ idk::ECS::removeChild( int parent_id, int child_id )
 
     if (m_readfile == false)
     {
-        // int grandparent = getParent(parent_id);
+        // // int grandparent = getParent(parent_id);
 
-        // if (grandparent != -1)
-        {
-            // glm::mat4 M = TransformSys::getModelMatrix(grandparent);
-            TransformSys::recomputeTransformMatrices(parent_id);
-            TransformSys::recomputeTransformMatrices(child_id);
-        }
+        // // if (grandparent != -1)
+        // {
+        //     // glm::mat4 M = TransformSys::getModelMatrix(grandparent);
+        //     TransformSys::recomputeTransformMatrices(parent_id);
+        //     TransformSys::recomputeTransformMatrices(child_id);
+        // }
 
-        TransformSys::setWorldPosition(child_id, child_pos);
+        // TransformSys::setWorldPosition(child_id, child_pos);
 
-        // Mw = TransformSys::getWorldMatrix(child_id);
-        // Ml = TransformSys::getLocalMatrix(child_id, false);
-        // R  = glm::inverse(glm::mat4(glm::mat3(Mw*Ml))) * R;
-        // glm::quat Q = glm::normalize(glm::quat_cast(R));
+        // // Mw = TransformSys::getWorldMatrix(child_id);
+        // // Ml = TransformSys::getLocalMatrix(child_id, false);
+        // // R  = glm::inverse(glm::mat4(glm::mat3(Mw*Ml))) * R;
+        // // glm::quat Q = glm::normalize(glm::quat_cast(R));
 
-        // TransformSys::getLocalRotation(child_id) = Q;
+        // // TransformSys::getLocalRotation(child_id) = Q;
     }
 }
 

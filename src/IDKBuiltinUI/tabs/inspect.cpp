@@ -30,7 +30,6 @@ idk_AddComponentPopup( idk::ECS &ecs, int obj_id )
     ImGui::Text("Add Component");
     ImGui::Separator();
 
-
     auto &categories = ecs.getComponentCategories();
 
     ImGui::BeginTable("Add Component Table", categories.size());
@@ -62,24 +61,21 @@ idk_AddComponentPopup( idk::ECS &ecs, int obj_id )
 
 
 void
-EditorUI_MD::_tab_inspect( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::_tab_inspect( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     ImGui::Begin("Inspect Object");
 
-    if (obj_id == -1)
+    if (obj_id == -1 || ecs.gameObjectExists(obj_id) == false)
     {
         ImGui::End();
         return;
     }
 
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &ren    = api.getRenderer();
     
-
     static size_t component = 0;
     static bool open_popup = false;
-
 
     std::string name = ecs.getGameObjectName(obj_id);
     if (ImGui::InputText("Name", &name, ImGuiInputTextFlags_EnterReturnsTrue))
@@ -154,8 +150,10 @@ EditorUI_MD::_tab_inspect( idk::EngineAPI &api, int obj_id )
         {
             ImGui::BeginChild("Component");
 
-            auto *CA = ecs.getComponentArray(component);
-            CA->userCallback(api, obj_id);
+            (idk::ECS::getUserCallback(component))(api, ecs, obj_id);
+
+            // auto *CA = ecs.getComponentArray(component);
+            // CA->userCallback(api, ecs, obj_id);
 
             ImGui::EndChild();
         }

@@ -28,40 +28,48 @@ private:
     float       m_rsnap = 1.0f;
     float       m_ssnap = 0.1f;
 
-    void        _tab_viewport( idk::EngineAPI & );
+    idk::ECS*   m_ecs = nullptr;
 
-    void        _tab_scene_treenode( idk::EngineAPI &, int );
-    void        _tab_scene_hierarchy( idk::EngineAPI & );
-    void        _tab_render_hierarchy( idk::EngineAPI & );
-    void        _tab_inspect( idk::EngineAPI &, int object_id );
-    void        _tab_editor_properties( idk::EngineAPI & );
-    void        _tab_scripts( idk::EngineAPI & );
-    void        _tab_assets( idk::EngineAPI & );
-    void        _tab_buffers( idk::EngineAPI & );
-    void        _tab( idk::EngineAPI & );
+    using tabfn_type = std::function<void(idk::EngineAPI&)>;
+    std::vector<tabfn_type> m_tabs;
+
+    void        _tab_viewport( idk::EngineAPI&, idk::ECS& );
+    idk::ECS*   _tab_scene_select( idk::EngineAPI& );
+    void        _tab_scene_treenode( idk::EngineAPI&, idk::ECS&, int );
+    void        _tab_scene_hierarchy( idk::EngineAPI&, idk::ECS& );
+    void        _tab_render_hierarchy( idk::EngineAPI& );
+    void        _tab_inspect( idk::EngineAPI&, idk::ECS&, int object_id );
+    void        _tab_editor_properties( idk::EngineAPI& );
+    void        _tab_scripts( idk::EngineAPI& );
+    void        _tab_assets( idk::EngineAPI& );
+    void        _tab_buffers( idk::EngineAPI& );
+    void        _tab( idk::EngineAPI& );
     // -----------------------------------------------------------------------------------------
 
     // Menu Bar
     // -----------------------------------------------------------------------------------------
-    void        _menubar( idk::EngineAPI & );
-    void        _menubar_settings( idk::EngineAPI & );
+    void        _menubar( idk::EngineAPI& );
+    void        _menubar_settings( idk::EngineAPI& );
     // -----------------------------------------------------------------------------------------
 
 
     template <typename T>
-    static void drawComponent( idk::EngineAPI &, int obj_id ) {  };
+    static void drawComponent( idk::EngineAPI&, idk::ECS&, int obj_id ) {  };
 
-    void registerDrawComponents( idk::EngineAPI &api );
+    void registerDrawComponents();
 
 
 public:
 
-    virtual void        init    ( idk::EngineAPI & ) final;
+    virtual void        init    ( idk::EngineAPI& ) final;
     virtual void        deinit  () final;
-    virtual void        stage_A ( idk::EngineAPI & ) final {  };
-    virtual void        stage_B ( idk::EngineAPI & ) final;
-    virtual void        stage_C ( idk::EngineAPI & ) final {  };
+    virtual void        registerECS( idk::EngineAPI&, idk::ECS& );
 
+    virtual void        stage_A ( idk::EngineAPI& ) final {  };
+    virtual void        stage_B ( idk::EngineAPI& ) final;
+    virtual void        stage_C ( idk::EngineAPI& ) final {  };
+
+    void insertImGui( const tabfn_type &fn ) { m_tabs.push_back(fn); }
 };
 
 

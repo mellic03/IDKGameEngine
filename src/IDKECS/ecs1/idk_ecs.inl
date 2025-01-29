@@ -79,6 +79,13 @@ idk::ECS::getComponentArray()
 }
 
 
+template <typename system_type>
+system_type&
+idk::ECS::getSystem()
+{
+    int idx = m_system_keys[getkey<system_type>()];
+    return *dynamic_cast<system_type *>(m_systems[idx]);
+}
 
 
 
@@ -88,7 +95,7 @@ idk::ECS::registerComponent( const std::string &name, const std::string &categor
 {
     size_t key = getkey<ComponentArray<T>>();
  
-    m_component_arrays[key] = std::make_unique<ComponentArray<T>>(name, key);
+    m_component_arrays[key] = std::make_unique<ComponentArray<T>>(m_api_ptr, this, name, key);
     m_component_keys[name] = key;
 
     m_component_categories[category].push_back(key);

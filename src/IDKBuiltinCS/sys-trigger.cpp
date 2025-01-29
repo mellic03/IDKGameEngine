@@ -21,7 +21,9 @@ idk::TriggerSys::init( idk::EngineAPI &api )
 void
 idk::TriggerSys::update( idk::EngineAPI &api )
 {
-    for (auto &[obj_id, trigger, response]: ECS2::getComponentArray<TriggerCmp>())
+    auto &ecs = getECS();
+
+    for (auto &[obj_id, trigger, response]: ecs.getComponentArray<TriggerCmp>())
     {
         if (m_triggers.contains(trigger) == false)
         {
@@ -87,23 +89,23 @@ idk::TriggerCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::TriggerCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::TriggerCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
 
 };
 
 
 void
-idk::TriggerCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::TriggerCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
 
 };
 
 
 void
-idk::TriggerCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::TriggerCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<TriggerCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<TriggerCmp>(dst_obj);
+    auto &src = ecs.getComponent<TriggerCmp>(src_obj);
+    auto &dst = ecs.getComponent<TriggerCmp>(dst_obj);
 
 };

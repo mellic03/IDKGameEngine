@@ -7,10 +7,11 @@
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::TransformCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &pcmp = idk::TransformSys::getTransformCmp(obj_id);
-    auto &cmp = idk::TransformSys::getTransform(obj_id);
+    auto &tsys = ecs.getSystem<idk::TransformSys>();
+    auto &pcmp = tsys.getTransformCmp(obj_id);
+    auto &cmp  = tsys.getTransform(obj_id);
 
     ImGui::InputFloat3("Tr", &cmp.position[0], "%0.2f");
     ImGui::SameLine();
@@ -66,11 +67,9 @@ drawNFThing( const std::string &name, idk::TerrainRenderer::NoiseFactor &NF )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::TerrainCmp>( idk::EngineAPI &api, int obj_id )
-{auto &ecs = api.getECS();
+EditorUI_MD::drawComponent<idk::TerrainCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+{
     auto &cmp = ecs.getComponent<idk::TerrainCmp>(obj_id);
-
-
     auto &desc = idk::TerrainRenderer::getTerrainDesc();
 
     glm::vec4 &scale = desc.scale;
@@ -230,10 +229,9 @@ void drag_drop_thing( idk::ECS &ecs, std::string label, const std::string &paylo
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::AnchorCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &cmp    = ecs.getComponent<idk::AnchorCmp>(obj_id);
 
     // drag_drop_thing("Anchor Distance", "SCENE_HIERARCHY", cmp.anchor_ids[0]);
@@ -242,10 +240,9 @@ EditorUI_MD::drawComponent<idk::AnchorCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::ParticleCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::ParticleCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &cmp    = ecs.getComponent<idk::ParticleCmp>(obj_id);
     // auto &desc   = cmp.desc;
 
@@ -267,10 +264,9 @@ EditorUI_MD::drawComponent<idk::ParticleCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::SmoothFollowCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::SmoothFollowCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &cmp    = ecs.getComponent<idk::SmoothFollowCmp>(obj_id);
 
     drag_drop_thing(ecs, "Anchor ID", "SCENE_HIERARCHY", cmp.anchor_id);
@@ -282,10 +278,9 @@ EditorUI_MD::drawComponent<idk::SmoothFollowCmp>( idk::EngineAPI &api, int obj_i
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::IKCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::IKCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &cmp    = ecs.getComponent<idk::IKCmp>(obj_id);
 
     drag_drop_thing(ecs, "Pole Target", "SCENE_HIERARCHY", cmp.pole_target);
@@ -295,10 +290,9 @@ EditorUI_MD::drawComponent<idk::IKCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::LookTowardCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::LookTowardCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &cmp    = ecs.getComponent<idk::LookTowardCmp>(obj_id);
 
     drag_drop_thing(ecs, "Target", "SCENE_HIERARCHY", cmp.target_id);
@@ -308,10 +302,9 @@ EditorUI_MD::drawComponent<idk::LookTowardCmp>( idk::EngineAPI &api, int obj_id 
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::RotateCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::RotateCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &cmp    = ecs.getComponent<idk::RotateCmp>(obj_id);
 
     ImGui::InputFloat("Magnitude", &(cmp.magnitude));
@@ -321,12 +314,13 @@ EditorUI_MD::drawComponent<idk::RotateCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<idk::CameraCmp>(obj_id);
 
+    ImGui::InputFloat("FOV",  &cmp.camera.fov);
+    ImGui::InputFloat("Exposure", &cmp.camera.exposure);
     ImGui::DragFloat("Bloom", &cmp.camera.bloom, 0.01f, 0.0f, 1.0f);
     ImGui::DragFloat("near",  &cmp.camera.near,  0.001f, 0.01f, 2.0f);
     ImGui::DragFloat("far",   &cmp.camera.far,   1.0f, 128.0f, 2048.0f);
@@ -361,10 +355,9 @@ EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
 
 // template <>
 // void
-// EditorUI_MD::drawComponent<idk::AtmosphereCmp>( idk::EngineAPI &api, int obj_id )
+// EditorUI_MD::drawComponent<idk::AtmosphereCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 // {
 //     auto &ren = api.getRenderer();
-//     auto &ecs = api.getECS();
 //     auto &cmp = ecs.getComponent<idk::AtmosphereCmp>(obj_id);
 
 //     if (cmp.atmosphere_id == -1)
@@ -388,10 +381,9 @@ EditorUI_MD::drawComponent<idk::CameraCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::SpotlightCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::SpotlightCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
     auto &cmp   = ecs.getComponent<idk::SpotlightCmp>(obj_id);
     auto &light = cmp.light;
 
@@ -406,10 +398,9 @@ EditorUI_MD::drawComponent<idk::SpotlightCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::DirlightCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::DirlightCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<idk::DirlightCmp>(obj_id);
 
     if (cmp.light_id == -1)
@@ -428,10 +419,9 @@ EditorUI_MD::drawComponent<idk::DirlightCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::PointlightCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::PointlightCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &ren = api.getRenderer();
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<idk::PointlightCmp>(obj_id);
     auto &light = cmp.light;
 
@@ -445,9 +435,10 @@ EditorUI_MD::drawComponent<idk::PointlightCmp>( idk::EngineAPI &api, int obj_id 
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, int obj_id )
-{auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
+EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+{
+    auto &msys = ecs.getSystem<idk::ModelSys>();
+    auto &cmp  = ecs.getComponent<idk::ModelCmp>(obj_id);
 
     ImGui::Text("Model ID: %d", cmp.model_id);
     ImGui::Separator();
@@ -472,7 +463,7 @@ EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, int obj_id )
             
                 if (fs::path(filepath).extension().string() == ".idkvi")
                 {
-                    idk::ModelSys::assignModel(obj_id, filepath);
+                    msys.assignModel(obj_id, filepath.c_str());
                 }
             }
             ImGui::EndDragDropTarget();
@@ -491,7 +482,7 @@ EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, int obj_id )
             
                 if (fs::path(filepath).extension().string() == ".idkvi")
                 {
-                    idk::ModelSys::assignModelLOD(obj_id, 1, filepath);
+                    msys.assignModelLOD(obj_id, 1, filepath.c_str());
                 }
             }
             ImGui::EndDragDropTarget();
@@ -510,7 +501,7 @@ EditorUI_MD::drawComponent<idk::ModelCmp>( idk::EngineAPI &api, int obj_id )
             
                 if (fs::path(filepath).extension().string() == ".idkvi")
                 {
-                    idk::ModelSys::assignModelLOD(obj_id, 2, filepath);
+                    msys.assignModelLOD(obj_id, 2, filepath.c_str());
                 }
             }
             ImGui::EndDragDropTarget();
@@ -556,9 +547,8 @@ void drag_drop_texture( std::string label, const std::string &payloadname, std::
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::StaticHeightmapCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::StaticHeightmapCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<idk::StaticHeightmapCmp>(obj_id);
 
     ImGui::Text("Model ID: %d", cmp.model);
@@ -589,9 +579,8 @@ EditorUI_MD::drawComponent<idk::StaticHeightmapCmp>( idk::EngineAPI &api, int ob
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::IconCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::IconCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs  = api.getECS();
     auto &data = ecs.getComponent<idk::IconCmp>(obj_id);
     std::string icon = std::string(data.icon);
 
@@ -631,7 +620,7 @@ EditorUI_MD::drawComponent<idk::IconCmp>( idk::EngineAPI &api, int obj_id )
 
 // template <>
 // void
-// EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
+// EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 // {
 //     auto &engine = api.getEngine();
     
@@ -760,8 +749,8 @@ EditorUI_MD::drawComponent<idk::IconCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::AudioEmitterCmp>( idk::EngineAPI &api, int obj_id )
-{auto &ecs = api.getECS();
+EditorUI_MD::drawComponent<idk::AudioEmitterCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+{
     auto &cmp = ecs.getComponent<idk::AudioEmitterCmp>(obj_id);
     std::string label = cmp.filepath;
 
@@ -797,7 +786,7 @@ EditorUI_MD::drawComponent<idk::AudioEmitterCmp>( idk::EngineAPI &api, int obj_i
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
 
 }
@@ -806,7 +795,7 @@ EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, int obj_
 
 // template <>
 // void
-// EditorUI_MD::drawComponent<idk::ProgressionEventCmp>( idk::EngineAPI &api, int obj_id )
+// EditorUI_MD::drawComponent<idk::ProgressionEventCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 // {
 //     auto &engine = api.getEngine();
     
@@ -867,8 +856,8 @@ EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, int obj_
 
 // template <>
 // void
-// EditorUI_MD::drawComponent<idk::ProgressionStateCmp>( idk::EngineAPI &api, int obj_id )
-// {auto &ecs = api.getECS();
+// EditorUI_MD::drawComponent<idk::ProgressionStateCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+// {
 //     auto &cmp = ecs.getComponent<idk::ProgressionStateCmp>(obj_id);
 //     int value = int(cmp.progress);
 //     ImGui::InputInt("Progression State", &value);
@@ -889,9 +878,10 @@ EditorUI_MD::drawComponent<idk::AudioListenerCmp>( idk::EngineAPI &api, int obj_
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
-{auto &ecs = api.getECS();
-    auto &cmp = ecs.getComponent<idk::ScriptCmp>(obj_id);
+EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+{
+    auto &ssys = ecs.getSystem<idk::ScriptSys>();
+    auto &cmp  = ecs.getComponent<idk::ScriptCmp>(obj_id);
 
     ImGui::BeginTable("Scripts", 4, ImGuiTableFlags_SizingStretchSame);
     {
@@ -903,24 +893,34 @@ EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
         {
             for (auto &name: cmp.scripts)
             {
-                idk::ScriptSys::reloadScript(name);
-                // script.reload();
+                ssys.reloadScript(name);
             }
         }
 
-        ImGui::TableNextRow();
-
         for (int i=0; i<cmp.scripts.size(); i++)
         {
+            ImGui::PushID(i);
             ImGui::TableNextRow();
         
             ImGui::TableNextColumn();
             ImGui::Text(cmp.scripts[i].c_str());
         
             ImGui::TableNextColumn();
-            if (ImGui::Button("Reload"))
+
+            std::string label = "Reload";
+
             {
-                idk::ScriptSys::reloadScript(cmp.scripts[i]);
+                auto *script = ssys.getScript(cmp.scripts[i]);
+
+                if (script->is_ready() == false)
+                {
+                    label = "Reloading... " ICON_FA_ROTATE;
+                }
+            }
+
+            if (ImGui::Button(label.c_str()))
+            {
+                ssys.reloadScript(cmp.scripts[i]);
             }
 
             ImGui::TableNextColumn();
@@ -932,14 +932,29 @@ EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
                 cmp.scripts.pop_back();
                 cmp.data.pop_back();
 
+                ImGui::PopID();
                 break;
             }
+
+            ImGui::PopID();
         }
 
         ImGui::EndTable();
     }
 
+    std::string label = "Drag/Drop " ICON_FA_DOWNLOAD;
+    ImGui::Button(label.c_str(), ImVec2(-FLT_MIN, 25));
 
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload *payload = ImGui::AcceptDragDropPayload("ASSET_BROWSER_DRAG_DROP"))
+        {
+            std::string filepath(reinterpret_cast<char *>(payload->Data));
+            fs::path path(filepath);
+            ssys.attachScript(obj_id, path.filename(), nullptr);
+        }
+        ImGui::EndDragDropTarget();
+    }
     // ImGui::ButtonEx(ICON_FA_DOWNLOAD, ImVec2(250, 50), ImGuiButtonFlags_None);
 
     // if (ImGui::BeginDragDropTarget())
@@ -965,11 +980,9 @@ EditorUI_MD::drawComponent<idk::ScriptCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::PhysicsCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::PhysicsCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::PhysicsCmp>(obj_id);
+    auto &cmp = ecs.getComponent<idk::PhysicsCmp>(obj_id);
 
     if (ImGui::Button("Bake mesh"))
     {
@@ -983,9 +996,8 @@ EditorUI_MD::drawComponent<idk::PhysicsCmp>( idk::EngineAPI &api, int obj_id )
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::KinematicRectCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::KinematicRectCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<idk::KinematicRectCmp>(obj_id);
     ImGui::Checkbox("Visualise", &cmp.visualise);
 
@@ -994,11 +1006,9 @@ EditorUI_MD::drawComponent<idk::KinematicRectCmp>( idk::EngineAPI &api, int obj_
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::KinematicCapsuleCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::KinematicCapsuleCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::KinematicCapsuleCmp>(obj_id);
+    auto &cmp = ecs.getComponent<idk::KinematicCapsuleCmp>(obj_id);
 
     ImGui::Checkbox("Enable",    &cmp.enabled);
     ImGui::Checkbox("Visualise", &cmp.visualise);
@@ -1013,11 +1023,9 @@ EditorUI_MD::drawComponent<idk::KinematicCapsuleCmp>( idk::EngineAPI &api, int o
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::StaticRectCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::StaticRectCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
-    auto &cmp    = ecs.getComponent<idk::StaticRectCmp>(obj_id);
+    auto &cmp = ecs.getComponent<idk::StaticRectCmp>(obj_id);
 
     ImGui::Checkbox("Visualise", &cmp.visualise);
 }
@@ -1026,10 +1034,9 @@ EditorUI_MD::drawComponent<idk::StaticRectCmp>( idk::EngineAPI &api, int obj_id 
 
 template <>
 void
-EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_id )
+EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     auto &engine  = api.getEngine();
-    auto &ecs     = api.getECS();
     auto &ren     = api.getRenderer();
     auto &cmp     = ecs.getComponent<idk::RenderSettingCmp>(obj_id);
     auto settings = ren.getRenderSettings();
@@ -1129,19 +1136,26 @@ EditorUI_MD::drawComponent<idk::RenderSettingCmp>( idk::EngineAPI &api, int obj_
 
 
 
+// #define ECS_COMPONENT_CALLBACK(component_type) \
+// { \
+//     ecs.getComponentArray<component_type>().userCallback = \
+//         EditorUI_MD::drawComponent<component_type> \
+//     ; \
+// }
+
+
 #define ECS_COMPONENT_CALLBACK(component_type) \
 { \
-    ecs.getComponentArray<component_type>().userCallback = \
+    idk::ECS::setUserCallback<component_type>( \
         EditorUI_MD::drawComponent<component_type> \
-    ; \
-}
+    ); \
+} \
+
 
 
 void
-EditorUI_MD::registerDrawComponents( idk::EngineAPI &api )
+EditorUI_MD::registerDrawComponents()
 {
-    auto &ecs = api.getECS();
-
     ECS_COMPONENT_CALLBACK(idk::IconCmp);
     ECS_COMPONENT_CALLBACK(idk::TransformCmp);
     ECS_COMPONENT_CALLBACK(idk::IKCmp);

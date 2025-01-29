@@ -32,12 +32,17 @@ public:
 
     class System
     {
+    protected:
+        idk::ECS *m_ecs;
+
     private:
         friend class idk::ECS;
         std::string m_name = "default";
         double m_avg_time = 0.0;
 
     public:
+        idk::ECS &getECS() { return *m_ecs; };
+
         virtual void init     ( idk::EngineAPI& ) = 0;
         virtual void update   ( idk::EngineAPI& ) = 0;
         virtual void shutdown ( idk::EngineAPI& ) {  };
@@ -45,7 +50,7 @@ public:
 
 
 private:
-    static inline idk::EngineAPI *m_api_ptr;
+    idk::EngineAPI *m_api_ptr;
 
     bool m_readfile = false;
     std::string m_filepath;
@@ -58,8 +63,15 @@ private:
     std::map<size_t, std::unique_ptr<iComponentArray>> m_component_arrays;
     std::map<std::string, size_t> m_component_keys;
     std::map<std::string, std::vector<size_t>> m_component_categories;
-    std::vector<System*> m_systems;
 
+    std::vector<System*> m_systems;
+    std::map<size_t, int> m_system_keys;
+
+    using userfn_type = std::function<void(idk::EngineAPI&, idk::ECS&, int)>;
+    inline static std::map<size_t, userfn_type> m_user_callbacks;
+    inline static userfn_type m_default_userfn = [](idk::EngineAPI&, idk::ECS&, int) {
+        LOG_WARN() << "Default userCallback YEET";
+    };
 
     struct Entity
     {
@@ -85,7 +97,7 @@ private:
 
 
     template <typename T>
-    size_t getkey()
+    static size_t getkey()
     {
         return typeid(T).hash_code();
     };
@@ -94,7 +106,17 @@ private:
 
 
 public:
-    void init     ( idk::EngineAPI &api );
+    std::string name = "";
+
+    // ECS() {  };
+    ECS( idk::EngineAPI &api, const std::string name )
+    :   m_api_ptr(&api),
+        name(name)
+    {
+
+    };
+
+    // void init     ( idk::EngineAPI &api );
     void update   ( idk::EngineAPI &api );
     void shutdown ( idk::EngineAPI &api );
 
@@ -200,8 +222,36 @@ public:
     template <typename T>
     void registerSystem()
     {
-        m_systems.push_back(dynamic_cast<System *>(new T));
+        auto *sys = dynamic_cast<System *>(new T);
+        sys->m_ecs = this;
+        sys->init(*m_api_ptr);
+
+        m_systems.push_back(sys);
+        m_system_keys[getkey<T>()] = m_systems.size() - 1;
     }
+
+    template <typename system_type>
+    system_type &getSystem();
+
+
+    template <typename component_type>
+    static void setUserCallback( const userfn_type &callback )
+    {
+        size_t key = getkey<ComponentArray<component_type>>();
+        LOG_INFO() << "m_user_callbacks[" << key << "] = callback;";
+        m_user_callbacks[key] = callback;
+    }
+
+    static userfn_type getUserCallback( size_t key );
+
+    template <typename component_type>
+    static userfn_type getUserCallback()
+    {
+        size_t key = getkey<ComponentArray<component_type>>();
+        return getUserCallback(key);
+    }
+
+
 
 
     void save( const std::string &filepath );

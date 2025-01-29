@@ -100,23 +100,26 @@ idk::RenderSettingCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::RenderSettingCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::RenderSettingCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     ecs.giveComponent<DirlightCmp>(obj_id);
+    auto &cmp = ecs.getComponent<TransformCmp>(obj_id);
+    // cmp.transform.rotation = glm::quat(glm::normalize(glm::vec3(-1.0, -0.5, +1.0)));
+    cmp.transform.rotation = glm::quat(0.77, -0.45, -0.37, -0.21);
+
     // this->obj_id = obj_id;
 };
 
 
 void
-idk::RenderSettingCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::RenderSettingCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     // this->obj_id = -1;
 };
 
 
 void
-idk::RenderSettingCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::RenderSettingCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
     // auto &src = ecs.getComponent<RenderSettingCmp>(src_obj);
     // auto &dst = ecs.getComponent<RenderSettingCmp>(dst_obj);

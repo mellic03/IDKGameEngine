@@ -13,20 +13,20 @@
 
 
 
-static idk::EngineAPI *api_ptr;
+// static idk::EngineAPI *api_ptr;
 
 
-IDK_VISIBLE
-void
-idk::Engine::initModules( idk::EngineAPI &api )
-{
-    api_ptr = &api;
+// IDK_VISIBLE
+// void
+// idk::Engine::initModules( idk::EngineAPI &api )
+// {
+//     api_ptr = &api;
 
-    for (auto &loader: m_modules)
-    {
-        loader.getInstance()->init(api);
-    }
-}
+//     for (auto &loader: m_modules)
+//     {
+//         loader.getInstance()->init(api);
+//     }
+// }
 
 
 
@@ -36,8 +36,15 @@ idk::Engine::_reloadModules()
     for (auto &loader: m_modules)
     {
         loader.reload();
-        loader.getInstance()->init(*api_ptr);
+        loader.getInstance()->init(*m_api);
     }
+}
+
+
+void
+idk::Engine::_clearModules()
+{
+    m_modules.clear();
 }
 
 
@@ -104,9 +111,10 @@ idk::Engine::endFrame( idk::EngineAPI &api )
         m_reload = false;
     }
 
-    if (m_running == false)
+    if (m_clear || m_running == false)
     {
-        m_modules.clear();
+        _clearModules();
+        m_clear = false;
     }
 }
 
@@ -126,14 +134,10 @@ idk::Engine::registerModule( const std::string &filename )
     using ModuleLoader = idk::GenericLoader<idk::Module>;
     namespace fs = std::filesystem;
 
-    #ifdef IDK_UNIX
-        std::string path = filename + ".so";
-    #elif defined(IDK_WINDOWS)
-        std::string path = filename + ".dll";
-    #endif
+    m_modules.push_back(ModuleLoader(filename + IDK_DLIB_EXT));
+    m_modules.back().getInstance()->init(*m_api);
 
-    m_modules.push_back(ModuleLoader(path));
-    LOG_INFO() << "Loaded module \"" << path << "\"";
+    std::cout << "[Engine::registerModule] Loaded module \"" << filename << "\"\n";
 
     return 0;
 }

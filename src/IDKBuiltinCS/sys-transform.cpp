@@ -22,7 +22,7 @@ idk::TransformSys::init( idk::EngineAPI &api )
 void
 idk::TransformSys::update( idk::EngineAPI &api )
 {
-    auto &ecs = api.getECS();
+    auto &ecs = getECS();
     float dtime = api.getEngine().deltaTime();
 
     for (auto &cmp: ecs.getComponentArray<idk::TransformCmp>())
@@ -32,9 +32,9 @@ idk::TransformSys::update( idk::EngineAPI &api )
             cmp.transform = idk::Transform::fromGLM(glm::mat4(1.0f));
         }
 
-        cmp.pitch = fmod(cmp.pitch, 2.0*M_PI);
-        cmp.roll  = fmod(cmp.roll, 2.0*M_PI);
-        cmp.yaw   = fmod(cmp.yaw, 2.0*M_PI);
+        // cmp.pitch = fmod(cmp.pitch, 2.0*M_PI);
+        // cmp.roll  = fmod(cmp.roll, 2.0*M_PI);
+        // cmp.yaw   = fmod(cmp.yaw, 2.0*M_PI);
 
         // if (cmp.is_dirty && ecs.hasParent(cmp.obj_id) == false)
         if (ecs.hasParent(cmp.obj_id) == false)
@@ -51,68 +51,68 @@ idk::TransformSys::update( idk::EngineAPI &api )
 
 
 
-    for (auto &cmp: ecs.getComponentArray<IKCmp>())
-    {
-        if (cmp.obj_id == -1 || cmp.pole_target == -1)
-        {
-            continue;
-        }
+    // for (auto &cmp: ecs.getComponentArray<IKCmp>())
+    // {
+    //     if (cmp.obj_id == -1 || cmp.pole_target == -1)
+    //     {
+    //         continue;
+    //     }
 
-        glm::vec3 pole_target = getPositionWorldspace(cmp.pole_target);
-        TransformSys::FABRIK(cmp.chain_length, cmp.obj_id, cmp.distances, pole_target);
-    }
-
-
-    for (auto &cmp: ecs.getComponentArray<LookTowardCmp>())
-    {
-        if (cmp.obj_id == -1 || cmp.target_id == -1)
-        {
-            continue;
-        }
-
-        lookTowards(cmp.obj_id, cmp.target_id, 128.0f*dtime);
-
-        // glm::vec3 target = getPositionWorldspace(cmp.pole_target);
-        // TransformSys::FABRIK(cmp.chain_length, cmp.obj_id, cmp.distances, pole_target);
-    }
+    //     glm::vec3 pole_target = getPositionWorldspace(cmp.pole_target);
+    //     TransformSys::FABRIK(cmp.chain_length, cmp.obj_id, cmp.distances, pole_target);
+    // }
 
 
-    for (auto &[obj_id, anchor_ids, distances]: ecs.getComponentArray<idk::AnchorCmp>())
-    {
-        if (anchor_ids.back() != -1)
-        {
-            anchor_ids.push_back(-1);
-            distances.push_back(1.0f);
-        }
+    // for (auto &cmp: ecs.getComponentArray<LookTowardCmp>())
+    // {
+    //     if (cmp.obj_id == -1 || cmp.target_id == -1)
+    //     {
+    //         continue;
+    //     }
 
-        glm::vec3 dir = glm::vec3(0.0f);
+    //     lookTowards(cmp.obj_id, cmp.target_id, 128.0f*dtime);
 
-        for (int i=0; i<anchor_ids.size()-1; i++)
-        {
-            glm::vec3 anchor_pos = getPositionWorldspace(anchor_ids[i]);
-            glm::vec3 obj_pos    = getPositionWorldspace(obj_id);
-
-            float dist = glm::distance(anchor_pos, obj_pos);
-            float error = distances[i] - dist;    
-
-            dir += error*glm::normalize(obj_pos - anchor_pos);
-        }
-
-        dir /= anchor_ids.size();
-
-        translateWorldspace(obj_id, dir);
-    }
+    //     // glm::vec3 target = getPositionWorldspace(cmp.pole_target);
+    //     // TransformSys::FABRIK(cmp.chain_length, cmp.obj_id, cmp.distances, pole_target);
+    // }
 
 
-    for (auto &[obj_id, anchor_id, speed]: ecs.getComponentArray<idk::SmoothFollowCmp>())
-    {
-        glm::vec3 anchor_pos = getPositionWorldspace(anchor_id);
-        glm::vec3 obj_pos    = getPositionWorldspace(obj_id);
+    // for (auto &[obj_id, anchor_ids, distances]: ecs.getComponentArray<idk::AnchorCmp>())
+    // {
+    //     if (anchor_ids.back() != -1)
+    //     {
+    //         anchor_ids.push_back(-1);
+    //         distances.push_back(1.0f);
+    //     }
 
-        glm::vec3 dir = anchor_pos - obj_pos;
+    //     glm::vec3 dir = glm::vec3(0.0f);
+
+    //     for (int i=0; i<anchor_ids.size()-1; i++)
+    //     {
+    //         glm::vec3 anchor_pos = getPositionWorldspace(anchor_ids[i]);
+    //         glm::vec3 obj_pos    = getPositionWorldspace(obj_id);
+
+    //         float dist = glm::distance(anchor_pos, obj_pos);
+    //         float error = distances[i] - dist;    
+
+    //         dir += error*glm::normalize(obj_pos - anchor_pos);
+    //     }
+
+    //     dir /= anchor_ids.size();
+
+    //     translateWorldspace(obj_id, dir);
+    // }
+
+
+    // for (auto &[obj_id, anchor_id, speed]: ecs.getComponentArray<idk::SmoothFollowCmp>())
+    // {
+    //     glm::vec3 anchor_pos = getPositionWorldspace(anchor_id);
+    //     glm::vec3 obj_pos    = getPositionWorldspace(obj_id);
+
+    //     glm::vec3 dir = anchor_pos - obj_pos;
     
-        translateWorldspace(obj_id, dtime*speed*dir);
-    }
+    //     translateWorldspace(obj_id, dtime*speed*dir);
+    // }
 
 
     for (auto &[obj_id, magnitude, axis]: ecs.getComponentArray<RotateCmp>())
@@ -124,14 +124,14 @@ idk::TransformSys::update( idk::EngineAPI &api )
                    R = glm::normalize(delta * R);
     }
 
-    _updateCallbacks();
+    // _updateCallbacks();
 
 }
 
 void
 idk::TransformSys::_computeTransform( int obj_id, const glm::mat4 &parent )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     auto &cmp = getTransformCmp(obj_id);
 
     idk::Transform T = cmp.transform;
@@ -197,25 +197,6 @@ idk::TransformSys::_computeLocalMatrix( int obj_id, bool scale )
     {
         return idk::Transform::toGLM_noscale(cmp.transform, cmp.pitch, cmp.roll, cmp.yaw);
     }
-
-
-    // cmp.up    = glm::normalize(cmp.up);
-    // cmp.right = glm::normalize(glm::cross(cmp.front, cmp.up));
-    // cmp.front = glm::normalize(glm::cross(cmp.up, cmp.right));
-
-    // glm::quat Qroll  = glm::angleAxis(cmp.roll,  glm::vec3(0.0f, 0.0f, -1.0f));
-    // glm::quat Qpitch = glm::angleAxis(cmp.pitch, glm::vec3(1.0f, 0.0f, 0.0f));
-    // glm::quat Qyaw   = glm::angleAxis(cmp.yaw,   glm::vec3(0.0f, 1.0f, 0.0f));
-
-    // glm::mat4 Rroll  = glm::mat4_cast(Qroll);
-    // glm::mat4 Rpitch = glm::mat4_cast(Qpitch);
-    // glm::mat4 Ryaw   = glm::mat4_cast(Qyaw);
-
-    // glm::mat4 R = glm::mat4_cast(cmp.rotation) * Ryaw * Rroll * Rpitch;
-    // glm::mat4 T = glm::translate(ident, cmp.position);
-    // glm::mat4 S = glm::scale(ident, (scale) ? cmp.scale * cmp.scale3 : glm::vec3(1.0f));
-
-    // return T * R * S;
 }
 
 
@@ -223,7 +204,7 @@ glm::mat4
 idk::TransformSys::_computeWorldMatrix( int obj_id )
 {
     static const glm::mat4 ident = glm::mat4(1.0f);
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     
     if (obj_id == -1)
     {
@@ -287,7 +268,7 @@ idk::TransformSys::rotateWorldAxis( int obj_id, const glm::vec3 &axis, float the
 idk::TransformCmp&
 idk::TransformSys::getTransformCmp( int obj_id )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     auto &cmp = ecs.getComponent<TransformCmp>(obj_id);
           cmp.is_dirty = true;
 
@@ -383,7 +364,7 @@ idk::TransformSys::getWorldRotation( int obj_id )
 glm::vec3
 idk::TransformSys::getPositionWorldspace( int obj_id )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     return ecs.getComponent<TransformCmp>(obj_id).model[3];
     // return glm::vec3(getModelMatrix(obj_id)[3]);
 }
@@ -513,10 +494,10 @@ idk::TransformSys::lookTowards( int subject, int target, float alpha )
     glm::vec3 A = glm::vec3(0.0f);
     glm::vec3 B = getPositionWorldspace(subject) - getPositionWorldspace(target);
     glm::mat4 V = glm::inverse(glm::lookAt(A, B, glm::vec3(0.0f, 1.0f, 0.0f)));
-    glm::mat4 M = TransformSys::getWorldMatrix(subject);
+    glm::mat4 M = getWorldMatrix(subject);
     glm::mat4 R = glm::inverse(extractRotation1(M)) * V;
 
-    TransformSys::getLocalRotation(subject) = glm::normalize(glm::quat_cast(R));
+    getLocalRotation(subject) = glm::normalize(glm::quat_cast(R));
     // TransformSys::lookTowards(obj_id, elbow_pos, 0.5f);
 
 
@@ -819,7 +800,7 @@ void
 idk::TransformSys::FABRIK( int chain_length, int end_obj, const std::vector<float> &distances,
                            const glm::vec3 &pole_target )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     std::vector<glm::vec3> positions(chain_length);
 
     int current = end_obj;
@@ -918,22 +899,30 @@ idk::TransformSys::FABRIK( int objA, int objB, int objC, glm::vec3 end_pos,
 void
 idk::TransformSys::pitch( int obj_id, float f )
 {
-    float &pitch = getTransformCmp(obj_id).pitch;
-           pitch = glm::clamp(pitch + glm::radians(f), -1.45f, +1.45f);
+    // glm::vec3 axis = getRight(obj_id);
+    glm::vec3 axis = glm::vec3(1, 0, 0);
+    glm::quat &R = getTransform(obj_id).rotation;
+    R = glm::rotate(R, f, axis);
 }
 
 
 void
 idk::TransformSys::yaw( int obj_id, float f )
 {
-    getTransformCmp(obj_id).yaw += glm::radians(f);
+    // glm::vec3 axis = getUp(obj_id);
+    glm::vec3 axis = glm::vec3(0, 1, 0);
+    glm::quat &R = getTransform(obj_id).rotation;
+    R = glm::rotate(R, f, axis);
 }
 
 
 void
 idk::TransformSys::roll( int obj_id, float f )
 {
-    getTransformCmp(obj_id).roll += glm::radians(f);
+    // glm::vec3 axis = getFront(obj_id);
+    glm::vec3 axis = glm::vec3(0, 0, -1);
+    glm::quat &R = getTransform(obj_id).rotation;
+    R = glm::rotate(R, f, axis);
 }
 
 

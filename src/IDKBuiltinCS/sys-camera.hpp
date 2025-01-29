@@ -4,7 +4,6 @@
 #include <IDKECS/IDKECS.hpp>
 
 
-
 namespace idk
 {
     class CameraSys;
@@ -17,9 +16,9 @@ public:
     virtual void init   ( idk::EngineAPI & ) final;
     virtual void update ( idk::EngineAPI & ) final;
 
-    static float &getFov       ( int obj_id );
-    static float &getFovOffset ( int obj_id );
-    static bool  in_frustum    ( int subject, int target );
+    float &getFov       ( int obj_id );
+    float &getFovOffset ( int obj_id );
+    bool  in_frustum    ( int subject, int target );
 };
 
 

@@ -35,9 +35,9 @@ struct idk::DirlightCmp
 
     size_t serialize( std::ofstream &stream ) const;
     size_t deserialize( std::ifstream &stream );
-    static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy( int src_obj, int dst_obj );
+    static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 
 
@@ -49,9 +49,9 @@ struct idk::PointlightCmp
 
     size_t serialize( std::ofstream &stream ) const;
     size_t deserialize( std::ifstream &stream );
-    static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy( int src_obj, int dst_obj );
+    static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 
 
@@ -63,9 +63,9 @@ struct idk::SpotlightCmp
 
     size_t serialize( std::ofstream &stream ) const;
     size_t deserialize( std::ifstream &stream );
-    static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy( int src_obj, int dst_obj );
+    static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 
 

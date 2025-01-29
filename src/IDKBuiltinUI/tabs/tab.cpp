@@ -9,15 +9,23 @@ void
 EditorUI_MD::_tab( idk::EngineAPI &api )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &ren    = api.getRenderer();
 
-    this->_tab_scene_hierarchy(api);
-    this->_tab_render_hierarchy(api);
-    this->_tab_editor_properties(api);
-    this->_tab_inspect(api, ecs.getSelectedGameObject());
-    this->_tab_scripts(api);
-    this->_tab_buffers(api);
+    m_ecs = _tab_scene_select(api);
+
+    if (m_ecs == nullptr)
+    {
+        m_ecs = &api.getScene();
+    }
+
+    auto &ecs = *m_ecs;
+
+    _tab_scene_hierarchy(api, ecs);
+    _tab_render_hierarchy(api);
+    _tab_editor_properties(api);
+    _tab_inspect(api, ecs, ecs.getSelectedGameObject());
+    _tab_scripts(api);
+    _tab_buffers(api);
 
 
     EditorTab::shader_programs(api);

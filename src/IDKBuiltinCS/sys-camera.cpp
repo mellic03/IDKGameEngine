@@ -22,14 +22,22 @@ idk::CameraSys::init( idk::EngineAPI &api )
 void
 idk::CameraSys::update( idk::EngineAPI &api )
 {
-    auto &ecs = api.getECS();
-    auto &ren = api.getRenderer();
+    auto &ecs  = getECS();
+    auto &tsys = ecs.getSystem<TransformSys>();
+    auto &ren  = api.getRenderer();
 
     for (auto &cmp: ecs.getComponentArray<CameraCmp>())
     {
         int obj_id = cmp.obj_id;
         int cam_id = cmp.cam_id;
-        ren.getCamera(cam_id).setTransform(TransformSys::getModelMatrix(obj_id));
+        
+        auto &cam = ren.getCamera(cam_id);
+
+        cam.fov      = cmp.camera.fov;
+        cam.bloom    = cmp.camera.bloom;
+        cam.exposure = cmp.camera.exposure;
+    
+        cam.setTransform(tsys.getModelMatrix(obj_id));
     }
 }
 
@@ -37,7 +45,7 @@ idk::CameraSys::update( idk::EngineAPI &api )
 float&
 idk::CameraSys::getFov( int obj_id )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     auto &cmp = ecs.getComponent<CameraCmp>(obj_id);
     return api_ptr->getRenderer().getCamera(cmp.cam_id).fov;
 }
@@ -46,7 +54,7 @@ idk::CameraSys::getFov( int obj_id )
 float&
 idk::CameraSys::getFovOffset( int obj_id )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     auto &cmp = ecs.getComponent<CameraCmp>(obj_id);
     return api_ptr->getRenderer().getCamera(cmp.cam_id).fov_offset;
 }
@@ -87,23 +95,22 @@ idk::CameraCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::CameraCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::CameraCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<CameraCmp>(obj_id);
     cmp.cam_id = api.getRenderer().activeCamera();
 }
 
 
 void
-idk::CameraCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::CameraCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     
 }
 
 
 void
-idk::CameraCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::CameraCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
 
 }

@@ -12,5 +12,5 @@ namespace fs = std::filesystem;
 
 
 
-template <>
-void idk::ECS2::userCallback<idk::TransformCmp>( idk::EngineAPI&, int ) IDK_VISIBLE; 
+// template <>
+// void idk::ECS2::userCallback<idk::TransformCmp>( idk::EngineAPI&, int ) IDK_VISIBLE; 

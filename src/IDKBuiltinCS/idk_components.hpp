@@ -23,13 +23,13 @@ namespace idk
         IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
         #undef IDK_STRUCT_MEMBERS
 
-        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
         {
             // this->obj_id = obj_id;
         };
 
-        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )       {  };
-        static void onObjectCopy( int src_obj, int dst_obj ) {  };
+        static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id ) {  };
+        static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj ) {  };
 
     };
 
@@ -43,9 +43,9 @@ namespace idk
 
         size_t serialize( std::ofstream &stream ) const;
         size_t deserialize( std::ifstream &stream );
-        static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
-        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-        static void onObjectCopy( int src_obj, int dst_obj );
+        static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+        static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+        static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj );
     };
 
 
@@ -80,16 +80,15 @@ namespace idk
             return n;
         };
 
-        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
         {
             // auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
             // cmp.emitter_id = AudioSystem::createEmitter();
             // this->obj_id = obj_id;
         };
     
-        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
         {
-            auto &ecs = api.getECS();
             auto &cmp = ecs.getComponent<AudioEmitterCmp>(obj_id);
         
             if (cmp.emitter_id != -1)
@@ -99,7 +98,7 @@ namespace idk
             }
         };
 
-        static void onObjectCopy( int src_obj, int dst_obj )
+        static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
         {
 
         };
@@ -115,17 +114,17 @@ namespace idk
         IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
         #undef IDK_STRUCT_MEMBERS
 
-        static void onObjectAssignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
         {
             // this->obj_id = obj_id;
         };
 
-        static void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+        static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
         {
 
         };
 
-        static void onObjectCopy( int src_obj, int dst_obj ) {  };
+        static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj ) {  };
 
     };
 

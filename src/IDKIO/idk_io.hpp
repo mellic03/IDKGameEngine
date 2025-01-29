@@ -13,12 +13,15 @@
 namespace idk
 {
     class IO;
-    extern idk::IO *idkio;
+    // inline static idk::IO *idkio;
 }
 
 
 class idk::IO
 {
+public:
+    inline static idk::IO *global = nullptr;
+
 private:
     bool m_Mcaptured   = false;
 
@@ -38,6 +41,8 @@ private:
 
     idk::WAllocator<std::function<void(int, int)>> m_mousedrag_callbacks[3];
     idk::WAllocator<std::function<void(int, int)>> m_mouseclick_callbacks[3];
+    idk::WAllocator<std::function<void(uint8_t, float)>> m_jaxis_callbacks;
+    idk::WAllocator<std::function<void(uint8_t)>> m_jbtn_callbacks;
 
     idk::Keylog m_keylog;
 
@@ -46,10 +51,16 @@ private:
 
 
 public:
+    float    m_joystick_jaxis[8];
+    uint8_t  m_joystick_jhat[8];
+    uint8_t *m_joystick_btndown;
+
     enum MouseButton { LMOUSE=0, MMOUSE=1, RMOUSE=2 };
     enum WinEvent    { WIN_EXIT=0, WIN_RESIZE=1 };
 
-    void update( float dt );
+    IO();
+
+    void update( uint64_t msElapsed );
     void setViewportOffset( int x, int y );
 
     void onPollEvent( std::function<void(SDL_Event*)> );
@@ -61,8 +72,15 @@ public:
     int  onMouseDrag( uint32_t mouse, const std::function<void(int, int)> &callback );
     void removeMouseDragCallback( uint32_t mouse, int id );
 
+    int  joystickAxisCreateCallback( const std::function<void(uint8_t, float)>& );
+    void JoystickAxisRemoveCallback( int );
+    int  joystickButtonCreateCallback( const std::function<void(uint8_t)>& );
+    void JoystickButtonRemoveCallback( int );
+
 
     void mouseCapture( bool );
+    void mouseReCapture();
+    void mouseUnCapture();
     bool mouseCaptured();
     glm::vec2 mousePosition();
     glm::vec2 mouseDelta();
@@ -72,9 +90,11 @@ public:
     bool  mouseClicked( uint32_t );
     float mouseWheelDelta();
 
-    bool keyDown   ( idk::Keycode );
-    bool keyUp     ( idk::Keycode );
-    bool keyTapped ( idk::Keycode );
+    bool keyDown     ( idk::Keycode );
+    bool keyUp       ( idk::Keycode );
+    bool keyPressed  ( idk::Keycode );
+    bool keyReleased ( idk::Keycode );
+    bool keyTapped   ( idk::Keycode );
 };
 
 

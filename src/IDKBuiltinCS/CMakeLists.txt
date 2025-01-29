@@ -26,12 +26,7 @@ target_link_libraries(
 )
 
 
-file(
-    GLOB PUBLIC_HEADER
-    ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
-)
-
-install(
-    FILES ${PUBLIC_HEADER}
-    DESTINATION ${CMAKE_SOURCE_DIR}/build/include/IDKBuiltinCS/
+FILE(
+    COPY ${CMAKE_CURRENT_SOURCE_DIR}/../${PROJECT_NAME}
+    DESTINATION ${IDK_OUTPUT_DIRECTORY}/include/.
 )

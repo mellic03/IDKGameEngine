@@ -15,13 +15,15 @@
 class idk::ECS::iComponentArray
 {
 protected:
-    using callback_type = std::function<void(idk::EngineAPI&, int)>;
+    using callback_type = std::function<void(idk::EngineAPI&, idk::ECS&, int)>;
+    idk::ECS   *m_ecs;
     std::string m_name;
     size_t      m_key;
 
 public:
-    iComponentArray( const std::string &name, size_t key, callback_type callback )
-    :   m_name (name),
+    iComponentArray( idk::ECS *ecs, const std::string &name, size_t key, callback_type callback )
+    :   m_ecs  (ecs),
+        m_name (name),
         m_key  (key)
     {
         userCallback = callback;
@@ -37,9 +39,9 @@ public:
     virtual void onObjectDeassignment( idk::EngineAPI&, int ) = 0;
     virtual void onObjectCopy( int, int ) = 0;
 
-    callback_type userCallback = []( idk::EngineAPI &api, int obj_id )
+    callback_type userCallback = []( idk::EngineAPI&, idk::ECS&, int )
     {
-        LOG_WARN() << "Default userCallback";
+        LOG_WARN() << "Default userCallback REE";
     };
 
     virtual size_t nbytes_serialized () = 0;
@@ -53,12 +55,14 @@ template <typename T>
 class idk::ECS::ComponentArray: public idk::ECS::iComponentArray
 {
 private:
+    idk::EngineAPI *m_api;
     idk::Allocator<T> m_data;
 
 public:
 
-    ComponentArray( const std::string &name, size_t key )
-    :   iComponentArray(name, key, [](idk::EngineAPI&, int){})
+    ComponentArray( idk::EngineAPI *api, idk::ECS *ecs, const std::string &name, size_t key )
+    :   iComponentArray(ecs, name, key, [](idk::EngineAPI&, idk::ECS&, int){}),
+        m_api(api)
     {
 
     }
@@ -78,7 +82,7 @@ public:
     {
         for (auto &cmp: m_data)
         {
-            onObjectDeassignment(*m_api_ptr, cmp.obj_id);
+            onObjectDeassignment(*m_api, cmp.obj_id);
         }
 
         m_data.clear();
@@ -112,17 +116,17 @@ public:
 
     virtual void onObjectAssignment( idk::EngineAPI &api, int obj_id )
     {
-        T::onObjectAssignment(api, obj_id);
+        T::onObjectAssignment(api, *m_ecs, obj_id);
     };
 
     virtual void onObjectDeassignment( idk::EngineAPI &api, int obj_id )
     {
-        T::onObjectDeassignment(api, obj_id);
+        T::onObjectDeassignment(api, *m_ecs, obj_id);
     };
 
     virtual void onObjectCopy( int src_obj, int dst_obj )
     {
-        T::onObjectCopy(src_obj, dst_obj);
+        T::onObjectCopy(*m_ecs, src_obj, dst_obj);
     };
 
     size_t size() const { return m_data.size(); };

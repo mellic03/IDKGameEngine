@@ -48,7 +48,7 @@ EditorUI_MD::init( idk::EngineAPI &api )
     auto &IO       = api.getIO();
     auto &ren      = api.getRenderer();
 
-    this->registerDrawComponents(api);
+    registerDrawComponents();
 
     IMGUI_CHECKVERSION();
     main_ctx = ImGui::CreateContext();
@@ -107,6 +107,11 @@ EditorUI_MD::deinit()
 }
 
 
+void
+EditorUI_MD::registerECS( idk::EngineAPI &api, idk::ECS &ecs )
+{
+    
+}
 
 
 
@@ -133,6 +138,16 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
     ImGui::NewFrame();
     ImGuizmo::BeginFrame();
 
+    // ImGui::GetIO().WantCaptureMouse = !api.getIO().mouseCaptured();
+    if (api.getIO().mouseCaptured())
+    {
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+    }
+    else
+    {
+        ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+    }
+
 
     if (m_show_ImGui_demo)
     {
@@ -148,13 +163,18 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
     this->_menubar(api);
 
     // if (pop_out == false)
+    if (m_ecs)
     {
         ImGui::Begin("Viewport");
-        this->_tab_viewport(api);
+        this->_tab_viewport(api, *m_ecs);
         ImGui::End();
     }
 
     this->_tab(api);
+    for (auto &callback: m_tabs)
+    {
+        callback(api);
+    }
 
 
     constexpr int NUM_ASSET_BROWSERS = 2;
@@ -168,7 +188,6 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
 
     ImGui::End();
     ImGui::Render();
-
 
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

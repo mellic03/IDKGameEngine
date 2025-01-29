@@ -14,6 +14,7 @@
 #include <unordered_map>
 
 
+namespace idk { class EngineAPI;    };
 namespace idk { class Engine;       };
 namespace idk { class RenderEngine; };
 namespace idk { class EventSystem;  };
@@ -24,42 +25,52 @@ class idk::Engine
 private:
     using ModuleLoader = idk::GenericLoader<idk::Module>;
 
-    uint64_t                                    m_frame_start = 0;
-    uint64_t                                    m_frame_end   = 0;
-    float                                       m_frame_time  = 0.0001f;
-    bool                                        m_running     = true;
-    bool                                        m_reload      = false;
+    uint64_t                   m_frame_start = 0;
+    uint64_t                   m_frame_end   = 0;
+    float                      m_frame_time  = 0.0001f;
+    bool                       m_running     = true;
+    bool                       m_reload      = false;
+    bool                       m_clear       = false;
 
-    std::vector<ModuleLoader>                   m_modules;
+    std::vector<ModuleLoader>  m_modules;
 
-    void                                        _idk_modules_stage_A( idk::EngineAPI & );
-    void                                        _idk_modules_stage_B( idk::EngineAPI & );
-    void                                        _idk_modules_stage_C( idk::EngineAPI & );
-    void                                        _reloadModules();
+    void                       _idk_modules_stage_A( idk::EngineAPI & );
+    void                       _idk_modules_stage_B( idk::EngineAPI & );
+    void                       _idk_modules_stage_C( idk::EngineAPI & );
+    void                       _reloadModules();
+    void                       _clearModules();
 
+    friend class idk::EngineAPI;
+    idk::EngineAPI *m_api;
+    Engine( idk::EngineAPI *api ) { m_api = api; }
 
 public:
 
+    // void                       initModules( idk::EngineAPI & );
+    void                       reloadModules() { m_reload = true; };
+    void                       clearModules()  { m_clear  = true; };
 
-    void                                        initModules( idk::EngineAPI & );
-    void                                        reloadModules() { m_reload = true; };
+    void                       beginFrame  ( idk::EngineAPI&, float );
+    void                       endFrame    ( idk::EngineAPI& );
 
-    void                                        beginFrame  ( idk::EngineAPI&, float );
-    void                                        endFrame    ( idk::EngineAPI& );
+    bool                       running() { return m_running; };
+    void                       shutdown();
 
-    bool                                        running() { return m_running; };
-    void                                        shutdown();
-
-    float                                       deltaTime() { return m_frame_time;       };
-    float                                       frameRate() { return 1.0f / deltaTime(); };
-
+    float                      deltaTime() { return m_frame_time;       };
+    float                      frameRate() { return 1.0f / deltaTime(); };
 
 
     /**
      * @param filename filename excluding extension (.so/.dll)
      */
-    // template <typename module_type> int         registerModule( const std::string &name );
     int                                         registerModule( const std::string &filename );
+
+    template <typename module_type>
+    module_type& getModule( int id )
+    {
+        return *dynamic_cast<module_type*>(m_modules[id].getInstance());
+    }
+
 
 };
 

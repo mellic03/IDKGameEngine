@@ -12,7 +12,7 @@ void
 idk::ModelSys::init( idk::EngineAPI &api )
 {
     api_ptr = &api;
-    auto &ecs = api.getECS();
+    auto &ecs = getECS();
     auto &ren = api.getRenderer();
 
     // ren.createProgram(
@@ -45,8 +45,10 @@ idk::ModelSys::init( idk::EngineAPI &api )
 void
 idk::ModelSys::update( idk::EngineAPI &api )
 {
-    auto &ecs = api.getECS();
-    auto &ren = api.getRenderer();
+    api_ptr = &api;
+    auto &ecs  = getECS();
+    auto &tsys = ecs.getSystem<TransformSys>();
+    auto &ren  = api.getRenderer();
     
     for (auto &cmp: ecs.getComponentArray<TerrainCmp>())
     {
@@ -55,7 +57,8 @@ idk::ModelSys::update( idk::EngineAPI &api )
         //     TerrainCmp::onObjectAssignment(api, cmp.obj_id);
         // }
 
-        glm::mat4 M = TransformSys::getModelMatrix(cmp.obj_id);
+        glm::mat4 M = tsys.getModelMatrix(cmp.obj_id);
+        // glm::mat4 M = glm::translate(glm::mat4(1), glm::vec3(0, -700, 0)) * glm::scale(glm::mat4(1.0f), glm::vec3(2048));
         TerrainRenderer::setTerrainTransform(M);
     }
 
@@ -67,32 +70,37 @@ idk::ModelSys::update( idk::EngineAPI &api )
             continue;
         }
 
-        glm::mat4 transform = TransformSys::getModelMatrix(cmp.obj_id);
-        glm::mat4 prev_T    = TransformSys::getTransformCmp(cmp.obj_id).prev_model;
+        const glm::mat4 &Tcurr = tsys.getModelMatrix(cmp.obj_id);
+        const glm::mat4 &Tprev = tsys.getTransformCmp(cmp.obj_id).prev_model;
 
         if (cmp.custom_RQ != -1)
         {
-            ren.drawModelRQ(cmp.custom_RQ, cmp.model_id, transform);
+            ren.drawModelRQ(cmp.custom_RQ, cmp.model_id, Tcurr, Tprev);
         }
 
         else if (cmp.alpha_cutoff)
         {
-            ren.drawModelRQ(m_alpha_cutoff_RQ, cmp.model_id, transform);
+            ren.drawModelRQ(m_alpha_cutoff_RQ, cmp.model_id, Tcurr, Tprev);
+        }
+
+        else if (cmp.viewspace)
+        {
+            ren.drawModelViewspace(cmp.model_id, Tcurr, Tprev);
         }
 
         else
         {
-            ren.drawModel(cmp.model_id, transform, prev_T);
+            ren.drawModel(cmp.model_id, Tcurr, Tprev);
         }
 
-        if (cmp.environment)
-        {
-            ren.drawEnvironmental(cmp.model_id, transform);
-        }
+        // if (cmp.environment)
+        // {
+        //     ren.drawEnvironmental(cmp.model_id, transform);
+        // }
 
         if (cmp.shadowcast)
         {
-            ren.drawShadowCaster(cmp.model_id, transform);
+            ren.drawShadowCaster(cmp.model_id, Tcurr);
         }
 
     }
@@ -144,9 +152,9 @@ idk::ModelSys::update( idk::EngineAPI &api )
 
 
 void
-idk::ModelSys::assignModel( int obj_id, const std::string &filepath )
+idk::ModelSys::assignModel( int obj_id, const char *filepath )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
 
     if (ecs.hasComponent<ModelCmp>(obj_id) == false)
     {
@@ -163,9 +171,9 @@ idk::ModelSys::assignModel( int obj_id, const std::string &filepath )
 
 
 void
-idk::ModelSys::assignModelLOD( int obj_id, int level, const std::string &filepath )
+idk::ModelSys::assignModelLOD( int obj_id, int level, const char *filepath )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
     api_ptr->getRenderer().loadModelLOD(cmp.model_id, level, filepath);
 }
@@ -173,16 +181,16 @@ idk::ModelSys::assignModelLOD( int obj_id, int level, const std::string &filepat
 void
 idk::ModelSys::assignCustomRQ( int obj_id, int RQ )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     auto &cmp = ecs.getComponent<idk::ModelCmp>(obj_id);
     cmp.custom_RQ = RQ;
 }
 
 
 void
-idk::ModelSys::assignShader_gpass( int obj_id, const std::string &shader_name )
+idk::ModelSys::assignShader_gpass( int obj_id, const char *shader_name )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     auto &cmp  = ecs.getComponent<idk::ModelCmp>(obj_id);
     cmp.shader_name = shader_name;
 }
@@ -225,9 +233,8 @@ idk::StaticHeightmapCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::StaticHeightmapCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::StaticHeightmapCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<StaticHeightmapCmp>(obj_id);
 
     static const idk::glTextureConfig config = {
@@ -248,16 +255,15 @@ idk::StaticHeightmapCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 
 
 void
-idk::StaticHeightmapCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::StaticHeightmapCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
 
 };
 
 
 void
-idk::StaticHeightmapCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::StaticHeightmapCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
-    auto &ecs = api_ptr->getECS();
     auto &src = ecs.getComponent<StaticHeightmapCmp>(src_obj);
     auto &dst = ecs.getComponent<StaticHeightmapCmp>(dst_obj);
 
@@ -313,9 +319,8 @@ idk::ModelCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::ModelCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::ModelCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     ModelCmp &cmp = ecs.getComponent<ModelCmp>(obj_id);
 
     if (cmp.model_id == -1 && cmp.filepath != "")
@@ -326,16 +331,15 @@ idk::ModelCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 
 
 void
-idk::ModelCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::ModelCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
 
 }
 
 
 void
-idk::ModelCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::ModelCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
-    auto &ecs = api_ptr->getECS();
     ModelCmp &src = ecs.getComponent<ModelCmp>(src_obj);
     ModelCmp &dst = ecs.getComponent<ModelCmp>(dst_obj);
     
@@ -387,7 +391,7 @@ idk::TerrainCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::TerrainCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::TerrainCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
     // TerrainCmp &cmp = ecs.getComponent<TerrainCmp>(obj_id);
 
@@ -427,14 +431,14 @@ idk::TerrainCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 
 
 void
-idk::TerrainCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::TerrainCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
 
 }
 
 
 void
-idk::TerrainCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::TerrainCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
 
 }

@@ -16,16 +16,23 @@ namespace idk
 class idk::Transform2Sys: public idk::ECS::System
 {
 private:
+    void _compute_transforms( int obj_id, const glm::mat4 &parent );
+
 
 public:
     virtual void init   ( idk::EngineAPI& ) final;
     virtual void update ( idk::EngineAPI& ) final;
-    
+
+    glm::mat4 &getModelMatrix( int obj_id );
+    glm::mat4 &getParentMatrix( int obj_id );
+
     // Convenience functions
     // -----------------------------------------------------------------------------------------
-    static void moveUp    ( int obj_id, float f );
-    static void moveRight ( int obj_id, float f );
-    static void moveFront ( int obj_id, float f );
+    Transform2Cmp &getCmp( int obj_id );
+
+    void moveUp    ( int obj_id, float f );
+    void moveRight ( int obj_id, float f );
+    void moveFront ( int obj_id, float f );
     // -----------------------------------------------------------------------------------------
 };
 
@@ -39,9 +46,14 @@ struct idk::Transform2Cmp
     glm::vec3 position;
     glm::quat rotation;
 
+    glm::vec3 up, right, front;
+
+    glm::mat4 model;
+    glm::mat4 parent;
+
     size_t  serialize( std::ofstream &stream ) const;
     size_t  deserialize( std::ifstream &stream );
-    static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy( int src_obj, int dst_obj );
+    static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj );
 };

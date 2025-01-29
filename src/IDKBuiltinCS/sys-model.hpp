@@ -32,11 +32,11 @@ public:
     virtual void    init   ( idk::EngineAPI & ) final;
     virtual void    update ( idk::EngineAPI & ) final;
 
-    static void     assignModel( int obj_id, const std::string &filepath );
-    static void     assignModelLOD( int obj_id, int level, const std::string &filepath );
-    static void     assignCustomRQ( int obj_id, int RQ );
+    void     assignModel( int obj_id, const char *filepath );
+    void     assignModelLOD( int obj_id, int level, const char *filepath );
+    void     assignCustomRQ( int obj_id, int RQ );
 
-    static void     assignShader_gpass( int obj_id, const std::string &shader_name );
+    void     assignShader_gpass( int obj_id, const char *shader_name );
 
 };
 
@@ -64,9 +64,9 @@ struct idk::ModelCmp
 
     size_t serialize( std::ofstream &stream ) const;
     size_t deserialize( std::ifstream &stream );
-    static void onObjectAssignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy( int src_obj, int dst_obj );
+    static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj );
 
 };
 
@@ -82,9 +82,9 @@ struct idk::StaticHeightmapCmp
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
-    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy         ( int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy         ( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 
 
@@ -95,9 +95,9 @@ struct idk::TerrainCmp
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
-    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy         ( int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy         ( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 
 

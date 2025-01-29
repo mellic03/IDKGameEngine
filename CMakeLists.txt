@@ -13,6 +13,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKEvents/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKIO/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinCS/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinUI/)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKEditorUI/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKECS/)
 
 
@@ -23,6 +24,9 @@ find_package(OpenGL REQUIRED)
 
 file(GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/world/world/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/world/item/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/world/character/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 )
 
@@ -67,6 +71,7 @@ target_link_libraries(
     IDKAudio
     IDKEvents
     IDKIO
+    IDKPhysics
     IDKBuiltinCS
     IDKECS
 
@@ -76,7 +81,7 @@ target_link_libraries(
 
 FILE(
     COPY ${CMAKE_CURRENT_SOURCE_DIR}/IDKGE/
-    DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/IDKGE/
+    DESTINATION ${IDK_OUTPUT_DIRECTORY}/IDKGE/
 )
 
 FILE(

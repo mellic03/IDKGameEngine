@@ -22,7 +22,9 @@ idk::ScriptSys::init( idk::EngineAPI &api )
 void
 idk::ScriptSys::update( idk::EngineAPI &api )
 {
-    auto &ecs = api.getECS();
+    api_ptr = &api;
+
+    auto &ecs = getECS();
     auto &ren = api.getRenderer();
     float dt  = api.dtime();
     
@@ -30,7 +32,7 @@ idk::ScriptSys::update( idk::EngineAPI &api )
     {
         for (int i=0; i<cmp.scripts.size(); i++)
         {
-            if (cmp.scripts[i] == "")
+            if (cmp.scripts[i] == "" || cmp.autoexec[i] == false)
             {
                 continue;
             }
@@ -50,16 +52,16 @@ idk::ScriptSys::update( idk::EngineAPI &api )
 
 
 
-void
-idk::ScriptSys::reserve( int obj_id, int count )
-{
-    auto &ecs = api_ptr->getECS();
-    auto &cmp = ecs.getComponent<ScriptCmp>(obj_id);
+// void
+// idk::ScriptSys::reserve( int obj_id, int count )
+// {
+//     auto &ecs = getECS();
+//     auto &cmp = ecs.getComponent<ScriptCmp>(obj_id);
 
-    cmp.data.resize(count, nullptr);
-    cmp.scripts.resize(count);
-    cmp.timers.resize(count, 0);
-}
+//     cmp.data.resize(count, nullptr);
+//     cmp.scripts.resize(count);
+//     cmp.timers.resize(count, 0);
+// }
 
 
 void
@@ -67,21 +69,17 @@ idk::ScriptSys::reloadScript( const std::string &filename )
 {
     if (m_scripts.contains(filename))
     {
+        LOG_INFO() << "[ScriptSys::reloadScript] Reloading script \"" << filename << "\"\n";
         m_scripts[filename]->reload();
     }
 }
 
 
-void
-idk::ScriptSys::attachScript( int obj_id, int idx, const std::string &filename )
+int
+idk::ScriptSys::attachScript( int obj_id, const std::string &filename, void *data, bool autoexec )
 {
     namespace fs = std::filesystem;
-    auto &ecs = api_ptr->getECS();
-
-    if (ecs.hasComponent<ScriptCmp>(obj_id) == false)
-    {
-        ecs.giveComponent<ScriptCmp>(obj_id);
-    }
+    auto &ecs = getECS();
 
     if (m_scripts.contains(filename) == false)
     {
@@ -89,18 +87,78 @@ idk::ScriptSys::attachScript( int obj_id, int idx, const std::string &filename )
         m_scripts[filename] = new idk::RuntimeScript(filename);
     }
 
+    if (ecs.hasComponent<ScriptCmp>(obj_id) == false)
+    {
+        ecs.giveComponent<ScriptCmp>(obj_id);
+    }
+
     auto &cmp = ecs.getComponent<ScriptCmp>(obj_id);
-    cmp.scripts[idx] = filename;
+    cmp.data.push_back(data);
+    cmp.scripts.push_back(filename);
+    cmp.timers.push_back(0);
+    cmp.autoexec.push_back(autoexec);
+
+    return cmp.data.size() - 1;
 }
+
+
+void
+idk::ScriptSys::removeScript( int obj_id, const std::string &name )
+{
+    namespace fs = std::filesystem;
+
+    auto &ecs = getECS();
+    auto &cmp = ecs.getComponent<ScriptCmp>(obj_id);
+
+    for (int i=0; i<cmp.scripts.size(); i++)
+    {
+        if (cmp.scripts[i] == name)
+        {
+            cmp.data[i]    = nullptr;
+            cmp.scripts[i] = "";
+        }
+    }
+}
+
+
+void
+idk::ScriptSys::executeScript( int obj_id, const std::string &name, void *data )
+{
+    auto &ecs = getECS();
+    auto &cmp = ecs.getComponent<ScriptCmp>(obj_id);
+
+    for (int i=0; i<cmp.scripts.size(); i++)
+    {
+        if (cmp.scripts[i] == name)
+        {
+            m_scripts[name]->execute(*api_ptr, data);
+            return;
+        }
+    }
+}
+
 
 
 
 void
 idk::ScriptSys::attachData( int obj_id, int idx, void *data )
 {
-    auto &ecs = api_ptr->getECS();
+    auto &ecs = getECS();
     ecs.getComponent<ScriptCmp>(obj_id).data[idx] = data;
 }
+
+
+
+idk::RuntimeScript*
+idk::ScriptSys::getScript( const std::string &name )
+{
+    if (m_scripts.contains(name) == false)
+    {
+        return nullptr;
+    }
+    return m_scripts[name];
+}
+
 
 
 
@@ -131,9 +189,8 @@ idk::ScriptCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::ScriptCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::ScriptCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     ScriptCmp &cmp = ecs.getComponent<ScriptCmp>(obj_id);
 
     // if (cmp.model_id == -1 && cmp.filepath != "")
@@ -144,16 +201,15 @@ idk::ScriptCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 
 
 void
-idk::ScriptCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::ScriptCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
 
 }
 
 
 void
-idk::ScriptCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::ScriptCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
-    auto &ecs = api_ptr->getECS();
     ScriptCmp &src = ecs.getComponent<ScriptCmp>(src_obj);
     ScriptCmp &dst = ecs.getComponent<ScriptCmp>(dst_obj);
     

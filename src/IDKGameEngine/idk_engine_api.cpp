@@ -1,5 +1,4 @@
 #include "idk_engine_api.hpp"
-#include "packager.hpp"
 
 #include <IDKGameEngine/IDKGameEngine.hpp>
 #include <IDKECS/IDKECS.hpp>
@@ -7,39 +6,41 @@
 #include <IDKBuiltinCS/IDKBuiltinCS.hpp>
 
 #include <IDKGraphics/IDKGraphics.hpp>
+#include <libidk/idk_eventemitter.hpp>
 #include <IDKIO/IDKIO.hpp>
-#include <libidk/idk_game.hpp>
 
 #include <IDKThreading/IDKThreading.hpp>
 
+static std::string gpath;
 
-idk::EngineAPI::EngineAPI( const std::vector<std::string> &args, idk::Game *game,
+idk::EngineAPI::EngineAPI( const std::vector<std::string> &args, const std::string &game_path,
                            int gl_major, int gl_minor )
 :   m_args(args)
 {
-    m_name = game->getName();
-
-    m_engine   = new idk::Engine();
-    m_ecs      = new idk::ECS();
-
+    m_engine   = new idk::Engine(this);
+    m_events   = new idk::EventEmitter<std::string, void*>();
     m_io       = new idk::IO();
-    m_pkg      = new idk::Packager();
 
     m_win      = new idk::Window(m_name.c_str(), 1920, 1080);
     m_gl       = new idk::GLContext(*m_win, gl_major, gl_minor);
     m_renderer = new idk::RenderEngine(*m_win, *m_gl);
 
-    m_game     = game;
+    createScene("DefaultScene");
 
-    idk::registerComponents(*m_ecs);
-    idk::registerSystems(*m_ecs);
-};
+        // m_gameloader = new idk::GenericLoader<idk::Game>(game_path);
+    gpath = game_path;
+    m_gameloader = new idk::GenericLoader<idk::Game>(gpath);
+    m_game = m_gameloader->getInstance();
+    m_name = m_game->getName();
+    m_game->setup(*this);
+
+}
 
 
 void
 idk::EngineAPI::update( float dt )
 {
-    m_dtime = dt;
+    m_dt = dt;
 
     if (m_callbacks.size() > 0)
     {
@@ -49,6 +50,16 @@ idk::EngineAPI::update( float dt )
         }
 
         m_callbacks.clear();
+    }
+}
+
+
+void
+idk::EngineAPI::updateScenes()
+{
+    for (auto &[name, ecs]: m_scenes)
+    {
+        ecs->update(*this);
     }
 }
 
@@ -63,6 +74,7 @@ idk::EngineAPI::running()
 void
 idk::EngineAPI::shutdown()
 {
+    m_game->shutdown();
     getEngine().shutdown();
 }
 
@@ -75,14 +87,19 @@ idk::EngineAPI::reloadEngine()
 
 
 void
-idk::EngineAPI::reloadECS()
+idk::EngineAPI::reloadECS( bool now )
 {
-    m_callbacks.push_back([this]() {
-        if (m_ecs) delete m_ecs;
-        m_ecs = new idk::ECS();
-        idk::registerComponents(*m_ecs);
-        idk::registerSystems(*m_ecs);
-    });
+    const auto callback = [this]() {
+        if (m_scenes.contains("DefaultScene"))
+        {
+            delete m_scenes["DefaultScene"];
+        }
+
+        createScene("DefaultScene");
+    };
+
+    if (now) callback();
+    else     m_callbacks.push_back(callback);
 }
 
 
@@ -106,16 +123,19 @@ idk::EngineAPI::reloadRenderer()
 }
 
 void
-idk::EngineAPI::reloadGame()
+idk::EngineAPI::reloadGame( bool now )
 {
-    reloadECS();
+    const auto callback = [this]() {
+        m_game->shutdown();
+        m_engine->clearModules();
 
-    m_callbacks.push_back([this]() {
-        if (m_game)
-        {            
-            m_game->setup(m_args, *this);
-        }
-    });
+        m_gameloader->freeInstance();        
+        m_game = m_gameloader->getInstance();
+        m_game->setup(*this);
+    };
+
+    if (now) callback();
+    else     m_callbacks.push_back(callback);
 }
 
 
@@ -127,3 +147,41 @@ idk::EngineAPI::reloadAll()
     reloadRenderer();
 }
 
+
+idk::ECS*
+idk::EngineAPI::createScene( const std::string &name )
+{
+    if (m_scenes.contains(name))
+    {
+        return nullptr;
+    }
+
+    m_scenes[name] = new idk::ECS(*this, name);
+    auto &ecs = *(m_scenes[name]);
+
+    idk::registerComponents(ecs);
+    idk::registerSystems(ecs);
+
+    return m_scenes[name];
+}
+
+
+idk::ECS&
+idk::EngineAPI::getScene( const std::string &name )
+{
+    IDK_ASSERT("Scene does not exist!", m_scenes.contains(name));
+    return *(m_scenes[name]);
+}
+
+
+bool
+idk::EngineAPI::deleteScene( const std::string &name )
+{
+    if (m_scenes.contains(name) == false)
+    {
+        return false;
+    }
+
+    delete m_scenes[name];
+    return true;
+}

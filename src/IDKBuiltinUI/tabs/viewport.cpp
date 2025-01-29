@@ -8,10 +8,10 @@
 
 
 static void
-transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsnap, float ssnap )
+transform_component_ecs( idk::EngineAPI &api, idk::ECS &ecs, int obj_id,
+                         float tsnap, float rsnap, float ssnap )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &IO     = api.getIO();
     auto &ren    = api.getRenderer();
     auto &camera = ren.getCamera();
@@ -80,13 +80,27 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
         snap = glm::vec3(ssnap);
     }
 
-    glm::mat4 world = idk::TransformSys::getWorldMatrix(obj_id);
-    glm::mat4 model = idk::TransformSys::getModelMatrix(obj_id);
+
+    // glm::mat4 world = idk::TransformSys::getWorldMatrix(obj_id);
+    // glm::mat4 model = idk::TransformSys::getModelMatrix(obj_id);
+
+    auto &tsys = ecs.getSystem<idk::TransformSys>();
+    glm::mat4 world = tsys.getWorldMatrix(obj_id);
+    glm::mat4 model = tsys.getModelMatrix(obj_id);
 
     if (view == glm::inverse(model))
     {
         return;
     }
+
+    if (ecs.hasComponent<idk::ModelCmp>(obj_id))
+    {
+        if (ecs.getComponent<idk::ModelCmp>(obj_id).viewspace)
+        {
+            view = glm::mat4(1.0f);
+        }
+    }
+
 
     static float bounds[] = { -0.5f, -0.5f, -0.5f, +0.5f, +0.5f, +0.5f };
 
@@ -103,9 +117,9 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
 
 
     glm::mat4 local = glm::inverse(world) * model;
-    auto &cmp = idk::TransformSys::getTransformCmp(obj_id);
-    auto &T   = idk::TransformSys::getTransform(obj_id);
-    // T = idk::Transform::fromGLM(local, T.scale.w);
+    auto &cmp = tsys.getTransformCmp(obj_id);
+    auto &T   = tsys.getTransform(obj_id);
+    T = idk::Transform::fromGLM(local, T.scale.w);
 
     glm::vec3 scale1;
     glm::vec3 scale2;
@@ -117,7 +131,6 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
     glm::decompose(local, scale1, rotation1, position, skew, persp);
     glm::decompose(world, scale2, rotation2, position, skew, persp);
 
-
     idk::Transform T1; T1.position = glm::vec3(0.0f);
     glm::mat4 invR = idk::Transform::toGLM(T1, cmp.pitch, cmp.roll, cmp.yaw);
               invR = glm::mat4(glm::inverse(glm::mat3(invR)));
@@ -126,7 +139,8 @@ transform_component_ecs( idk::EngineAPI &api, int obj_id, float tsnap, float rsn
     T.rotation = glm::normalize(glm::quat_cast(glm::mat4_cast(rotation1) * invR));
     T.scale    = glm::vec4(scale1, T.scale.w);
 
-
+    // cmp.position = glm::vec3(local[3]);
+    // cmp.rotation = glm::normalize(glm::quat_cast(glm::mat4_cast(rotation1)));
 }
 
 
@@ -149,10 +163,9 @@ display_texture( float w, float h, uint32_t texture )
 
 
 void
-EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
+EditorUI_MD::_tab_viewport( idk::EngineAPI &api, idk::ECS &ecs )
 {
     auto &engine = api.getEngine();
-    auto &ecs    = api.getECS();
     auto &IO     = api.getIO();
     auto &ren    = api.getRenderer();
 
@@ -205,9 +218,14 @@ EditorUI_MD::_tab_viewport( idk::EngineAPI &api )
         return;
     }
 
+    if (IO.mouseCaptured())
+    {
+        return;
+    }
+
     if (ecs.hasComponent<idk::TransformCmp>(obj_id))
     {
-        transform_component_ecs(api, obj_id, m_tsnap, m_rsnap, m_ssnap);
+        transform_component_ecs(api, ecs, obj_id, m_tsnap, m_rsnap, m_ssnap);
     }
 }
 

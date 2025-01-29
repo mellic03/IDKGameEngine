@@ -16,28 +16,29 @@ idk::LightSys::init( idk::EngineAPI &api )
 void
 idk::LightSys::update( idk::EngineAPI &api )
 {
-    auto &ecs = api.getECS();
-    auto &ren = api.getRenderer();
+    auto &ecs  = api.getECS();
+    auto &tsys = ecs.getSystem<TransformSys>();
+    auto &ren  = api.getRenderer();
 
     for (auto &cmp: ecs.getComponentArray<DirlightCmp>())
     {
-        cmp.light.transform = TransformSys::getModelMatrix(cmp.obj_id);
-        cmp.light.direction = glm::vec4(TransformSys::getFront(cmp.obj_id), 0.0f);
+        glm::mat3 R = tsys.getModelMatrix(cmp.obj_id);
+        cmp.light.direction = glm::vec4(R*glm::vec3(0, 0, -1), 0.0f);
         ren.getDirlight(cmp.light_id) = cmp.light;
     }
 
 
     for (auto &cmp: ecs.getComponentArray<PointlightCmp>())
     {
-        cmp.light.position = glm::vec4(TransformSys::getPositionWorldspace(cmp.obj_id), 1.0f);
+        cmp.light.position = glm::vec4(tsys.getPositionWorldspace(cmp.obj_id), 1.0f);
         ren.getPointlight(cmp.light_id) = cmp.light;
     }
 
 
     for (auto &cmp: ecs.getComponentArray<SpotlightCmp>())
     {
-        cmp.light.direction = glm::vec4(TransformSys::getFront(cmp.obj_id), 0.0f);
-        cmp.light.position  = glm::vec4(TransformSys::getPositionWorldspace(cmp.obj_id), 1.0f);
+        cmp.light.direction = glm::vec4(tsys.getFront(cmp.obj_id), 0.0f);
+        cmp.light.position  = glm::vec4(tsys.getPositionWorldspace(cmp.obj_id), 1.0f);
 
         ren.getSpotlight(cmp.light_id) = cmp.light;
     }
@@ -74,9 +75,8 @@ idk::DirlightCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::DirlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::DirlightCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<DirlightCmp>(obj_id);
     cmp.light_id = api.getRenderer().createDirlight();
     cmp.light    = api.getRenderer().getDirlight(cmp.light_id);
@@ -84,16 +84,15 @@ idk::DirlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 
 
 void
-idk::DirlightCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::DirlightCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<DirlightCmp>(obj_id);
     api.getRenderer().destroyDirlight(cmp.light_id);
 }
 
 
 void
-idk::DirlightCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::DirlightCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
     
 }
@@ -130,9 +129,8 @@ idk::PointlightCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::PointlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::PointlightCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<PointlightCmp>(obj_id);
     cmp.light_id = api.getRenderer().createPointlight();
     cmp.light    = api.getRenderer().getPointlight(cmp.light_id);
@@ -140,16 +138,15 @@ idk::PointlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 
 
 void
-idk::PointlightCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::PointlightCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<PointlightCmp>(obj_id);
     api_ptr->getRenderer().destroyPointlight(cmp.light_id);
 }
 
 
 void
-idk::PointlightCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::PointlightCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
     
 }
@@ -186,9 +183,8 @@ idk::SpotlightCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::SpotlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::SpotlightCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<SpotlightCmp>(obj_id);
     cmp.light_id = api.getRenderer().createSpotlight();
     cmp.light    = api.getRenderer().getSpotlight(cmp.light_id);
@@ -196,16 +192,15 @@ idk::SpotlightCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 
 
 void
-idk::SpotlightCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::SpotlightCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &ecs = api.getECS();
     auto &cmp = ecs.getComponent<SpotlightCmp>(obj_id);
     api_ptr->getRenderer().destroySpotlight(cmp.light_id);
 }
 
 
 void
-idk::SpotlightCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::SpotlightCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
     
 }

@@ -35,6 +35,8 @@ idk::registerComponents( idk::ECS &ecs )
     ecs.registerComponent<ScriptCmp>              ("Script");
     ecs.registerComponent<ParticleCmp>            ("ParticleEmitter");
 
+    ecs.registerComponent<GUIButtonCmp>           ("GUIButton");
+
 }
 
 
@@ -53,5 +55,7 @@ idk::registerSystems( idk::ECS &ecs )
     ecs.registerSystem<RenderSettingSys>();
     ecs.registerSystem<ScriptSys>();
     ecs.registerSystem<ParticleSys>();
+
+    ecs.registerSystem<GUISys>();
 
 }

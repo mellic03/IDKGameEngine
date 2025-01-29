@@ -109,9 +109,9 @@ idk::ParticleCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::ParticleCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::ParticleCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &cmp = idk::ECS2::getComponent<ParticleCmp>(obj_id);
+    auto &cmp = ecs.getComponent<ParticleCmp>(obj_id);
     cmp.emitter_id = -1;
 
 
@@ -141,18 +141,18 @@ idk::ParticleCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
 
 
 void
-idk::ParticleCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::ParticleCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &cmp = idk::ECS2::getComponent<ParticleCmp>(obj_id);
+    auto &cmp = ecs.getComponent<ParticleCmp>(obj_id);
     // api.getRenderer().destroyParticleEmitter(cmp.emitter_id);
 };
 
 
 void
-idk::ParticleCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::ParticleCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<ParticleCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<ParticleCmp>(dst_obj);
+    auto &src = ecs.getComponent<ParticleCmp>(src_obj);
+    auto &dst = ecs.getComponent<ParticleCmp>(dst_obj);
 };
 
 

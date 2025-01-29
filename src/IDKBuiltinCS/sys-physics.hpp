@@ -29,31 +29,31 @@ class idk::PhysicsSys: public idk::ECS::System
 {
 private:
 
-    static void kinematicCapsule_staticRect( float dt, KinematicCapsuleCmp&, StaticRectCmp& );
+    static void kinematicCapsule_staticRect( float dt, KinematicCapsuleCmp&, StaticRectCmp& ) {  };
 
-    static void kinematicCapsule_triangle( float dt, KinematicCapsuleCmp&, idk::geometry::Triangle& );
-    static void kinematicCapsule_triangleGrid( float dt, KinematicCapsuleCmp& );
-    static void _insert_triangle( const idk::geometry::Triangle& );
+    static void kinematicCapsule_triangle( float dt, KinematicCapsuleCmp&, idk::geometry::Triangle& ) {  };
+    static void kinematicCapsule_triangleGrid( float dt, KinematicCapsuleCmp& ) {  };
+    static void _insert_triangle( const idk::geometry::Triangle& ) {  };
 
-    static void _integrate ( idk::EngineAPI &api, float dt );
+    static void _integrate ( idk::EngineAPI &api, float dt ) {  };
 
     inline static std::vector<idk::TextureWrapper> m_heightmaps;
     inline static float m_accumulator = 0.0f;
 
 
 public:
-    virtual void init   ( idk::EngineAPI & ) final;
-    virtual void update ( idk::EngineAPI & ) final;
+    virtual void init   ( idk::EngineAPI & ) final {  };
+    virtual void update ( idk::EngineAPI & ) final {  };
 
-    static void addForce( int obj_id, const glm::vec3& );
-    static void addImpulse( int obj_id, const glm::vec3& );
-    static void jump( int obj_id, float force );
-    static bool raycast ( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit );
+    static void applyForce( int obj_id, const glm::vec3& ) {  };
+    static void addImpulse( int obj_id, const glm::vec3& ) {  };
+    static void jump( int obj_id, float force ) {  };
+    static bool raycast ( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit ) { return false; };
 
-    static void bakeMeshCollider( int obj_id );
+    static void bakeMeshCollider( int obj_id ) {  };
 
-    static void bakeHeightmap( idk::TextureWrapper &wrapper );
-    static float queryHeightmap( TextureWrapper &wrapper, const glm::vec3 &position, const glm::vec3 &scale );
+    static void bakeHeightmap( idk::TextureWrapper &wrapper ) {  };
+    static float queryHeightmap( TextureWrapper &wrapper, const glm::vec3 &position, const glm::vec3 &scale ) { return -1.0f; };
 
 };
 
@@ -67,9 +67,9 @@ struct idk::PhysicsCmp
 
     size_t      serialize            ( std::ofstream &stream ) const;
     size_t      deserialize          ( std::ifstream &stream );
-    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy         ( int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy         ( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 
 
@@ -81,9 +81,9 @@ struct idk::StaticRectCmp
 
     size_t      serialize            ( std::ofstream &stream ) const;
     size_t      deserialize          ( std::ifstream &stream );
-    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy         ( int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy         ( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 
 
@@ -94,9 +94,9 @@ struct idk::KinematicRectCmp
 
     size_t      serialize            ( std::ofstream &stream ) const;
     size_t      deserialize          ( std::ifstream &stream );
-    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy         ( int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy         ( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 
 
@@ -128,8 +128,8 @@ struct idk::KinematicCapsuleCmp
 
     size_t  serialize            ( std::ofstream &stream ) const;
     size_t  deserialize          ( std::ifstream &stream );
-    static void onObjectAssignment   ( idk::EngineAPI &api, int obj_id );
-    static void onObjectDeassignment ( idk::EngineAPI &api, int obj_id );
-    static void onObjectCopy         ( int src_obj, int dst_obj );
+    static void onObjectAssignment   ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment ( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy         ( idk::ECS &ecs, int src_obj, int dst_obj );
 };
 

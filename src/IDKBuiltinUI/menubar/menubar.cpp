@@ -1,7 +1,6 @@
 #include "../EditorUI.hpp"
 #include "../common/idk_imgui_extra.hpp"
 
-#include <IDKGameEngine/packager.hpp>
 #include <IDKIO/IDKIO.hpp>
 
 
@@ -34,15 +33,6 @@ menubar_file( idk::EngineAPI &api, bool &popup_save, bool &popup_load )
         if (ImGui::MenuItem("Load " ICON_FA_FILE_IMPORT, "CTRL + L"))
         {
             popup_load = true;
-        }
-
-        if (ImGui::BeginMenu("Project"))
-        {
-            if (ImGui::MenuItem("Build"))
-            {
-                api.getPackager().build();
-            }
-            ImGui::EndMenu();
         }
 
         if (ImGui::MenuItem("Reload Modules", "F5"))
@@ -108,7 +98,8 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
 
     if (idkImGui::fileSelectPopup("File Save", popup_save, "./", selection))
     {
-        idk::ECS2::save(selection);
+        api.getECS().save(selection);
+        // idk::ECS2::save(selection);
         std::cout << "Saved scene to " << selection << "\n";
     }
 
@@ -119,7 +110,8 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
 
     if (idkImGui::fileSelectPopup("File Load", popup_load, "./", selection))
     {
-        idk::ECS2::load(selection);
+        api.getECS().load(selection);
+        // idk::ECS2::load(selection);
         std::cout << "Loaded scene from " << selection << "\n";
     }
 }

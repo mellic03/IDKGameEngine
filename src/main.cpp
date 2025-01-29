@@ -9,9 +9,7 @@
 #include <libidk/idk_random.hpp>
 
 #include <IDKGameEngine/IDKengine.hpp>
-#include <IDKGameEngine/packager.hpp>
-// #include <IDKECS/IDKECS.hpp>
-#include <IDKECS/ecs1/idk_ecs.hpp>
+#include <IDKECS/IDKECS.hpp>
 
 #include <IDKEvents/IDKEvents.hpp>
 #include <IDKIO/IDKIO.hpp>
@@ -131,20 +129,13 @@ int main( int argc, char **argv )
 
 
     // Load game code
-    // -----------------------------------------------------------------------------------------
-    std::string game_path = (arg_load_game) ? arg_game : "libgame.so";
-
-    idk::GenericLoader<idk::Game> gameLoader(game_path);
-    idk::Game *game = gameLoader.getInstance();
-    // -----------------------------------------------------------------------------------------
-
-
     // Load engine code
-    // // -----------------------------------------------------------------------------------------
-    idk::EngineAPI api(args, game, 4, 6);
-
+    // -----------------------------------------------------------------------------------------
     idk::AudioSystem::init();
     idk::ThreadPool::init(arg_threads);
+
+    std::string game_path = (arg_load_game) ? arg_game : "libgame.so";
+    idk::EngineAPI api(args, game_path, 4, 6);
     // -----------------------------------------------------------------------------------------
 
     IDK_GLCALL(
@@ -157,38 +148,17 @@ int main( int argc, char **argv )
     idk::gl::enable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     IDK_GLCALL( glDebugMessageCallback(message_callback, nullptr); )
 
-    // // Load modules from IDKGE/runtime/modules/
-    // // -----------------------------------------------------------------------------------------
-    // if (arg_load_modules)
-    // {
-    //     std::filesystem::directory_iterator d_iter("IDKGE/modules/");
 
-    //     for (auto dir: d_iter)
-    //     {
-    //         auto path = dir.path();
-    //         path.replace_extension("");
-
-    //         engine.registerModule(path.string());
-    //     }
-    // }
-    // // -----------------------------------------------------------------------------------------
-
-
-    // idk::RenderOverlay test
+    // Run all scripts found in IDKGE/init
     // -----------------------------------------------------------------------------------------
-    // ren.pushRenderOverlayFill(glm::vec3(0.0f), 0.0f, 6.25f, 0.25f);
-    // ren.pushRenderOverlay("IDKGE/resources/logo.jpg", 0.5f, 2.0f, 0.5f);
+    for (auto dir: std::filesystem::directory_iterator("./init/"))
+    {
+        auto path = dir.path(); path.replace_extension();
+        auto name = path.string();
+        idk::RuntimeScript script(name, false);
+        script.execute(api, nullptr);
+    }
     // -----------------------------------------------------------------------------------------
-
-    // Setup
-    // -----------------------------------------------------------------------------------------
-    game->registerModules(api);
-    api.getEngine().initModules(api);
-    api.getECS().init(api);
-    game->setup(args, api);
-    api.getPackager().onBuild([game](){ game->build(); });
-    // -----------------------------------------------------------------------------------------
-
 
 
     // Main loop
@@ -216,15 +186,15 @@ int main( int argc, char **argv )
         // }
 
         api.update(dt);
+        api.updateScenes();
 
+        auto *game   = api.getGame();
         auto &engine = api.getEngine();
         auto &io     = api.getIO();
         auto &ecs    = api.getECS();
         auto &ren    = api.getRenderer();
 
-        // idk::idkio->update(dt);
-        io.update(dt);
-        ecs.update(api);
+        io.update(delta);
         idk::Events::update();
 
         engine.beginFrame(api, dt);
@@ -232,20 +202,17 @@ int main( int argc, char **argv )
         engine.endFrame(api);
     
         idk::ThreadPool::update();
-
         idk::Logger::print();
         b = a;
 
 
         if (io.windowEvent(idk::IO::WIN_EXIT))
         {
-            engine.shutdown();
+            api.shutdown();
         }
     }
     // -----------------------------------------------------------------------------------------
 
-
-    game->shutdown();
 
     LOG_INFO() << "Main loop terminated, writing log to file";
 

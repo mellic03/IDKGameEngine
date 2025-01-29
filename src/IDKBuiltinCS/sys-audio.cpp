@@ -34,8 +34,8 @@ idk::AudioSys::init( idk::EngineAPI &api )
 void
 idk::AudioSys::update( idk::EngineAPI &api )
 {
-    auto &ecs = api.getECS();
-
+    auto &ecs  = getECS();
+    auto &tsys = ecs.getSystem<TransformSys>();
     // static std::set<int> finished_callbacks;
     // finished_callbacks.clear();
 
@@ -55,7 +55,7 @@ idk::AudioSys::update( idk::EngineAPI &api )
 
     for (auto &cmp: ecs.getComponentArray<AudioEmitterCmp>())
     {
-        glm::vec3 pos = idk::TransformSys::getWorldPosition(cmp.obj_id);
+        glm::vec3 pos = tsys.getWorldPosition(cmp.obj_id);
         AudioSystem::getEmitter(cmp.emitter_id).pos = pos;
     }
 
@@ -63,8 +63,8 @@ idk::AudioSys::update( idk::EngineAPI &api )
 
     for (auto &[obj_id]: ecs.getComponentArray<AudioListenerCmp>())
     {
-        glm::vec3 pos = idk::TransformSys::getWorldPosition(obj_id);
-        glm::vec3 dir = idk::TransformSys::getFront(obj_id);
+        glm::vec3 pos = tsys.getWorldPosition(obj_id);
+        glm::vec3 dir = tsys.getFront(obj_id);
         // std::cout << pos.x << ", " << pos.y << ", " << pos.z << "\n";
 
         AudioSystem::update(pos, dir);

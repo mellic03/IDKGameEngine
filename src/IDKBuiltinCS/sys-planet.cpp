@@ -42,25 +42,25 @@ idk::PlanetCmp::deserialize( std::ifstream &stream )
 
 
 void
-idk::PlanetCmp::onObjectAssignment( idk::EngineAPI &api, int obj_id )
+idk::PlanetCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &cmp = idk::ECS2::getComponent<PlanetCmp>(obj_id);
+    auto &cmp = ecs.getComponent<PlanetCmp>(obj_id);
 
 };
 
 
 void
-idk::PlanetCmp::onObjectDeassignment( idk::EngineAPI &api, int obj_id )
+idk::PlanetCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    auto &cmp = idk::ECS2::getComponent<PlanetCmp>(obj_id);
+    auto &cmp = ecs.getComponent<PlanetCmp>(obj_id);
 };
 
 
 void
-idk::PlanetCmp::onObjectCopy( int src_obj, int dst_obj )
+idk::PlanetCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
 {
-    auto &src = idk::ECS2::getComponent<PlanetCmp>(src_obj);
-    auto &dst = idk::ECS2::getComponent<PlanetCmp>(dst_obj);
+    auto &src = ecs.getComponent<PlanetCmp>(src_obj);
+    auto &dst = ecs.getComponent<PlanetCmp>(dst_obj);
 };
 
 
