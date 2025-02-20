@@ -3,7 +3,7 @@
 #include <libidk/idk_export.hpp>
 #include <libidk/idk_platform.hpp>
 #include <libidk/idk_scene_file.hpp>
-#include <libidk/idk_log.hpp>
+#include <libidk/idk_log2.hpp>
 
 #include <IDKGraphics/IDKGraphics.hpp>
 #include <IDKEvents/IDKEvents.hpp>
@@ -11,6 +11,7 @@
 #include "./idk_engine_api.hpp"
 #include "../../external/include/idk_imgui/imgui.hpp"
 
+#include <filesystem>
 
 
 // static idk::EngineAPI *api_ptr;
@@ -122,7 +123,7 @@ idk::Engine::endFrame( idk::EngineAPI &api )
 void
 idk::Engine::shutdown()
 {
-    LOG_INFO() << "Shutdown initiated";
+    LOG_INFO("idk::Engine::shutdown");
     m_running = false;
 }
 

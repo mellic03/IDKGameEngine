@@ -42,7 +42,7 @@ TemplateGameName::mainloop( idk::EngineAPI &api )
 void
 TemplateGameName::shutdown()
 {
-    LOG_INFO() << "TemplateGameName::shutdown";
+    
 }
 
 

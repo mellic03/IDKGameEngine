@@ -189,3 +189,67 @@ idk::AudioSys::isPlaying( int obj_id )
     auto &cmp = ecs.getComponent<AudioEmitterCmp>(obj_id);
     return AudioSystem::getEmitter(cmp.emitter_id).channel != -1;
 }
+
+
+
+
+
+
+
+size_t
+idk::AudioEmitterCmp::serialize( std::ofstream &stream ) const
+{
+    size_t n = 0;
+    n += idk::streamwrite(stream, obj_id);
+    n += idk::streamwrite(stream, emitter_id);
+    n += idk::streamwrite(stream, volume);
+
+    std::string str = std::filesystem::relative(filepath);
+    idk_printvalue(str);
+
+    n += idk::streamwrite(stream, str);
+    return n;
+}
+
+
+size_t
+idk::AudioEmitterCmp::deserialize( std::ifstream &stream )
+{
+    size_t n = 0;
+    n += idk::streamread(stream, obj_id);
+    n += idk::streamread(stream, emitter_id);
+    n += idk::streamread(stream, volume);
+    n += idk::streamread(stream, filepath);
+    return n;
+}
+
+
+void
+idk::AudioEmitterCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+{
+    // auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
+    // cmp.emitter_id = AudioSystem::createEmitter();
+    // this->obj_id = obj_id;
+}
+
+
+void
+idk::AudioEmitterCmp::onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+{
+    auto &cmp = ecs.getComponent<AudioEmitterCmp>(obj_id);
+
+    if (cmp.emitter_id != -1)
+    {
+        AudioSystem::destroyEmitter(cmp.emitter_id);
+        cmp.emitter_id = -1;
+    }
+}
+
+
+void
+idk::AudioEmitterCmp::onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj )
+{
+
+}
+
+

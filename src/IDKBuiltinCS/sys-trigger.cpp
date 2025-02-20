@@ -1,6 +1,6 @@
 #include "sys-trigger.hpp"
-
 #include <libidk/idk_geometry.hpp>
+#include <libidk/idk_log2.hpp>
 
 
 namespace
@@ -27,14 +27,20 @@ idk::TriggerSys::update( idk::EngineAPI &api )
     {
         if (m_triggers.contains(trigger) == false)
         {
-            LOG_ERROR() << "Trigger \"" << trigger << "\" does not exist!\n";
-            return;
+            LOG_ERROR(
+                "idk::TriggerSys::update",
+                std::format("Trigger \"{}\" does not exist!", trigger)
+            );
+            continue;
         }
 
         if (m_callbacks.contains(response) == false)
         {
-            LOG_ERROR() << "Callback \"" << response << "\" does not exist!\n";
-            return;
+            LOG_ERROR(
+                "idk::TriggerSys::update",
+                std::format("Callback \"{}\" does not exist!", response)
+            );
+            continue;
         }
 
         if (m_triggers[trigger](api, obj_id))

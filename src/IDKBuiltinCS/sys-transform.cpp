@@ -1,6 +1,5 @@
 #include "sys-transform.hpp"
 
-#include <libidk/idk_log.hpp>
 #include <libidk/idk_geometry.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -148,7 +147,7 @@ idk::TransformSys::_computeTransform( int obj_id, const glm::mat4 &parent )
 
     cmp.up    = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 1.0f, 0.0f));
     cmp.right = glm::normalize(glm::mat3(cmp.model) * glm::vec3(1.0f, 0.0f, 0.0f));
-    cmp.front = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 0.0f, -1.0f));
+    cmp.front = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 0.0f, 1.0f));
 
     for (int child_id: ecs.getChildren(obj_id))
     {
@@ -169,7 +168,7 @@ idk::TransformSys::recomputeTransformMatrices( int obj_id )
 
     cmp.up    = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 1.0f, 0.0f));
     cmp.right = glm::normalize(glm::mat3(cmp.model) * glm::vec3(1.0f, 0.0f, 0.0f));
-    cmp.front = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 0.0f, -1.0f));
+    cmp.front = glm::normalize(glm::mat3(cmp.model) * glm::vec3(0.0f, 0.0f, 1.0f));
 
     cmp.world_rotation = glm::quat_cast(glm::mat4(glm::mat3(cmp.world * cmp.local)));
 }
@@ -920,7 +919,7 @@ void
 idk::TransformSys::roll( int obj_id, float f )
 {
     // glm::vec3 axis = getFront(obj_id);
-    glm::vec3 axis = glm::vec3(0, 0, -1);
+    glm::vec3 axis = glm::vec3(0, 0, 1);
     glm::quat &R = getTransform(obj_id).rotation;
     R = glm::rotate(R, f, axis);
 }

@@ -584,7 +584,6 @@
 //         if (isRegisteredComponent(name) == false)
 //         {
 //             std::cout << "Component \"" << name << "\" not registered, ignoring" << std::endl;
-//             LOG_ERROR() << "Component \"" << name << "\" not registered, ignoring";
 //             stream.ignore(sizes[i]);
 //             continue;
 //         }
@@ -644,7 +643,6 @@
 //     std::filesystem::path fpath(filepath);
 //     if (std::filesystem::exists(fpath) == false)
 //     {
-//         LOG_ERROR() << "[idk::ECS::load] Cannot open file \"" << filepath << "\"";
 //     }
 
 //     m_readfile = true;

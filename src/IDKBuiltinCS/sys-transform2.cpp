@@ -1,6 +1,5 @@
 #include "sys-transform2.hpp"
 
-#include <libidk/idk_log.hpp>
 #include <libidk/idk_geometry.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -126,7 +125,7 @@ idk::Transform2Cmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int 
     auto &cmp = ecs.getComponent<Transform2Cmp>(obj_id);
     cmp.up    = glm::vec3(0, 1, 0);
     cmp.right = glm::vec3(1, 0, 0);
-    cmp.front = glm::vec3(0, 0, -1);
+    cmp.front = glm::vec3(0, 0, 1);
 
     cmp.model = glm::translate(glm::mat4(1.0f), cmp.position);
     cmp.parent = glm::mat4(1.0f);

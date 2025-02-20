@@ -6,6 +6,8 @@
 
 namespace idk
 {
+    struct AudioEmitterCmp;
+    struct AudioListenerCmp;
     class AudioSys;
 };
 
@@ -33,6 +35,42 @@ public:
     static bool         isFinished( int obj_id );
     static bool         isPlaying( int obj_id );
 
+};
+
+
+struct idk::AudioEmitterCmp
+{
+    int         obj_id     = -1;
+    int         emitter_id = -1;
+    float       volume     = -1;
+    std::string filepath   = "";
+
+    size_t serialize( std::ofstream &stream ) const;
+    size_t deserialize( std::ifstream &stream );
+    static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id );
+    static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj );
 
 };
 
+struct idk::AudioListenerCmp
+{
+    #define IDK_STRUCT_MEMBERS(X) \
+        X( int, obj_id, -1 ) \
+
+    IDK_STRUCT_BODY(IDK_STRUCT_MEMBERS)
+    #undef IDK_STRUCT_MEMBERS
+
+    static void onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+    {
+        // this->obj_id = obj_id;
+    };
+
+    static void onObjectDeassignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
+    {
+
+    };
+
+    static void onObjectCopy( idk::ECS &ecs, int src_obj, int dst_obj ) {  };
+
+};

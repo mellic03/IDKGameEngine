@@ -5,7 +5,7 @@
 #include <libidk/idk_game.hpp>
 #include <libidk/idk_string.hpp>
 #include <libidk/idk_print.hpp>
-#include <libidk/idk_log.hpp>
+#include <libidk/idk_log2.hpp>
 #include <libidk/idk_random.hpp>
 
 #include <IDKGameEngine/IDKengine.hpp>
@@ -23,62 +23,7 @@
 #include <filesystem>
 #include <iomanip>
 
-
-
-void
-message_callback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
-                  GLchar const* message, void const* user_param )
-{
-	auto const src_str = [source]()
-    {
-		switch (source)
-		{
-            default:                                return "UNKNOWN";
-            case GL_DEBUG_SOURCE_API:               return "API";
-            case GL_DEBUG_SOURCE_WINDOW_SYSTEM:     return "WINDOW SYSTEM";
-            case GL_DEBUG_SOURCE_SHADER_COMPILER:   return "SHADER COMPILER";
-            case GL_DEBUG_SOURCE_THIRD_PARTY:       return "THIRD PARTY";
-            case GL_DEBUG_SOURCE_APPLICATION:       return "APPLICATION";
-            case GL_DEBUG_SOURCE_OTHER:             return "OTHER";
-		}
-	}();
-
-	auto const type_str = [type]()
-    {
-		switch (type)
-		{
-            default:                                return "UNKNOWN";
-            case GL_DEBUG_TYPE_ERROR:               return "ERROR";
-            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED_BEHAVIOR";
-            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  return "UNDEFINED_BEHAVIOR";
-            case GL_DEBUG_TYPE_PORTABILITY:         return "PORTABILITY";
-            case GL_DEBUG_TYPE_PERFORMANCE:         return "PERFORMANCE";
-            case GL_DEBUG_TYPE_MARKER:              return "MARKER";
-            case GL_DEBUG_TYPE_OTHER:               return "OTHER";
-		}
-	}();
-
-	auto const severity_str = [severity]
-    {
-		switch (severity)
-        {
-            default:                                return "UNKNOWN";
-		    case GL_DEBUG_SEVERITY_NOTIFICATION:    return "NOTIFICATION";
-            case GL_DEBUG_SEVERITY_LOW:             return "LOW";
-            case GL_DEBUG_SEVERITY_MEDIUM:          return "MEDIUM";
-            case GL_DEBUG_SEVERITY_HIGH:            return "HIGH";
-		}
-	}();
-
-    idk::Logger::print();
-
-	std::cout << src_str << ", "
-              << type_str << ", "
-              << severity_str << ", "
-              << id << ": "
-              << message << '\n';
-}
-
+void message_callback( GLenum, GLenum, GLuint, GLenum, GLsizei, GLchar const*, void const* );
 
 
 int main( int argc, char **argv )
@@ -131,6 +76,13 @@ int main( int argc, char **argv )
     // Load game code
     // Load engine code
     // -----------------------------------------------------------------------------------------
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    {
+        std::cout << "Error initializing SDL\n";
+        exit(1);
+    }
+
+    idk::Logger2::init();
     idk::AudioSystem::init();
     idk::ThreadPool::init(arg_threads);
 
@@ -167,6 +119,7 @@ int main( int argc, char **argv )
     uint64_t b = SDL_GetTicks64();
     uint64_t delta;
     float    dt;
+    uint32_t framecount = 0;
 
     api.getRenderer().beginFrame();
     api.getRenderer().endFrame(0.0001);
@@ -179,11 +132,6 @@ int main( int argc, char **argv )
 
         float dt = float(delta) / 1000.0f;
               dt = glm::clamp(dt, 0.0001f, 1.0f);
-
-        // if (dt < 1.0f / 60.0f)
-        // {
-        //     continue;
-        // }
 
         api.update(dt);
         api.updateScenes();
@@ -202,24 +150,84 @@ int main( int argc, char **argv )
         engine.endFrame(api);
     
         idk::ThreadPool::update();
-        idk::Logger::print();
+        idk::Logger2::update();
         b = a;
-
 
         if (io.windowEvent(idk::IO::WIN_EXIT))
         {
             api.shutdown();
         }
+
+        framecount += 1;
     }
     // -----------------------------------------------------------------------------------------
 
 
-    LOG_INFO() << "Main loop terminated, writing log to file";
+    LOG_INFO("main", "Main loop terminated");
 
-    idk::Logger::write();
-
+    idk::Logger2::print();
+    idk::Logger2::writeFile();
 
     return 0;
 }
 
+
+
+
+
+
+
+void
+message_callback( GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                  GLchar const* message, void const* user_param )
+{
+	auto const src_str = [source]()
+    {
+		switch (source)
+		{
+            default:                                return "UNKNOWN";
+            case GL_DEBUG_SOURCE_API:               return "API";
+            case GL_DEBUG_SOURCE_WINDOW_SYSTEM:     return "WINDOW SYSTEM";
+            case GL_DEBUG_SOURCE_SHADER_COMPILER:   return "SHADER COMPILER";
+            case GL_DEBUG_SOURCE_THIRD_PARTY:       return "THIRD PARTY";
+            case GL_DEBUG_SOURCE_APPLICATION:       return "APPLICATION";
+            case GL_DEBUG_SOURCE_OTHER:             return "OTHER";
+		}
+	}();
+
+	auto const type_str = [type]()
+    {
+		switch (type)
+		{
+            default:                                return "UNKNOWN";
+            case GL_DEBUG_TYPE_ERROR:               return "ERROR";
+            case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED_BEHAVIOR";
+            case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  return "UNDEFINED_BEHAVIOR";
+            case GL_DEBUG_TYPE_PORTABILITY:         return "PORTABILITY";
+            case GL_DEBUG_TYPE_PERFORMANCE:         return "PERFORMANCE";
+            case GL_DEBUG_TYPE_MARKER:              return "MARKER";
+            case GL_DEBUG_TYPE_OTHER:               return "OTHER";
+		}
+	}();
+
+	auto const severity_str = [severity]
+    {
+		switch (severity)
+        {
+            default:                                return "UNKNOWN";
+		    case GL_DEBUG_SEVERITY_NOTIFICATION:    return "NOTIFICATION";
+            case GL_DEBUG_SEVERITY_LOW:             return "LOW";
+            case GL_DEBUG_SEVERITY_MEDIUM:          return "MEDIUM";
+            case GL_DEBUG_SEVERITY_HIGH:            return "HIGH";
+		}
+	}();
+
+    // idk::Logger::print();
+
+	std::cout << src_str << ", "
+              << type_str << ", "
+              << severity_str << ", "
+              << id << ": "
+              << message << '\n';
+}
 

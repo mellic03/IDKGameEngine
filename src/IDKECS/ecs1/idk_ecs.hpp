@@ -1,7 +1,6 @@
 #pragma once
 
 #include <libidk/idk_allocator.hpp>
-#include <libidk/idk_log.hpp>
 
 #include <vector>
 #include <string>
@@ -70,7 +69,7 @@ private:
     using userfn_type = std::function<void(idk::EngineAPI&, idk::ECS&, int)>;
     inline static std::map<size_t, userfn_type> m_user_callbacks;
     inline static userfn_type m_default_userfn = [](idk::EngineAPI&, idk::ECS&, int) {
-        LOG_WARN() << "Default userCallback YEET";
+        // LOG_WARN("idk::ECS::m_default_userfn", "Default userCallback");
     };
 
     struct Entity
@@ -156,14 +155,8 @@ public:
     const std::map<std::string, std::function<int()>> &getPrefabs();
 
 
-
-    // void giveComponents( int obj_id ) {  };
-
-    // template <typename T, typename... Args>
-    // void giveComponents( int obj_id );
-
     template <typename T>
-    void giveComponent( int obj_id );
+    T &giveComponent( int obj_id );
 
     void giveComponent( int obj_id, size_t key );
 
@@ -201,14 +194,6 @@ public:
         return m_component_categories;
     };
 
-
-    // template <typename T>
-    // void userCallback( idk::EngineAPI&, int )
-    // {
-    //     const auto &name = idk::ECS::getComponentArray<T>().getName();
-    //     LOG_WARN() << "Default userCallback<" << name << ">()";
-    // }
-
     size_t getComponentKey( const std::string &name )
     {
         return m_component_keys[name];
@@ -238,7 +223,6 @@ public:
     static void setUserCallback( const userfn_type &callback )
     {
         size_t key = getkey<ComponentArray<component_type>>();
-        LOG_INFO() << "m_user_callbacks[" << key << "] = callback;";
         m_user_callbacks[key] = callback;
     }
 

@@ -8,11 +8,12 @@
 
 
 template <typename T>
-void
+T&
 idk::ECS::giveComponent( int obj_id )
 {
     size_t key = getkey<ComponentArray<T>>();
     giveComponent(obj_id, key);
+    return getComponent<T>(obj_id);
 }
 
 

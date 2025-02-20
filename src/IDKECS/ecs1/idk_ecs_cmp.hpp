@@ -41,7 +41,7 @@ public:
 
     callback_type userCallback = []( idk::EngineAPI&, idk::ECS&, int )
     {
-        LOG_WARN() << "Default userCallback REE";
+        // LOG_WARN() << "Default userCallback REE";
     };
 
     virtual size_t nbytes_serialized () = 0;

@@ -46,7 +46,7 @@ public:
     virtual void update ( idk::EngineAPI & ) final {  };
 
     static void applyForce( int obj_id, const glm::vec3& ) {  };
-    static void addImpulse( int obj_id, const glm::vec3& ) {  };
+    static void addVel( int obj_id, const glm::vec3& ) {  };
     static void jump( int obj_id, float force ) {  };
     static bool raycast ( const glm::vec3 &origin, const glm::vec3 &dir, glm::vec3 &hit ) { return false; };
 

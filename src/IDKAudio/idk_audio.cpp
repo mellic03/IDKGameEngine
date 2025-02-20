@@ -1,6 +1,5 @@
 #include "idk_audio.hpp"
-
-#include <libidk/idk_log.hpp>
+#include <libidk/idk_log2.hpp>
 
 #include <filesystem>
 #include <map>
@@ -119,7 +118,7 @@ idk::AudioSystem::loadWav( const std::string &filepath )
 
     if (m_wav_cache.contains(path))
     {
-        LOG_INFO() << "[AudioSystem] .wav file already cached :" << filepath;
+        LOG_INFO("AudioSystem::loadWav", ".wav file already cached: " + filepath);
         return m_wav_cache[path];
     }
 

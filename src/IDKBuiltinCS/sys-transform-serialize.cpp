@@ -1,6 +1,5 @@
 #include "sys-transform.hpp"
 
-#include <libidk/idk_log.hpp>
 #include <libidk/idk_geometry.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL

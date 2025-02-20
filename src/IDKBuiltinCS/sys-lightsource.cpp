@@ -23,7 +23,7 @@ idk::LightSys::update( idk::EngineAPI &api )
     for (auto &cmp: ecs.getComponentArray<DirlightCmp>())
     {
         glm::mat3 R = tsys.getModelMatrix(cmp.obj_id);
-        cmp.light.direction = glm::vec4(R*glm::vec3(0, 0, -1), 0.0f);
+        cmp.light.direction = glm::vec4(R*glm::vec3(0, 0, 1), 0.0f);
         ren.getDirlight(cmp.light_id) = cmp.light;
     }
 

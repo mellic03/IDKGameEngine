@@ -1,5 +1,9 @@
 #include "idk_ecs.hpp"
 #include "IDKBuiltinCS/sys-transform.hpp"
+#include <libidk/idk_log2.hpp>
+
+#include <filesystem>
+
 
 namespace
 {
@@ -56,7 +60,7 @@ idk::ECS::shutdown( idk::EngineAPI &api )
         system->shutdown(api);
     }
 
-    LOG_INFO() << "idk::ECS::shutdown";
+    LOG_INFO("idk::ECS::shutdown", "");
 }
 
 
@@ -92,7 +96,8 @@ idk::ECS::removeComponent( int obj_id, size_t key )
 
     if (e.components.contains(key) == false)
     {
-        LOG_WARN() << "Object " << obj_id << " does not have component " << key;
+        auto msg = std::format("Object {} does not have component {}", obj_id, key);
+        LOG_WARN("idk::ECS::removeComponent", msg);
     }
 
     c->onObjectDeassignment(*m_api_ptr, obj_id);
@@ -161,7 +166,8 @@ idk::ECS::getUserCallback( size_t key )
 {
     if (m_user_callbacks.contains(key) == false)
     {
-        LOG_WARN() << "[ECS::getUserCallback] m_user_callbacks does not contain \"" << key << "\"";
+        auto msg = std::format("m_user_callbacks does not contain \"{}\"", key);
+        LOG_WARN("idk::ECS::getUserCallback", msg);
 
         return m_default_userfn;
     }
@@ -230,7 +236,7 @@ idk::ECS::copyGameObject( int src_obj, bool deep )
 void
 idk::ECS::_deleteGameObject( int obj_id, bool deep )
 {
-    LOG_DEBUG() << "[ECS::deleteGameObject] obj_id " << obj_id;
+    LOG_DEBUG("idk::ECS::deleteGameObject", std::to_string(obj_id));
 
     // Delete children
     // --------------------------------------------
@@ -277,7 +283,7 @@ idk::ECS::_deleteGameObject( int obj_id, bool deep )
 void
 idk::ECS::deleteGameObject( int obj_id, bool deep )
 {
-    LOG_DEBUG() << "[ECS::deleteGameObject] obj_id " << obj_id;
+    LOG_DEBUG("idk::ECS::deleteGameObject", std::to_string(obj_id));
     m_delete_list.push_back(obj_id);
 }
 
@@ -348,7 +354,7 @@ idk::ECS::deleteSelectedGameObject()
 int
 idk::ECS::copySelectedGameObject()
 {
-    LOG_INFO() << "ECS::copySelectedGameObject";
+    LOG_INFO("idk::ECS::copySelectedGameObject");
     IDK_ASSERT("No selected object!", m_selected_object != -1);
     return copyGameObject(m_selected_object);
 }
@@ -372,7 +378,8 @@ idk::ECS::giveComponent( int obj_id, size_t key )
 {
     if (hasComponent(obj_id, key))
     {
-        LOG_WARN() << "Object " << obj_id << " already has component " << getComponentArray(key)->getName();
+        auto msg = std::format("Object {} already has component {}", obj_id, key);
+        LOG_WARN("idk::ECS::giveComponent", msg);
         return;
     }
 
@@ -599,7 +606,6 @@ idk::ECS::_load()
         if (isRegisteredComponent(name) == false)
         {
             std::cout << "Component \"" << name << "\" not registered, ignoring" << std::endl;
-            LOG_ERROR() << "Component \"" << name << "\" not registered, ignoring";
             stream.ignore(sizes[i]);
             continue;
         }
@@ -659,7 +665,8 @@ idk::ECS::load( const std::string &filepath )
     std::filesystem::path fpath(filepath);
     if (std::filesystem::exists(fpath) == false)
     {
-        LOG_ERROR() << "[idk::ECS::load] Cannot open file \"" << filepath << "\"";
+        auto msg = std::format("Cannot open file \"{}\"", filepath);
+        LOG_ERROR("idk::ECS::load", msg);
     }
 
     m_readfile = true;

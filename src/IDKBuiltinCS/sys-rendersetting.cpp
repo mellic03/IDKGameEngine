@@ -3,7 +3,7 @@
 #include "sys-lightsource.hpp"
 
 #include <libidk/idk_geometry.hpp>
-#include <libidk/idk_log.hpp>
+#include <libidk/idk_log2.hpp>
 
 
 static idk::EngineAPI *api_ptr;
@@ -20,7 +20,7 @@ static idk::RenderSettingCmp &getCmp()
 void
 idk::RenderSettingSys::init( idk::EngineAPI &api )
 {
-    LOG_INFO() << "idk::RenderSettingSys::init";
+    LOG_INFO("idk::RenderSettingSys::init", "");
     api_ptr = &api;
 }
 
@@ -60,7 +60,7 @@ idk::RenderSettingSys::update( idk::EngineAPI &api )
 void
 idk::RenderSettingSys::shutdown( idk::EngineAPI &api )
 {
-    LOG_INFO() << "idk::RenderSettingSys::shutdown";
+    LOG_INFO("idk::RenderSettingSys::shutdown", "");
 }
 
 
@@ -105,7 +105,7 @@ idk::RenderSettingCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, i
     ecs.giveComponent<DirlightCmp>(obj_id);
     auto &cmp = ecs.getComponent<TransformCmp>(obj_id);
     // cmp.transform.rotation = glm::quat(glm::normalize(glm::vec3(-1.0, -0.5, +1.0)));
-    cmp.transform.rotation = glm::quat(0.77, -0.45, -0.37, -0.21);
+    cmp.transform.rotation = -glm::quat(0.77, -0.45, -0.37, -0.21);
 
     // this->obj_id = obj_id;
 };

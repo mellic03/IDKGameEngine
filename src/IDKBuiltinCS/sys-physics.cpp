@@ -3,7 +3,6 @@
 // #include "sys-model.hpp"
 
 // #include <libidk/idk_geometry.hpp>
-// #include <libidk/idk_log.hpp>
 
 
 
@@ -130,7 +129,7 @@
 //             // {
 //             //     vel.y = m_jump_force*PhysicsConstants::G;
 //             //     glm::vec3 f = glm::vec3(0.0f, m_jump_force*PhysicsConstants::G, 0.0f);
-//             //     PhysicsSys::addImpulse(m_obj_id, f);
+//             //     PhysicsSys::addVel(m_obj_id, f);
 //             // }
 //         }
 
@@ -231,7 +230,7 @@
 // }
 
 // void
-// idk::PhysicsSys::addImpulse( int obj_id, const glm::vec3 &impulse )
+// idk::PhysicsSys::addVel( int obj_id, const glm::vec3 &impulse )
 // {
 //     float dt = api_ptr->dtime();
 //     ECS2::getComponent<KinematicCapsuleCmp>(obj_id).impulse += impulse;
@@ -247,7 +246,7 @@
 //     {
 //         cmp.vel.y = force*PhysicsConstants::G;
 //         glm::vec3 f = glm::vec3(0.0f, force*PhysicsConstants::G, 0.0f);
-//         PhysicsSys::addImpulse(obj_id, f);
+//         PhysicsSys::addVel(obj_id, f);
 //     }
 // }
 
