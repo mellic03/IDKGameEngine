@@ -1,5 +1,5 @@
 #include "../EditorUI.hpp"
-#include <IDKECS/ecs1/idk_ecs.hpp>
+#include <IDKECS/IDKECS.hpp>
 #include "EditorUI-tabs.hpp"
 
 #include <filesystem>

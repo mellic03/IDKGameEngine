@@ -32,29 +32,31 @@ idk_AddComponentPopup( idk::ECS &ecs, int obj_id )
 
     auto &categories = ecs.getComponentCategories();
 
-    ImGui::BeginTable("Add Component Table", categories.size());
-    ImGui::TableNextRow();
-
-    for (auto &[category, keys]: categories)
+    if (ImGui::BeginTable("Add Component Table", categories.size()))
     {
-        ImGui::TableNextColumn();
+        ImGui::TableNextRow();
 
-        ImGui::Text(category.c_str());
-        ImGui::Separator();
-
-        for (auto &[name, C]: ecs.getComponentArraysByCategory(category))
+        for (auto &[category, keys]: categories)
         {
-            if (ecs.hasComponent(obj_id, C->getKey()) == false)
+            ImGui::TableNextColumn();
+
+            ImGui::Text(category.c_str());
+            ImGui::Separator();
+
+            for (auto &[name, C]: ecs.getComponentArraysByCategory(category))
             {
-                if (ImGui::MenuItem(name.c_str()))
+                if (ecs.hasComponent(obj_id, C->getKey()) == false)
                 {
-                    ecs.giveComponent(obj_id, C->getKey());
+                    if (ImGui::MenuItem(name.c_str()))
+                    {
+                        ecs.giveComponent(obj_id, C->getKey());
+                    }
                 }
             }
-        }
 
+        }
+        ImGui::EndTable();
     }
-    ImGui::EndTable();
 
 }
 

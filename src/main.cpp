@@ -5,8 +5,9 @@
 #include <libidk/idk_game.hpp>
 #include <libidk/idk_string.hpp>
 #include <libidk/idk_print.hpp>
-#include <libidk/idk_log2.hpp>
+#include <libidk/idk_log.hpp>
 #include <libidk/idk_random.hpp>
+#include <libidk/idk_memory.hpp>
 
 #include <IDKGameEngine/IDKengine.hpp>
 #include <IDKECS/IDKECS.hpp>
@@ -26,9 +27,17 @@
 void message_callback( GLenum, GLenum, GLuint, GLenum, GLsizei, GLchar const*, void const* );
 
 
+
 int main( int argc, char **argv )
 {
     srand(clock());
+
+    // Initialize memory allocators
+    // -----------------------------------------------------------------------------------------
+    // auto  nbytes = 1024*idk::MEGA;
+    // void *base   = new uint8_t[nbytes];
+    // idk::memory::init(nbytes, base);
+    // -----------------------------------------------------------------------------------------
 
     // Parse command-line arguments
     // -----------------------------------------------------------------------------------------
@@ -82,12 +91,12 @@ int main( int argc, char **argv )
         exit(1);
     }
 
-    idk::Logger2::init();
-    idk::AudioSystem::init();
+    idk::Logger::init();
     idk::ThreadPool::init(arg_threads);
 
     std::string game_path = (arg_load_game) ? arg_game : "libgame.so";
     idk::EngineAPI api(args, game_path, 4, 6);
+
     // -----------------------------------------------------------------------------------------
 
     IDK_GLCALL(
@@ -127,6 +136,8 @@ int main( int argc, char **argv )
 
     while (api.running())
     {
+        // LOG_DETAIL("Begin frame");
+
         a = SDL_GetTicks64();
         delta = a - b;
 
@@ -150,7 +161,7 @@ int main( int argc, char **argv )
         engine.endFrame(api);
     
         idk::ThreadPool::update();
-        idk::Logger2::update();
+        idk::Logger::update();
         b = a;
 
         if (io.windowEvent(idk::IO::WIN_EXIT))
@@ -159,14 +170,16 @@ int main( int argc, char **argv )
         }
 
         framecount += 1;
+
+        // LOG_DETAIL("End frame");
     }
     // -----------------------------------------------------------------------------------------
 
 
-    LOG_INFO("main", "Main loop terminated");
+    LOG_INFO("Main loop terminated");
 
-    idk::Logger2::print();
-    idk::Logger2::writeFile();
+    idk::Logger::print();
+    idk::Logger::writeFile();
 
     return 0;
 }

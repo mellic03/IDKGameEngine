@@ -33,10 +33,10 @@ idk::ModelSys::init( idk::EngineAPI &api )
 
     for (auto &cmp: ecs.getComponentArray<idk::ModelCmp>())
     {
-        if (cmp.filepath[0] != '\0')
-        {
-            cmp.model_id = ren.loadModel(cmp.filepath);
-        }
+        // if (cmp.filepath[0] != '\0')
+        // {
+        //     cmp.model_id = ren.loadModel(cmp.filepath);
+        // }
     }
 }
 

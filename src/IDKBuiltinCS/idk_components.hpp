@@ -1,7 +1,6 @@
 #pragma once
 
 #include <IDKECS/IDKECS.hpp>
-#include <IDKECS/ecs1/idk_ecs.hpp>
 
 #include <IDKAudio/IDKAudio.hpp>
 #include <IDKGameEngine/IDKGameEngine.hpp>

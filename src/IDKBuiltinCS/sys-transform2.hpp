@@ -1,7 +1,7 @@
 #pragma once
 
 #include <libidk/idk_transform.hpp> 
-#include <IDKECS/ecs1/idk_ecs.hpp>
+#include <IDKECS/IDKECS.hpp>
 #include "idk_components.hpp"
 
 

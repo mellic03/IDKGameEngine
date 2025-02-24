@@ -1,37 +1,14 @@
 #include "idk_audio.hpp"
-#include <libidk/idk_log2.hpp>
-
-#include <filesystem>
-#include <map>
 
 
-namespace
+idk::Audio::Audio( idk::linear_allocator *mainblock )
+// :   m_chunks   (idk::pool_allocator<Mix_Chunk>(512, mainblock)),
+//     m_emitters (idk::pool_allocator<Emitter>(512, mainblock))
 {
-    static constexpr int NUM_CHANNELS = 32;
-    // static int m_curr_channel = 0;
-
-    static std::stack<int>                           m_channels;
-    static std::map<std::string, int>                m_wav_cache;
-
-    static idk::Allocator<Mix_Chunk>                 m_chunks;
-    static idk::Allocator<idk::AudioSystem::Emitter> m_emitters;
-
-};
-
-
-
-void
-idk::AudioSystem::init()
-{
-    // for (int i=0; i<NUM_CHANNELS; i++)
-    // {
-    //     m_channels.push(i);
-    // }
 
     int    audio_rate    = 44100;
     Uint16 audio_format  = MIX_DEFAULT_FORMAT; // AUDIO_S16SYS;
     int    audio_buffers = 2048;
-
 
     IDK_ASSERT(
         "Error initialising SDL2 audio",
@@ -47,27 +24,27 @@ idk::AudioSystem::init()
 
 
 int
-idk::AudioSystem::createEmitter()
+idk::Audio::createEmitter()
 {
     return m_emitters.create();
 }
 
 
 int
-idk::AudioSystem::createEmitter( const Emitter &emitter )
+idk::Audio::createEmitter( const Emitter &emitter )
 {
     int id = m_emitters.create(emitter);
-    AudioSystem::getEmitter(id).id = id;
+    Audio::getEmitter(id).id = id;
     return id;
 }
 
 
 int
-idk::AudioSystem::createEmitter( const std::string &filepath )
+idk::Audio::createEmitter( const std::string &filepath )
 {
     int sound = loadWav(filepath);
     int id = m_emitters.create(Emitter(sound));
-    auto &em = AudioSystem::getEmitter(id);
+    auto &em = Audio::getEmitter(id);
     em.id  = id;
     em.att = glm::vec4(1, 0, 0, 0);
 
@@ -76,17 +53,17 @@ idk::AudioSystem::createEmitter( const std::string &filepath )
 
 
 
-idk::AudioSystem::Emitter&
-idk::AudioSystem::getEmitter( int id )
+idk::Audio::Emitter&
+idk::Audio::getEmitter( int id )
 {
     return m_emitters.get(id);
 }
 
 
 void
-idk::AudioSystem::destroyEmitter( int id )
+idk::Audio::destroyEmitter( int id )
 {
-    if (m_emitters.contains(id))
+    // if (m_emitters.contains(id))
     {
         m_emitters.destroy(id);
     }
@@ -95,14 +72,14 @@ idk::AudioSystem::destroyEmitter( int id )
 
 
 int
-idk::AudioSystem::createChunk( const Mix_Chunk &chunk )
+idk::Audio::createChunk( const Mix_Chunk &chunk )
 {
     return m_chunks.create(chunk);
 }
 
 
 Mix_Chunk&
-idk::AudioSystem::getChunk( int id )
+idk::Audio::getChunk( int id )
 {
     return m_chunks.get(id);
 }
@@ -112,19 +89,19 @@ idk::AudioSystem::getChunk( int id )
 
 
 int
-idk::AudioSystem::loadWav( const std::string &filepath )
+idk::Audio::loadWav( const std::string &filepath )
 {
     std::string path = std::filesystem::absolute(filepath);
 
     if (m_wav_cache.contains(path))
     {
-        LOG_INFO("AudioSystem::loadWav", ".wav file already cached: " + filepath);
+        LOG_INFO(".wav file already cached: \"{}\"", filepath);
         return m_wav_cache[path];
     }
 
     Mix_Chunk *mc = Mix_LoadWAV(path.c_str());
 
-    std::string msg  = "[idk::AudioSystem]";
+    std::string msg  = "[idk::Audio]";
                 msg += " Could not load file \"" + filepath + "\"";
 
     IDK_ASSERT(msg.c_str(), mc != nullptr);
@@ -137,7 +114,7 @@ idk::AudioSystem::loadWav( const std::string &filepath )
 
 
 void
-idk::AudioSystem::playSound( int emitter_id, bool loop )
+idk::Audio::playSound( int emitter_id, bool loop )
 {
     auto &emitter = getEmitter(emitter_id);
     emitter.looping = loop;
@@ -176,12 +153,16 @@ idk::AudioSystem::playSound( int emitter_id, bool loop )
 
     Mix_Chunk &chunk = getChunk(emitter.chunk);
     emitter.channel = Mix_PlayChannel(-1, &chunk, (loop) ? -1 : 0);
-    std::cout << "channel: " << emitter.channel << "\n";
+
+    LOG_ADV(
+        log_flag::AUDIO | log_flag::DETAIL,
+        "Playing emitter {} on channel {}", emitter.id, emitter.channel
+    );
 }
 
 
 void
-idk::AudioSystem::stopSound( int emitter_id )
+idk::Audio::stopSound( int emitter_id )
 {
     auto &emitter = getEmitter(emitter_id);
 
@@ -199,7 +180,7 @@ idk::AudioSystem::stopSound( int emitter_id )
 
 
 void
-idk::AudioSystem::resumeSound( int emitter_id )
+idk::Audio::resumeSound( int emitter_id )
 {
     auto &emitter = getEmitter(emitter_id);
 
@@ -217,7 +198,7 @@ idk::AudioSystem::resumeSound( int emitter_id )
 
 
 void
-idk::AudioSystem::pauseSound( int emitter_id )
+idk::Audio::pauseSound( int emitter_id )
 {
     auto &emitter = getEmitter(emitter_id);
 
@@ -235,7 +216,7 @@ idk::AudioSystem::pauseSound( int emitter_id )
 
 
 void
-idk::AudioSystem::update( const glm::vec3 &listener_pos, const glm::vec3 &listener_front )
+idk::Audio::update( const glm::vec3 &listener_pos, const glm::vec3 &listener_front )
 {
     for (Emitter &emitter: m_emitters)
     {
@@ -248,11 +229,6 @@ idk::AudioSystem::update( const glm::vec3 &listener_pos, const glm::vec3 &listen
         int volume = int(mag * float(SDL_MIX_MAXVOLUME));
             volume = glm::clamp(volume, 0, SDL_MIX_MAXVOLUME);
 
-        // idk_printvalue(sqrt(dist2));
-        // idk_printvalue(volume);
-        // idk_printvalue(emitter.channel);
-        // std::cout << "\n";
-
         Mix_Volume(emitter.channel, volume);
 
         if (Mix_Playing(emitter.channel) == 0)
@@ -260,6 +236,4 @@ idk::AudioSystem::update( const glm::vec3 &listener_pos, const glm::vec3 &listen
             stopSound(emitter.id);
         }
     }
-    // std::cout << "\n";
-
 }

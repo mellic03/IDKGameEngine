@@ -2,7 +2,7 @@
 
 #include <IDKGameEngine/IDKGameEngine.hpp>
 #include <IDKECS/IDKECS.hpp>
-#include <IDKECS/ecs1/idk_ecs.hpp>
+#include <IDKECS/IDKECS.hpp>
 #include <IDKBuiltinCS/IDKBuiltinCS.hpp>
 
 #include <IDKGraphics/IDKGraphics.hpp>
@@ -20,6 +20,7 @@ idk::EngineAPI::EngineAPI( const std::vector<std::string> &args, const std::stri
     m_engine   = new idk::Engine(this);
     m_events   = new idk::EventEmitter<std::string, void*>();
     m_io       = new idk::IO();
+    m_audio    = new idk::Audio(memory.mainblock);
 
     m_win      = new idk::Window(m_name.c_str(), 1920, 1080);
     m_gl       = new idk::GLContext(*m_win, gl_major, gl_minor);
@@ -127,8 +128,6 @@ idk::EngineAPI::reloadGame( bool now )
 {
     const auto callback = [this]() {
         m_game->shutdown();
-        m_engine->clearModules();
-
         m_gameloader->freeInstance();        
         m_game = m_gameloader->getInstance();
         m_game->setup(*this);

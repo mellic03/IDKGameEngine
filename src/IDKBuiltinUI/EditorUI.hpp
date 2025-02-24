@@ -57,13 +57,12 @@ private:
     static void drawComponent( idk::EngineAPI&, idk::ECS&, int obj_id ) {  };
 
     void registerDrawComponents();
+    void clearDrawComponents();
 
 
 public:
-
     virtual void        init    ( idk::EngineAPI& ) final;
     virtual void        deinit  () final;
-    virtual void        registerECS( idk::EngineAPI&, idk::ECS& );
 
     virtual void        stage_A ( idk::EngineAPI& ) final {  };
     virtual void        stage_B ( idk::EngineAPI& ) final;

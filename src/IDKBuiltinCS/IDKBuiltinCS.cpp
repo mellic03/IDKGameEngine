@@ -1,5 +1,5 @@
 #include "IDKBuiltinCS.hpp"
-#include <IDKECS/ecs1/idk_ecs.hpp>
+#include <IDKECS/IDKECS.hpp>
 
 void
 idk::registerComponents( idk::ECS &ecs )

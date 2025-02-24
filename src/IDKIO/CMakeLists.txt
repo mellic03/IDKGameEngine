@@ -5,6 +5,7 @@ project(IDKIO)
 file(
     GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/device/*.cpp
 )
 
 

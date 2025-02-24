@@ -441,7 +441,7 @@
 //         count += 1;
 //     }
 
-//     LOG_INFO() << "[PhysicsSys] Baked " << count << " triangles";
+//     LOG_INFO("") << "[PhysicsSys] Baked " << count << " triangles";
 
 // }
 

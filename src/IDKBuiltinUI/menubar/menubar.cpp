@@ -35,10 +35,10 @@ menubar_file( idk::EngineAPI &api, bool &popup_save, bool &popup_load )
             popup_load = true;
         }
 
-        if (ImGui::MenuItem("Reload Modules", "F5"))
-        {
-            api.getEngine().reloadModules();
-        }
+        // if (ImGui::MenuItem("Reload Modules", "F5"))
+        // {
+        //     api.getEngine().reloadModules();
+        // }
 
         ImGui::Separator();
         ImGui::EndMenu();
@@ -67,11 +67,6 @@ EditorUI_MD::_menubar( idk::EngineAPI &api )
     auto &engine = api.getEngine();
     auto &io     = api.getIO();
     auto &ren    = api.getRenderer();
-
-    if (io.keyTapped(idk::Keycode::F5))
-    {
-        engine.reloadModules();
-    }
 
     static bool popup_save = false;
     static bool popup_load = false;

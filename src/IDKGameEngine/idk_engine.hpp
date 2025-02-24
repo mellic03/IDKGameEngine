@@ -8,6 +8,7 @@
 
 #include <libidk/idk_module.hpp>
 #include <libidk/idk_dynamiclib.hpp>
+#include <libidk/idk_wallocator.hpp>
 
 #include <cstdint>
 #include <cstddef>
@@ -29,16 +30,13 @@ private:
     uint64_t                   m_frame_end   = 0;
     float                      m_frame_time  = 0.0001f;
     bool                       m_running     = true;
-    bool                       m_reload      = false;
     bool                       m_clear       = false;
 
-    std::vector<ModuleLoader>  m_modules;
+    idk::WAllocator<ModuleLoader> m_modules;
 
     void                       _idk_modules_stage_A( idk::EngineAPI & );
     void                       _idk_modules_stage_B( idk::EngineAPI & );
     void                       _idk_modules_stage_C( idk::EngineAPI & );
-    void                       _reloadModules();
-    void                       _clearModules();
 
     friend class idk::EngineAPI;
     idk::EngineAPI *m_api;
@@ -47,8 +45,9 @@ private:
 public:
 
     // void                       initModules( idk::EngineAPI & );
-    void                       reloadModules() { m_reload = true; };
-    void                       clearModules()  { m_clear  = true; };
+    int                        loadModule( const std::string &filename );
+    void                       unloadModule( int );
+    void                       reloadModule( int, const std::function<void()> &callback=[](){} );
 
     void                       beginFrame  ( idk::EngineAPI&, float );
     void                       endFrame    ( idk::EngineAPI& );
@@ -60,15 +59,11 @@ public:
     float                      frameRate() { return 1.0f / deltaTime(); };
 
 
-    /**
-     * @param filename filename excluding extension (.so/.dll)
-     */
-    int                                         registerModule( const std::string &filename );
 
     template <typename module_type>
     module_type& getModule( int id )
     {
-        return *dynamic_cast<module_type*>(m_modules[id].getInstance());
+        return *dynamic_cast<module_type*>(m_modules.get(id).getInstance());
     }
 
 

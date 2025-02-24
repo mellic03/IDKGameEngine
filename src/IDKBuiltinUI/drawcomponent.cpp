@@ -754,7 +754,7 @@ EditorUI_MD::drawComponent<idk::AudioEmitterCmp>( idk::EngineAPI &api, idk::ECS 
     auto &cmp = ecs.getComponent<idk::AudioEmitterCmp>(obj_id);
     std::string label = cmp.filepath;
 
-    auto &em = idk::AudioSystem::getEmitter(cmp.emitter_id);
+    auto &em = api.getAudio().getEmitter(cmp.emitter_id);
     ImGui::InputFloat("Linear",    &em.att[1]);
     ImGui::InputFloat("Quadratic", &em.att[2]);
 
@@ -1183,6 +1183,32 @@ EditorUI_MD::registerDrawComponents()
     ECS_COMPONENT_CALLBACK(idk::RenderSettingCmp);
     ECS_COMPONENT_CALLBACK(idk::ScriptCmp);
     ECS_COMPONENT_CALLBACK(idk::ParticleCmp);
+
+}
+
+
+void
+EditorUI_MD::clearDrawComponents()
+{
+    using namespace idk;
+
+    ECS::clearUserCallback<idk::IconCmp>();
+    ECS::clearUserCallback<idk::TransformCmp>();
+    ECS::clearUserCallback<idk::IKCmp>();
+    ECS::clearUserCallback<idk::LookTowardCmp>();
+    ECS::clearUserCallback<idk::SmoothFollowCmp>();
+    ECS::clearUserCallback<idk::AnchorCmp>();
+    ECS::clearUserCallback<idk::RotateCmp>();
+    ECS::clearUserCallback<idk::ModelCmp>();
+    ECS::clearUserCallback<idk::TerrainCmp>();
+    ECS::clearUserCallback<idk::CameraCmp>();
+    ECS::clearUserCallback<idk::DirlightCmp>();
+    ECS::clearUserCallback<idk::PointlightCmp>();
+    ECS::clearUserCallback<idk::SpotlightCmp>();
+    ECS::clearUserCallback<idk::AudioEmitterCmp>();
+    ECS::clearUserCallback<idk::RenderSettingCmp>();
+    ECS::clearUserCallback<idk::ScriptCmp>();
+    ECS::clearUserCallback<idk::ParticleCmp>();
 
 }
 

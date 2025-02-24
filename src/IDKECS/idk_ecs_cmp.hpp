@@ -2,6 +2,7 @@
 
 #include "idk_ecs.hpp"
 #include <libidk/idk_serialize.hpp>
+#include <libidk/idk_allocator_fixed.hpp>
 #include <IDKGameEngine/IDKGameEngine.hpp>
 #include <functional>
 
@@ -56,13 +57,14 @@ class idk::ECS::ComponentArray: public idk::ECS::iComponentArray
 {
 private:
     idk::EngineAPI *m_api;
-    idk::Allocator<T> m_data;
+    idk::fixed_Allocator<T> m_data;
 
 public:
 
     ComponentArray( idk::EngineAPI *api, idk::ECS *ecs, const std::string &name, size_t key )
     :   iComponentArray(ecs, name, key, [](idk::EngineAPI&, idk::ECS&, int){}),
-        m_api(api)
+        m_api(api),
+        m_data(2048, api->memory.mainblock)
     {
 
     }
@@ -72,24 +74,24 @@ public:
     virtual size_t serialize( std::ofstream &stream )
     {
         size_t n = 0;
-        n += idk::streamwrite(stream, m_name);
-        n += idk::streamwrite(stream, m_data);
+        // n += idk::streamwrite(stream, m_name);
+        // n += idk::streamwrite(stream, m_data);
         return n;
     }
 
 
     virtual size_t deserialize( std::ifstream &stream )
     {
-        for (auto &cmp: m_data)
-        {
-            onObjectDeassignment(*m_api, cmp.obj_id);
-        }
+        // for (auto &cmp: m_data)
+        // {
+        //     onObjectDeassignment(*m_api, cmp.obj_id);
+        // }
 
-        m_data.clear();
+        // m_data.clear();
 
         size_t n = 0;
-        n += idk::streamread(stream, m_name);
-        n += idk::streamread(stream, m_data);
+        // n += idk::streamread(stream, m_name);
+        // n += idk::streamread(stream, m_data);
         return n;
     }
 
@@ -141,9 +143,9 @@ public:
     };
 
 
-    idk::Allocator<T> &getData() { return m_data; };
+    idk::fixed_Allocator<T> &getData() { return m_data; };
 
-    std::vector<T>::iterator begin() { return m_data.begin(); };
-    std::vector<T>::iterator end()   { return m_data.end();   };
+    idk::fixed_vector<T>::iterator begin() { return m_data.begin(); };
+    idk::fixed_vector<T>::iterator end()   { return m_data.end();   };
 
 };

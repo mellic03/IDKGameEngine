@@ -1,18 +1,44 @@
 #include "idk_io.hpp"
-#include <libidk/idk_log2.hpp>
+#include <libidk/idk_log.hpp>
 #include <libidk/idk_assert.hpp>
 #include <filesystem>
+
 using namespace idk;
+using lf = idk::log_flag;
+
+
+static constexpr bool IsControllerEvent( uint32_t type )
+{
+    return (SDL_CONTROLLERAXISMOTION <= type && type <= SDL_CONTROLLERSTEAMHANDLEUPDATED);
+}
 
 
 void
-IO::processEvent( SDL_Event &e )
+IO::_processEvents()
+{
+    static SDL_Event e;
+
+    while (SDL_PollEvent(&e))
+    {
+        for (auto &[id, callback]: m_callbacks.pollEvents)
+        {
+            callback(&e);
+        }
+
+        _processEvent(e);
+        _processEventController(e);
+    }
+}
+
+
+void
+IO::_processEvent( SDL_Event &e )
 {
     namespace fs = std::filesystem;
 
     switch (e.type)
     {
-        default: break;
+        default: return;
 
         case SDL_QUIT:
             m_windowevents[IO::WIN_EXIT] = true;
@@ -107,93 +133,76 @@ IO::processEvent( SDL_Event &e )
             break;
         }
 
-        case SDL_JOYAXISMOTION:
-            m_joystick_jaxis[e.jaxis.axis] = e.jaxis.value;
-            for (auto &[id, callback]: m_callbacks.joystickaxis)
-            {
-                callback(uint8_t(e.jaxis.axis), e.jaxis.value);
-            }
-            break;
-
-        case SDL_JOYHATMOTION:
-            m_joystick_jhat[e.jhat.hat] = e.jhat.value; 
-            break;
-
-        case SDL_JOYBUTTONDOWN:
-            m_joystick_btndown[e.jbutton.button] = true;
-            break;
-
-        case SDL_JOYBUTTONUP:
-            m_joystick_btndown[e.jbutton.button] = false;
-            break;
+        // case SDL_JOYAXISMOTION: m_jstick.setAxis(e.jaxis.axis, e.jaxis.value); break;
+        // case SDL_JOYHATMOTION:  m_jstick.setHat(e.jhat.hat, e.jhat.value);     break;
+        // case SDL_JOYBUTTONDOWN: m_joystick_btndown[e.jbutton.button] = true;   break;
+        // case SDL_JOYBUTTONUP:   m_joystick_btndown[e.jbutton.button] = false;  break;
     }
-
-    processEventGamepad(e);
-
-    m_poll_callback(&e);
 }
 
 
 
 void
-IO::processEventGamepad( SDL_Event &e )
+IO::_processEventController( SDL_Event &e )
 {
+    int which = -1;
+
+    if (e.type == SDL_CONTROLLERDEVICEADDED)
+    {
+        which = e.cdevice.which;
+
+        LOG_ADV(lf::IO|lf::DETAIL, "SDL_CONTROLLERDEVICEADDED, which={}", which);
+        auto *impl = SDL_GameControllerOpen(which);
+        // int instanceID = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(impl));
+
+        if (m_devices.contains(which) == false)
+        {
+            createDevice(which);
+        }
+
+        // if (getDevice(which)->isOpen() == false)
+        // {
+        //     getDevice(which)->open(which);
+        // }
+    }
+
+    // SDL_GameControllerGetPlayerIndex
+    // SDL_GameControllerOpen
+    // SDL_GameControllerGetPlayerIndex
+
+    else if (e.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        LOG_ADV(lf::IO|lf::DETAIL, "SDL_CONTROLLERDEVICEREMOVED, which={}", e.cdevice.which);
+        destroyDevice(e.cdevice.which);
+    }
+
+
+    // which = e.cbutton.which;
+
+    // if (m_devices.contains(which) == false)
+    // {
+    //     if (createDevice(which) == nullptr)
+    //     {
+    //         return;
+    //     }
+    // }
+
     switch (e.type)
     {
         default: break;
 
-        case SDL_CONTROLLERBUTTONDOWN:
-        {
-            m_gpad.setBtn(e.cbutton.button, true);
-            for (auto &[id, callback]: m_callbacks.gpadbtn[IDX_GPAD_DOWN])
-                callback(e.cbutton.button);
-            break;
-        }
-
-        case SDL_CONTROLLERBUTTONUP:
-        {
-            m_gpad.setBtn(e.cbutton.button, false);
-            for (auto &[id, callback]: m_callbacks.gpadbtn[IDX_GPAD_UP])
-                callback(e.cbutton.button);
-            break;
-        }
-
         case SDL_CONTROLLERAXISMOTION:
-        {
-            m_gpad.setAxis(e.caxis.axis, e.caxis.value);
+            // LOG_ADV(lf::IO|lf::DETAIL, "SDL_CONTROLLERAXISMOTION");
+            getDevice(e.cbutton.which)->updateAxis(e.caxis.axis, e.caxis.value);
             break;
-        }
-
-        case SDL_CONTROLLERDEVICEADDED:
-        {
-            m_gpad.open(e.cdevice.which);
-
-            LOG_INFO(
-                "idk::IO::processEvent",
-                std::format("Controller detected on device index {}", e.cdevice.which)
-            );
-
+        case SDL_CONTROLLERBUTTONDOWN:
+            // LOG_ADV(lf::IO|lf::DETAIL, "SDL_CONTROLLERBUTTONDOWN");
+            getDevice(e.cbutton.which)->updateButton(e.cbutton.button, true);
             break;
-        }
-
-        case SDL_CONTROLLERDEVICEREMOVED:
-        {
-            if (e.cdevice.which == m_gpad.id)
-            {
-                m_gpad.close();
-            
-                for (int i=0; i<SDL_NumJoysticks(); i++)
-                {
-                    if (SDL_IsGameController(i))
-                    {
-                        m_gpad.open(i);
-                        break;
-                    }
-                }
-            }
-                
+        case SDL_CONTROLLERBUTTONUP:
+            // LOG_ADV(lf::IO|lf::DETAIL, "SDL_CONTROLLERBUTTONUP");
+            getDevice(e.cbutton.which)->updateButton(e.cbutton.button, false);
             break;
-        }
     }
 
 }

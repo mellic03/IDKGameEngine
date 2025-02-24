@@ -5,6 +5,10 @@
 #include <libidk/idk_module.hpp>
 #include <libidk/idk_dynamiclib.hpp>
 #include <libidk/idk_game.hpp>
+#include <libidk/memory/linear_allocator.hpp>
+#include <libidk/memory/stack_allocator.hpp>
+#include <libidk/memory/ring_allocator.hpp>
+
 #include <string>
 #include <vector>
 #include <map>
@@ -17,21 +21,43 @@ namespace idk
     class Window;
     class GLContext;
 
-    // class AudioSystem;
+    class linear_allocator;
 
     class Engine;
 
     template <typename key_type, typename msg_type>
     class EventEmitter;
+
     class ECS;
     class IO;
+    class Audio;
 
     class RenderEngine;
-    // class ThreadPool;
-
     class Game;
 
     class EngineAPI;
+
+
+    struct EngineMemory
+    {
+        static constexpr size_t MAIN_SIZE  = 1024 * idk::MEGA;
+        static constexpr size_t STACK_SIZE = 16   * idk::MEGA;
+        static constexpr size_t RING_SIZE  = 16   * idk::MEGA;
+
+        idk::linear_allocator *mainblock;
+        idk::stack_allocator  *stack;
+        idk::ring_allocator   *ring;
+
+        EngineMemory()
+        {
+            using namespace idk;
+
+            mainblock = new linear_allocator(MAIN_SIZE);
+            stack     = new stack_allocator(STACK_SIZE, mainblock);
+            ring      = new ring_allocator(RING_SIZE, mainblock);
+        }
+    };
+
 }
 
 
@@ -54,12 +80,15 @@ private:
 
     idk::Engine         *m_engine   = nullptr;
     idk::IO             *m_io       = nullptr;
+    idk::Audio          *m_audio    = nullptr;
 
     idk::RenderEngine   *m_renderer = nullptr;
     idk::EventEmitter<std::string, void*> *m_events = nullptr;
 
 
 public:
+    EngineMemory memory;
+
                          EngineAPI( const std::vector<std::string>&, const std::string&, int, int );
 
     void                 update( float dt );
@@ -71,6 +100,7 @@ public:
     idk::Engine         &getEngine()     { return *m_engine;   };
     idk::ECS            &getECS()        { return getScene("DefaultScene"); };
     idk::IO             &getIO()         { return *m_io;       };
+    idk::Audio          &getAudio()      { return *m_audio;    };
     idk::RenderEngine   &getRenderer()   { return *m_renderer; };
     auto                &getEvents()     { return *m_events;   };
     idk::Game           *getGame()       { return  m_game;     };

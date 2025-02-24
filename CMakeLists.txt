@@ -13,7 +13,6 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKEvents/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKIO/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinCS/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKBuiltinUI/)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKEditorUI/)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src/IDKECS/)
 
 

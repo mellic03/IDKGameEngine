@@ -1,27 +1,64 @@
 #include "gamepad.hpp"
 #include <libidk/idk_assert.hpp>
+#include <libidk/idk_log.hpp>
 #include <glm/glm.hpp>
 
+#include <SDL2/SDL.h>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <string>
-
+using lf = idk::log_flag;
 
 
 idk::Gamepad::Gamepad()
+:   idk::DeviceController(64, 6)
 {
+    // LOG_INFO("idk::Gamepad::Gamepad");
+    LOG_ADV(lf::IO|lf::DETAIL, "");
+
     lstick   = {0, 0, -1, +1, 0.2, 1.0};
     rstick   = {0, 0, -1, +1, 0.2, 1.0};
     ltrigger = {0, 0,  0, +1, 0.0, 1.0};
     rtrigger = {0, 0,  0, +1, 0.0, 1.0};
 
-    for (int i=0; i<down.size(); i++)
+    for (int i=0; i<_down.size(); i++)
     {
-        down[i] = false;
-        tapped[i] = false;
-        timers[i] = 0;
+        _down[i] = false;
+        _tapped[i] = false;
+        _timers[i] = 0;
     }
 }
+
+
+void
+idk::Gamepad::update( uint32_t msElapsed )
+{
+    bool btn_down = false;
+
+    for (int i=0; i<_down.size(); i++)
+    {
+        if (_down[i])
+        {
+            _timers[i] += uint32_t(msElapsed);
+        }
+    }
+}
+
+
+bool
+idk::Gamepad::buttonDown( uint32_t btn )
+{
+    return _down[btn];
+}
+
+
+bool
+idk::Gamepad::buttonTapped( uint32_t btn )
+{
+    return _tapped[btn];
+}
+
 
 
 
@@ -89,9 +126,29 @@ idk::Gamepad::_getDeadzoneIdx( uint32_t axis )
 }
 
 
-void
-idk::Gamepad::setAxis( uint32_t axis, int16_t value )
+static uint32_t
+SDLAxisToGamepadEvent( uint32_t axis )
 {
+    using namespace idk;
+
+    switch (axis)
+    {
+        default: return GamepadEvent::INVALID;
+        case SDL_CONTROLLER_AXIS_LEFTX:        return GamepadEvent::LEFT_STICK;
+        case SDL_CONTROLLER_AXIS_LEFTY:        return GamepadEvent::LEFT_STICK;
+        case SDL_CONTROLLER_AXIS_RIGHTX:       return GamepadEvent::RIGHT_STICK;
+        case SDL_CONTROLLER_AXIS_RIGHTY:       return GamepadEvent::RIGHT_STICK;
+        case SDL_CONTROLLER_AXIS_TRIGGERLEFT:  return GamepadEvent::LEFT_TRIGGER;
+        case SDL_CONTROLLER_AXIS_TRIGGERRIGHT: return GamepadEvent::RIGHT_TRIGGER;
+    }
+}
+
+
+void
+idk::Gamepad::updateAxis( uint8_t axis, int16_t value )
+{
+    // LOG_ADV(lf::IO|lf::DETAIL, "axis {} {}", int(axis), int(value));
+
     static constexpr int axis_min = -32768;
     static constexpr int axis_max = +32767;
 
@@ -123,34 +180,24 @@ idk::Gamepad::setAxis( uint32_t axis, int16_t value )
     }
 
     data[_getDataIdx(axis)] = glm::mix(minv, maxv, alpha);
+    this->emit(SDLAxisToGamepadEvent(axis));
 }
 
 
+
 void
-idk::Gamepad::setBtn( uint32_t btn, bool is_down )
+idk::Gamepad::updateButton( uint32_t btn, bool dwn )
 {
-    bool was_down = this->down[btn];
-    bool is_up    = !is_down;
+    // LOG_ADV(lf::IO|lf::DETAIL, "button {} {}", btn, (dwn ? "down" : "up"));
 
-    if (was_down && is_up)
-    {
-        if (this->timers[btn] < 250)
-        {
-            this->tapped[btn] = true;
-        }
-    }
+    uint32_t idx = btn;
+    DeviceController::updateButton(idx, dwn);
 
-    if (is_up)
-    {
-        this->down[btn] = false;
-        this->timers[btn] = 0;
-    }
+    uint32_t flags = 0;
+    if (dwn) flags |= GamepadEvent::BTN_DWN;
+    else     flags |= GamepadEvent::BTN_UP;
 
-    else if (is_down)
-    {
-        this->down[btn] = true;
-        this->tapped[btn] = false;
-    }
+    this->emit(flags | btn);
 }
 
 
@@ -162,28 +209,3 @@ idk::Gamepad::_clear()
     rstick.x = 0.0f;
     rstick.y = 0.0f;
 }
-
-
-bool
-idk::Gamepad::isOpen()
-{
-    return ctl != nullptr;
-}
-
-
-void
-idk::Gamepad::open( int index )
-{
-    ctl = SDL_GameControllerOpen(index);
-    id  = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(ctl));
-    _clear();
-}
-
-void
-idk::Gamepad::close()
-{
-    SDL_GameControllerClose(ctl);
-    ctl = nullptr;
-}
-
-

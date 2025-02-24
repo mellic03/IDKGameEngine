@@ -1,11 +1,11 @@
 #include "EditorUI.hpp"
-
 #include <IDKIO/IDKIO.hpp>
 
 #include <idk_imgui/imgui.hpp>
 #include <idk_imgui/imguizmo.hpp>
 #include <idk_imgui/imnodes.hpp>
 #include <libidk/idk_export.hpp>
+#include <libidk/idk_log.hpp>
 
 #include "common/idk_imgui_assetbrowser.hpp"
 #include "tabs/node-editor.hpp"
@@ -18,6 +18,9 @@ namespace fs = std::filesystem;
 static void
 ImGui_SDL2_OpenGL_init( ImGuiContext *ctx, SDL_Window *win, SDL_GLContext gl )
 {
+    // LOG_INFO("EditorUI_MD::ImGui_SDL2_OpenGL_init");
+    LOG_INFO("");
+
     ImGui::SetCurrentContext(ctx);
 
     ImGuiIO& io = ImGui::GetIO();
@@ -30,8 +33,15 @@ ImGui_SDL2_OpenGL_init( ImGuiContext *ctx, SDL_Window *win, SDL_GLContext gl )
     ImGui::StyleColorsLight();
     idkImGui_theme();
 
-    ImGui_ImplSDL2_InitForOpenGL(win, gl);
-    ImGui_ImplOpenGL3_Init("#version 460");
+    IDK_ASSERT(
+        "ImGui_ImplSDL2_InitForOpenGL failure",
+        ImGui_ImplSDL2_InitForOpenGL(win, gl) == true
+    );
+
+    IDK_ASSERT(
+        "ImGui_ImplOpenGL3_Init failure",
+        ImGui_ImplOpenGL3_Init("#version 460") == true
+    );
 
 }
 
@@ -39,32 +49,36 @@ ImGui_SDL2_OpenGL_init( ImGuiContext *ctx, SDL_Window *win, SDL_GLContext gl )
 static ImGuiContext *main_ctx;
 static ImGuiContext *popout_ctx;
 static SDL_Window   *popout_win;
+static int m_pollEventCallback;
+static idk::EngineAPI *api_ptr;
 
 
 void
 EditorUI_MD::init( idk::EngineAPI &api )
 {
+    LOG_INFO("");
+    LOG_INFO("m_tabs.size(): {}", m_tabs.size());
+
+    api_ptr = &api;
     auto &engine   = api.getEngine();
-    auto &IO       = api.getIO();
     auto &ren      = api.getRenderer();
 
     registerDrawComponents();
 
     IMGUI_CHECKVERSION();
     main_ctx = ImGui::CreateContext();
-    ImGui_SDL2_OpenGL_init(main_ctx, api.getWindow().sdl_win, api.getGL().sdl_ctx);
+    ImGui_SDL2_OpenGL_init(main_ctx, api.getWindow().sdl_win, api.getGL().sdl_glctx);
 
     ImGui::SetCurrentContext(main_ctx);
     ImGuiIO& io = ImGui::GetIO();
 
-    IO.onPollEvent(
+    m_pollEventCallback = api.getIO().onPollEvent(
         [](SDL_Event *event)
         {
             ImGui::SetCurrentContext(main_ctx);
             ImGui_ImplSDL2_ProcessEvent(event);
         }
     );
-
 
     for (size_t i=0; i<NUM_FONTS; i++)
     {
@@ -75,7 +89,6 @@ EditorUI_MD::init( idk::EngineAPI &api )
                          + "/Ubuntu-Medium.ttf";
 
         m_fonts[i] = io.Fonts->AddFontFromFileTTF(path.c_str(), font_size);
-
 
         // Icons
         // -------------------------------------------------------------------------------------
@@ -101,18 +114,16 @@ EditorUI_MD::init( idk::EngineAPI &api )
 void
 EditorUI_MD::deinit()
 {
+    // LOG_INFO("EditorUI_MD::deinit");
+    LOG_INFO("");
+
+    this->clearDrawComponents();
+    api_ptr->getIO().removeCallback(m_pollEventCallback);
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
 }
-
-
-void
-EditorUI_MD::registerECS( idk::EngineAPI &api, idk::ECS &ecs )
-{
-    
-}
-
 
 
 
@@ -120,9 +131,9 @@ EditorUI_MD::registerECS( idk::EngineAPI &api, idk::ECS &ecs )
 void
 EditorUI_MD::stage_B( idk::EngineAPI &api )
 {
+    api_ptr = &api;
     auto &engine = api.getEngine();
     auto &ren    = api.getRenderer();
-
 
     ImGuiWindowFlags windowflags = ImGuiWindowFlags_NoResize
                                  | ImGuiWindowFlags_NoMove
@@ -147,7 +158,6 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
     {
         ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
     }
-
 
     if (m_show_ImGui_demo)
     {
@@ -184,11 +194,10 @@ EditorUI_MD::stage_B( idk::EngineAPI &api )
 
     idkImGui::AssetBrowser("Asset Browser ##A", dir_1);
     idkImGui::AssetBrowser("Asset Browser ##B", dir_2);
-
-
     ImGui::End();
-    ImGui::Render();
 
+    ImGui::Render();
+    ImGui::EndFrame();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 

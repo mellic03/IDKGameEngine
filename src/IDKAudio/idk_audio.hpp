@@ -4,16 +4,18 @@
 
 #include <libidk/idk_allocator.hpp>
 #include <libidk/idk_glm.hpp>
+#include <libidk/idk_log.hpp>
+#include <libidk/memory/linear_allocator.hpp>
 
 #include <string>
+#include <map>
 #include <stack>
+#include <filesystem>
+
+namespace idk { class Audio; };
 
 
-namespace idk { class AudioSystem; };
-
-
-
-class idk::AudioSystem
+class idk::Audio
 {
 public:
 
@@ -34,30 +36,38 @@ public:
 
 
 private:
-    static int createChunk( const Mix_Chunk& );
-    static Mix_Chunk &getChunk( int );
+    static constexpr int NUM_CHANNELS = 32;
+
+    std::stack<int>                 m_channels;
+    std::map<std::string, int>      m_wav_cache;
+    idk::Allocator<Mix_Chunk>       m_chunks;
+    idk::Allocator<Emitter>         m_emitters;
+    // idk::pool_allocator<Mix_Chunk>  m_chunks;
+    // idk::pool_allocator<Emitter>    m_emitters;
+
+    int createChunk( const Mix_Chunk& );
+    Mix_Chunk &getChunk( int );
 
 public:
-                // AudioSystem();
+    Audio( idk::linear_allocator *mainblock );
 
-    static void init();
-    static void update( const glm::vec3&, const glm::vec3 & );
-    static int  loadWav( const std::string & );
+    void update( const glm::vec3&, const glm::vec3 & );
+    int  loadWav( const std::string & );
 
-    static int createEmitter();
-    static int createEmitter( const Emitter& );
-    static int createEmitter( const std::string& );
-    static Emitter &getEmitter( int );
-    static void destroyEmitter( int );
+    int createEmitter();
+    int createEmitter( const Emitter& );
+    int createEmitter( const std::string& );
+    Emitter &getEmitter( int );
+    void destroyEmitter( int );
 
     // IDK_ALLOCATOR_ACCESS(Emitter, Emitter,   m_emitters)
     // IDK_ALLOCATOR_ACCESS(Chunk,   Mix_Chunk, m_chunks)
 
-    static void playSound( int emitter_id, bool loop );
-    static void stopSound( int emitter_id );
+    void playSound( int emitter_id, bool loop );
+    void stopSound( int emitter_id );
 
-    static void resumeSound( int emitter_id );
-    static void pauseSound( int emitter_id );
+    void resumeSound( int emitter_id );
+    void pauseSound( int emitter_id );
 
 };
 

@@ -3,7 +3,7 @@
 #include <libidk/idk_export.hpp>
 #include <libidk/idk_platform.hpp>
 #include <libidk/idk_scene_file.hpp>
-#include <libidk/idk_log2.hpp>
+#include <libidk/idk_log.hpp>
 
 #include <IDKGraphics/IDKGraphics.hpp>
 #include <IDKEvents/IDKEvents.hpp>
@@ -32,28 +32,9 @@
 
 
 void
-idk::Engine::_reloadModules()
-{
-    for (auto &loader: m_modules)
-    {
-        loader.reload();
-        loader.getInstance()->init(*m_api);
-    }
-}
-
-
-void
-idk::Engine::_clearModules()
-{
-    m_modules.clear();
-}
-
-
-
-void
 idk::Engine::_idk_modules_stage_A( idk::EngineAPI &api )
 {
-    for (auto &loader: m_modules)
+    for (auto &[key, loader]: m_modules)
     {
         loader.getInstance()->stage_A(api);
     }
@@ -63,7 +44,7 @@ idk::Engine::_idk_modules_stage_A( idk::EngineAPI &api )
 void
 idk::Engine::_idk_modules_stage_B( idk::EngineAPI &api )
 {
-    for (auto &loader: m_modules)
+    for (auto &[key, loader]: m_modules)
     {
         loader.getInstance()->stage_B(api);
     }
@@ -73,7 +54,7 @@ idk::Engine::_idk_modules_stage_B( idk::EngineAPI &api )
 void
 idk::Engine::_idk_modules_stage_C( idk::EngineAPI &api )
 {
-    for (auto &loader: m_modules)
+    for (auto &[key, loader]: m_modules)
     {
         loader.getInstance()->stage_C(api);
     }
@@ -85,8 +66,36 @@ IDK_VISIBLE
 void
 idk::Engine::beginFrame( idk::EngineAPI &api, float dt )
 {
-    auto &ren = api.getRenderer();
+    static std::vector<int> cull;
+    cull.clear();
 
+    for (auto &[id, loader]: m_modules)
+    {
+        if (loader.should_unload)
+        {
+            LOG_INFO("Reloading module with ID {}", id);
+
+            cull.push_back(id);
+        }
+
+        if (loader.should_reload)
+        {
+            LOG_INFO("Reloading module with ID {}", id);
+
+            loader.reload();
+            loader.getInstance()->init(*m_api);
+            loader.onReload();
+            loader.should_reload = false;
+        }
+    }
+
+    for (int id: cull)
+    {
+        m_modules.get(id).unload();
+        m_modules.destroy(id);
+    }
+
+    auto &ren = api.getRenderer();
     m_frame_time = dt;
 
     ren.beginFrame();
@@ -105,40 +114,50 @@ idk::Engine::endFrame( idk::EngineAPI &api )
     _idk_modules_stage_B(api);
     api.getWindow().swapWindow();
     _idk_modules_stage_C(api);
-
-    if (m_reload)
-    {
-        _reloadModules();
-        m_reload = false;
-    }
-
-    if (m_clear || m_running == false)
-    {
-        _clearModules();
-        m_clear = false;
-    }
 }
 
 
 void
 idk::Engine::shutdown()
 {
-    LOG_INFO("idk::Engine::shutdown");
+    // LOG_INFO("idk::Engine::shutdown");
+    LOG_INFO("");
     m_running = false;
 }
 
 
 
 int
-idk::Engine::registerModule( const std::string &filename )
+idk::Engine::loadModule( const std::string &filename )
 {
     using ModuleLoader = idk::GenericLoader<idk::Module>;
     namespace fs = std::filesystem;
 
-    m_modules.push_back(ModuleLoader(filename + IDK_DLIB_EXT));
-    m_modules.back().getInstance()->init(*m_api);
+    int id = m_modules.create(ModuleLoader(filename + IDK_DLIB_EXT));
+    m_modules.get(id).getInstance()->init(*m_api);
 
-    std::cout << "[Engine::registerModule] Loaded module \"" << filename << "\"\n";
+    LOG_INFO("Loaded module from {} with id {}", filename, id);
 
-    return 0;
+    return id;
 }
+
+
+void
+idk::Engine::unloadModule( int id )
+{
+    m_modules.get(id).should_unload = true;
+
+    LOG_INFO("Schedule unload for module with ID {}", id);
+}
+
+
+
+void
+idk::Engine::reloadModule( int id, const std::function<void()> &callback )
+{
+    m_modules.get(id).should_reload = true;
+    m_modules.get(id).onReload = callback;
+
+    LOG_INFO("Schedule reload for module with ID {}", id);
+}
+

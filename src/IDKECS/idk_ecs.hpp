@@ -224,6 +224,15 @@ public:
     {
         size_t key = getkey<ComponentArray<component_type>>();
         m_user_callbacks[key] = callback;
+        LOG_INFO("Assigned callback for component_type {}", key);
+    }
+
+    template <typename component_type>
+    static void clearUserCallback()
+    {
+        size_t key = getkey<ComponentArray<component_type>>();
+        m_user_callbacks.erase(key);
+        LOG_INFO("Removed callback for component_type {}", key);
     }
 
     static userfn_type getUserCallback( size_t key );

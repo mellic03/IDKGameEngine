@@ -11,15 +11,14 @@
 
 #include "game.hpp"
 
-// #include <IDKEditorUI/EditorUI.hpp>
 #include <IDKBuiltinUI/EditorUI.hpp>
 
 
 // void
-// TemplateGameName::registerModules( idk::EngineAPI &api )
+// TemplateGameName::loadModules( idk::EngineAPI &api )
 // {
 //     using namespace idk;
-//     int id = api.getEngine().registerModule("IDKGE/modules/libIDKBuiltinUI");
+//     int id = api.getEngine().loadModule("IDKGE/modules/libIDKBuiltinUI");
 //     auto &mod = api.getEngine().getModule<EditorUI_MD>(id);
 
 // }

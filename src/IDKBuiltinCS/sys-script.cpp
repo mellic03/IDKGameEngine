@@ -1,5 +1,5 @@
 #include "sys-script.hpp"
-#include <libidk/idk_log2.hpp>
+#include <libidk/idk_log.hpp>
 
 static idk::EngineAPI *api_ptr;
 
@@ -70,8 +70,7 @@ idk::ScriptSys::reloadScript( const std::string &filename )
 {
     if (m_scripts.contains(filename))
     {
-        LOG_INFO("ScriptSys::reloadScript", "Reloading script " + filename);
-        // LOG_INFO() << "[ScriptSys::reloadScript] Reloading script \"" << filename << "\"\n";
+        LOG_INFO("Reloading script: \"{}\"", filename);
         m_scripts[filename]->reload();
     }
 }

@@ -3,7 +3,7 @@
 #include "sys-lightsource.hpp"
 
 #include <libidk/idk_geometry.hpp>
-#include <libidk/idk_log2.hpp>
+#include <libidk/idk_log.hpp>
 
 
 static idk::EngineAPI *api_ptr;
@@ -20,7 +20,8 @@ static idk::RenderSettingCmp &getCmp()
 void
 idk::RenderSettingSys::init( idk::EngineAPI &api )
 {
-    LOG_INFO("idk::RenderSettingSys::init", "");
+    // LOG_INFO("idk::RenderSettingSys::init");
+    LOG_INFO("");
     api_ptr = &api;
 }
 
@@ -60,7 +61,8 @@ idk::RenderSettingSys::update( idk::EngineAPI &api )
 void
 idk::RenderSettingSys::shutdown( idk::EngineAPI &api )
 {
-    LOG_INFO("idk::RenderSettingSys::shutdown", "");
+    // LOG_INFO("idk::RenderSettingSys::shutdown");
+    LOG_INFO("");
 }
 
 

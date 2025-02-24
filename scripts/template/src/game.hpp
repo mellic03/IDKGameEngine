@@ -12,7 +12,7 @@ class IDK_VISIBLE TemplateGameName: public idk::Game
 public:
     virtual std::string getName() final { return "TemplateGameName"; }
 
-    // virtual void registerModules ( idk::EngineAPI& ) final;
+    // virtual void loadModules ( idk::EngineAPI& ) final;
     virtual void setup           ( const std::vector<std::string>&, idk::EngineAPI& ) final;
     virtual void mainloop        ( idk::EngineAPI& ) final;
     virtual void shutdown        (                 ) final;
