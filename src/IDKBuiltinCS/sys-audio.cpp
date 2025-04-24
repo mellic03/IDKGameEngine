@@ -237,9 +237,9 @@ idk::AudioEmitterCmp::deserialize( std::ifstream &stream )
 void
 idk::AudioEmitterCmp::onObjectAssignment( idk::EngineAPI &api, idk::ECS &ecs, int obj_id )
 {
-    // auto &cmp = ECS2::getComponent<AudioEmitterCmp>(obj_id);
-    // cmp.emitter_id = audio.createEmitter();
-    // this->obj_id = obj_id;
+    auto &audio = api_ptr->getAudio();
+    auto &cmp = api.getECS().getComponent<AudioEmitterCmp>(obj_id);
+    cmp.emitter_id = audio.createEmitter();
 }
 
 

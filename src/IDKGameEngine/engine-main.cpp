@@ -26,9 +26,7 @@
 
 void message_callback( GLenum, GLenum, GLuint, GLenum, GLsizei, GLchar const*, void const* );
 
-
-
-int main( int argc, char **argv )
+int IDKGameEngineMain( int argc, char **argv, idk::Game *game )
 {
     srand(clock());
 
@@ -92,11 +90,7 @@ int main( int argc, char **argv )
     }
 
     idk::Logger::init();
-    idk::ThreadPool::init(arg_threads);
-
-    std::string game_path = (arg_load_game) ? arg_game : "libgame.so";
-    idk::EngineAPI api(args, game_path, 4, 6);
-
+    idk::EngineAPI api(game, 4, 6);
     // -----------------------------------------------------------------------------------------
 
     IDK_GLCALL(
@@ -110,16 +104,16 @@ int main( int argc, char **argv )
     IDK_GLCALL( glDebugMessageCallback(message_callback, nullptr); )
 
 
-    // Run all scripts found in IDKGE/init
-    // -----------------------------------------------------------------------------------------
-    for (auto dir: std::filesystem::directory_iterator("./init/"))
-    {
-        auto path = dir.path(); path.replace_extension();
-        auto name = path.string();
-        idk::RuntimeScript script(name, false);
-        script.execute(api, nullptr);
-    }
-    // -----------------------------------------------------------------------------------------
+    // // Run all scripts found in IDKGE/init
+    // // -----------------------------------------------------------------------------------------
+    // for (auto dir: std::filesystem::directory_iterator("./init/"))
+    // {
+    //     auto path = dir.path(); path.replace_extension();
+    //     auto name = path.string();
+    //     idk::RuntimeScript script(name, false);
+    //     script.execute(api, nullptr);
+    // }
+    // // -----------------------------------------------------------------------------------------
 
 
     // Main loop
@@ -150,6 +144,7 @@ int main( int argc, char **argv )
         auto *game   = api.getGame();
         auto &engine = api.getEngine();
         auto &io     = api.getIO();
+        auto &tasks  = api.getTasks();
         auto &ecs    = api.getECS();
         auto &ren    = api.getRenderer();
 
@@ -160,7 +155,7 @@ int main( int argc, char **argv )
         game->mainloop(api);
         engine.endFrame(api);
     
-        idk::ThreadPool::update();
+        tasks.update();
         idk::Logger::update();
         b = a;
 

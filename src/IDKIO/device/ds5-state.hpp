@@ -30,21 +30,6 @@ namespace idk
         uint8_t LedBlue;            /* 46 */
     };
 
-    uint8_t DS5StateBitSet( uint8_t byte, uint8_t mask )
-    {
-        return byte |= mask;
-    }
-
-    uint8_t DS5StateBitUnset( uint8_t byte, uint8_t mask )
-    {
-        return byte &= ~mask;
-    }
-
-    uint8_t DS5StateBitToggle( uint8_t byte, uint8_t mask )
-    {
-        return byte ^= mask;
-    }
-
 }
 
 

@@ -31,6 +31,7 @@ namespace idk
     class ECS;
     class IO;
     class Audio;
+    class Threadpool;
 
     class RenderEngine;
     class Game;
@@ -68,11 +69,11 @@ private:
     std::string         m_name;
     float               m_dt = 0.001f;
 
-    std::vector<std::string> m_args;
+    // std::vector<std::string> m_args;
     std::vector<std::function<void()>> m_callbacks;
     std::map<std::string, idk::ECS*> m_scenes;
 
-    idk::GenericLoader<idk::Game> *m_gameloader;
+    // idk::GenericLoader<idk::Game> *m_gameloader;
     idk::Game           *m_game     = nullptr;
 
     idk::Window         *m_win      = nullptr;
@@ -81,6 +82,7 @@ private:
     idk::Engine         *m_engine   = nullptr;
     idk::IO             *m_io       = nullptr;
     idk::Audio          *m_audio    = nullptr;
+    idk::Threadpool     *m_tasks    = nullptr;
 
     idk::RenderEngine   *m_renderer = nullptr;
     idk::EventEmitter<std::string, void*> *m_events = nullptr;
@@ -89,7 +91,7 @@ private:
 public:
     EngineMemory memory;
 
-                         EngineAPI( const std::vector<std::string>&, const std::string&, int, int );
+                         EngineAPI( idk::Game*, int, int );
 
     void                 update( float dt );
     void                 updateScenes();
@@ -103,6 +105,7 @@ public:
     idk::Audio          &getAudio()      { return *m_audio;    };
     idk::RenderEngine   &getRenderer()   { return *m_renderer; };
     auto                &getEvents()     { return *m_events;   };
+    auto                &getTasks()      { return *m_tasks;    };
     idk::Game           *getGame()       { return  m_game;     };
 
     /**
@@ -116,12 +119,11 @@ public:
     bool                 deleteScene( const std::string &name );
     const auto &         getScenes() { return m_scenes; };
 
-    void                 reloadEngine();
-    void                 reloadECS( bool now=false );
-    void                 reloadGL();
-    void                 reloadRenderer();
-    void                 reloadGame( bool now=false );
-    void                 reloadAll();
+    // void                 reloadEngine();
+    // void                 reloadECS( bool now=false );
+    // void                 reloadGL();
+    // void                 reloadRenderer();
+    // void                 reloadAll();
 
     bool                 running();
     void                 shutdown();

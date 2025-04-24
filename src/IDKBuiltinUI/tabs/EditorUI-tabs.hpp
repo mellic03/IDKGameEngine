@@ -10,7 +10,7 @@ namespace EditorUI
     void selection_splitWindow( const It &begin, const It &end, const lambda_t &callback );
 
     template <typename T, typename lambda_t>
-    void selection_splitWindow2( idk::Allocator<T> &container, const lambda_t &callback );
+    void selection_splitWindow2( idk::fixed_Allocator<T> &container, const lambda_t &callback );
 };
 
 
@@ -72,7 +72,7 @@ EditorUI::selection_splitWindow( const It &begin, const It &end, const lambda_t 
 
 template <typename T, typename lambda_t>
 void
-EditorUI::selection_splitWindow2( idk::Allocator<T> &container, const lambda_t &callback )
+EditorUI::selection_splitWindow2( idk::fixed_Allocator<T> &container, const lambda_t &callback )
 {
     ImGuiTableFlags flags  = ImGuiTableFlags_SizingStretchSame;
                     flags |= ImGuiTableFlags_Resizable;

@@ -23,31 +23,29 @@ find_package(OpenGL REQUIRED)
 
 file(GLOB SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/world/world/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/world/item/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/IDKGameEngine/world/character/*.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 )
 
-add_executable(IDKGameLoader ${SOURCES})
+# add_library(${PROJECT_NAME} SHARED ${SOURCES})
+# add_executable(IDKGameLoader ${SOURCES})
 
 
-set_target_properties(
-    IDKGameLoader PROPERTIES
-    BUILD_WITH_INSTALL_RPATH FALSE
-    LINK_FLAGS "-Wl,-rpath,$ORIGIN/"
-)
+# set_target_properties(
+#     IDKGameLoader PROPERTIES
+#     BUILD_WITH_INSTALL_RPATH FALSE
+#     LINK_FLAGS "-Wl,-rpath,$ORIGIN/"
+# )
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
-if (IDK_DEBUG)
-    target_compile_options(IDKGameLoader PUBLIC -Werror -fsanitize=undefined -lstdc++fs -g)
-else()
-    target_compile_options(IDKGameLoader PUBLIC -Ofast)
-endif ()
+# if (IDK_DEBUG)
+#     target_compile_options(IDKGameLoader PUBLIC -Werror -fsanitize=undefined -lstdc++fs -g)
+# else()
+#     target_compile_options(IDKGameLoader PUBLIC -Ofast)
+# endif ()
 
 
 
+add_library(${PROJECT_NAME} STATIC ${SOURCES})
 
 
 include_directories(${GLEW_INCLUDE_DIRS})
@@ -55,7 +53,7 @@ include_directories(${OPENGL_INCLUDE_DIRS})
 
 
 target_link_libraries(
-    IDKGameLoader PUBLIC
+    ${PROJECT_NAME} PUBLIC
 
     GLEW
     SDL2

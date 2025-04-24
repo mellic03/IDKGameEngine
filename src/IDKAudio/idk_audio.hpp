@@ -2,7 +2,8 @@
 
 #include <SDL2/SDL_mixer.h>
 
-#include <libidk/idk_allocator.hpp>
+// #include <libidk/idk_allocator.hpp>
+#include <libidk/idk_allocator_fixed.hpp>
 #include <libidk/idk_glm.hpp>
 #include <libidk/idk_log.hpp>
 #include <libidk/memory/linear_allocator.hpp>
@@ -40,8 +41,8 @@ private:
 
     std::stack<int>                 m_channels;
     std::map<std::string, int>      m_wav_cache;
-    idk::Allocator<Mix_Chunk>       m_chunks;
-    idk::Allocator<Emitter>         m_emitters;
+    idk::fixed_Allocator<Mix_Chunk> m_chunks;
+    idk::fixed_Allocator<Emitter>   m_emitters;
     // idk::pool_allocator<Mix_Chunk>  m_chunks;
     // idk::pool_allocator<Emitter>    m_emitters;
 

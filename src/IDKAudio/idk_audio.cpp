@@ -2,8 +2,8 @@
 
 
 idk::Audio::Audio( idk::linear_allocator *mainblock )
-// :   m_chunks   (idk::pool_allocator<Mix_Chunk>(512, mainblock)),
-//     m_emitters (idk::pool_allocator<Emitter>(512, mainblock))
+:   m_chunks   (512, mainblock),
+    m_emitters (512, mainblock)
 {
 
     int    audio_rate    = 44100;

@@ -353,9 +353,7 @@ idk::ECS::deleteSelectedGameObject()
 int
 idk::ECS::copySelectedGameObject()
 {
-    // LOG_INFO("idk::ECS::copySelectedGameObject");
-    LOG_INFO("");
-    IDK_ASSERT("No selected object!", m_selected_object != -1);
+    LOG_ASSERT(m_selected_object != -1, "No selected object!");
     return copyGameObject(m_selected_object);
 }
 
@@ -363,7 +361,7 @@ idk::ECS::copySelectedGameObject()
 const std::string &
 idk::ECS::getSelectedGameObjectName()
 {
-    IDK_ASSERT("No selected object!", m_selected_object != -1);
+    LOG_ASSERT(m_selected_object != -1, "No selected object!");
     return getGameObjectName(m_selected_object);
 }
 
@@ -392,9 +390,6 @@ idk::ECS::giveComponent( int obj_id, size_t key )
 bool
 idk::ECS::hasComponent( int obj_id, size_t key )
 {
-    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
-    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
-
     auto &e = m_entities.get(obj_id);
     return e.components.contains(key);
 }
@@ -403,7 +398,6 @@ idk::ECS::hasComponent( int obj_id, size_t key )
 int
 idk::ECS::getParent( int obj_id )
 {
-    // IDK_ASSERT("Object does not have parent", hasParent(obj_id));
     return m_entities.get(obj_id).parent;
 }
 
@@ -411,9 +405,6 @@ idk::ECS::getParent( int obj_id )
 const std::set<int>&
 idk::ECS::getChildren( int obj_id )
 {
-    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
-    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
-
     return m_entities.get(obj_id).children;
 }
 
@@ -422,9 +413,6 @@ idk::ECS::getChildren( int obj_id )
 bool
 idk::ECS::hasParent( int obj_id )
 {
-    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
-    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
-
     return m_entities.get(obj_id).parent != -1;
 }
 
@@ -432,9 +420,6 @@ idk::ECS::hasParent( int obj_id )
 bool
 idk::ECS::hasChildren( int obj_id )
 {
-    std::string msg = "Object " + std::to_string(obj_id) + " does not exist";
-    IDK_ASSERT(msg.c_str(), m_entities.contains(obj_id));
-
     return m_entities.get(obj_id).children.size() > 0;
 }
 
